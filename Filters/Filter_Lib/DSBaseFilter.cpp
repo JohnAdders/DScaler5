@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.3 2004-02-27 17:08:16 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.4 2004-03-01 13:04:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/27 17:08:16  adcockj
+// Improved locking at state changes
+// Better error handling at state changes
+//
 // Revision 1.2  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -265,10 +269,10 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
 
     CProtectCode WhileVarInScope(this);
 
-	LockAllPins();
 
     if(m_State == State_Stopped)
     {
+		LockAllPins();
         int i;
         for(i = 0; i < m_NumInputPins; ++i)
         {
@@ -279,11 +283,11 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
             m_OutputPins[i]->Activate();
         }
         Activate();
+		UnlockAllPins();
     }
 
     m_State = State_Running;
 
-	UnlockAllPins();
 
     LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run end\n"));
     return S_OK;
