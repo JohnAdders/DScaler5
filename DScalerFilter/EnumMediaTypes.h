@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.h,v 1.3 2003-05-08 15:58:38 adcockj Exp $
+// $Id: EnumMediaTypes.h,v 1.4 2003-05-19 07:02:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -42,7 +42,7 @@ BEGIN_COM_MAP(CEnumMediaTypes)
 	COM_INTERFACE_ENTRY(IEnumMediaTypes)
 END_COM_MAP()
 
-// IBaseFilter
+// IEnumMediaTypes
 public:
     STDMETHOD(Next)(ULONG cTypes,AM_MEDIA_TYPE **ppTypes, ULONG *pcFetched);
     STDMETHOD(Skip)(ULONG cTypes);

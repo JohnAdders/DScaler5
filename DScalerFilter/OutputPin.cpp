@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.13 2003-05-17 11:29:35 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.14 2003-05-19 07:02:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2003/05/17 11:29:35  adcockj
+// Fixed crashing
+//
 // Revision 1.12  2003/05/10 13:21:31  adcockj
 // Bug fixes
 //
@@ -111,7 +114,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
     if(m_Allocator == NULL)
     {
         // ask the conencted filter for it's allocator
-        // if it hasn't got one then use the one from downstream
+        // if it hasn't got one then use the one from upstream
         // \todo we should probably have our own allocator
         // here but it doesn't seem worth it yet
         hr = m_MemInputPin->GetAllocator(&m_Allocator);
@@ -439,7 +442,7 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
     LOG(DBGLOG_FLOW, ("COutputPin::Notify \n Type %d Proportion %d Late %d\n", q.Type, q.Proportion, (long)q.Late));
     // \todo see what we get sent here and work out how to handle some
     // of the more common messages
-    // in the mean time just pass the messages downstream
+    // in the mean time just pass the messages upstream
     CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
     if(QualityControl != NULL)
     {

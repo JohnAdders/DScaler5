@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.7 2003-05-09 07:03:26 adcockj Exp $
+// $Id: Utils.cpp,v 1.8 2003-05-19 07:02:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2003/05/09 07:03:26  adcockj
+// Bug fixes for new format code
+//
 // Revision 1.6  2003/05/08 15:58:38  adcockj
 // Better error handling, threading and format support
 //
@@ -43,6 +46,7 @@
 
 #include "stdafx.h"
 #include "Utils.h"
+#include <dxerr9.h>
 
 #ifdef _DEBUG
 int CurrentDebugLevel = DBGLOG_ALL;
@@ -127,6 +131,54 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
 }
 
 #ifndef NOLOGGING
+
+/**
+ * Function to get a string describing the guid.
+ * @return Name of the guid. The return value is only valid until the next call to this function
+ */
+char* GetGUIDName(const GUID &guid)
+{
+    static char fourcc_buffer[20];
+    struct TGUID2NAME
+    {
+        char *szName;
+        GUID guid;
+    };
+    #define OUR_GUID_ENTRY(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+    { #name, { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } } },
+    TGUID2NAME names[] =
+    {
+        #include <uuids.h>
+    };
+
+    if(guid==GUID_NULL)
+    {
+        return "GUID_NULL";
+    }
+    for(int i=0;i<(sizeof(names)/sizeof(names[0]));i++)
+    {
+        if(names[i].guid==guid)
+        {
+            return names[i].szName;
+        }
+    }
+    //if we get here, the return value is only valid until the next call to this function
+    if(guid.Data2==0 && guid.Data3==0x10 && ((DWORD *)guid.Data4)[0]==0xaa000080 && ((DWORD *)guid.Data4)[1]==0x719b3800)
+    {
+        char tmp[sizeof(DWORD)+1];
+        memset(tmp,0,sizeof(DWORD)+1);
+        memcpy(tmp,&guid.Data1,sizeof(DWORD));
+        _snprintf(fourcc_buffer,20,"FOURCC '%s'",tmp);
+        return fourcc_buffer;
+    }
+    BYTE *Uuid=NULL;
+    static char uuidbuffer[50];
+    UuidToString(const_cast<UUID*>(&guid), &Uuid);
+    sprintf(uuidbuffer,"{%s}",Uuid);
+    RpcStringFree(&Uuid);
+    return uuidbuffer;
+}
+
 void _LOG(LPCSTR szFormat, ...)
 {
     char szMessage[2048];
@@ -136,10 +188,10 @@ void _LOG(LPCSTR szFormat, ...)
     int result=_vsnprintf(szMessage,2048, szFormat, Args);
     va_end(Args);
     if(result==-1)
-	{
-		OutputDebugString("DebugString too long, truncated!!\n");
-	}
-	OutputDebugString(szMessage);
+    {
+        OutputDebugString("DebugString too long, truncated!!\n");
+    }
+    OutputDebugString(szMessage);
 }
 
 void LogSample(IMediaSample* Sample, LPCSTR Desc)
@@ -163,96 +215,114 @@ void LogSample(IMediaSample* Sample, LPCSTR Desc)
     else
     {
     }
-
 }
 
 void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
 {
-    BYTE* Uuid;
+    struct TFlag2String
+    {
+        DWORD dwFlag;
+        char *szName;
+    };
+    //BYTE* Uuid;
     
     LOG(DBGLOG_FLOW, ("%s - AM_MEDIA_TYPE Dump\n", Desc));
-
-    if(MediaType->majortype == MEDIATYPE_Video)
-    {
-        LOG(DBGLOG_ALL, (" MEDIATYPE_Video\n"));
-    }
-    else
-    {
-        UuidToString((GUID*)&MediaType->majortype, &Uuid);
-        LOG(DBGLOG_ALL, (" Major Type {%s}\n", Uuid));
-        RpcStringFree(&Uuid);
-    }
-    if(MediaType->subtype == MEDIASUBTYPE_YUY2)
-    {
-        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_YUY2\n"));
-    }
-    else if(MediaType->subtype == MEDIASUBTYPE_YV12)
-    {
-        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_YV12\n"));
-    }
-    else if(MediaType->subtype == MEDIASUBTYPE_NV12)
-    {
-        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_NV12\n"));
-    }
-    else if(MediaType->subtype == MEDIASUBTYPE_RGB32)
-    {
-        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_RGB32\n"));
-    }
-    else
-    {
-        UuidToString((GUID*)&MediaType->subtype, &Uuid);
-        LOG(DBGLOG_ALL, (" Sub Type {%s}\n", Uuid));
-        RpcStringFree(&Uuid);
-    }
+    LOG(DBGLOG_ALL, (" Major Type %s\n", GetGUIDName(MediaType->majortype)));
+    LOG(DBGLOG_ALL, (" Sub Type %s\n",GetGUIDName(MediaType->subtype)));
     LOG(DBGLOG_ALL, (" Format size %d\n", MediaType->cbFormat));
+    LOG(DBGLOG_ALL, (" Format Type %s\n", GetGUIDName(MediaType->formattype)));
 
-    if(MediaType->formattype == FORMAT_VideoInfo)
+    if(MediaType->formattype==FORMAT_VideoInfo || MediaType->formattype==FORMAT_VideoInfo2)
     {
-        LOG(DBGLOG_ALL, (" FORMAT_VideoInfo\n"));
-        VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)MediaType->pbFormat;
-        LOG(DBGLOG_ALL, (" cbData %d\n", Format->bmiHeader));
-        LOG(DBGLOG_ALL, (" biSize %d\n", Format->bmiHeader.biSize));
-        LOG(DBGLOG_ALL, (" biWidth %d\n", Format->bmiHeader.biWidth));
-        LOG(DBGLOG_ALL, (" biHeight %d\n", Format->bmiHeader.biHeight));
-        LOG(DBGLOG_ALL, (" biPlanes %d\n", Format->bmiHeader.biPlanes));
-        LOG(DBGLOG_ALL, (" biBitCount %d\n", Format->bmiHeader.biBitCount));
-        LOG(DBGLOG_ALL, (" biCompression %d\n", Format->bmiHeader.biCompression));
-        LOG(DBGLOG_ALL, (" biSizeImage %d\n", Format->bmiHeader.biSizeImage));
-    }
-    else if(MediaType->formattype == FORMAT_VIDEOINFO2)
-    {
-        LOG(DBGLOG_ALL, (" FORMAT_VIDEOINFO2\n"));
-        VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)MediaType->pbFormat;
-        LOG(DBGLOG_ALL, (" cbData %d\n", Format->bmiHeader));
-        LOG(DBGLOG_ALL, (" biSize %d\n", Format->bmiHeader.biSize));
-        LOG(DBGLOG_ALL, (" biWidth %d\n", Format->bmiHeader.biWidth));
-        LOG(DBGLOG_ALL, (" biHeight %d\n", Format->bmiHeader.biHeight));
-        LOG(DBGLOG_ALL, (" biPlanes %d\n", Format->bmiHeader.biPlanes));
-        LOG(DBGLOG_ALL, (" biBitCount %d\n", Format->bmiHeader.biBitCount));
-        LOG(DBGLOG_ALL, (" biCompression %d\n", Format->bmiHeader.biCompression));
-        LOG(DBGLOG_ALL, (" biSizeImage %d\n", Format->bmiHeader.biSizeImage));
-    }
-    else
-    {
-        UuidToString((GUID*)&MediaType->formattype, &Uuid);
-        LOG(DBGLOG_ALL, (" Format Type {%s}\n", Uuid));
-        RpcStringFree(&Uuid);
+        BITMAPINFOHEADER *pBMI=NULL;
+        VIDEOINFOHEADER* pHeader = (VIDEOINFOHEADER*)MediaType->pbFormat;
+
+        //parts of the struct that is common to both VIDEOINFOHEADER and VIDEOINFOHEADER2
+        LOG(DBGLOG_ALL, (" Source RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcSource.left,pHeader->rcSource.top,pHeader->rcSource.right,pHeader->rcSource.bottom));
+        LOG(DBGLOG_ALL, (" Target RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcTarget.left,pHeader->rcTarget.top,pHeader->rcTarget.right,pHeader->rcTarget.bottom));
+        LOG(DBGLOG_ALL, (" BitRate: %lu ErrorRate: %lu\n",pHeader->dwBitRate,pHeader->dwBitErrorRate));
+        LOG(DBGLOG_ALL, (" AvgTimePerFrame: %g fps\n",1/(pHeader->AvgTimePerFrame/(double)10000000)));
+
+        if(MediaType->formattype == FORMAT_VideoInfo)
+        {
+            pBMI=&pHeader->bmiHeader;
+        }
+        else if(MediaType->formattype == FORMAT_VideoInfo2)
+        {
+            VIDEOINFOHEADER2* pHeader2 = (VIDEOINFOHEADER2*)MediaType->pbFormat;
+            pBMI=&pHeader2->bmiHeader;
+
+            char buffer[1024];
+            ZeroMemory(buffer,1024);
+            TFlag2String flags[]=
+            {
+                {AMINTERLACE_IsInterlaced,"AMINTERLACE_IsInterlaced"},
+                {AMINTERLACE_1FieldPerSample,"AMINTERLACE_1FieldPerSample"},
+                {AMINTERLACE_Field1First,"AMINTERLACE_Field1First"},
+                {AMINTERLACE_FieldPatField1Only,"AMINTERLACE_FieldPatField1Only"},
+                {AMINTERLACE_FieldPatField2Only,"AMINTERLACE_FieldPatField2Only"},
+                {AMINTERLACE_FieldPatBothRegular,"AMINTERLACE_FieldPatBothRegular"},
+                {AMINTERLACE_DisplayModeBobOnly,"AMINTERLACE_DisplayModeBobOnly"},
+                {AMINTERLACE_DisplayModeWeaveOnly,"AMINTERLACE_DisplayModeWeaveOnly"},
+                {AMINTERLACE_DisplayModeBobOrWeave,"AMINTERLACE_DisplayModeBobOrWeave"}
+            };
+
+            for(int i=0;i<sizeof(flags)/sizeof(flags[0]);i++)
+            {
+                if(flags[i].dwFlag&pHeader2->dwInterlaceFlags)
+                {
+                    if(i!=0)
+                    {
+                        strcat(buffer,"|");
+                    }
+                    strcat(buffer,flags[i].szName);
+                }
+            }
+            LOG(DBGLOG_ALL, (" InterlaceFlags: %lu (%s)\n",pHeader2->dwInterlaceFlags,buffer));
+            LOG(DBGLOG_ALL, (" AspectRatio: %lux%lu (%g)\n",pHeader2->dwPictAspectRatioX,pHeader2->dwPictAspectRatioY,pHeader2->dwPictAspectRatioX/(double)pHeader2->dwPictAspectRatioY));
+            if(pHeader2->dwControlFlags&AMCONTROL_USED)
+            {
+                if(pHeader2->dwControlFlags&AMCONTROL_PAD_TO_4x3)
+                {
+                    LOG(DBGLOG_ALL, (" ControllFlags: AMCONTROL_PAD_TO_4x3"));
+                }
+                else if(pHeader2->dwControlFlags&AMCONTROL_PAD_TO_16x9)
+                {
+                    LOG(DBGLOG_ALL, (" ControllFlags: AMCONTROL_PAD_TO_16x9"));
+                }
+                else
+                {
+                    LOG(DBGLOG_ALL, (" ControllFlags: Unknown (%lu)",pHeader2->dwControlFlags));
+                }
+            }
+        }
+        //BITMAPINFOHEADER
+        LOG(DBGLOG_ALL, (" biSize %d\n", pBMI->biSize));
+        LOG(DBGLOG_ALL, (" biWidth %d\n", pBMI->biWidth));
+        LOG(DBGLOG_ALL, (" biHeight %d\n", pBMI->biHeight));
+        LOG(DBGLOG_ALL, (" biPlanes %d\n", pBMI->biPlanes));
+        LOG(DBGLOG_ALL, (" biBitCount %d\n", pBMI->biBitCount));
+        LOG(DBGLOG_ALL, (" biCompression %d\n", pBMI->biCompression));
+        LOG(DBGLOG_ALL, (" biSizeImage %d\n", pBMI->biSizeImage));
     }
 }
 
 void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
 {
-    char ErrorString[256];
-    if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, hr, 0, ErrorString, 256, 0))
+    USES_CONVERSION;
+    //DXGetErrorString9 seems to be a bit better at returning a string for a
+    //hresult but instead it only returns strings like
+    //VFW_E_INVALID_MEDIA_TYPE but that shoud be enough
+    const TCHAR *ErrorMsg=DXGetErrorString9(hr);
+    if(ErrorMsg!=NULL)
     {           
-        _LOG("%s(%d) : Bad HRESULT 0x%08x  - %s", File, Line, hr, ErrorString);
+        _LOG("%s(%d) : Bad HRESULT 0x%08x  - %s\n", File, Line, hr, T2A(const_cast<TCHAR *>(ErrorMsg)));
     }
     else
     {
         _LOG("%s(%d) : Bad HRESULT 0x%08x\n", File, Line, hr);
     }
 }
-
 
 #endif // NOLOGGING
 
