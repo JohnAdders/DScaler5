@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.16 2004-04-08 16:41:57 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.17 2004-04-13 06:23:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/04/08 16:41:57  adcockj
+// Tidy up subpicture support
+//
 // Revision 1.15  2004/04/06 16:46:12  adcockj
 // DVD Test Annex Compatability fixes
 //
@@ -1492,6 +1495,33 @@ HRESULT CMpegDecoder::Deactivate()
     return S_OK;
 }
 
+// function taken from 
+// header.c
+// Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
+// Copyright (C) 2003      Regis Duchesne <hpreg@zoy.org>
+// Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+//
+// This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
+// See http://libmpeg2.sourceforge.net/ for updates.
+void Simplify(int * u, int * v)
+{
+    int a, b, tmp;
+
+    a = *u;	
+    b = *v;
+    
+    while (a) 
+    {	
+        /* find greatest common divisor */
+	    tmp = a;	
+        a = b % tmp;	
+        b = tmp;
+    }
+    *u /= b;
+    *v /= b;
+}
+
+
 HRESULT CMpegDecoder::ProcessNewSequence()
 {
     HRESULT hr = S_OK;
@@ -1546,6 +1576,15 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
+
+    // \todo crop 1088 images
+
+    // \todo optionally use accurate aspect ratio
+
+	m_arxin = mpeg2_info(m_dec)->sequence->pixel_width * m_InternalWidth;
+	m_aryin = mpeg2_info(m_dec)->sequence->pixel_height * m_InternalHeight;
+
+    Simplify(&m_arxin, &m_aryin);
 
 	if(m_DoPanAndScan)
 	{
