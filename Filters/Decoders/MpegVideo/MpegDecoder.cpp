@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.68 2005-02-17 09:31:45 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.69 2005-03-04 17:54:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.68  2005/02/17 09:31:45  adcockj
+// Added analog blanking option
+// Removed force Dscaler filter option
+// Another proposed fix for menus
+//
 // Revision 1.67  2005/02/09 07:27:32  adcockj
 // fixed buffer handling on reset
 //
@@ -796,9 +801,12 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
     {
         LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
         m_LastOutputTime = 0;
+
+        CProtectCode WhileVarInScope(&m_RateLock);
         m_rate.Rate = (LONG)(10000 / dRate);
         m_rate.StartTime = 0;
-		m_IsDiscontinuity = true;
+
+        m_IsDiscontinuity = true;
         return S_OK;
     }
     else if(pPin == m_SubpictureInPin)
@@ -1076,6 +1084,12 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
     if(len <= 0) 
         return S_OK;
 
+
+    if(pSampleProperties->tStart == -1)
+    {
+        pSampleProperties->dwSampleFlags &= ~AM_SAMPLE_TIMEVALID;
+    }
+
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
     {
         LOG(DBGLOG_FLOW, ("Got Discontinuity\n"));
@@ -1177,6 +1191,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     
     if(!fRepeatLast)
     {
+        CProtectCode WhileVarInScope(&m_RateLock);
+
         // cope with a change in rate       
         if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
         {
@@ -1416,6 +1432,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 void CMpegDecoder::FlushMPEG()
 {
     CProtectCode WhileVarInScope(m_VideoInPin);
+    CProtectCode WhileVarInScope2(&m_RateLock);
         
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
@@ -1700,7 +1717,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
 
     if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-        LOG(DBGLOG_ALL, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
+        LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d - %010I64d\n", pSampleProperties->tStart, m_LastOutputTime));
         LARGE_INTEGER temp;
         temp.QuadPart = pSampleProperties->tStart;
         CurrentPicture->tag = temp.HighPart;
@@ -1708,6 +1725,10 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
         CurrentPicture->flags |= PIC_FLAG_TAGS;
         // make sure we only tag one i-frame per timestamp
         pSampleProperties->dwSampleFlags &=  ~AM_SAMPLE_TIMEVALID;
+    }
+    else
+    {
+        CurrentPicture->flags &= ~PIC_FLAG_TAGS;
     }
 
     // set up the memory want to receive the buffers into

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.8 2005-02-17 09:31:48 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.9 2005-03-04 17:54:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -37,6 +37,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2005/02/17 09:31:48  adcockj
+// Added analog blanking option
+// Removed force Dscaler filter option
+// Another proposed fix for menus
+//
 // Revision 1.7  2005/02/03 13:40:55  adcockj
 // Improved seek support
 //
@@ -76,6 +81,7 @@ HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
     {
     case AM_RATE_SimpleRateChange:
         {
+            CProtectCode WhileVarInScope(&m_RateLock);
             AM_SimpleRateChange* p = (AM_SimpleRateChange*)pPropertyData;
             if(!m_CorrectTS) return E_PROP_ID_UNSUPPORTED;
             m_ratechange.Rate = p->Rate;

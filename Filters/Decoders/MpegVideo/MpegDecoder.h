@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.34 2005-02-17 09:31:48 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.35 2005-03-04 17:54:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -252,6 +252,8 @@ private:
     HRESULT GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
     HRESULT SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport);
     static const long MAX_SPEED;
+    CCanLock m_RateLock;
+
 private:
     // Subpicture Stuff
     AM_PROPERTY_COMPOSIT_ON m_spon;

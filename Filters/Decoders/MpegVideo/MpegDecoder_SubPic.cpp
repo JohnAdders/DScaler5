@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.16 2005-02-17 09:31:48 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.17 2005-03-04 17:54:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2005/02/17 09:31:48  adcockj
+// Added analog blanking option
+// Removed force Dscaler filter option
+// Another proposed fix for menus
+//
 // Revision 1.15  2004/12/06 18:05:00  adcockj
 // Major improvements to deinterlacing
 //
@@ -124,10 +129,19 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
             std::list<CHighlight*>::iterator it = m_HighlightList.begin();
             while(it != m_HighlightList.end())
             {
-                if((*it)->rtStart >= PTS2RT(pSPHLI->StartPTM) || pSPHLI->HLISS == 0 || pSPHLI->StartPTM == 0xFFFFFFFF)
+                // clear out the the history list of highlights
+                // completely if we get :
+                // Highlights off
+                // a ptm that says do now
+                // we are on a still page
+                // otherwise eat any that overlap
+                if((*it)->rtStart >= PTS2RT(pSPHLI->StartPTM) || 
+                    pSPHLI->HLISS == 0 || 
+                    pSPHLI->StartPTM == 0xFFFFFFFF || 
+                    m_LastPictureWasStill)
                 {
                     delete *it;
-                    m_HighlightList.pop_front();
+                    m_HighlightList.remove(*it);
                     it = m_HighlightList.begin();
                 }
                 else
@@ -154,7 +168,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                 // add new highlight into list
                 CHighlight* NewHighlight = new CHighlight();
                 memcpy(&NewHighlight->m_Hi, pSPHLI, sizeof(AM_PROPERTY_SPHLI));
-                if(pSPHLI->StartPTM != 0xFFFFFFFF)
+                if(pSPHLI->StartPTM != 0xFFFFFFFF && !m_LastPictureWasStill)
                 {
                     NewHighlight->rtStart = PTS2RT(pSPHLI->StartPTM);
                 }
@@ -174,8 +188,9 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                 m_HighlightList.push_back(NewHighlight);
                 fRefresh = true;
 
-                LOG(DBGLOG_ALL,("hli: %I64d - %I64d, (%d,%d) - (%d,%d) %d\n", 
+                LOG(DBGLOG_FLOW,("hli: %I64d - %I64d, (%x,%x) (%d,%d) - (%d,%d) %d\n", 
                     NewHighlight->rtStart, NewHighlight->rtStop,
+                    pSPHLI->StartPTM, pSPHLI->EndPTM,
                     pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY, &NewHighlight->m_Hi));
             }
         }
@@ -462,15 +477,23 @@ bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD
 
 void CMpegDecoder::FlushSubPic()
 {
+    CProtectCode WhileVarInScope(&m_SubPictureLock);
+
     // clear out all the subpictures
     std::list<CSubPicture*>::iterator it = m_SubPicureList.begin();
     while(it != m_SubPicureList.end())
-        delete *it++;
+    {
+        delete *it;
+        ++it;
+    }
     m_SubPicureList.clear();
 
     std::list<CHighlight*>::iterator it2 = m_HighlightList.begin();
     while(it2 != m_HighlightList.end())
-        delete *it2++;
+    {
+        delete *it2;
+        ++it2;
+    }
     m_HighlightList.clear();
 }
 
