@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.5 2003-05-08 15:58:38 adcockj Exp $
+// $Id: Utils.h,v 1.6 2003-05-08 16:20:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -61,5 +61,5 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line);
 #define LogSample
 #define LogMediaType
 #define CHECK(hr) if(FAILED(hr)) { return hr;}
-#define LogBadHRESULT;
+#define LogBadHRESULT(hr, File, Line)
 #endif

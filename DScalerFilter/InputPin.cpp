@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.10 2003-05-08 15:58:38 adcockj Exp $
+// $Id: InputPin.cpp,v 1.11 2003-05-08 16:20:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 // Revision 1.9  2003/05/08 07:00:59  adcockj
 // Couple of minor fixes
 //
@@ -458,6 +461,7 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     if(SampleProperties.dwSampleFlags | AM_SAMPLE_DATADISCONTINUITY)
     {
         dwFlags |= AM_GBF_PREVFRAMESKIPPED;
+        GuessInterlaceFlags(&SampleProperties);
     }
 
 
@@ -512,27 +516,24 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
 
     BYTE* pInBuffer = SampleProperties.pbBuffer;
     BYTE* pOutBuffer = OutSampleProperties.pbBuffer;
-    
-    if(InputBMI->biCompression == MAKEFOURCC('Y', 'U', 'Y', '2'))
+
+    switch(InputBMI->biCompression)
     {
+    case MAKEFOURCC('Y', 'U', 'Y', '2'):
         ProcessYUY2(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
-    }
-    else if(InputBMI->biCompression == MAKEFOURCC('Y', 'V', '1', '2'))
-    {
+        break;
+    case MAKEFOURCC('Y', 'V', '1', '2'):
         ProcessYV12(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
-    }
-    else if(InputBMI->biCompression == MAKEFOURCC('N', 'V', '1', '2'))
-    {
+        break;
+    case MAKEFOURCC('N', 'V', '1', '2'):
         ProcessNV12(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
-    }
-    else
-    {
+        break;
+    default:
         return E_UNEXPECTED;
     }
     
     OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
-    OutSampleProperties.dwTypeSpecificFlags = AM_VIDEO_FLAG_WEAVE;
-    OutSampleProperties.dwTypeSpecificFlags = 0;
+    OutSampleProperties.dwTypeSpecificFlags = m_VideoSampleFlag;
     OutSampleProperties.tStart = SampleProperties.tStart;
     OutSampleProperties.tStop = SampleProperties.tStop;
 
@@ -552,14 +553,15 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     }
 
     hr = SetSampleProperties(OutSample, &OutSampleProperties);
-    CHECK(hr);
-    hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
-    CHECK(hr);
-
     if(OutSampleProperties.pMediaType != NULL)
     {
         FreeMediaType(OutSampleProperties.pMediaType);
     }
+    CHECK(hr);
+
+    hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+    CHECK(hr);
+
     OutSample->Release();
     return hr;
 }
