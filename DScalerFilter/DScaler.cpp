@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.2 2003-05-01 16:19:02 adcockj Exp $
+// $Id: DScaler.cpp,v 1.3 2003-05-01 18:15:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 16:19:02  adcockj
+// Changed property pages ready for generic page
+//
 // Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
 // Initial Import
 //
@@ -355,127 +358,3 @@ STDMETHODIMP CDScaler::GetCurrentTimeFormat( GUID *pguidTimeFormat,MP_TIMEDATA *
     // \todo get working
     return E_NOTIMPL;
 }
-
-
-// we just pass all seeking calls downsteam
-
-#define GETMEDIASEEKING \
-    if(m_InputPin->m_ConnectedPin == NULL) return E_NOTIMPL; \
-    PIN_INFO PinInfo; \
-    if(FAILED(m_InputPin->m_ConnectedPin->QueryPinInfo(&PinInfo))) return E_NOTIMPL; \
-    CComQIPtr<IMediaSeeking> MediaSeeking = PinInfo.pFilter; \
-    PinInfo.pFilter->Release(); \
-    if(MediaSeeking == NULL) return E_NOTIMPL;
-
-STDMETHODIMP CDScaler::GetCapabilities(DWORD *pCapabilities)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetCapabilities(pCapabilities);
-}
-
-STDMETHODIMP CDScaler::CheckCapabilities(DWORD *pCapabilities)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->CheckCapabilities(pCapabilities);
-}
-
-STDMETHODIMP CDScaler::IsFormatSupported(const GUID *pFormat)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->IsFormatSupported(pFormat);
-}
-
-STDMETHODIMP CDScaler::QueryPreferredFormat(GUID *pFormat)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->QueryPreferredFormat(pFormat);
-}
-
-STDMETHODIMP CDScaler::GetTimeFormat(GUID *pFormat)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetTimeFormat(pFormat);
-}
-
-STDMETHODIMP CDScaler::IsUsingTimeFormat(const GUID *pFormat)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->IsUsingTimeFormat(pFormat);
-}
-
-STDMETHODIMP CDScaler::SetTimeFormat(const GUID *pFormat)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->SetTimeFormat(pFormat);
-}
-
-STDMETHODIMP CDScaler::GetDuration(LONGLONG *pDuration)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetDuration(pDuration);
-}
-
-STDMETHODIMP CDScaler::GetStopPosition(LONGLONG *pStop)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetStopPosition(pStop);
-}
-
-STDMETHODIMP CDScaler::GetCurrentPosition(LONGLONG *pCurrent)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetCurrentPosition(pCurrent);
-}
-
-STDMETHODIMP CDScaler::ConvertTimeFormat(
-                                LONGLONG *pTarget,
-                                const GUID *pTargetFormat,
-                                LONGLONG Source,
-                                const GUID *pSourceFormat
-                            )
-{
-    GETMEDIASEEKING
-    return MediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
-}
-
-STDMETHODIMP CDScaler::SetPositions( 
-                        LONGLONG *pCurrent,
-                        DWORD dwCurrentFlags,
-                        LONGLONG *pStop,
-                        DWORD dwStopFlags
-                       )
-{
-    GETMEDIASEEKING
-    return MediaSeeking->SetPositions(pCurrent, dwCurrentFlags, pStop, dwStopFlags);
-}
-
-STDMETHODIMP CDScaler::GetPositions(LONGLONG *pCurrent, LONGLONG *pStop)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetPositions(pCurrent, pStop);
-}
-
-STDMETHODIMP CDScaler::GetAvailable(LONGLONG *pEarliest, LONGLONG *pLatest)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetAvailable(pEarliest, pLatest);
-}
-
-STDMETHODIMP CDScaler::SetRate(double dRate)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->SetRate(dRate);
-}
-
-STDMETHODIMP CDScaler::GetRate(double *pdRate)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetRate(pdRate);
-}
-
-STDMETHODIMP CDScaler::GetPreroll(LONGLONG *pllPreroll)
-{
-    GETMEDIASEEKING
-    return MediaSeeking->GetPreroll(pllPreroll);
-}
-

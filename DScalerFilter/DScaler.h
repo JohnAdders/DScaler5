@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.2 2003-05-01 16:19:36 adcockj Exp $
+// $Id: DScaler.h,v 1.3 2003-05-01 18:15:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -33,7 +33,6 @@ class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScal
     public ISpecifyPropertyPages,
     public IBaseFilter,
 	public IPersistStream,
-    public IMediaSeeking,
     public IMediaParamInfo,
     public IMediaParams
 {
@@ -49,7 +48,6 @@ BEGIN_COM_MAP(CDScaler)
 	COM_INTERFACE_ENTRY(IBaseFilter)
 	COM_INTERFACE_ENTRY(IMediaFilter)
 	COM_INTERFACE_ENTRY2(IPersist, IPersistStream)
-	COM_INTERFACE_ENTRY(IMediaSeeking)
 	COM_INTERFACE_ENTRY(ISpecifyPropertyPages)
 	COM_INTERFACE_ENTRY(IPersistStream)
     COM_INTERFACE_ENTRY(IMediaParamInfo)
@@ -77,35 +75,6 @@ public:
     STDMETHOD(GetSyncSource)(IReferenceClock **pClock);
     STDMETHOD(GetClassID)(CLSID __RPC_FAR *pClassID);
 
-// IMediaSeeking
-public:
-    STDMETHOD(GetCapabilities)(DWORD *pCapabilities);
-    STDMETHOD(CheckCapabilities)(DWORD *pCapabilities);
-    STDMETHOD(IsFormatSupported)(const GUID *pFormat);
-    STDMETHOD(QueryPreferredFormat)(GUID *pFormat);
-    STDMETHOD(GetTimeFormat)(GUID *pFormat);
-    STDMETHOD(IsUsingTimeFormat)(const GUID *pFormat);
-    STDMETHOD(SetTimeFormat)(const GUID *pFormat);
-    STDMETHOD(GetDuration)(LONGLONG *pDuration);
-    STDMETHOD(GetStopPosition)(LONGLONG *pStop);
-    STDMETHOD(GetCurrentPosition)(LONGLONG *pCurrent);
-    STDMETHOD(ConvertTimeFormat)(
-                                    LONGLONG *pTarget,
-                                    const GUID *pTargetFormat,
-                                    LONGLONG Source,
-                                    const GUID *pSourceFormat
-                                );
-    STDMETHOD(SetPositions)( 
-                            LONGLONG *pCurrent,
-                            DWORD dwCurrentFlags,
-                            LONGLONG *pStop,
-                            DWORD dwStopFlags
-                           );
-    STDMETHOD(GetPositions)(LONGLONG *pCurrent, LONGLONG *pStop);
-    STDMETHOD(GetAvailable)(LONGLONG *pEarliest, LONGLONG *pLatest);
-    STDMETHOD(SetRate)(double dRate);
-    STDMETHOD(GetRate)(double *pdRate);
-    STDMETHOD(GetPreroll)(LONGLONG *pllPreroll);
 
 // ISpecifyPropertyPages
 public:

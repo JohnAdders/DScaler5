@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.2 2003-05-01 16:22:24 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.3 2003-05-01 18:15:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 16:22:24  adcockj
+// Dynamic connection test code
+//
 // Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
 // Initial Import
 //
@@ -514,5 +517,127 @@ void COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
         ++Types;
         ClearMediaType(Types);
     }
+}
+
+// we just pass all seeking calls downsteam
+
+#define GETMEDIASEEKING \
+    if(m_InputPin->m_ConnectedPin == NULL) return E_NOTIMPL; \
+    PIN_INFO PinInfo; \
+    if(FAILED(m_InputPin->m_ConnectedPin->QueryPinInfo(&PinInfo))) return E_NOTIMPL; \
+    CComQIPtr<IMediaSeeking> MediaSeeking = PinInfo.pFilter; \
+    PinInfo.pFilter->Release(); \
+    if(MediaSeeking == NULL) return E_NOTIMPL;
+
+STDMETHODIMP COutputPin::GetCapabilities(DWORD *pCapabilities)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetCapabilities(pCapabilities);
+}
+
+STDMETHODIMP COutputPin::CheckCapabilities(DWORD *pCapabilities)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->CheckCapabilities(pCapabilities);
+}
+
+STDMETHODIMP COutputPin::IsFormatSupported(const GUID *pFormat)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->IsFormatSupported(pFormat);
+}
+
+STDMETHODIMP COutputPin::QueryPreferredFormat(GUID *pFormat)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->QueryPreferredFormat(pFormat);
+}
+
+STDMETHODIMP COutputPin::GetTimeFormat(GUID *pFormat)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetTimeFormat(pFormat);
+}
+
+STDMETHODIMP COutputPin::IsUsingTimeFormat(const GUID *pFormat)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->IsUsingTimeFormat(pFormat);
+}
+
+STDMETHODIMP COutputPin::SetTimeFormat(const GUID *pFormat)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->SetTimeFormat(pFormat);
+}
+
+STDMETHODIMP COutputPin::GetDuration(LONGLONG *pDuration)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetDuration(pDuration);
+}
+
+STDMETHODIMP COutputPin::GetStopPosition(LONGLONG *pStop)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetStopPosition(pStop);
+}
+
+STDMETHODIMP COutputPin::GetCurrentPosition(LONGLONG *pCurrent)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetCurrentPosition(pCurrent);
+}
+
+STDMETHODIMP COutputPin::ConvertTimeFormat(
+                                LONGLONG *pTarget,
+                                const GUID *pTargetFormat,
+                                LONGLONG Source,
+                                const GUID *pSourceFormat
+                            )
+{
+    GETMEDIASEEKING
+    return MediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
+}
+
+STDMETHODIMP COutputPin::SetPositions( 
+                        LONGLONG *pCurrent,
+                        DWORD dwCurrentFlags,
+                        LONGLONG *pStop,
+                        DWORD dwStopFlags
+                       )
+{
+    GETMEDIASEEKING
+    return MediaSeeking->SetPositions(pCurrent, dwCurrentFlags, pStop, dwStopFlags);
+}
+
+STDMETHODIMP COutputPin::GetPositions(LONGLONG *pCurrent, LONGLONG *pStop)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetPositions(pCurrent, pStop);
+}
+
+STDMETHODIMP COutputPin::GetAvailable(LONGLONG *pEarliest, LONGLONG *pLatest)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetAvailable(pEarliest, pLatest);
+}
+
+STDMETHODIMP COutputPin::SetRate(double dRate)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->SetRate(dRate);
+}
+
+STDMETHODIMP COutputPin::GetRate(double *pdRate)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetRate(pdRate);
+}
+
+STDMETHODIMP COutputPin::GetPreroll(LONGLONG *pllPreroll)
+{
+    GETMEDIASEEKING
+    return MediaSeeking->GetPreroll(pllPreroll);
 }
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.2 2003-05-01 16:22:24 adcockj Exp $
+// $Id: OutputPin.h,v 1.3 2003-05-01 18:15:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -32,6 +32,7 @@ class ATL_NO_VTABLE COutputPin :
 	public CComObjectRootEx<CComMultiThreadModel>,
 	public IPin,
     public IUpdateMediaTypes,
+    public IMediaSeeking,
     public IQualityControl
 {
 public:
@@ -42,6 +43,7 @@ public:
 BEGIN_COM_MAP(COutputPin)
 	COM_INTERFACE_ENTRY(IPin)
     COM_INTERFACE_ENTRY(IQualityControl)
+	COM_INTERFACE_ENTRY(IMediaSeeking)
 END_COM_MAP()
 
 // IPin
@@ -67,6 +69,36 @@ public:
 public:
     STDMETHOD(Notify)(IBaseFilter *pSelf, Quality q);
     STDMETHOD(SetSink)(IQualityControl *piqc);
+
+// IMediaSeeking
+public:
+    STDMETHOD(GetCapabilities)(DWORD *pCapabilities);
+    STDMETHOD(CheckCapabilities)(DWORD *pCapabilities);
+    STDMETHOD(IsFormatSupported)(const GUID *pFormat);
+    STDMETHOD(QueryPreferredFormat)(GUID *pFormat);
+    STDMETHOD(GetTimeFormat)(GUID *pFormat);
+    STDMETHOD(IsUsingTimeFormat)(const GUID *pFormat);
+    STDMETHOD(SetTimeFormat)(const GUID *pFormat);
+    STDMETHOD(GetDuration)(LONGLONG *pDuration);
+    STDMETHOD(GetStopPosition)(LONGLONG *pStop);
+    STDMETHOD(GetCurrentPosition)(LONGLONG *pCurrent);
+    STDMETHOD(ConvertTimeFormat)(
+                                    LONGLONG *pTarget,
+                                    const GUID *pTargetFormat,
+                                    LONGLONG Source,
+                                    const GUID *pSourceFormat
+                                );
+    STDMETHOD(SetPositions)( 
+                            LONGLONG *pCurrent,
+                            DWORD dwCurrentFlags,
+                            LONGLONG *pStop,
+                            DWORD dwStopFlags
+                           );
+    STDMETHOD(GetPositions)(LONGLONG *pCurrent, LONGLONG *pStop);
+    STDMETHOD(GetAvailable)(LONGLONG *pEarliest, LONGLONG *pLatest);
+    STDMETHOD(SetRate)(double dRate);
+    STDMETHOD(GetRate)(double *pdRate);
+    STDMETHOD(GetPreroll)(LONGLONG *pllPreroll);
 
 public:
     BOOL HasChanged();
