@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.24 2004-05-10 06:40:27 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.25 2004-05-10 16:48:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.24  2004/05/10 06:40:27  adcockj
+// Fixes for better compatability with PES streams
+//
 // Revision 1.23  2004/05/06 06:38:06  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -231,6 +234,8 @@ CMpegDecoder::CMpegDecoder() :
 
     InitMediaType(&m_InternalMT);
     m_NeedToAttachFormat = false;
+
+	ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -1051,15 +1056,16 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 			return S_OK;
 			break;
  		case STATE_INVALID:
-            // this state seems to happen quite a lot in DVD
-            // streams but ignoring it doesn't seem to do amything bad
-            // although the docs for the decoder says that things should 
-            // be screwed up
+			// the decoder seems to recover OK now
+			// so we are just going to ignore these
  			LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
  			break;
 		case STATE_SEQUENCE:
-        //case STATE_SEQUENCE_MODIFIED:
             hr = ProcessNewSequence();
+            CHECK(hr);
+			break;
+		case STATE_SEQUENCE_MODIFIED:
+            hr = ProcessModifiedSequence();
             CHECK(hr);
 			break;
 		case STATE_PICTURE:
@@ -1072,7 +1078,14 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
             hr = ProcessPictureDisplay();
             CHECK(hr);
 			break;
+		case STATE_GOP:
+		case STATE_SEQUENCE_REPEATED:
+		case STATE_SLICE_1ST:
+		case STATE_PICTURE_2ND:
+			// don't care about these
+			break;
 		default:
+ 			LOG(DBGLOG_FLOW, ("Unexpected State in stream %d\n", state));
 		    break;
 		}
     }
@@ -1840,20 +1853,23 @@ HRESULT CMpegDecoder::ProcessNewSequence()
         ChromaSizeDivider = 1;
 	}
 
+	memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
+
+
 	// frame buffer
-	m_MpegWidth = mpeg2_info(m_dec)->sequence->picture_width;
-	m_MpegHeight = mpeg2_info(m_dec)->sequence->picture_height;
-	m_InternalPitch = mpeg2_info(m_dec)->sequence->width;
+	m_MpegWidth = m_CurrentSequence.picture_width;
+	m_MpegHeight = m_CurrentSequence.picture_height;
+	m_InternalPitch = m_CurrentSequence.width;
 
     mpeg2_custom_fbuf(m_dec, 1);
 
     for(int i(0); i < NUM_BUFFERS; ++i)
     {
-        hr = m_Buffers[i].AllocMem(m_MpegHeight * m_InternalPitch, m_MpegHeight * m_InternalPitch / ChromaSizeDivider);
+        hr = m_Buffers[i].AllocMem(m_CurrentSequence.height * m_InternalPitch, m_CurrentSequence.height * m_InternalPitch / ChromaSizeDivider);
         CHECK(hr);
     }
 
-    hr = m_SubPicBuffer.AllocMem(m_MpegHeight * m_InternalPitch, m_MpegHeight * m_InternalPitch / ChromaSizeDivider);
+    hr = m_SubPicBuffer.AllocMem(m_CurrentSequence.height * m_InternalPitch, m_CurrentSequence.height * m_InternalPitch / ChromaSizeDivider);
     CHECK(hr);
 
     m_CurrentPicture = NULL;
@@ -1866,12 +1882,6 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
 
-    // reset AFD to show all on new sequence
-	if(m_AFD)
-	{
-		m_AFD = 8;
-	}
-
 
     // todo move out to helper function so that we can
     // cope with dynamically changes to sequence without
@@ -1879,7 +1889,37 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_OutputWidth = m_MpegWidth;
 	m_OutputHeight = m_MpegHeight;
 
-    // optionally use accurate aspect ratio
+    UpdateAspectRatio();
+
+	return S_OK;
+}
+
+HRESULT CMpegDecoder::ProcessModifiedSequence()
+{
+	// On some channels we get notification of aspect ratio change
+	// via this mechinism however we need to ensure  that we handle the case
+	// where nothing really has changed
+	if(m_CurrentSequence.pixel_height != mpeg2_info(m_dec)->sequence->pixel_height ||
+		m_CurrentSequence.pixel_width != mpeg2_info(m_dec)->sequence->pixel_width ||
+		m_CurrentSequence.display_height != mpeg2_info(m_dec)->sequence->display_height ||
+		m_CurrentSequence.display_width != mpeg2_info(m_dec)->sequence->display_width)
+	{
+		memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
+		UpdateAspectRatio();
+	}
+	return S_OK;
+}
+
+
+void CMpegDecoder::UpdateAspectRatio()
+{
+    // reset AFD to show all on new sequence
+	if(m_AFD)
+	{
+		m_AFD = 8;
+	}
+    
+	// optionally use accurate aspect ratio
 	if(GetParamBool(DOACCURATEASPECT))
 	{
 		unsigned int PixelX, PixelY;
@@ -1889,27 +1929,24 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	}
 	else
 	{
-		m_ARMpegX = mpeg2_info(m_dec)->sequence->pixel_width;
-		m_ARMpegY = mpeg2_info(m_dec)->sequence->pixel_height;
+		m_ARMpegX = m_CurrentSequence.pixel_width;
+		m_ARMpegY = m_CurrentSequence.pixel_height;
 	}
 
-	m_ARMpegX *= mpeg2_info(m_dec)->sequence->display_width;
-	m_ARMpegY *= mpeg2_info(m_dec)->sequence->display_height;
+	m_ARMpegX *= m_CurrentSequence.display_width;
+	m_ARMpegY *= m_CurrentSequence.display_height;
 
     Simplify(m_ARMpegX, m_ARMpegY);
 
-	LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", mpeg2_info(m_dec)->sequence->pixel_width,
-                                                    mpeg2_info(m_dec)->sequence->pixel_height,
-                                                    mpeg2_info(m_dec)->sequence->display_width,
-                                                    mpeg2_info(m_dec)->sequence->display_height,
+	LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", m_CurrentSequence.pixel_width,
+                                                    m_CurrentSequence.pixel_height,
+                                                    m_CurrentSequence.display_width,
+                                                    m_CurrentSequence.display_height,
                                                     m_OutputWidth,
                                                     m_OutputHeight));
 
 
 	CorrectOutputSize();
-
-
-    return S_OK;
 }
 
 CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
@@ -2045,10 +2082,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
             break;
         }
 
-        // we should get updates about the timings only on I frames
-        // sometimes we get them more frequently
-        // \todo check the I frame thing
-		if((picture->tag != 0 || picture->tag2 != 0) && ((m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I))
+		if((picture->tag != 0 || picture->tag2 != 0))
 		{
 			LARGE_INTEGER temp;
 			temp.HighPart = picture->tag;
@@ -2058,13 +2092,6 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
 		}
 		else
 		{
-            if((picture->tag != 0 || picture->tag2 != 0))
-            {
-			    LARGE_INTEGER temp;
-			    temp.HighPart = picture->tag;
-			    temp.LowPart = picture->tag2;
-                LOG(DBGLOG_FLOW, ("Ignored non I frame time - %010I64d\n", temp.QuadPart));
-            }
             if(LastPicture != NULL)
             {
 			    m_CurrentPicture->m_rtStart = LastPicture->m_rtStop;
