@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.6 2004-03-25 18:01:30 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.7 2004-05-10 06:40:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/03/25 18:01:30  adcockj
+// Fixed issues with downmixing
+//
 // Revision 1.5  2004/03/05 22:14:25  laurentg
 // Padding to make MP3 over S/PDIF working - work only with MP3 48 KHz
 //
@@ -152,7 +155,7 @@ HRESULT CAudioDecoder::ProcessMPA()
             // check that the incomming format is reasonable
             // sometimes we get told we have a lower format than we
             // actually get
-		    if(wfein->nChannels > m_synth.pcm.channels || wfein->nSamplesPerSec > m_synth.pcm.samplerate)
+		    if(wfein->nSamplesPerSec > m_synth.pcm.samplerate)
 			    continue;
 
 		    const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.23 2004-05-06 06:38:06 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.24 2004-05-10 06:40:27 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.23  2004/05/06 06:38:06  adcockj
+// Interim fixes for connection and PES streams
+//
 // Revision 1.22  2004/04/29 16:16:45  adcockj
 // Yet more reconnection fixes
 //
@@ -508,15 +511,14 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     {
     	int wout = 0, hout = 0;
 		long arxout = 0, aryout = 0;
-    	Result = (ExtractDim(pmt, wout, hout, arxout, aryout) &&
-		            m_OutputHeight == abs((int)hout)) && 
+    	Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
 				    pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
-                    pmt->subtype == MEDIASUBTYPE_RGB555);
+                    pmt->subtype == MEDIASUBTYPE_RGB555));
 		if(m_InsideReconnect)
 		{
 			m_Pitch = wout;
@@ -1056,6 +1058,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
  			LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
  			break;
 		case STATE_SEQUENCE:
+        //case STATE_SEQUENCE_MODIFIED:
             hr = ProcessNewSequence();
             CHECK(hr);
 			break;
@@ -1393,6 +1396,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 		{
 			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
 			bmi = &vih->bmiHeader;
+            vih->AvgTimePerFrame = m_AvgTimePerFrame;
 			bmi->biXPelsPerMeter = m_MpegWidth * m_ARMpegX * m_ARAdjustX;
 			bmi->biYPelsPerMeter = m_MpegHeight * m_ARMpegY * m_ARAdjustY;
 			Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
@@ -1402,6 +1406,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 		{
 			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
 			bmi = &vih->bmiHeader;
+            vih->AvgTimePerFrame = m_AvgTimePerFrame;
 		    vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
 		    vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
 			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
@@ -1429,7 +1434,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 				bmi->biWidth = m_OutputWidth;
 			}
 
-			if(bmi->biHeight > 0)
+            if(bmi->biHeight > 0)
 			{
     			bmi->biHeight = m_OutputHeight;
 			}
@@ -1587,7 +1592,8 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
     if(m_dec != NULL)
     {
-    	mpeg2_reset(m_dec, 1);
+    	mpeg2_free(m_dec);
+        m_dec = mpeg2_init();
         if(cbSequenceHeader > 0)
         {
     	    mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
@@ -1619,8 +1625,8 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 	if(m_DoPanAndScan)
 	{
 		pIn += m_PanScanOffsetX + pitchIn*m_PanScanOffsetY;
-		pInU += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/2;
-		pInV += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/2;
+		pInU += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
+		pInV += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
 	}
 
 
@@ -1860,20 +1866,18 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
 
-
-    // reset any aspect adjusments on new sequence
-	m_ARAdjustX = m_ARAdjustY = 1;
-
-	m_OutputWidth = m_MpegWidth;
-	m_OutputHeight = m_MpegHeight;
-
-	// reset AFD to show all on new sequence
+    // reset AFD to show all on new sequence
 	if(m_AFD)
 	{
 		m_AFD = 8;
 	}
 
-	CorrectOutputSize();
+
+    // todo move out to helper function so that we can
+    // cope with dynamically changes to sequence without
+    // breaking the flow
+	m_OutputWidth = m_MpegWidth;
+	m_OutputHeight = m_MpegHeight;
 
     // optionally use accurate aspect ratio
 	if(GetParamBool(DOACCURATEASPECT))
@@ -1893,6 +1897,17 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_ARMpegY *= mpeg2_info(m_dec)->sequence->display_height;
 
     Simplify(m_ARMpegX, m_ARMpegY);
+
+	LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", mpeg2_info(m_dec)->sequence->pixel_width,
+                                                    mpeg2_info(m_dec)->sequence->pixel_height,
+                                                    mpeg2_info(m_dec)->sequence->display_width,
+                                                    mpeg2_info(m_dec)->sequence->display_height,
+                                                    m_OutputWidth,
+                                                    m_OutputHeight));
+
+
+	CorrectOutputSize();
+
 
     return S_OK;
 }
@@ -2202,8 +2217,8 @@ void CMpegDecoder::CorrectOutputSize()
 				}
 				else
 				{
-					LetterBox(4,3);
-					PillarBox(7,6);
+					//LetterBox(4,3);
+					//PillarBox(7,6);
 				}
 				break;
 			// 16:9 with shoot and protect 4:3
@@ -2214,8 +2229,8 @@ void CMpegDecoder::CorrectOutputSize()
 				}
 				else
 				{
-					LetterBox(4,3);
-					PillarBox(4,3);
+					//LetterBox(4,3);
+					//PillarBox(4,3);
 				}
 				break;
 			// reserved
