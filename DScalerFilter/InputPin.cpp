@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.13 2003-05-09 15:51:05 adcockj Exp $
+// $Id: InputPin.cpp,v 1.14 2003-05-10 13:21:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2003/05/09 15:51:05  adcockj
+// Code tidy up
+// Added aspect ratio parameters
+//
 // Revision 1.12  2003/05/09 07:03:25  adcockj
 // Bug fixes for new format code
 //
@@ -454,6 +458,8 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
     AM_SAMPLE2_PROPERTIES InSampleProperties;
     AM_SAMPLE2_PROPERTIES OutSampleProperties;
     IMediaSample* OutSample = NULL;
+    ZeroMemory(&InSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
+    ZeroMemory(&OutSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
 
     __try
     {
@@ -473,6 +479,14 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         // a NULL means the type is the same as last time
         if(InSampleProperties.pMediaType != NULL)
         {
+            // this shouldn't eer fail as a good filter will have
+            // called this already but I've seen a filter ignore the
+            // results of a queryaccept
+            hr = QueryAccept(InSampleProperties.pMediaType);
+            if(hr != S_OK)
+            {
+                return VFW_E_INVALIDMEDIATYPE;
+            }
             // note that doing this here prevents us from 
             // sending data while the reconnection is going on
             // be careful if we move to threads here

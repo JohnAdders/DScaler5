@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.11 2003-05-09 15:51:05 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.12 2003-05-10 13:21:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2003/05/09 15:51:05  adcockj
+// Code tidy up
+// Added aspect ratio parameters
+//
 // Revision 1.10  2003/05/09 07:03:26  adcockj
 // Bug fixes for new format code
 //
@@ -692,9 +696,6 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
         NewFormat->dwBitRate = OldFormat->dwBitRate;
         NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
         NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
-
-        NewFormat->rcSource = OldFormat->rcSource;
-        NewFormat->rcTarget = OldFormat->rcTarget;
     }
     else if(InputType->formattype == FORMAT_VideoInfo)
     {
@@ -728,9 +729,6 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
         NewFormat->dwBitRate = OldFormat->dwBitRate;
         NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
         NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
-
-        NewFormat->rcSource = OldFormat->rcSource;
-        NewFormat->rcTarget = OldFormat->rcTarget;
     }
     else
     {
@@ -761,22 +759,14 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
 
     NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
     
-    if(NewFormat->rcSource.bottom == 0)
-    {
-        NewFormat->rcSource.bottom = Height;
-    }
-    if(NewFormat->rcSource.right == 0)
-    {
-        NewFormat->rcSource.right = Width;
-    }
-    if(NewFormat->rcTarget.bottom == 0)
-    {
-        NewFormat->rcTarget.bottom = Height;
-    }
-    if(NewFormat->rcTarget.right == 0)
-    {
-        NewFormat->rcTarget.right = Width;
-    }
+    NewFormat->rcSource.top = 0;
+    NewFormat->rcSource.bottom = Height;
+    NewFormat->rcSource.left = 0;
+    NewFormat->rcSource.right = Width;
+    NewFormat->rcTarget.top = 0;
+    NewFormat->rcTarget.bottom = Height;
+    NewFormat->rcTarget.left = 0;
+    NewFormat->rcTarget.right = Width;
     
     NewFormat->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 
