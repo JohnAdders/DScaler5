@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.8 2004-07-28 13:59:30 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.9 2004-07-29 08:31:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/28 13:59:30  adcockj
+// spdif fixes
+//
 // Revision 1.7  2004/07/26 17:08:13  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -235,6 +238,9 @@ HRESULT CAudioDecoder::ProcessLPCM()
             CHECK(hr);
         }
     }
+
+    ASSERT(i == LenIn);
+    m_buff.resize(0);
 
     return hr;
 }
