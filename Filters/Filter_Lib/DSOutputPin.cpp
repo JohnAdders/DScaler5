@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.15 2004-07-20 16:37:57 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.16 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/07/20 16:37:57  adcockj
+// Fixes for main issues raised in testing of 0.0.1
+//  - Improved parameter handling
+//  - Fixed some overlay issues
+//  - Auto aspect ratio with VMR
+//  - Fixed some overlay stutters
+//  - Fixed some push filter issues
+//  - ffdshow and DirectVobSub connection issues
+//
+// Added
+//  - Hardcode for PAL setting for ffdshow
+//  - Added choice of IDCT for testing
+//
 // Revision 1.14  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -597,7 +610,13 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     Props.cbBuffer = max(Props.cbBuffer, PropsWeWant.cbBuffer);
     Props.cbPrefix = max(Props.cbPrefix, PropsWeWant.cbPrefix);
     Props.cBuffers = max(Props.cBuffers, PropsWeWant.cBuffers);
-    
+
+    // handle fixed sized buffers
+    if(pmt->bFixedSizeSamples)
+    {
+        Props.cbBuffer = max(Props.cbBuffer, (long)pmt->lSampleSize);
+    }
+
     hr = m_Allocator->SetProperties(&Props, &PropsAct);
 
     // \todo see if we need this rubbish

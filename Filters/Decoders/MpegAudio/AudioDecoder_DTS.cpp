@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.9 2004-07-24 21:20:37 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.10 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/24 21:20:37  adcockj
+// Patch for international lanugauges in OSD from Alexander Choporov
+//
 // Revision 1.8  2004/07/16 15:45:19  adcockj
 // Fixed compilation issues under .NET
 // Improved (hopefully) handling of negative times and preroll
@@ -204,59 +207,36 @@ HRESULT CAudioDecoder::ProcessDTS()
 
         if((size = dts_syncinfo(m_dts_state, p, &flags, &sample_rate, &bit_rate, &frame_length)) > 0) 
         {
-            LOG(DBGLOG_FLOW, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
-    
             bool fEnoughData = p + size <= end;
 
             if(fEnoughData)
             {
+                LOG(DBGLOG_ALL, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
+
+                if(m_BufferSizeAtFrameStart <= 0)
+                {
+                    UpdateStartTime();
+                }
+
                 if(m_ConnectedAsSpdif)
                 {
                     int len = frame_length * 4; 
 
-                    SI(IMediaSample) pOut;
-                    WORD* pDataOut = NULL;
-
-                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                    CHECK(hr);
-
-                    pDataOut[0] = 0xf872;
-                    pDataOut[1] = 0x4e1f;
                     if(frame_length == 512)
                     {
-                        pDataOut[2] = 0x000b;
+                        return SendDigitalData(0x000b, size, len, (char*)p);
                     }
                     else if(frame_length == 1024)
                     {
-                        pDataOut[2] = 0x000c;
+                        return SendDigitalData(0x000c, size, len, (char*)p);
                     }
                     else
                     {
-                        pDataOut[2] = 0x000d;
+                        return SendDigitalData(0x000d, size, len, (char*)p);
                     }
-                    pDataOut[3] = size*8;
-
-                    if(size + 8 > len)
-                    {
-                        return E_UNEXPECTED;
-                    }
-
-                    _swab((char*)p, (char*)&pDataOut[4], size);
-                  
-                    if((len - size - 8) > 0)
-                    {
-                        ZeroMemory((char*)pDataOut + size + 8, len - size - 8);
-                    }
-
-                    REFERENCE_TIME rtDur = 10000000i64 * frame_length / sample_rate; // should be 106667 * 100 ns
-
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-                    if(S_OK != hr)
-                        return hr;
                 }
                 else
                 {
-
                     switch(GetParamEnum(SPEAKERCONFIG))
                     {
                     case SPCFG_STEREO:
@@ -293,12 +273,7 @@ HRESULT CAudioDecoder::ProcessDTS()
     
                         int blocks = dts_blocks_num(m_dts_state); 
 
-                        SI(IMediaSample) pOut;
-                        BYTE* pDataOut = NULL;
-                        DWORD len = blocks*256*m_ChannelsRequested*m_SampleSize;
-
-                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
-                        CHECK(hr);
+                        HRESULT hr = S_OK;
 
                         int i = 0;
                         CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
@@ -328,23 +303,30 @@ HRESULT CAudioDecoder::ProcessDTS()
 
                             for(int j = 0; j < 256; j++)
                             {
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = GetOutputSampleAndPointer();
+                                    CHECK(hr);
+                                }
+
                                 for(int ch = 0; ch < m_ChannelsRequested; ch++)
                                 {
-                                    pConvFunc(pDataOut, Channels[ch][j]);
+                                    pConvFunc(m_pDataOut, Channels[ch][j]);
+                                }
+
+                                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                                ASSERT(m_BytesLeftInBuffer >=0);
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = Deliver();
+                                    CHECK(hr);
                                 }
                             }
-                        }
-
-                        if(i == blocks)
-                        {
-                            REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested);
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-                            if(S_OK != hr)
-                                return hr;
                         }
                     }
                 }
                 p += size;
+                m_BufferSizeAtFrameStart -= size;
             }
 
             memmove(base, p, end - p);

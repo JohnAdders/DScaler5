@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.12 2004-07-16 15:45:19 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.13 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/07/16 15:45:19  adcockj
+// Fixed compilation issues under .NET
+// Improved (hopefully) handling of negative times and preroll
+// Changed name of filter
+//
 // Revision 1.11  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -122,6 +127,14 @@ HRESULT CAudioDecoder::ProcessMPA()
             continue;
         }
 
+        if(m_BufferSizeAtFrameStart <= 0)
+        {
+            UpdateStartTime();
+        }
+        
+        short len = m_stream.next_frame - m_stream.this_frame;
+        m_BufferSizeAtFrameStart -= len;
+
         if(GetParamBool(MPEGOVERSPDIF) && m_ConnectedAsSpdif)
         {
             // Send the undecoded byte stream over spdif
@@ -131,35 +144,16 @@ HRESULT CAudioDecoder::ProcessMPA()
             if(m_InputSampleRate > m_frame.header.samplerate)
                 continue;
 
-            DWORD len = m_stream.next_frame - m_stream.this_frame;
+            long FinalLen = m_frame.header.duration.fraction * m_frame.header.samplerate * 4 / MAD_TIMER_RESOLUTION;
 
-            SI(IMediaSample) pOut;
-            WORD* pDataOut = NULL;
-
-            DWORD block_size = (m_frame.header.layer == MAD_LAYER_I) ? BLOCK_SIZE_LAYER1 : BLOCK_SIZE_LAYER23;
-
-            HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, block_size);
-            CHECK(hr);
-            
-            memset((char*)pDataOut, 0, block_size);
-            pDataOut[0] = 0xf872;
-            pDataOut[1] = 0x4e1f;
             if(m_frame.header.layer == MAD_LAYER_I)
             {
-                pDataOut[2] = 0x0004;
+                return SendDigitalData(0x0004, len, FinalLen, (char*)m_stream.this_frame);
             }
             else
             {
-                pDataOut[2] = 0x0005;
+                return SendDigitalData(0x0005, len, FinalLen, (char*)m_stream.this_frame);
             }
-            pDataOut[3] = (WORD)len*8;
-            _swab((char*)m_stream.this_frame, (char*)&pDataOut[4], len);
-            
-            REFERENCE_TIME rtDur = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;
-
-            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-            if(S_OK != hr)
-                return hr;
         }
         else
         {
@@ -174,80 +168,75 @@ HRESULT CAudioDecoder::ProcessMPA()
             const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
             const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
 
+            HRESULT hr = S_OK;
+
             if(m_CanReconnect && m_synth.pcm.samplerate != m_InputSampleRate)
             {
-                HRESULT hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, 2, 0, 32);
+                hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, 2, 0, 32);
                 m_NeedToAttachFormat = true;
                 m_ConnectedAsSpdif = false;
                 CHECK(hr);
             }
+
             DWORD len = m_synth.pcm.length*m_ChannelsRequested*m_SampleSize;
 
-            SI(IMediaSample) pOut;
-            BYTE* pDataOut = NULL;
-
-            HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-            CHECK(hr);
-
-            unsigned short i;
             CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
+            int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
 
-            if(m_synth.pcm.channels == 2)
+            for(unsigned short i = 0; i < m_synth.pcm.length; i++)
             {
-                int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
-                for(i = 0; i < m_synth.pcm.length; i++)
+                if(m_BytesLeftInBuffer == 0)
                 {
-                    pConvFunc(pDataOut, *left_ch++);
-                    pConvFunc(pDataOut, *right_ch++);
+                    hr = GetOutputSampleAndPointer();
+                    CHECK(hr);
+                }
+
+                if(m_synth.pcm.channels == 2)
+                {
+                    pConvFunc(m_pDataOut, *left_ch++);
+                    pConvFunc(m_pDataOut, *right_ch++);
                     if(Padding > 0)
                     {
-                        memset(pDataOut, 0, Padding);
-                        pDataOut += Padding;
+                        memset(m_pDataOut, 0, Padding);
+                        m_pDataOut += Padding;
                     }
                 }
-            }
-            // else upconvert mono to stereo
-            // TODO: note that the volume is halved in a very simplistic way
-            // it may be worth improving this if people notice
-            else if((m_ChannelMask & SPEAKER_FRONT_CENTER) == 0)
-            {
-                int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
-                for(i = 0; i < m_synth.pcm.length; i++)
+                // else upconvert mono to stereo
+                // TODO: note that the volume is halved in a very simplistic way
+                // it may be worth improving this if people notice
+                else if((m_ChannelMask & SPEAKER_FRONT_CENTER) == 0)
                 {
-                    pConvFunc(pDataOut, *left_ch>>1);
-                    pConvFunc(pDataOut, *left_ch++>>1);
+                    pConvFunc(m_pDataOut, *left_ch>>1);
+                    pConvFunc(m_pDataOut, *left_ch++>>1);
                     if(Padding > 0)
                     {
-                        memset(pDataOut, 0, Padding);
-                        pDataOut += Padding;
+                        memset(m_pDataOut, 0, Padding);
+                        m_pDataOut += Padding;
                     }
                 }
-            }
-            // otherwise send mono to centre speaker always third
-            else
-            {
-                for(i = 0; i < m_synth.pcm.length; i++)
+                // otherwise send mono to centre speaker always third
+                else
                 {
                     for(int j = 0; j < m_ChannelsRequested; ++j)
                     {
                         if(j == 2)
                         {
-                            pConvFunc(pDataOut, *left_ch++);
+                            pConvFunc(m_pDataOut, *left_ch++);
                         }
                         else
                         {
-                            pConvFunc(pDataOut, 0);
+                            pConvFunc(m_pDataOut, 0);
                         }
                     }
                 }
+                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                ASSERT(m_BytesLeftInBuffer >=0);
+                if(m_BytesLeftInBuffer == 0)
+                {
+                    hr = Deliver();
+                    CHECK(hr);
+                }
             }
-    
-            REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_ChannelsRequested*m_SampleSize);
-            REFERENCE_TIME rtDur2 = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;
-
-            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur2);
-            if(S_OK != hr)
-                return hr;
         }
     }
 

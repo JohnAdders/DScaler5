@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.24 2004-07-23 16:25:07 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.25 2004-07-26 17:08:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.24  2004/07/23 16:25:07  adcockj
+// Fix issues with changing buffer size with wave renderer to hopefully fix DTS problem
+//
 // Revision 1.23  2004/07/20 20:01:59  adcockj
 // Fixed accidental check in of test code
 //
@@ -179,10 +182,6 @@ CAudioDecoder::CAudioDecoder() :
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
-
-    // request buffer large enough for 100ms of 6 channel 32 bit audio
-    m_OutputBufferSize = 48000*6*(32/8)/10; 
-
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -303,8 +302,10 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     }
     else if(pPin == m_AudioOutPin)
     {
+        // we specify a fixed size buffer and so size is already
+        // taken care of
         pProperties->cBuffers = 1;
-        pProperties->cbBuffer = m_OutputBufferSize; 
+        pProperties->cbBuffer = 0; 
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
     }
@@ -548,6 +549,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID && m_rtNextFrameStart == _I64_MIN)
     {
         m_rtNextFrameStart = pSampleProperties->tStart;
+        m_BufferSizeAtFrameStart = m_buff.size();
     }
     else
     {
@@ -696,58 +698,37 @@ HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nC
 
 }
 
-HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFERENCE_TIME rtDur2)
+HRESULT CAudioDecoder::Deliver()
 {
     HRESULT hr = S_OK;
+    REFERENCE_TIME rtDur = 10000000i64 * m_InternalMT.lSampleSize / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
 
-    if(m_rtNextFrameStart != _I64_MIN)
-    {
-        if(!GetParamBool(JITTERREMOVER) || abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > rtDur || m_IsDiscontinuity)
-        {
-            if(abs((long)(m_rtNextFrameStart - m_rtOutputStart )) > 0)
-            {
-                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", m_rtOutputStart , m_rtNextFrameStart));
-            }
-            if(m_rtOutputStart < m_rtNextFrameStart)
-            {
-                m_rtOutputStart = m_rtNextFrameStart;
-            }
-            else
-            {
-                m_rtOutputStart = m_rtNextFrameStart;
-                m_IsDiscontinuity = TRUE;
-            }
-        }
-   }
-    
-    m_rtNextFrameStart = _I64_MIN;
-
-    rtDur += m_rtOutputStart;
-
-    pOut->SetTime(&m_rtOutputStart, NULL);
+    m_CurrentOutputSample->SetTime(&m_rtOutputStart, NULL);
 
 	if(!m_Preroll)
 	{
-	    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
+	    LOG(DBGLOG_ALL, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 
-		pOut->SetPreroll(FALSE);
-		pOut->SetSyncPoint(TRUE);
+		m_CurrentOutputSample->SetPreroll(FALSE);
+		m_CurrentOutputSample->SetSyncPoint(TRUE);
 
 		if(m_NeedToAttachFormat)
 		{
 			m_AudioOutPin->SetType(&m_InternalMT);
-			pOut->SetMediaType(&m_InternalMT);
-			pOut->SetDiscontinuity(TRUE); 
+			m_CurrentOutputSample->SetMediaType(&m_InternalMT);
+			m_CurrentOutputSample->SetDiscontinuity(TRUE); 
 		}
 		else
 		{
-			pOut->SetDiscontinuity(m_IsDiscontinuity); 
+			m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
 		}
 
 	    
 		m_IsDiscontinuity = false;
 
-		hr = m_AudioOutPin->SendSample(pOut);
+		hr = m_AudioOutPin->SendSample(m_CurrentOutputSample.GetNonAddRefedInterface());
+
+        m_CurrentOutputSample.Detach();
 
 		m_NeedToAttachFormat = false;
 	}
@@ -756,39 +737,10 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFEREN
 		LOG(DBGLOG_FLOW, ("Preroll: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 	}
 
-    m_rtOutputStart += rtDur2;
+    m_rtOutputStart += rtDur;
     return hr;
 }
 
-
-HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
-{
-    HRESULT hr;
-
-    if(Len != m_InternalMT.lSampleSize)
-    {
-        // should have already done a QueryAccept when deciding types
-        // so no need to do again here
-        m_InternalMT.bFixedSizeSamples = TRUE;
-        m_InternalMT.lSampleSize = Len;
-        m_OutputBufferSize = Len;
-        hr = m_AudioOutPin->m_Allocator->Decommit();
-        CHECK(hr);
-        ALLOCATOR_PROPERTIES Props, ActualProps;
-        hr = m_AudioOutPin->m_Allocator->GetProperties(&Props);
-        CHECK(hr);
-        Props.cbBuffer = Len;
-        hr = m_AudioOutPin->m_Allocator->SetProperties(&Props, &ActualProps);
-        CHECK(hr);
-        hr = m_AudioOutPin->m_MemInputPin->NotifyAllocator(m_AudioOutPin->m_Allocator.GetNonAddRefedInterface(), FALSE);
-        CHECK(hr);
-        hr = m_AudioOutPin->m_Allocator->Commit();
-
-        //hr = m_AudioOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-        CHECK(hr);
-    }
-    return S_OK;
-}
 
 HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
 {
@@ -928,6 +880,9 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
         wfe->Samples.wValidBitsPerSample = wfe->Format.wBitsPerSample;
 
         pmt->pbFormat = (BYTE*)wfe;
+        pmt->bFixedSizeSamples = TRUE;
+        // make the sample buffer a quarter of a secong long
+        pmt->lSampleSize = m_InputSampleRate * ChannelsRequested * wfe->Format.wBitsPerSample / 32;
         return S_OK;
     }
     else
@@ -970,7 +925,13 @@ HRESULT CAudioDecoder::Deactivate()
 
 HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
 {
+    m_BytesLeftInBuffer = 0;
+    m_CurrentOutputSample.Detach();
     m_buff.resize(0);
+    m_pDataOut = NULL;
+    m_rtNextFrameStart = _I64_MIN;
+    m_BufferSizeAtFrameStart = 0;
+
     return S_OK;
 }
 
@@ -990,6 +951,16 @@ HRESULT CAudioDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME 
 
 HRESULT CAudioDecoder::SendOutLastSamples(CDSBasePin* pPin)
 {
+    HRESULT hr = S_OK;
+    if(m_BytesLeftInBuffer > 0)
+    {
+        memset(m_pDataOut, 0, m_BytesLeftInBuffer);
+        hr = Deliver();
+        m_CurrentOutputSample.Detach();
+        m_BytesLeftInBuffer = 0;
+        m_pDataOut = NULL;
+
+    }
     return S_OK;
 }
 
@@ -1262,22 +1233,21 @@ HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
 }
 
 
-HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len)
+HRESULT CAudioDecoder::GetOutputSampleAndPointer()
 {
-    HRESULT hr = ReconnectOutput(Len);
+    m_pDataOut = NULL;
+
+    HRESULT hr = m_AudioOutPin->GetOutputSample(m_CurrentOutputSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
 
-    *ppDataOut = NULL;
-
-    hr = m_AudioOutPin->GetOutputSample(pOut, NULL, NULL, m_IsDiscontinuity);
+    hr = m_CurrentOutputSample->GetPointer(&m_pDataOut);
     CHECK(hr);
 
-    hr = (*pOut)->GetPointer(ppDataOut);
-    CHECK(hr);
-
-    hr = (*pOut)->SetActualDataLength(Len);
+    hr = m_CurrentOutputSample->SetActualDataLength(m_InternalMT.lSampleSize);
     CHECK(hr);
     
+    m_BytesLeftInBuffer = m_InternalMT.lSampleSize;
+
     return hr;
 }
 
@@ -1305,4 +1275,109 @@ BOOL CAudioDecoder::IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType)
 BOOL CAudioDecoder::IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType)
 {
     return (pMediaType->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
+}
+
+HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData)
+{
+    HRESULT hr = S_OK;
+    if(m_BytesLeftInBuffer == 0)
+    {
+        hr = GetOutputSampleAndPointer();
+        CHECK(hr);
+    }
+
+    *m_pDataOut++ = 0x72;
+    *m_pDataOut++ = 0xf8;
+    *m_pDataOut++ = 0x1f;
+    *m_pDataOut++ = 0x4e;
+
+    m_BytesLeftInBuffer -= 4;
+    ASSERT(m_BytesLeftInBuffer >=0);
+    if(m_BytesLeftInBuffer == 0)
+    {
+        hr = Deliver();
+        CHECK(hr);
+        hr = GetOutputSampleAndPointer();
+        CHECK(hr);
+    }
+
+    *m_pDataOut++ = (BYTE)HeaderWord;
+    *m_pDataOut++ = (BYTE)(HeaderWord >> 8);
+    *m_pDataOut++ = (BYTE)(DigitalLength << 3);
+    *m_pDataOut++ = (BYTE)(DigitalLength >> 5);
+
+    m_BytesLeftInBuffer -= 4;
+    ASSERT(m_BytesLeftInBuffer >=0);
+    if(m_BytesLeftInBuffer == 0)
+    {
+        hr = Deliver();
+        CHECK(hr);
+        hr = GetOutputSampleAndPointer();
+        CHECK(hr);
+    }
+
+    long BytesToGo = DigitalLength;
+
+    if(DigitalLength > m_BytesLeftInBuffer)
+    {
+        _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
+        pData += m_BytesLeftInBuffer;
+        BytesToGo -= m_BytesLeftInBuffer;
+        hr = Deliver();
+        CHECK(hr);
+        hr = GetOutputSampleAndPointer();
+        CHECK(hr);
+    }
+    _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
+    m_pDataOut += BytesToGo;
+    m_BytesLeftInBuffer -= m_BytesLeftInBuffer;
+
+    BytesToGo = FinalLength - DigitalLength - 8;
+
+    if(BytesToGo > 0)
+    {
+        if(BytesToGo > m_BytesLeftInBuffer)
+        {
+            ZeroMemory(m_pDataOut, m_BytesLeftInBuffer);
+            BytesToGo -= m_BytesLeftInBuffer;
+            hr = Deliver();
+            CHECK(hr);
+            hr = GetOutputSampleAndPointer();
+            CHECK(hr);
+        }
+        ZeroMemory(m_pDataOut, BytesToGo);
+        m_pDataOut += BytesToGo;
+        m_BytesLeftInBuffer -= BytesToGo;
+    }
+    return hr;
+}
+
+void CAudioDecoder::UpdateStartTime()
+{
+    if(m_rtNextFrameStart != _I64_MIN)
+    {
+        REFERENCE_TIME OutputStart = m_rtNextFrameStart;
+        if(m_BytesLeftInBuffer > 0)
+        {
+            OutputStart -= 10000000i64 * (m_InternalMT.lSampleSize - m_BytesLeftInBuffer) / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
+        }
+        if(!GetParamBool(JITTERREMOVER) || abs((long)(OutputStart - m_rtOutputStart)) > 10000 || m_IsDiscontinuity)
+        {
+            if(abs((long)(OutputStart - m_rtOutputStart )) > 0)
+            {
+                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", OutputStart , m_rtOutputStart));
+            }
+            if(m_rtOutputStart < OutputStart)
+            {
+                m_rtOutputStart = OutputStart;
+            }
+            else
+            {
+                m_rtOutputStart = OutputStart;
+                m_IsDiscontinuity = TRUE;
+            }
+        }
+   }
+    
+    m_rtNextFrameStart = _I64_MIN;
 }

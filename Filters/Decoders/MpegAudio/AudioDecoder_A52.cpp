@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.7 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.8 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.6  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -189,34 +193,15 @@ HRESULT CAudioDecoder::ProcessAC3()
             if(fEnoughData)
             {
                 LOG(DBGLOG_ALL, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
+                
+                if(m_BufferSizeAtFrameStart <= 0)
+                {
+                    UpdateStartTime();
+                }
 
                 if(m_ConnectedAsSpdif)
                 {
-                    DWORD len = 0x1800; 
-
-                    SI(IMediaSample) pOut;
-                    WORD* pDataOut = NULL;
-
-                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                    CHECK(hr);
-
-                    pDataOut[0] = 0xf872;
-                    pDataOut[1] = 0x4e1f;
-                    pDataOut[2] = 0x0001;
-                    pDataOut[3] = size*8;
-                    _swab((char*)p, (char*)&pDataOut[4], size);
-
-                    if((len - size - 8) > 0)
-                    {
-                        ZeroMemory(pDataOut + size/2 + 4, len - size - 8);
-                    }
-
-                    // each frame contains 6 * 256 samples
-                    REFERENCE_TIME rtDur = 10000000i64 * 6 * 256 / sample_rate;
-
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-                    if(S_OK != hr)
-                        return hr;
+                    return SendDigitalData(0x0001, size, 0x1800, (char*)p);
                 }
                 else
                 {
@@ -256,12 +241,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                         int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
 
-                        SI(IMediaSample) pOut;
-                        DWORD len = 6*256*m_ChannelsRequested*m_SampleSize; 
-                        BYTE* pDataOut = NULL;
-
-                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
-                        CHECK(hr);
+                        HRESULT hr = S_OK;
                     
                         int i = 0;
                         CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
@@ -291,24 +271,31 @@ HRESULT CAudioDecoder::ProcessAC3()
                         
                             for(int j = 0; j < 256; j++, samples++)
                             {
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = GetOutputSampleAndPointer();
+                                    CHECK(hr);
+                                }
+
                                 for(int ch = 0; ch < m_ChannelsRequested; ch++)
                                 {
-                                    pConvFunc(pDataOut, Channels[ch][j]);
+                                    pConvFunc(m_pDataOut, Channels[ch][j]);
+                                }
+
+                                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                                ASSERT(m_BytesLeftInBuffer >=0);
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = Deliver();
+                                    CHECK(hr);
                                 }
                             }
-                        }
-
-                        if(i == 6)
-                        {
-                            REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested); // should be 320000 * 100ns
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-                            if(S_OK != hr)
-                                return hr;
                         }
                     }
                 }
 
                 p += size;
+                m_BufferSizeAtFrameStart -= size;
             }
 
             memmove(base, p, end - p);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.6 2004-07-16 15:45:19 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.7 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/16 15:45:19  adcockj
+// Fixed compilation issues under .NET
+// Improved (hopefully) handling of negative times and preroll
+// Changed name of filter
+//
 // Revision 1.5  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -88,36 +93,27 @@ HRESULT CAudioDecoder::ProcessLPCM()
 {
     WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
-    // Each frame in a PCM packet is 1/600th of a second long
-    // since that would lead to fractional times we bunch them up three at a time
-    // to get 1/200th of a second or 5ms units
-    int ThreeFrames = m_buff.size() / ((wfein->nSamplesPerSec / 600) * wfein->nChannels * (wfein->wBitsPerSample / 8)) / 3;
-    if(ThreeFrames == 0)
-    {
-        return S_OK;
-    }
-    DWORD lenOut = ThreeFrames * 3 *  (m_OutputSampleRate/600) * m_ChannelsRequested * m_SampleSize;
-    DWORD lenIn = ThreeFrames * 3 *  (wfein->nSamplesPerSec/600) * wfein->nChannels * (wfein->wBitsPerSample / 8);
+    DWORD LenIn = m_buff.size();
     
-    // each unit of three frames is 5ms long
-    REFERENCE_TIME rtDur = 50000 * ThreeFrames;
-
-    SI(IMediaSample) pOut;
-    BYTE* pDataOut = NULL;
-
-    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, lenOut);
-    CHECK(hr);
-
+    HRESULT hr = S_OK;
     int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
 
-    if(m_DownSample && m_OutputSampleRate != wfein->nSamplesPerSec)
-    {
-        if(wfein->wBitsPerSample == 16)
-        {
-            CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
+    UpdateStartTime();
 
-            for(DWORD i = 0; i < lenIn; i+=8)
+    for(DWORD i = 0; i < LenIn;)
+    {
+        if(m_BytesLeftInBuffer == 0)
+        {
+            hr = GetOutputSampleAndPointer();
+            CHECK(hr);
+        }
+
+        if(m_DownSample && m_OutputSampleRate != wfein->nSamplesPerSec)
+        {
+            if(wfein->wBitsPerSample == 16)
             {
+                CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
+
                 static short lastLeft = 0;
                 static short lastRight = 0;
                 short left1 = (m_buff[i] << 8) + m_buff[i + 1];
@@ -125,23 +121,23 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 short left2 = (m_buff[i] << 8) + m_buff[i + 1];
                 short right2 = (m_buff[i + 2] << 8) + m_buff[i + 3];
 
-                pConvFunc(pDataOut, (lastLeft + 2 * left1 + left2) >> 2);
-                pConvFunc(pDataOut, (lastRight + 2 * right1 + right2) >> 2);
+                pConvFunc(m_pDataOut, (lastLeft + 2 * left1 + left2) >> 2);
+                pConvFunc(m_pDataOut, (lastRight + 2 * right1 + right2) >> 2);
                 lastLeft = left2;
                 lastRight = right2;
                 
                 if(Padding > 0)
                 {
-                    memset(pDataOut, 0, Padding);
-                    pDataOut += Padding;
+                    memset(m_pDataOut, 0, Padding);
+                    m_pDataOut += Padding;
                 }
+                i += 8;
+                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
             }
-        }
-        else if(wfein->wBitsPerSample == 24)
-        {
-            CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
-            for(DWORD i = 0; i < lenIn; i += 12)
+            else if(wfein->wBitsPerSample == 24)
             {
+                CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
+
                 // if it's 24 bit audio 
                 // we need to do unmangle the data
                 // the packing method was discussed in conversations on the ogle list
@@ -154,45 +150,44 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 long left2 = (m_buff[i + 4] << 16) + (m_buff[i + 5] << 8) + m_buff[i + 10];
                 long right2 = (m_buff[i + 6] << 16) + (m_buff[i + 7] << 8) + m_buff[i + 11];
             
-                pConvFunc(pDataOut, (lastLeft + 2 * left1 + left2) >> 2);
-                pConvFunc(pDataOut, (lastRight + 2 * right1 + right2) >> 2);
+                pConvFunc(m_pDataOut, (lastLeft + 2 * left1 + left2) >> 2);
+                pConvFunc(m_pDataOut, (lastRight + 2 * right1 + right2) >> 2);
 
                 if(Padding > 0)
                 {
-                    memset(pDataOut, 0, Padding);
-                    pDataOut += Padding;
+                    memset(m_pDataOut, 0, Padding);
+                    m_pDataOut += Padding;
                 }
+                i += 12;
+                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+            }
+            else
+            {
+                return E_UNEXPECTED;
             }
         }
         else
         {
-            return E_UNEXPECTED;
-        }
-    }
-    else
-    {
-        if(wfein->wBitsPerSample == 16)
-        {
-            CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
-            for(DWORD i = 0; i < lenIn; i+=4)
+            if(wfein->wBitsPerSample == 16)
             {
+                CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
+
                 short left = (m_buff[i] << 8) + m_buff[i + 1];
                 short right = (m_buff[i + 2] << 8) + m_buff[i + 3];
-                pConvFunc(pDataOut, left);
-                pConvFunc(pDataOut, right);
+                pConvFunc(m_pDataOut, left);
+                pConvFunc(m_pDataOut, right);
                 
                 if(Padding > 0)
                 {
-                    memset(pDataOut, 0, Padding);
-                    pDataOut += Padding;
+                    memset(m_pDataOut, 0, Padding);
+                    m_pDataOut += Padding;
                 }
+                i += 4;
+                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
             }
-        }
-        else if(wfein->wBitsPerSample == 24)
-        {
-            CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
-            for(DWORD i = 0; i < lenIn; i += 12)
+            else if(wfein->wBitsPerSample == 24)
             {
+                CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
                 // if it's 24 bit audio 
                 // we need to do unmangle the data
                 // and convert to little endian
@@ -204,41 +199,38 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 long left2 = (m_buff[i + 4] << 24) + (m_buff[i + 5] << 16) + (m_buff[i + 10] << 8);
                 long right2 = (m_buff[i + 6] << 24) + (m_buff[i + 7] << 16) + (m_buff[i + 11] << 8);
             
-                pConvFunc(pDataOut, left1 >> 8);
-                pConvFunc(pDataOut, right1 >> 8);
+                pConvFunc(m_pDataOut, left1 >> 8);
+                pConvFunc(m_pDataOut, right1 >> 8);
 
                 if(Padding > 0)
                 {
-                    memset(pDataOut, 0, Padding);
-                    pDataOut += Padding;
+                    memset(m_pDataOut, 0, Padding);
+                    m_pDataOut += Padding;
                 }
-
-
-                pConvFunc(pDataOut, left2 >> 8);
-                pConvFunc(pDataOut, right2 >> 8);
+        
+                pConvFunc(m_pDataOut, left2 >> 8);
+                pConvFunc(m_pDataOut, right2 >> 8);
 
                 if(Padding > 0)
                 {
-                    memset(pDataOut, 0, Padding);
-                    pDataOut += Padding;
+                    memset(m_pDataOut, 0, Padding);
+                    m_pDataOut += Padding;
                 }
+                i += 12;
+                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize * 2;
+            }
+            else
+            {
+                return E_UNEXPECTED;
             }
         }
-        else
+        ASSERT(m_BytesLeftInBuffer >=0);
+        if(m_BytesLeftInBuffer == 0)
         {
-            return E_UNEXPECTED;
+            hr = Deliver();
+            CHECK(hr);
         }
     }
 
-    if(lenIn < m_buff.size())
-    {
-        memmove(&m_buff[0], &m_buff[lenIn], m_buff.size() - lenIn);
-        m_buff.resize(m_buff.size() - lenIn);
-    }
-    else
-    {
-        m_buff.resize(0);
-    }
-
-    return Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
+    return hr;
 }

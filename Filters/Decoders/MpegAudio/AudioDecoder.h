@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.16 2004-07-16 15:45:19 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.17 2004-07-26 17:08:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -162,26 +162,25 @@ protected:
     std::vector<BYTE> m_buff;
     REFERENCE_TIME m_rtNextFrameStart;
     REFERENCE_TIME m_rtOutputStart;
-    DWORD m_OutputBufferSize;
 
     HRESULT ProcessLPCM();
     HRESULT ProcessAC3();
     HRESULT ProcessDTS();
     HRESULT ProcessMPA();
-    HRESULT Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFERENCE_TIME rtDur2);
-    HRESULT ReconnectOutput(DWORD Len);
+    HRESULT Deliver();
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
 
     HRESULT CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD BitsPerSample);
     HRESULT CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);
     HRESULT CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
-    HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
+    HRESULT GetOutputSampleAndPointer();
     BOOL IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType);
-
+    HRESULT SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData);
+    void UpdateStartTime();
 
 private:
     AM_MEDIA_TYPE m_InternalMT;
@@ -197,6 +196,10 @@ private:
     bool m_CanReconnect;
     bool m_DownSample;
 	bool m_Preroll;
+    long m_BytesLeftInBuffer;
+    SI(IMediaSample) m_CurrentOutputSample;
+    BYTE* m_pDataOut;
+    long m_BufferSizeAtFrameStart;
 };
 
 #define m_AudioInPin m_InputPins[0]
