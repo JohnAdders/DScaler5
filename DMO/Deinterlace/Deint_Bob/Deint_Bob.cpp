@@ -43,7 +43,7 @@ HRESULT CDeint_Bob::GetClassID(CLSID *pClsid)
 
 } // GetClassID
 
-STDMETHODIMP CDeint_Bob::GetName(BSTR* Name)
+STDMETHODIMP CDeint_Bob::get_Name(BSTR* Name)
 {
     if(Name == NULL)
     {
@@ -60,7 +60,7 @@ STDMETHODIMP CDeint_Bob::GetName(BSTR* Name)
     }
 }
 
-STDMETHODIMP CDeint_Bob::GetLicense(eFreeLicense* License)
+STDMETHODIMP CDeint_Bob::get_License(eFreeLicense* License)
 {
     if(License == NULL)
     {
@@ -70,7 +70,7 @@ STDMETHODIMP CDeint_Bob::GetLicense(eFreeLicense* License)
     return S_OK;
 }
 
-STDMETHODIMP CDeint_Bob::GetAuthors(BSTR* Authors)
+STDMETHODIMP CDeint_Bob::get_Authors(BSTR* Authors)
 {
     if(Authors == NULL)
     {

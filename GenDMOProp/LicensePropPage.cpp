@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: LicensePropPage.cpp,v 1.2 2003-05-06 16:36:27 adcockj Exp $
+// $Id: LicensePropPage.cpp,v 1.3 2003-05-20 16:51:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/06 16:36:27  adcockj
+// Prelimuianry support for license page
+//
 // Revision 1.1  2003/05/01 12:34:41  adcockj
 // Added headers and new license page
 //
@@ -83,11 +86,11 @@ STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModa
         return E_UNEXPECTED;
     }
 
-    hr = m_License->GetName(&Name);
+    hr = m_License->get_Name(&Name);
     if(FAILED(hr)) return hr;
-	hr = m_License->GetLicense(&LicenceType);
+	hr = m_License->get_License(&LicenceType);
     if(FAILED(hr)) return hr;
-    hr = m_License->GetAuthors(&Authors);
+    hr = m_License->get_Authors(&Authors);
     if(FAILED(hr)) return hr;
     
     SendMessageW(GetDlgItem(IDC_NAME), WM_SETTEXT, 0, (LPARAM)Name);

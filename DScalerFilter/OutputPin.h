@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.7 2003-05-09 15:51:05 adcockj Exp $
+// $Id: OutputPin.h,v 1.8 2003-05-20 16:50:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -111,6 +111,8 @@ public:
     HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
     BITMAPINFOHEADER* GetBitmapInfo();
     HRESULT ChangeOutputFormat(const AM_MEDIA_TYPE* InputType);
+    HRESULT SetMediaType(const AM_MEDIA_TYPE* NewType);
+
         
 public:
     CDScaler* m_Filter;
@@ -122,7 +124,7 @@ public:
     CComPtr<IMemAllocator> m_Allocator;
     ULONG m_FormatVersion;
 
-    HRESULT WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
+    HRESULT CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
 
 private:
     BOOL AreTypesCloseEnough(const AM_MEDIA_TYPE* CurrentType, const AM_MEDIA_TYPE* ProposedType);

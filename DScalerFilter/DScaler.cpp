@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.10 2003-05-09 15:51:04 adcockj Exp $
+// $Id: DScaler.cpp,v 1.11 2003-05-20 16:50:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2003/05/09 15:51:04  adcockj
+// Code tidy up
+// Added aspect ratio parameters
+//
 // Revision 1.9  2003/05/08 15:58:37  adcockj
 // Better error handling, threading and format support
 //
@@ -75,6 +79,8 @@ CDScaler::CDScaler()
     {
         m_ParamValues[i] = m_ParamInfos[i].mpdNeutralValue;
     }
+    m_TypesChanged = TRUE;
+    m_RebuildRequired = TRUE;
 }
 
 HRESULT CDScaler::FinalConstruct()
@@ -88,6 +94,8 @@ HRESULT CDScaler::FinalConstruct()
     m_InputPin->m_OutputPin = m_OutputPin;
     m_OutputPin->m_Filter = this;
     m_OutputPin->m_InputPin = m_InputPin;
+    HRESULT hr = LoadDMOs();
+    CHECK(hr)
 	return CoCreateFreeThreadedMarshaler(GetControllingUnknown(), &m_pUnkMarshaler.p);
 }
 
@@ -97,6 +105,7 @@ void CDScaler::FinalRelease()
     m_InputPin->Release();
     m_OutputPin->Release();
 	m_pUnkMarshaler.Release();
+    UnloadDMOs();
 }
 
 STDMETHODIMP CDScaler::EnumPins(IEnumPins **ppEnum)
@@ -481,7 +490,7 @@ STDMETHODIMP CDScaler::GetCurrentTimeFormat( GUID *pguidTimeFormat,MP_TIMEDATA *
     return E_NOTIMPL;
 }
 
-STDMETHODIMP CDScaler::GetName(BSTR* Name)
+STDMETHODIMP CDScaler::get_Name(BSTR* Name)
 {
     if(Name == NULL)
     {
@@ -498,7 +507,7 @@ STDMETHODIMP CDScaler::GetName(BSTR* Name)
     }
 }
 
-STDMETHODIMP CDScaler::GetLicense(eFreeLicense* License)
+STDMETHODIMP CDScaler::get_License(eFreeLicense* License)
 {
     if(License == NULL)
     {
@@ -508,7 +517,7 @@ STDMETHODIMP CDScaler::GetLicense(eFreeLicense* License)
     return S_OK;
 }
 
-STDMETHODIMP CDScaler::GetAuthors(BSTR* Authors)
+STDMETHODIMP CDScaler::get_Authors(BSTR* Authors)
 {
     if(Authors == NULL)
     {
@@ -555,4 +564,123 @@ long CDScaler::GetParamEnum(eDScalerFilterParams ParamId)
     ATLASSERT(m_ParamInfos[ParamId].mpType == MPT_ENUM);
     CProtectCode WhileVarInScope(this);
     return (BOOL)m_ParamValues[ParamId];
+}
+
+HRESULT CDScaler::LoadDMOs()
+{
+    CComPtr<IEnumDMO> EnumDMO;
+
+    HRESULT hr = DMOEnum(
+                            DMOCATEGORY_VIDEO_EFFECT,
+                            0,
+                            0,
+                            NULL,
+                            0,
+                            NULL,
+                            &EnumDMO
+                        );
+    CHECK(hr);
+
+    CLSID DMOClsid;
+    WCHAR* wszName;
+    while((hr = EnumDMO->Next(1, &DMOClsid, &wszName, NULL)) == S_OK)
+    {
+        CComPtr<IMediaObject> DMO;
+        hr = DMO.CoCreateInstance(DMOClsid, NULL, CLSCTX_INPROC);
+        if(SUCCEEDED(hr))
+        {
+            CComQIPtr<IDScalerVideoFilterPlugin> DScalerDMO = DMO;        
+            if(DScalerDMO != NULL)
+            {
+                CComQIPtr<IDeinterlace> DeinterlaceDMO = DMO;        
+                if(DeinterlaceDMO != NULL)
+                {
+                    m_Deinterlacers.push_back(DMO.Detach());
+                }
+                else
+                {
+                    // \todo need to see if these are film detection
+                    // DMO's or where in the chain they should go
+                    m_Filters.push_back(DMO.Detach());
+                }
+            }
+            else
+            {
+                DMO.Release();
+            }
+        }
+        // need to free the name
+        CoTaskMemFree(wszName);
+    }
+
+    // we need at least one deinterlacing method
+    if(m_Deinterlacers.size() > 0)
+    {
+        // \todo real storage of current method
+        // for the time being use the first one
+        m_CurrentDeinterlacingMethod = m_Deinterlacers.front();
+        return S_OK;
+    }
+    else
+    {
+        // \todo better error reporting
+        return E_UNEXPECTED;
+    }
+}
+
+void CDScaler::UnloadDMOs()
+{
+    // release our hold on all the Deinterlacing DMO's
+    EmptyList(m_Deinterlacers); 
+    // release our hold on all the Filter DMO's
+    EmptyList(m_Filters); 
+}
+
+
+void CDScaler::EmptyList(std::list<IMediaObject*>& List)
+{
+    for(std::list<IMediaObject*>::iterator it = List.begin(); 
+        it != List.end(); 
+        ++it)
+    {
+        (*it)->Release();
+    }
+    List.empty();
+}
+
+void CDScaler::SetTypesChangedFlag()
+{
+    m_TypesChanged = TRUE;
+}
+
+HRESULT CDScaler::CheckProcessingLine()
+{
+    HRESULT hr = S_OK;
+    if(m_RebuildRequired == TRUE)
+    {
+        CProtectCode WhileVarInScope(this);
+        hr = RebuildProcessingLine();
+        CHECK(hr);
+    }
+    if(m_TypesChanged == TRUE)
+    {
+        CProtectCode WhileVarInScope(this);
+        hr = UpdateTypes();
+        CHECK(hr);
+    }
+    return hr;
+}
+
+HRESULT CDScaler::RebuildProcessingLine()
+{
+    HRESULT hr = S_OK;
+    // \todo stop inform DMO's of correct types
+    return hr;
+}
+
+HRESULT CDScaler::UpdateTypes()
+{
+    HRESULT hr = S_OK;
+    // \todo stop inform DMO's of correct types
+    return hr;
 }

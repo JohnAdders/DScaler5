@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.4 2003-05-16 15:18:37 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.5 2003-05-20 16:51:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/16 15:18:37  adcockj
+// Interim check inas we move to supporting DMO plug-ins
+//
 // Revision 1.3  2003/05/06 16:36:27  adcockj
 // Prelimuianry support for license page
 //
@@ -48,6 +51,20 @@ library GENDMOPROPLib
         LGPL,
     } eFreeLicense;
 
+    typedef enum
+    {
+        PRE_FILMDETECT_1,
+        PRE_FILMDETECT_2,
+        PRE_FILMDETECT_3,
+        IS_FILMDETECT,
+        POST_FD_PRE_DEINT_1,
+        POST_FD_PRE_DEINT_2,
+        POST_FD_PRE_DEINT_3,
+        IS_DEINT,
+        POST_DEINT_1,
+        POST_DEINT_2,
+        POST_DEINT_3,
+    } eVideoFilterPosition;
 
 	[
         object,
@@ -57,9 +74,9 @@ library GENDMOPROPLib
 	]
 	interface IAmFreeSoftwareLicensed : IUnknown
 	{
-        HRESULT GetName(BSTR* Name);
-		HRESULT GetLicense(eFreeLicense* License);
-        HRESULT GetAuthors(BSTR* Authors);
+        [propget] HRESULT Name([out, retval] BSTR* Name);
+		[propget] HRESULT License([out, retval] eFreeLicense* License);
+        [propget] HRESULT Authors([out, retval] BSTR* Authors);
 	};
 
 	[
@@ -70,9 +87,7 @@ library GENDMOPROPLib
 	]
 	interface IDeinterlace : IUnknown
 	{
-        HRESULT GetComplexityIndex(long* pComplexity);
-        HRESULT GetNumFieldsDelay(long* pFieldsDelay);
-        HRESULT GetNumFieldsBuffered(long* pFieldsBuffered);
+        [propget] HRESULT ComplexityIndex([out, retval] long* pComplexity);
     }
 
 	[
@@ -83,8 +98,21 @@ library GENDMOPROPLib
 	]
 	interface IDScalerFilterPlugin : IUnknown
 	{
-        HRESULT Attach(IUnknown* m_DScalerFilter);
+        HRESULT Attach([in] IUnknown* m_DScalerFilter);
         HRESULT Detach();
+    }
+
+	[
+        object,
+		uuid(D2C9AF19-8AC4-11d7-B851-0002A5623377),
+		helpstring("IDScalerVideoFilterPlugin Interface"),
+		pointer_default(unique)
+	]
+	interface IDScalerVideoFilterPlugin : IUnknown
+	{
+        [propget] HRESULT Position([out, retval] eVideoFilterPosition* pPosition);
+        [propget] HRESULT NumFieldsDelay([out, retval] long* pFieldsDelay);
+        [propget] HRESULT NumFieldsBuffered([out, retval] long* pFieldsBuffered);
     }
     
     [

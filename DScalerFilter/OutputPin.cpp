@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.14 2003-05-19 07:02:24 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.15 2003-05-20 16:50:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2003/05/19 07:02:24  adcockj
+// Patches from Torbjorn to extend logging
+//
 // Revision 1.13  2003/05/17 11:29:35  adcockj
 // Fixed crashing
 //
@@ -88,10 +91,11 @@ HRESULT COutputPin::ChangeOutputFormat(const AM_MEDIA_TYPE* InputType)
     InitMediaType(&ProposedType);
 
     // say which type we really want to send out
-    HRESULT hr = WorkOutNewMediaType(InputType, &ProposedType);
+    HRESULT hr = CreateOutputMediaType(InputType, &ProposedType);
     CHECK(hr);
     
-    m_Allocator->Decommit();
+    hr = m_Allocator->Decommit();
+    CHECK(hr);
 
     hr = InternalConnect(m_ConnectedPin, &ProposedType);
     ClearMediaType(&ProposedType);
@@ -187,9 +191,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
         return VFW_E_NO_TRANSPORT;
     }
 
-    hr = CopyMediaType(&m_CurrentMediaType, ProposedType);
-    ++m_FormatVersion;
-    CHECK(hr);
+    hr = SetMediaType(ProposedType);
     return S_OK;
 }
 
@@ -221,7 +223,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     InitMediaType(&ProposedType);
 
     // say which type we really want to send out
-    hr = WorkOutNewMediaType(&m_InputPin->m_InputMediaType, &ProposedType);
+    hr = CreateOutputMediaType(&m_InputPin->m_InputMediaType, &ProposedType);
     CHECK(hr);
 
     // check that any format we've been passed in is OK
@@ -376,7 +378,7 @@ STDMETHODIMP COutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
         {
             AM_MEDIA_TYPE TestType;
             InitMediaType(&TestType);
-            hr = WorkOutNewMediaType(&m_InputPin->m_InputMediaType, &TestType);
+            hr = CreateOutputMediaType(&m_InputPin->m_InputMediaType, &TestType);
             CHECK(hr);
             if(!AreTypesCloseEnough(&TestType, pmt))
             {
@@ -538,7 +540,7 @@ HRESULT COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
         if(m_InputPin->m_ConnectedPin != NULL)
         {
             NumTypes = 1;
-            hr = WorkOutNewMediaType(&m_InputPin->m_InputMediaType, Types);
+            hr = CreateOutputMediaType(&m_InputPin->m_InputMediaType, Types);
             CHECK(hr);
             ++Types;
             ClearMediaType(Types);
@@ -676,7 +678,7 @@ STDMETHODIMP COutputPin::GetPreroll(LONGLONG *pllPreroll)
     return MediaSeeking->GetPreroll(pllPreroll);
 }
 
-HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
+HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
 {
     BITMAPINFOHEADER* BitmapInfo = NULL;
     NewType->majortype = MEDIATYPE_Video;
@@ -837,4 +839,15 @@ BOOL COutputPin::AreTypesCloseEnough(const AM_MEDIA_TYPE* CurrentType, const AM_
         return FALSE;
     }
     return TRUE;
+}
+
+HRESULT COutputPin::SetMediaType(const AM_MEDIA_TYPE* NewType)
+{
+    LogMediaType(NewType, "Output Format Change");
+    HRESULT hr = CopyMediaType(&m_CurrentMediaType, NewType);
+    ++m_FormatVersion;
+    // tell the filter that we need to rebuild the processing path
+    m_Filter->SetTypesChangedFlag();
+    CHECK(hr);
+    return hr;
 }

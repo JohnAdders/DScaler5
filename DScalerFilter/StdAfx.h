@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.6 2003-05-16 15:18:37 adcockj Exp $
+// $Id: StdAfx.h,v 1.7 2003-05-20 16:50:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -51,12 +51,15 @@ extern CComModule _Module;
 #include <amstream.h>
 #include <dvdmedia.h>
 #include <medparam.h>
+#include <Dmo.h>
 
 #include "Utils.h"
 #include "..\GenDMOProp\GenDMOProp.h"
 
 #include <stdio.h>
 #include <stdarg.h>
+
+#include <list>
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.8 2003-05-16 15:18:36 adcockj Exp $
+// $Id: DScaler.h,v 1.9 2003-05-20 16:50:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -115,15 +115,17 @@ public:
 
 // IAmFreeSoftwareLicensed
 public:
-    STDMETHOD(GetName)(BSTR* Name);
-	STDMETHOD(GetLicense)(eFreeLicense* License);
-    STDMETHOD(GetAuthors)(BSTR* Authors);
+    STDMETHOD(get_Name)(BSTR* Name);
+	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_Authors)(BSTR* Authors);
 
 public:
     float GetParamFloat(eDScalerFilterParams ParamId);
     long GetParamInt(eDScalerFilterParams ParamId);
     BOOL GetParamBool(eDScalerFilterParams ParamId);
     long GetParamEnum(eDScalerFilterParams ParamId);
+    void SetTypesChangedFlag();
+    HRESULT CheckProcessingLine();
     
 public:
     CInputPin* m_InputPin;
@@ -133,9 +135,22 @@ public:
     IFilterGraph2* m_Graph;
     WCHAR m_Name[MAX_FILTER_NAME];
     BOOL m_IsDirty;
+    std::list<IMediaObject*> m_Filters;
+    std::list<IMediaObject*> m_Deinterlacers;
+    IMediaObject* m_CurrentDeinterlacingMethod;
+    
+private:
+    HRESULT LoadDMOs();
+    void UnloadDMOs();
+    void EmptyList(std::list<IMediaObject*>& List);
+    HRESULT RebuildProcessingLine();
+    HRESULT UpdateTypes();
+
 private:
     MP_DATA m_ParamValues[PARAMS_LASTONE];
     static const MP_PARAMINFO m_ParamInfos[PARAMS_LASTONE];
+    BOOL m_TypesChanged;
+    BOOL m_RebuildRequired;
 };
 
 #endif

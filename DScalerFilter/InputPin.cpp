@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.16 2003-05-17 11:29:35 adcockj Exp $
+// $Id: InputPin.cpp,v 1.17 2003-05-20 16:50:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2003/05/17 11:29:35  adcockj
+// Fixed crashing
+//
 // Revision 1.15  2003/05/16 15:18:36  adcockj
 // Interim check inas we move to supporting DMO plug-ins
 //
@@ -269,7 +272,7 @@ STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
         HRESULT hr = S_OK;
         AM_MEDIA_TYPE TestType;
         InitMediaType(&TestType);
-        hr = m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        hr = m_OutputPin->CreateOutputMediaType(pmt, &TestType);
         CHECK(hr);
 
         if(m_Filter->m_State != State_Stopped && m_OutputPin->m_PinConnection != NULL)
@@ -454,6 +457,9 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *InSample)
     // functions with this line
     CProtectCode WhileVarInScope(this);
     
+    HRESULT hr = m_Filter->CheckProcessingLine();
+    CHECK(hr);
+
     return InternalReceive(InSample);
 }
 
@@ -541,9 +547,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         CHECK(hr);
         if(OutSampleProperties.pMediaType != NULL)
         {
-            LogMediaType(OutSampleProperties.pMediaType, "Output Format Change");
-            hr = CopyMediaType(&m_OutputPin->m_CurrentMediaType, OutSampleProperties.pMediaType);
-            ++(m_OutputPin->m_FormatVersion);
+            hr = m_OutputPin->SetMediaType(OutSampleProperties.pMediaType);
             CHECK(hr);
         }
 
@@ -673,7 +677,7 @@ STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
     {
         AM_MEDIA_TYPE TestType;
         InitMediaType(&TestType);
-        hr = m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        hr = m_OutputPin->CreateOutputMediaType(pmt, &TestType);
         CHECK(hr);
 
         // can the input pin of the filter downstream accept
@@ -980,6 +984,127 @@ HRESULT CInputPin::SetInputType(const AM_MEDIA_TYPE *pmt)
     CHECK(hr);
     LogMediaType(&m_InputMediaType, "Input Connected");
     ++m_FormatVersion;
+    // create a new internal type for use by the DMOs
+    hr = CreateInternalMediaType(&m_InputMediaType, &m_InternalMediaType);
+    CHECK(hr);
+    // tell the filter that we need to rebuild the processing path
+    m_Filter->SetTypesChangedFlag();
     return hr;
 }
 
+
+HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
+{
+    BITMAPINFOHEADER* BitmapInfo = NULL;
+    NewType->majortype = MEDIATYPE_Video;
+    NewType->subtype = InputType->subtype;
+    NewType->bFixedSizeSamples = TRUE;
+    NewType->bTemporalCompression = FALSE;
+    NewType->formattype = FORMAT_VIDEOINFO2;
+    NewType->cbFormat = sizeof(VIDEOINFOHEADER2);
+    VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
+    if(NewFormat == NULL)
+    {
+        ClearMediaType(NewType);
+        return E_OUTOFMEMORY;
+    }
+    ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
+    NewType->pbFormat = (BYTE*)NewFormat;
+
+    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+
+    if(InputType->formattype == FORMAT_VIDEOINFO2)
+    {
+        VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+        NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
+        NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+        if(OldFormat->dwInterlaceFlags & AMINTERLACE_Field1First)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+    }
+    else if(InputType->formattype == FORMAT_VideoInfo)
+    {
+        NewType->pbFormat =(BYTE*)NewFormat;
+        VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+
+        // if the input format is a known TV style one then
+        // it should be assumed to be 4:3
+        if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+            (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+        {
+            NewFormat->dwPictAspectRatioX = 4;
+            NewFormat->dwPictAspectRatioY = 3;
+        }
+        else
+        {
+            // first guess is square pixels
+            NewFormat->dwPictAspectRatioX = BitmapInfo->biWidth;
+            NewFormat->dwPictAspectRatioY = BitmapInfo->biHeight;
+
+            // the update the aspect ratio with the pels per meter info if both
+            // are present, this was the old way of handling aspect ratio
+            if(BitmapInfo->biXPelsPerMeter > 0 && BitmapInfo->biYPelsPerMeter > 0)
+            {
+                NewFormat->dwPictAspectRatioX *= BitmapInfo->biYPelsPerMeter;
+                NewFormat->dwPictAspectRatioY *= BitmapInfo->biXPelsPerMeter;
+            }
+        }
+
+        if(BitmapInfo->biHeight == 576)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+    }
+    else
+    {
+        ClearMediaType(NewType);
+    }
+
+    if(m_Filter->GetParamBool(CDScaler::INPUTISANAMORPHIC) != 0)
+    {
+        NewFormat->dwPictAspectRatioX *= 4;
+        NewFormat->dwPictAspectRatioY *= 3;
+    }
+
+    // we want to use the new height but we'll work with a normal stride
+    // if it's within 32 of the new width
+    long Height = BitmapInfo->biHeight; 
+    long Width = BitmapInfo->biWidth;
+
+    DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
+
+    NewFormat->rcSource.top = 0;
+    NewFormat->rcSource.bottom = Height;
+    NewFormat->rcSource.left = 0;
+    NewFormat->rcSource.right = Width;
+    NewFormat->rcTarget.top = 0;
+    NewFormat->rcTarget.bottom = Height;
+    NewFormat->rcTarget.left = 0;
+    NewFormat->rcTarget.right = Width;
+    
+    NewFormat->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+
+    NewFormat->bmiHeader.biHeight = Height;
+    NewFormat->bmiHeader.biWidth = Width;
+    NewFormat->bmiHeader.biPlanes = 1;
+    NewFormat->bmiHeader.biBitCount = BitmapInfo->biBitCount;
+    NewFormat->bmiHeader.biCompression = BitmapInfo->biCompression;
+    NewFormat->bmiHeader.biSizeImage = Size;
+    NewFormat->bmiHeader.biXPelsPerMeter = 0;
+    NewFormat->bmiHeader.biYPelsPerMeter = 0;
+    NewFormat->bmiHeader.biClrUsed = 0;
+    NewFormat->bmiHeader.biClrImportant = 0;
+
+    NewType->lSampleSize = Size;
+    return S_OK;
+}
