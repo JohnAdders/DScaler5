@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.10 2005-01-21 14:25:06 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.11 2005-02-08 15:57:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2005/01/21 14:25:06  adcockj
+// Buffer fix
+//
 // Revision 1.9  2004/12/21 14:43:19  adcockj
 // added stop times
 //
@@ -559,6 +562,28 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
         }
         if(GotPicture)
         {
+            // deinterlace
+            switch(GetParamEnum(DEINTMODE))
+            {
+            case DIAuto:
+                if(m_CurrentPicture->m_Picture.interlaced_frame == 0)
+                {
+                    m_NextFrameDeint = DIWeave;
+                }
+                else
+                {
+                    m_NextFrameDeint = DIBob;
+                }
+                break;
+            case DIWeave:
+                m_NextFrameDeint = DIWeave;
+                break;
+            case DIBob:
+            default:
+                m_NextFrameDeint = DIBob;
+                break;
+            }
+
             hr = Deliver();
             m_CurrentPicture->Release();
             m_CurrentPicture = GetNextBuffer();
