@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.11 2004-07-27 16:53:21 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.12 2004-07-28 13:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/07/27 16:53:21  adcockj
+// Some spdif fixes
+//
 // Revision 1.10  2004/07/26 17:08:13  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -219,7 +222,8 @@ HRESULT CAudioDecoder::ProcessDTS()
 
                 if(m_BufferSizeAtFrameStart <= 0)
                 {
-                    UpdateStartTime();
+                    hr = UpdateStartTime();
+                    CHECK(hr)
                 }
 
                 if(m_ConnectedAsSpdif)

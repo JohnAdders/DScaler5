@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.7 2004-07-26 17:08:13 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.8 2004-07-28 13:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/26 17:08:13  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.6  2004/07/16 15:45:19  adcockj
 // Fixed compilation issues under .NET
 // Improved (hopefully) handling of negative times and preroll
@@ -98,7 +101,8 @@ HRESULT CAudioDecoder::ProcessLPCM()
     HRESULT hr = S_OK;
     int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
 
-    UpdateStartTime();
+    hr = UpdateStartTime();
+    CHECK(hr)
 
     for(DWORD i = 0; i < LenIn;)
     {

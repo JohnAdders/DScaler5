@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.27 2004-07-27 16:53:20 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.28 2004-07-28 13:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.27  2004/07/27 16:53:20  adcockj
+// Some spdif fixes
+//
 // Revision 1.26  2004/07/26 17:24:43  adcockj
 // Fixed crashing
 //
@@ -188,7 +191,7 @@ CAudioDecoder::CAudioDecoder() :
     m_BytesLeftInBuffer = 0;
     m_pDataOut = NULL;
     m_BufferSizeAtFrameStart = 0;
-    m_NeedToSendAC3Silence = false;
+    m_AC3SilenceFrames = 0;
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
@@ -892,7 +895,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
         pmt->pbFormat = (BYTE*)wfe;
         pmt->bFixedSizeSamples = TRUE;
         // make the sample buffer a quarter of a secong long
-        pmt->lSampleSize = 4 * 6 * 256 * ChannelsRequested * wfe->Format.wBitsPerSample / 8;
+        pmt->lSampleSize = 1 * 6 * 256 * ChannelsRequested * wfe->Format.wBitsPerSample / 8;
         return S_OK;
     }
     else
@@ -914,7 +917,15 @@ HRESULT CAudioDecoder::Activate()
     mad_stream_options(&m_stream, 0);
 
     m_rtNextFrameStart = _I64_MIN;
-    m_NeedToSendAC3Silence = true;
+
+    if(m_ConnectedAsSpdif && IsMediaTypeAC3(m_AudioInPin->GetMediaType()))
+    {
+        m_AC3SilenceFrames = 3;
+    }
+    else
+    {
+        m_AC3SilenceFrames = 0;
+    }
 
     return S_OK;
 }
@@ -944,6 +955,15 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     m_pDataOut = NULL;
     m_rtNextFrameStart = _I64_MIN;
     m_BufferSizeAtFrameStart = 0;
+
+    if(m_ConnectedAsSpdif && IsMediaTypeAC3(m_AudioInPin->GetMediaType()))
+    {
+        m_AC3SilenceFrames = 3;
+    }
+    else
+    {
+        m_AC3SilenceFrames = 0;
+    }
 
     return S_OK;
 }
@@ -990,7 +1010,6 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         m_InputSampleRate = wfe->nSamplesPerSec;
         m_IsDiscontinuity = true;
         m_NeedToAttachFormat = true;
-        Flush(m_AudioInPin);
         
         // cope with dynamic format changes
         // these can happen during DVD playback
@@ -1040,6 +1059,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
             else if(IsMediaTypeAC3(pMediaType))
             {
                 LOG(DBGLOG_FLOW, ("Got change to AC3\n"));
+                
                 if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
                 {
                     hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
@@ -1315,10 +1335,20 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         CHECK(hr);
     }
 
-    *m_pDataOut++ = (BYTE)HeaderWord;
-    *m_pDataOut++ = (BYTE)(HeaderWord >> 8);
-    *m_pDataOut++ = (BYTE)(DigitalLength << 3);
-    *m_pDataOut++ = (BYTE)(DigitalLength >> 5);
+    if(m_AC3SilenceFrames == 0)
+    {
+        *m_pDataOut++ = (BYTE)HeaderWord;
+        *m_pDataOut++ = (BYTE)(HeaderWord >> 8);
+        *m_pDataOut++ = (BYTE)(DigitalLength << 3);
+        *m_pDataOut++ = (BYTE)(DigitalLength >> 5);
+    }
+    else
+    {
+        *m_pDataOut++ = 0x00;
+        *m_pDataOut++ = 0x03;
+        *m_pDataOut++ = 0xbf;
+        *m_pDataOut++ = 0xc0;
+    }
 
     m_BytesLeftInBuffer -= 4;
     ASSERT(m_BytesLeftInBuffer >=0);
@@ -1330,23 +1360,33 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         CHECK(hr);
     }
 
-    long BytesToGo = DigitalLength;
+    long BytesToGo;
 
-    if(DigitalLength > m_BytesLeftInBuffer)
+    if(m_AC3SilenceFrames == 0)
     {
-        _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
-        pData += m_BytesLeftInBuffer;
-        BytesToGo -= m_BytesLeftInBuffer;
-        hr = Deliver();
-        CHECK(hr);
-        hr = GetOutputSampleAndPointer();
-        CHECK(hr);
-    }
-    _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
-    m_pDataOut += BytesToGo;
-    m_BytesLeftInBuffer -= BytesToGo;
+        BytesToGo = DigitalLength;
 
-    BytesToGo = FinalLength - DigitalLength - 8;
+        if(DigitalLength > m_BytesLeftInBuffer)
+        {
+            _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
+            pData += m_BytesLeftInBuffer;
+            BytesToGo -= m_BytesLeftInBuffer;
+            hr = Deliver();
+            CHECK(hr);
+            hr = GetOutputSampleAndPointer();
+            CHECK(hr);
+        }
+        _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
+        m_pDataOut += BytesToGo;
+        m_BytesLeftInBuffer -= BytesToGo;
+
+        BytesToGo = FinalLength - DigitalLength - 8;
+    }
+    else
+    {
+        BytesToGo =  FinalLength - 8;
+        --m_AC3SilenceFrames;
+    }
 
     if(BytesToGo > 0)
     {
@@ -1373,44 +1413,12 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     return hr;
 }
 
-HRESULT CAudioDecoder::SendDigitalSilence()
-{
-    ASSERT(m_BytesLeftInBuffer == 0);
-
-    HRESULT hr = GetOutputSampleAndPointer();
-    CHECK(hr);
-
-    int Padding = m_InternalMT.lSampleSize % 0x1800;
-    if(Padding > 0)
-    {
-        ZeroMemory(m_pDataOut, Padding);
-        m_pDataOut += Padding;
-    }
-
-    int DigitalLength = 0x1800 - 8;
-    for(DWORD i = 0; i < m_InternalMT.lSampleSize / 0x1800; ++i)
-    {
-        *m_pDataOut++ = 0x72;
-        *m_pDataOut++ = 0xf8;
-        *m_pDataOut++ = 0x1f;
-        *m_pDataOut++ = 0x4e;
-        *m_pDataOut++ = 0x00;
-        *m_pDataOut++ = 0x03;
-        *m_pDataOut++ = (BYTE)(DigitalLength << 3);
-        *m_pDataOut++ = (BYTE)(DigitalLength >> 5);
-        ZeroMemory(m_pDataOut, DigitalLength);
-        m_pDataOut += DigitalLength;
-    }
-    m_BytesLeftInBuffer = 0;
-    return Deliver();
-}
-
-
-void CAudioDecoder::UpdateStartTime()
+HRESULT CAudioDecoder::UpdateStartTime()
 {
     if(m_rtNextFrameStart != _I64_MIN)
     {
         REFERENCE_TIME OutputStart = m_rtNextFrameStart;
+
         if(m_BytesLeftInBuffer > 0)
         {
             OutputStart -= 10000000i64 * (m_InternalMT.lSampleSize - m_BytesLeftInBuffer) / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
@@ -1434,4 +1442,5 @@ void CAudioDecoder::UpdateStartTime()
    }
     
     m_rtNextFrameStart = _I64_MIN;
+    return S_OK;
 }

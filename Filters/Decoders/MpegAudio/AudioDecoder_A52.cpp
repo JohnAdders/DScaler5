@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.9 2004-07-27 16:53:21 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.10 2004-07-28 13:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/27 16:53:21  adcockj
+// Some spdif fixes
+//
 // Revision 1.8  2004/07/26 17:08:13  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -198,16 +201,10 @@ HRESULT CAudioDecoder::ProcessAC3()
             {
                 LOG(DBGLOG_ALL, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
                 
-                if(m_ConnectedAsSpdif && m_NeedToSendAC3Silence)
-                {
-                    hr = SendDigitalSilence();
-                    CHECK(hr);
-                    m_NeedToSendAC3Silence = false;
-                }
-
                 if(m_BufferSizeAtFrameStart <= 0)
                 {
-                    UpdateStartTime();
+                    hr = UpdateStartTime();
+                    CHECK(hr)
                 }
 
                 if(m_ConnectedAsSpdif)

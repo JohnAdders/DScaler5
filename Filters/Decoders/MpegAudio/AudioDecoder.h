@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.18 2004-07-27 16:53:21 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.19 2004-07-28 13:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -180,8 +180,7 @@ protected:
     BOOL IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType);
     HRESULT SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData);
-    HRESULT SendDigitalSilence();
-    void UpdateStartTime();
+    HRESULT UpdateStartTime();
 
 private:
     AM_MEDIA_TYPE m_InternalMT;
@@ -201,7 +200,7 @@ private:
     SI(IMediaSample) m_CurrentOutputSample;
     BYTE* m_pDataOut;
     long m_BufferSizeAtFrameStart;
-    bool m_NeedToSendAC3Silence;
+    long m_AC3SilenceFrames;
 };
 
 #define m_AudioInPin m_InputPins[0]

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.14 2004-07-27 16:53:21 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.15 2004-07-28 13:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/07/27 16:53:21  adcockj
+// Some spdif fixes
+//
 // Revision 1.13  2004/07/26 17:08:13  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -133,7 +136,8 @@ HRESULT CAudioDecoder::ProcessMPA()
 
         if(m_BufferSizeAtFrameStart <= 0)
         {
-            UpdateStartTime();
+            hr = UpdateStartTime();
+            CHECK(hr)
         }
         
         short len = m_stream.next_frame - m_stream.this_frame;
