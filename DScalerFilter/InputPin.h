@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.12 2003-11-13 17:27:44 adcockj Exp $
+// $Id: InputPin.h,v 1.13 2003-11-13 21:39:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -141,6 +141,7 @@ protected:
 		{
 			IsTopLine = RHS.IsTopLine;
 			m_Sample = RHS.m_Sample;
+            m_EndTime = RHS.m_EndTime;
 			return *this;
 		}
     public:

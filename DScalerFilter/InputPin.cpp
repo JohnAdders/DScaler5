@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.28 2003-11-13 17:27:44 adcockj Exp $
+// $Id: InputPin.cpp,v 1.29 2003-11-13 21:39:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.28  2003/11/13 17:27:44  adcockj
+// Minor improvements
+//
 // Revision 1.27  2003/10/31 17:19:37  adcockj
 // Added support for manual pulldown selection (works with Elecard Filters)
 //
@@ -685,7 +688,7 @@ HRESULT CInputPin::GetOutputSample(IMediaSample** OutSample)
 
 HRESULT CInputPin::InternalProcessOutput(BOOL HurryUp)
 {
-    REFERENCE_TIME FrameEndTime;
+    REFERENCE_TIME FrameEndTime = 0;
 	HRESULT hr = S_OK;
 	
 	while(hr == S_OK && m_FieldsInBuffer > m_Filter->m_NumberOfFieldsToBuffer)
@@ -1637,52 +1640,52 @@ CInputPin::eHowToProcess CInputPin::WorkOutHowToProcess(REFERENCE_TIME& FrameEnd
             Index = m_Filter->GetParamInt(CDScaler::PULLDOWNINDEX);
         }
 
-            switch(m_Filter->GetParamEnum(CDScaler::PULLDOWNMODE))
+        switch(m_Filter->GetParamEnum(CDScaler::PULLDOWNMODE))
+        {
+        case PULLDOWN_32:
+            switch((FrameNum + Index) % 5)
             {
-            case PULLDOWN_32:
-                switch((FrameNum + Index) % 5)
-                {
-                case 1:
-                    HowToProcess = PROCESS_WEAVE;
-                    FrameEndTime += m_FieldTiming / 2;
-                    break;
-                case 4:
-                    HowToProcess = PROCESS_WEAVE;
-                    break;
-                default:
-                    HowToProcess = PROCESS_IGNORE;
-                    break;
-                }
+            case 1:
+                HowToProcess = PROCESS_WEAVE;
+                FrameEndTime += m_FieldTiming / 2;
                 break;
-            case PULLDOWN_22:
-                if(((FrameNum + Index) & 1) == 1)
-                {
-                    HowToProcess = PROCESS_WEAVE;
-                }
-                else
-                {
-                    HowToProcess = PROCESS_IGNORE;
-                }
+            case 4:
+                HowToProcess = PROCESS_WEAVE;
                 break;
-            case HALFRATEVIDEO:
-                if((FrameNum & 1) == 0)
-                {
-                    HowToProcess = PROCESS_WEAVE;
-                }
-                else
-                {
-                    HowToProcess = PROCESS_IGNORE;
-                }
+            default:
+                HowToProcess = PROCESS_IGNORE;
                 break;
+            }
+            break;
+        case PULLDOWN_22:
+            if(((FrameNum + Index) & 1) == 1)
+            {
+                HowToProcess = PROCESS_WEAVE;
+            }
+            else
+            {
+                HowToProcess = PROCESS_IGNORE;
+            }
+            break;
+        case HALFRATEVIDEO:
+            if((FrameNum & 1) == 0)
+            {
+                HowToProcess = PROCESS_DEINTERLACE;
+            }
+            else
+            {
+                HowToProcess = PROCESS_IGNORE;
+            }
+            break;
         default:
         case FULLRATEVIDEO:
             break;
-            }
         }
-        else
-        {
+    }
+    else
+    {
         HowToProcess = PROCESS_IGNORE;
-        }
+    }
 
     return HowToProcess;
 }
