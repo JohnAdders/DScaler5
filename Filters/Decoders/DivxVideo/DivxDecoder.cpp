@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.8 2004-12-06 18:04:57 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.9 2004-12-21 14:43:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/12/06 18:04:57  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.7  2004/11/25 17:22:09  adcockj
 // Fixed some more connection issues
 //
@@ -654,11 +657,7 @@ HRESULT CDivxDecoder::Deliver()
                 return hr;
             }
             Props.tStart = rtStart;
-
-            // ffdshow quality control requires stop times
-            // nothing else needs these and setting stop times
-            // seems to sometimes results in frames being dropped
-            // which we really wanted to show
+            Props.tStop = rtStop;
 
             if(m_IsDiscontinuity)
             {
@@ -669,6 +668,7 @@ HRESULT CDivxDecoder::Deliver()
                 Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
             }
             Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
+            Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
             Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
             Props.dwTypeSpecificFlags = 0;
