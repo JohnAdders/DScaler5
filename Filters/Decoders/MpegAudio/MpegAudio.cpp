@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.5 2004-07-16 15:45:19 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.6 2005-02-17 09:28:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/16 15:45:19  adcockj
+// Fixed compilation issues under .NET
+// Improved (hopefully) handling of negative times and preroll
+// Changed name of filter
+//
 // Revision 1.4  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -99,6 +104,7 @@ STDAPI DllRegisterServer(void)
         {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_AUDIO},
         {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_AUDIO},
         {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG2_AUDIO},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG},
         {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DOLBY_AC3},
         {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DOLBY_AC3},
         {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DOLBY_AC3},

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.48 2005-02-08 15:32:34 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.49 2005-02-17 09:28:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.48  2005/02/08 15:32:34  adcockj
+// Added CSS handling
+//
 // Revision 1.47  2005/02/05 13:39:33  adcockj
 // fixed rate addition issues
 //
@@ -467,6 +470,8 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
                 (pmt->majortype == MEDIATYPE_Audio && 
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
+                (pmt->majortype == MEDIATYPE_Audio && 
+                 pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG) ||
                 (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
                  pmt->subtype == MEDIASUBTYPE_DOLBY_AC3) ||
                 (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
@@ -1525,7 +1530,8 @@ BOOL CAudioDecoder::IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType)
             pMediaType->subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
             pMediaType->subtype == MEDIASUBTYPE_MPEG1Payload ||
             pMediaType->subtype == MEDIASUBTYPE_MPEG1Packet ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO);
+            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG);
 }
 
 BOOL CAudioDecoder::IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType)
