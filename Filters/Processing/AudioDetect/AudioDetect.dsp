@@ -110,14 +110,6 @@ SOURCE="$(InputPath)"
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\DScaler.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DScaler_Field.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\AudioDetect.cpp
 # End Source File
 # Begin Source File
@@ -130,7 +122,7 @@ SOURCE=.\AudioDetect.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\DScalerWeave.cpp
+SOURCE=.\AudioDetectFilter.cpp
 # End Source File
 # Begin Source File
 
@@ -143,7 +135,7 @@ SOURCE=.\StdAfx.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\DScaler.h
+SOURCE=.\AudioDetect.h
 # End Source File
 # Begin Source File
 

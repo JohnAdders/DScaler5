@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDetect.cpp,v 1.2 2004-09-13 14:28:45 adcockj Exp $
+// $Id: AudioDetect.cpp,v 1.3 2004-10-21 18:52:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // AudioDetect.dll - DirectShow filter for detecting audio type in PCM streams
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/09/13 14:28:45  adcockj
+// Connection changes and crash fixes
+//
 // Revision 1.1  2004/09/10 16:55:46  adcockj
 // Initial version of spdif input filter
 //
@@ -61,6 +64,7 @@ CAudioDetect::CAudioDetect() :
 
 	m_StreamType = STREAM_PCM;
 	m_SamplesPerSec = 48000;
+    m_BufferStartTime = 0;
 }
 
 CAudioDetect::~CAudioDetect()
@@ -385,6 +389,12 @@ HRESULT CAudioDetect::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     m_buff.resize(m_buff.size() + len);
     memcpy(&m_buff[0] + tmp, pDataIn, len);
 
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    {
+        m_BufferStartTime = pSampleProperties->tStart;
+        m_BufferStartTime -= tmp * 10000000i64  / (m_SamplesPerSec * 4);
+    }
+
     // only process if we have at least one full ac3 buffer
     // in the buffer and at least 2 spdif headers
     // worst case is that we are two bytes in to one 0x1800 long structure
@@ -461,6 +471,7 @@ HRESULT CAudioDetect::ProcessPCM()
                 int Size = m_buff.size() - ByteToChuck;
                 memmove(&m_buff[0], pTest, Size);
                 m_buff.resize(Size);
+                m_BufferStartTime += ByteToChuck * 10000000i64  / (m_SamplesPerSec * 4);
                 return hr;
             }
             ++pTest;
@@ -474,6 +485,7 @@ HRESULT CAudioDetect::ProcessPCM()
         int Size = m_buff.size() - ByteToChuck;
         memmove(&m_buff[0], pData, Size);
         m_buff.resize(Size);
+        m_BufferStartTime += ByteToChuck * 10000000i64  / (m_SamplesPerSec * 4);
     }
 	return hr;
 }
@@ -517,11 +529,22 @@ HRESULT CAudioDetect::ProcessAC3()
         {
         	m_StreamType = STREAM_PCM;
             CreateInternalMediaType();
+            if(lenIn > 0)
+	        {
+		        memmove(&m_buff[0], pDataIn, lenIn);
+	        }
+	        m_buff.resize(lenIn);
+
             return hr;
         }
         if(pDataIn[2] != 0x0001)
         {
             ChangeTypeBasedOnSpdifType(pDataIn[2]);
+	        if(lenIn > 0)
+	        {
+		        memmove(&m_buff[0], pDataIn, lenIn);
+	        }
+	        m_buff.resize(lenIn);
             return hr;
         }
         DWORD Size = pDataIn[3] >> 3;
@@ -541,6 +564,7 @@ HRESULT CAudioDetect::ProcessAC3()
         }
         pDataIn += 0x1800 / 2;
         lenIn -= 0x1800;
+        m_BufferStartTime += 0x1800 * 10000000i64  / (m_SamplesPerSec * 4);
 	}
 
 	if(lenIn > 0)
@@ -632,6 +656,10 @@ HRESULT CAudioDetect::Deliver(IMediaSample* pOut)
 
 	pOut->SetPreroll(FALSE);
 	pOut->SetSyncPoint(TRUE);
+    if(m_BufferStartTime != 0)
+    {
+        pOut->SetTime(&m_BufferStartTime, NULL);
+    }
 
 	if(m_NeedToAttachFormat)
 	{

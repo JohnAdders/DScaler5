@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDetect.h,v 1.1 2004-09-10 16:55:46 adcockj Exp $
+// $Id: AudioDetect.h,v 1.2 2004-10-21 18:52:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -114,6 +114,7 @@ protected:
 	WAVEFORMATEX m_InternalWF;
 	AM_MEDIA_TYPE m_InternalMT;
 	DWORD m_SamplesPerSec;
+    REFERENCE_TIME m_BufferStartTime;
 
 	std::vector<BYTE> m_buff;
 

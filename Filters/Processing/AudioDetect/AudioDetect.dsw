@@ -3,21 +3,6 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
-Project: "DMO_Lib"=..\..\..\DMO\DMO_Lib\DMO_Lib.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "AudioDetect"=.\AudioDetect.dsp - Package Owner=<4>
 
 Package=<5>
@@ -30,76 +15,7 @@ Package=<4>
     Project_Dep_Name GenDMOProp
     End Project Dependency
     Begin Project Dependency
-    Project_Dep_Name Deint_Bob
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name DMO_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name Deint_Diag
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name Deint_Weave
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name Video_Gamma
-    End Project Dependency
-    Begin Project Dependency
     Project_Dep_Name Filter_Lib
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "Deint_Bob"=..\..\..\DMO\Deinterlace\Deint_Bob\Deint_Bob.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name DMO_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "Deint_Diag"=..\..\..\DMO\Deinterlace\Deint_Diag\Deint_Diag.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name DMO_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "Deint_Weave"=..\..\..\DMO\Deinterlace\Deint_Weave\Deint_Weave.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name DMO_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
     End Project Dependency
 }}}
 
@@ -125,24 +41,6 @@ Package=<5>
 
 Package=<4>
 {{{
-}}}
-
-###############################################################################
-
-Project: "Video_Gamma"=..\..\..\DMO\Video\Video_Gamma\Video_Gamma.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name DMO_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
-    End Project Dependency
 }}}
 
 ###############################################################################
