@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.70 2005-03-08 13:35:09 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.71 2005-03-20 14:18:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.70  2005/03/08 13:35:09  adcockj
+// Better handling of square pixel formats
+// Turn off quality control
+//
 // Revision 1.69  2005/03/04 17:54:37  adcockj
 // Menu fixes & added rate stuff locking
 //
@@ -509,6 +513,12 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
         break;
     case ANALOGBLANKING:
         break;
+    case FIELD1FIRST:
+        if(m_VideoOutPin->m_ConnectedPin)
+        {
+            return S_FALSE;
+        }
+        break;
     }
     return hr;
 }
@@ -835,6 +845,7 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
         DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
+        VideoFlags |= (GetParamBool(FIELD1FIRST))?VIDEOTYPEFLAG_SET_FIELD1FIRST:0;
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
     else if(pPin == m_SubpictureInPin)
@@ -1262,7 +1273,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     SI(IMediaSample) pOut;
     BYTE* pDataOut = NULL;
     
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -1671,10 +1682,10 @@ void CMpegDecoder::UpdateAspectRatio()
 
         Simplify(m_ARMpegX, m_ARMpegY);
 
-        m_ARMpegX *= m_MpegWidth;
+        m_ARMpegX *= m_CurrentSequence.display_width;
     }
 
-    m_ARMpegY *= min(m_MpegHeight, 1080);
+    m_ARMpegY *= min(m_CurrentSequence.display_height, 1080);
     Simplify(m_ARMpegX, m_ARMpegY);
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.12 2005-03-10 09:03:58 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.13 2005-03-20 14:18:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2005/03/10 09:03:58  adcockj
+// test for for PAL interlacing
+//
 // Revision 1.11  2005/02/03 15:34:40  adcockj
 // better vmr connections
 //
@@ -382,7 +385,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         if(TypeNum%3 == InterlacedIndex)
         {
             vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
-            if(m_AvgTimePerFrame == 400000)
+            if(VideoControlFlags & VIDEOTYPEFLAG_SET_FIELD1FIRST)
             {
                 vih->dwInterlaceFlags |= AMINTERLACE_Field1First;
             }

@@ -17,7 +17,7 @@ devenv MpegVideo.sln /build "Release"
 cd ..\..\..\Help
 "c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler5.hhp
 cd ..\Install
-"c:\Program Files\Inno Setup 2\Compil32.exe" /cc DScaler5.iss
+"c:\Program Files\Inno Setup 5\Compil32.exe" /cc DScaler5.iss
 copy Output\Setup.exe ..\..\DScaler5%1.exe
 cd ..\..
 del /f /q /s DScaler5

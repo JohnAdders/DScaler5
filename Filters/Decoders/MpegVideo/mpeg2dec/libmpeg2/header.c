@@ -337,19 +337,6 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
 			unsigned int * pixel_width,
 			unsigned int * pixel_height)
 {
-    // cope with HDTV and other odd modes
-    // that use square pixels
-    static struct {
-	unsigned int width, height;
-    } square_modes[] = {
-	{1920, 1088},
-	{1280, 720},
-	{768, 576},
-	{1024, 576},
-	{640, 480},
-	{864, 480},
-    };
-
     static struct {
 	unsigned int width, height;
     } video_modes[] = {
@@ -378,15 +365,9 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
     width = sequence->picture_width;
     height = sequence->picture_height;
 
-    for (i = 0; i < sizeof (square_modes) / sizeof (square_modes[0]); i++)
-    {
-	    if (width == square_modes[i].width && height == square_modes[i].height)
-        {
-            *pixel_width = 1;
-            *pixel_height = 1;
-            return 2;
-        }
-    }
+    for (i = 0; i < sizeof (video_modes) / sizeof (video_modes[0]); i++)
+      	if (width == video_modes[i].width && height == video_modes[i].height)
+      	    break;
 
     // JA 7/Mar/2005 removed 
     if (i == sizeof (video_modes) / sizeof (video_modes[0]) ||
