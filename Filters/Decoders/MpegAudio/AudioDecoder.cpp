@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.42 2004-10-27 12:10:55 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.43 2004-10-29 09:11:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.42  2004/10/27 12:10:55  adcockj
+// checked over Laurent's changes
+//
 // Revision 1.41  2004/10/24 16:24:28  laurentg
 // Negative delay added when doing S/PDIF passthrough
 //
@@ -896,6 +899,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
                     UseSpdif = 0;
                 }
             }
+            TypeNum = 2;
         }
         else
         {
@@ -910,7 +914,6 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             if(TypeNum > 3) return VFW_S_NO_MORE_ITEMS;
             TypeNum--;
             #endif
-            TypeNum = 2;
         }
 
         pmt->majortype = MEDIATYPE_Audio;
