@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.3 2004-02-12 17:06:45 adcockj Exp $
+// $Id: Utils.h,v 1.4 2004-02-17 16:51:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -32,6 +32,8 @@ bool AreMediaTypesIdentical(const AM_MEDIA_TYPE* Type1, const AM_MEDIA_TYPE* Typ
 HRESULT RegisterFilter(const CLSID& clsidFilter, LPCWSTR wszName, const REGFILTER2* pRegFilter);
 HRESULT UnregisterFilter(const CLSID& clsidFilter);
 
+
+#define countof(Array) (sizeof(Array)/sizeof(Array[0]))
 
 #define DBGLOG_SILENT 0
 #define DBGLOG_ERROR  1

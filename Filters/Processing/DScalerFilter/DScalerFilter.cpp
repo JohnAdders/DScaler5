@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.2 2004-02-17 16:51:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 // Revision 1.5  2003/10/31 17:19:37  adcockj
 // Added support for manual pulldown selection (works with Elecard Filters)
 //
@@ -96,8 +101,8 @@ STDAPI DllRegisterServer(void)
 							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12, 
 							&MEDIATYPE_Video, &MEDIASUBTYPE_NV12 };
     
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, sizeof(Types)/sizeof(REGPINTYPES), Types, 0, NULL, &GUID_NULL}, 
-                              { REG_PINFLAG_B_OUTPUT , 1, sizeof(Types)/sizeof(REGPINTYPES), Types, 0, NULL, &GUID_NULL}};
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(Types), Types, 0, NULL, &GUID_NULL}, 
+                              { REG_PINFLAG_B_OUTPUT , 1, countof(Types), Types, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
    

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.3 2004-02-12 17:06:45 adcockj Exp $
+// $Id: Utils.cpp,v 1.4 2004-02-17 16:51:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.2  2004/02/10 13:24:13  adcockj
 // Lots of bug fixes + corrected interlaced YV12 upconversion
 //
@@ -188,7 +192,7 @@ char* GetGUIDName(const GUID &guid)
     {
         return "GUID_NULL";
     }
-    for(int i=0;i<(sizeof(names)/sizeof(names[0]));i++)
+    for(int i=0;i<countof(names);i++)
     {
         if(names[i].guid==guid)
         {
@@ -300,7 +304,7 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
                 {AMINTERLACE_DisplayModeBobOrWeave,"AMINTERLACE_DisplayModeBobOrWeave"}
             };
 
-            for(int i=0;i<sizeof(flags)/sizeof(flags[0]);i++)
+            for(int i=0;i<countof(flags);i++)
             {
                 if(flags[i].dwFlag&pHeader2->dwInterlaceFlags)
                 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.2 2004-02-12 17:06:43 adcockj Exp $
+// $Id: Params.h,v 1.3 2004-02-17 16:51:33 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@
 #define DEFINE_PARAM_ENUM(max, neutral, label) {{MPT_ENUM, 0, 0, max, neutral, L"None", label,}, neutral,},
 
 #define END_PARAM_LIST()         {{MPT_INT, 0, 0, 1, 0, L"", L"",}, 0, }, \
-                  }; if(pCount != NULL) *pCount = sizeof(_params)/sizeof(ParamInfo) - 1; return _params; }; \
+                  }; if(pCount != NULL) *pCount = countof(_params) - 1; return _params; }; \
 
 #define GetParamFloat(Index) ((float)_GetParamList()[Index].Value)
 #define GetParamInt(Index) ((long)_GetParamList()[Index].Value)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.3 2004-02-17 16:51:33 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/10 13:24:12  adcockj
+// Lots of bug fixes + corrected interlaced YV12 upconversion
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -95,8 +98,8 @@ STDAPI DllRegisterServer(void)
     	{&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
     };
     
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, sizeof(InputTypes)/sizeof(REGPINTYPES), InputTypes, 0, NULL, &GUID_NULL}, 
-                              { REG_PINFLAG_B_OUTPUT , 1, sizeof(OutputTypes)/sizeof(REGPINTYPES), OutputTypes, 0, NULL, &GUID_NULL}};
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
+                              { REG_PINFLAG_B_OUTPUT , 1, countof(OutputTypes), OutputTypes, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
    
