@@ -10,7 +10,9 @@ cvs -z3 -d:ext:%2@cvs.sf.net:/cvsroot/deinterlace co DScaler5
 cd DScaler5
 7z a -tzip ..\DScaler5%1src.zip *.* -r
 call c:\PROGRA~1\MICROS~2\VC98\bin\vcvars32.bat
-cd Filters\Decoders\MpegAudio
+cd Help
+"c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler.hhp
+cd ..\Filters\Decoders\MpegAudio
 msdev MpegAudio.dsw /MAKE "All"
 cd ..\MpegVideo
 msdev MpegVideo.dsw /MAKE "All"
