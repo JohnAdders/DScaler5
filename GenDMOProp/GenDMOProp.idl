@@ -1,0 +1,29 @@
+// GenDMOProp.idl : IDL source for GenDMOProp.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (GenDMOProp.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(0E93874B-7AED-11D7-B84B-0002A5623377),
+	version(1.0),
+	helpstring("GenDMOProp 1.0 Type Library")
+]
+library GENDMOPROPLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+
+	[
+		uuid(0E938757-7AED-11D7-B84B-0002A5623377),
+		helpstring("GenDMOPropPage Class")
+	]
+	coclass GenDMOPropPage
+	{
+		interface IUnknown;
+	};
+};
