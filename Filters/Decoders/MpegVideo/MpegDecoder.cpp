@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.59 2004-12-06 18:04:58 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.60 2004-12-12 20:35:15 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.59  2004/12/06 18:04:58  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.58  2004/11/27 22:15:22  adcockj
 // whoops, shouldn't have checked in css tests
 //
@@ -1416,6 +1419,7 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
     if(m_dec != NULL)
     {
+		mpeg2_close(m_dec);
         mpeg2_free(m_dec);
         m_dec = mpeg2_init();
         if(cbSequenceHeader > 0)
@@ -1474,6 +1478,7 @@ HRESULT CMpegDecoder::Deactivate()
 {
     if(m_dec != NULL)
     {
+        mpeg2_close(m_dec);
         mpeg2_free(m_dec);
         m_dec = NULL;
     }

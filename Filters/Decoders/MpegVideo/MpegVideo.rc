@@ -54,8 +54,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,4,0
- PRODUCTVERSION 0,0,4,0
+ FILEVERSION 0,0,5,0
+ PRODUCTVERSION 0,0,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -73,14 +73,14 @@ BEGIN
             VALUE "Comments", "This file is licensed under the GPL\0"
             VALUE "CompanyName", "DScaler Team\0"
             VALUE "FileDescription", "MpegVideo Module\0"
-            VALUE "FileVersion", "0, 0, 4, 0\0"
+            VALUE "FileVersion", "0, 0, 5, 0\0"
             VALUE "InternalName", "MpegVideo\0"
             VALUE "LegalCopyright", "Copyright 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al\0"
             VALUE "LegalTrademarks", "(c) 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al\0"
             VALUE "OriginalFilename", "MpegVideo.DLL\0"
             VALUE "PrivateBuild", "\0"
             VALUE "ProductName", "MpegVideo Module\0"
-            VALUE "ProductVersion", "0, 0, 4, 0\0"
+            VALUE "ProductVersion", "0, 0, 5, 0\0"
             VALUE "SpecialBuild", "\0"
         END
     END
