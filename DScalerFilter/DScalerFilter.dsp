@@ -152,7 +152,7 @@ SOURCE=.\OutputPin.cpp
 
 !ELSEIF  "$(CFG)" == "DScalerFilter - Win32 Release"
 
-# ADD CPP /GB /O1
+# ADD CPP /GB /Od
 
 !ENDIF 
 
