@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.57 2004-11-26 15:15:03 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.58 2004-11-27 22:15:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.57  2004/11/26 15:15:03  adcockj
+// Fixed overlay stutter
+//
 // Revision 1.56  2004/11/25 17:22:10  adcockj
 // Fixed some more connection issues
 //
@@ -482,10 +485,6 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
     {
         return SupportPropSetSubPic(dwPropID, pTypeSupport);
     }
-    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
-    {
-        return SupportPropSetCopyProt(dwPropID, pTypeSupport);
-    }
     return E_NOTIMPL;
 }
 
@@ -498,10 +497,6 @@ HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
-    }
-    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
-    {
-        return SetPropSetCopyProt(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
     else
     {
@@ -520,10 +515,6 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
-    }
-    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
-    {
-        return GetPropSetCopyProt(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
     else
     {
@@ -2101,20 +2092,5 @@ void CMpegDecoder::CorrectOutputSize()
     m_VideoOutPin->SetAspectY(m_ARMpegY * m_ARAdjustY);
     m_VideoOutPin->SetWidth(m_OutputWidth);
     m_VideoOutPin->SetHeight(m_OutputHeight);
-}
-
-STDMETHODIMP CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData)
-{
-    return Set(guidPropSet, dwPropID, pInstanceData, cbInstanceData, pPropData, cbPropData, NULL);
-}
-
-STDMETHODIMP CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned)
-{
-    return Get(guidPropSet, dwPropID, pInstanceData, cbInstanceData, pPropData, cbPropData, pcbReturned, NULL);
-}
-
-STDMETHODIMP CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport)
-{
-    return QuerySupported(guidPropSet, dwPropID, pTypeSupport, NULL);
 }
 

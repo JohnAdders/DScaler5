@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.29 2004-11-26 15:15:04 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.30 2004-11-27 22:15:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -38,8 +38,7 @@ DEFINE_GUID(CLSID_CMpegDecoder, 0xf8904f1f, 0x371, 0x4471, 0x88, 0x66, 0x90, 0xe
 class CMpegDecoder : 
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed,
-    public IAMDecoderCaps,
-    public IKsPropertySet
+    public IAMDecoderCaps
 {
 public:
 
@@ -54,7 +53,6 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281AB
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(ISaveDefaults)
     IMPLEMENTS_INTERFACE(IAMDecoderCaps)
-    IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()
 
 public:
@@ -118,12 +116,7 @@ public:
     HRESULT Activate();
     HRESULT Deactivate();
 
-    // IKsPropertySet
-    STDMETHOD(Set)(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData);
-    STDMETHOD(Get)(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned);
-    STDMETHOD(QuerySupported)(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport);
-
-protected:
+ protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
 
@@ -300,14 +293,6 @@ private:
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
     void PillarBox(long YAdjust, long XAdjust);
     bool m_LastPictureWasStill;
-
-    HRESULT GetPropSetCopyProt(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
-    HRESULT SetPropSetCopyProt(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
-    HRESULT SupportPropSetCopyProt(DWORD dwPropID, DWORD *pTypeSupport);
-    void UnCopyProtect(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
-	int m_varient;
-	BYTE m_Challenge[10], m_KeyCheck[5], m_Key[10];
-	BYTE m_DiscKey[6], m_TitleKey[6];
 
 
 };
