@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.6 2004-12-06 18:04:56 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.7 2004-12-07 16:53:32 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.6  2004/12/06 18:04:56  adcockj
+;// Major improvements to deinterlacing
+;//
 ;// Revision 1.5  2004/08/31 16:33:40  adcockj
 ;// Minor improvements to quality control
 ;// Preparation for next version
@@ -27,7 +30,6 @@ USE32
 
 segment .data
 
-Still dd 0xffffffff, 0xffffffff
 ShiftMask dd 0xfefffeff, 0xfefffeff
 YMask dd 0x00ff00ff, 0x00ff00ff
 UVMask dd 0xff00ff00, 0xff00ff00
@@ -35,11 +37,8 @@ UVMask dd 0xff00ff00, 0xff00ff00
 global _MOVE
 _MOVE dd 0x0f0f0f0f, 0x0f0f0f0f
 
-global _MOVE2
-_MOVE2 dd 0x00010001, 0x00010001
-
-global _MOVE3
-_MOVE3 dd 0x01010101, 0x01010101
+global _STILL
+_STILL dd 0x01010101, 0x01010101
 
 segment .text
 
@@ -75,16 +74,34 @@ proc _Deint_Diag_Core_YUY2%1, 28
     sub eax, 8
     mov [ebp + %$PixelCount], eax
 
-	; simple bob first 8 bytes
-	movq mm0, [ebx]
-	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
-
-	mov	eax, [ebp + %$Dest]
-	DS_MOVNTQ [eax], mm0
-
-	; now loop over the stuff in the middle
+    ; now loop over the stuff in the middle
 	mov		esi, [ebp + %$M1]
 	mov		edi, [ebp + %$M3]
+
+	; no diagonal on first 8 bytes
+	movq    mm2, [ebx]
+	movq    mm5, [edx]
+    movq    mm1, [esi]
+    DS_PAVGB mm5, mm2, mm0, [ShiftMask]
+	
+    mov     eax, [ebp + %$T4]
+    movq	mm2, [eax]
+
+    movq    mm3, [edi]
+
+    mov     eax, [ebp + %$B4]
+    movq	mm4, [eax]
+    
+    pcmpgtb mm2, [_STILL]
+    pcmpgtb mm3, [_STILL]
+    pcmpgtb mm4, [_STILL]
+
+    por  mm2, mm4                ; top or bottom still
+    pand  mm3, mm2               ; where we should weave
+
+	mov		eax, [ebp + %$Dest]
+    DS_COMBINE mm1, mm5, mm3
+    DS_MOVNTQ [eax], mm1
 
 	mov		ecx, 8				; curr offset into all lines
 
@@ -219,12 +236,12 @@ LoopYUY2%1:
     ; mm4 = movement map in the bottom
     ; mm6 = Bob pixels          
 
-    pcmpgtb mm2, [_MOVE3]           ; FF where still
-    pcmpgtb mm3, [_MOVE3]           ; non-zero where mm3 > MOVE i.e. still
-    pcmpgtb mm4, [_MOVE3]           ; non-zero where mm4 > MOVE i.e. still
+    pcmpgtb mm2, [_STILL]           ; FF where still
+    pcmpgtb mm3, [_STILL]           ; non-zero where mm3 > MOVE i.e. still
+    pcmpgtb mm4, [_STILL]           ; non-zero where mm4 > MOVE i.e. still
 
     por  mm2, mm4                   ; top or bottom still
-    pand  mm3, mm2                   ; middle and top or bottom still
+    pand  mm3, mm2                  ; middle and top or bottom still
 
    
 	mov		eax, [ebp + %$Dest]
@@ -237,14 +254,35 @@ LoopYUY2%1:
 
     add ebx, 8
     add edx, 8
+    add esi, 8
+    add edi, 8
 
     ; finish up
-	; simple bob last 8 bytes
-	movq mm0, [ebx]
+	; no diag on  last 8 bytes
+
+	movq    mm2, [ebx]
+	movq    mm5, [edx]
+    movq    mm1, [esi]
+    DS_PAVGB mm5, mm2, mm0, [ShiftMask]
+	
+    mov     eax, [ebp + %$T4]
+    movq	mm2, [eax + ecx]
+
+    movq    mm3, [edi]
+
+    mov     eax, [ebp + %$B4]
+    movq	mm4, [eax + ecx]
+    
+    pcmpgtb mm2, [_STILL]
+    pcmpgtb mm3, [_STILL]
+    pcmpgtb mm4, [_STILL]
+
+    por  mm2, mm4                ; top or bottom still
+    pand  mm3, mm2               ; where we should weave
 
 	mov		eax, [ebp + %$Dest]
-	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
-	DS_MOVNTQ [eax + ecx], mm0
+    DS_COMBINE mm1, mm5, mm3
+    DS_MOVNTQ [eax + ecx], mm1
 
 	mov esi, [esp+16]
 	mov edi, [esp+20]
@@ -257,13 +295,13 @@ endproc
 %endmacro
 
 ;---------------------------------------------------------------------------
-; Do diagonal Interpolating packed Luma method
+; Do diagonal Interpolating packed Values method
 ;---------------------------------------------------------------------------
-%imacro Deint_Diag_Core_Luma 1
+%imacro Deint_Diag_Core_Packed 1
 
-global _Deint_Diag_Core_Luma%1
+global _Deint_Diag_Core_Packed%1
 
-proc _Deint_Diag_Core_Luma%1, 28
+proc _Deint_Diag_Core_Packed%1, 28
 
     %define %1 1
 
@@ -282,23 +320,38 @@ proc _Deint_Diag_Core_Luma%1, 28
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
-	mov edi, [ebp + %$Dest]
+	mov	esi, [ebp + %$M1]
+	mov	edi, [ebp + %$M3]
 
     ; PixelCount -= 8
     mov eax, [ebp + %$PixelCount]
     sub eax, 8
     mov [ebp + %$PixelCount], eax
 
-	; simple bob first 8 bytes
-	movq mm0, [ebx]
-	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
+	; no diagonal on first 8 bytes
+	movq    mm2, [ebx]
+	movq    mm5, [edx]
+    movq    mm1, [esi]
+    DS_PAVGB mm5, mm2, mm0, [ShiftMask]
+	
+    mov     eax, [ebp + %$T4]
+    movq	mm2, [eax]
+
+    movq    mm3, [edi]
+
+    mov     eax, [ebp + %$B4]
+    movq	mm4, [eax]
+    
+    pcmpgtb mm2, [_STILL]
+    pcmpgtb mm3, [_STILL]
+    pcmpgtb mm4, [_STILL]
+
+    por  mm2, mm4                ; top or bottom still
+    pand  mm3, mm2               ; where we should weave
 
 	mov		eax, [ebp + %$Dest]
-	DS_MOVNTQ [eax], mm0
-
-	; now loop over the stuff in the middle
-	mov		esi, [ebp + %$M1]
-	mov		edi, [ebp + %$M3]
+    DS_COMBINE mm1, mm5, mm3
+    DS_MOVNTQ [eax], mm1
 
 	mov		ecx, 8				; curr offset into all lines
 
@@ -401,20 +454,10 @@ LoopLuma%1:
 
 
     ;//////////////////////////////////////////////////////////////////////////
-    ; simple weave
+    ; get simple weave value
     ;//////////////////////////////////////////////////////////////////////////
 
-    ; at the start of this function
-    ; mm0 = 0
-    ; mm6 = Bob pixels          
-
     movq mm1, [esi]
-
-    ; these must be the values as we exit
-    ; mm0 = 0
-    ; mm1 = weave pixels
-    ; mm6 = Bob pixels          
-
 
     ;//////////////////////////////////////////////////////////////////////////
     ; Bottom
@@ -439,9 +482,9 @@ LoopLuma%1:
     ; mm4 = "movement" in the bottom
     ; mm6 = Bob pixels          
 
-    pcmpgtb mm2, [_MOVE3]
-    pcmpgtb mm3, [_MOVE3]
-    pcmpgtb mm4, [_MOVE3]
+    pcmpgtb mm2, [_STILL]
+    pcmpgtb mm3, [_STILL]
+    pcmpgtb mm4, [_STILL]
 
     por  mm2, mm4                ; top or bottom still
     pand  mm3, mm2               ; where we should weave
@@ -456,14 +499,35 @@ LoopLuma%1:
 
     add ebx, 8
     add edx, 8
+    add esi, 8
+    add edi, 8
 
     ; finish up
-	; simple bob last 8 bytes
-	movq mm0, [ebx]
+	; no diag on  last 8 bytes
+
+	movq    mm2, [ebx]
+	movq    mm5, [edx]
+    movq    mm1, [esi]
+    DS_PAVGB mm5, mm2, mm0, [ShiftMask]
+	
+    mov     eax, [ebp + %$T4]
+    movq	mm2, [eax + ecx]
+
+    movq    mm3, [edi]
+
+    mov     eax, [ebp + %$B4]
+    movq	mm4, [eax + ecx]
+    
+    pcmpgtb mm2, [_STILL]
+    pcmpgtb mm3, [_STILL]
+    pcmpgtb mm4, [_STILL]
+
+    por  mm2, mm4                ; top or bottom still
+    pand  mm3, mm2               ; where we should weave
 
 	mov		eax, [ebp + %$Dest]
-	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
-	DS_MOVNTQ [eax + ecx], mm0
+    DS_COMBINE mm1, mm5, mm3
+    DS_MOVNTQ [eax + ecx], mm1
 	
 	mov esi, [esp+16]
 	mov edi, [esp+20]
@@ -475,77 +539,6 @@ LoopLuma%1:
 endproc
 %endmacro
 
-;---------------------------------------------------------------------------
-; Do motion sensitive chroma deinterlacing
-;---------------------------------------------------------------------------
-%imacro Deint_Diag_Core_Chroma 1
-
-global _Deint_Diag_Core_Chroma%1
-
-proc _Deint_Diag_Core_Chroma%1, 4
-
-    %define %1 1
-
-    %$Weave arg
-    %$BobUpper arg
-    %$BobLower arg
-    %$MapUpper arg
-    %$MapMiddle arg
-    %$MapLower arg
-    %$Dest arg
-    %$PixelCount arg
-
-    pxor mm0, mm0
-	mov		ecx, 0				; curr offset into all lines
-
-LoopChroma%1:	
-
-    ; these should be the values held as we go in
-    ; mm0 = 0
-
-    mov     eax, [ebp + %$Weave]
-    movq	mm1, [eax + ecx]
-
-    mov     eax, [ebp + %$BobUpper]
-    movq	mm2, [eax + ecx]
-
-    mov     eax, [ebp + %$BobLower]
-	DS_PAVGB mm2, [eax + ecx], mm3, [ShiftMask]
-	
-
-    mov     eax, [ebp + %$MapUpper]
-    movq	mm3, [eax + ecx]
-
-    mov     eax, [ebp + %$MapMiddle]
-    movq	mm4, [eax + ecx]
-
-    mov     eax, [ebp + %$MapLower]
-    movq	mm5, [eax + ecx]
-
-    pcmpgtb mm3, [_MOVE3]        ; FF where still
-    pcmpgtb mm4, [_MOVE3]        ; FF where still
-    pcmpgtb mm5, [_MOVE3]        ; FF where still
-
-    por  mm3, mm5
-    pand  mm3, mm4
-
-
-	mov		eax, [ebp + %$Dest]
-    DS_COMBINE mm1, mm2, mm3
-    DS_MOVNTQ [eax + ecx], mm1
-
-    add     ecx, 8
-    cmp     ecx, [ebp + %$PixelCount]          ; done with line?
-    jb      LoopChroma%1
-
-	emms
-
-    %undef %1
-endproc
-%endmacro
-
-
-
 ; creates external C function _Deint_Diag_Core_YUY2_MMX
 Deint_Diag_Core_YUY2 _MMX
 
@@ -555,20 +548,11 @@ Deint_Diag_Core_YUY2 _3DNOW
 ; creates external C function _Deint_Diag_Core_YUY2_SSE
 Deint_Diag_Core_YUY2 _SSE
 
-; creates external C function _Deint_Diag_Core_Luma_MMX
-Deint_Diag_Core_Luma _MMX
+; creates external C function _Deint_Diag_Core_Packed_MMX
+Deint_Diag_Core_Packed _MMX
 
-; creates external C function _Deint_Diag_Core_Luma_3DNOW
-Deint_Diag_Core_Luma _3DNOW
+; creates external C function _Deint_Diag_Core_Packed_3DNOW
+Deint_Diag_Core_Packed _3DNOW
 
-; creates external C function _Deint_Diag_Core_Luma_SSE
-Deint_Diag_Core_Luma _SSE
-
-; creates external C function _Deint_Diag_Core_Chroma_MMX
-Deint_Diag_Core_Chroma _MMX
-
-; creates external C function _Deint_Diag_Core_Chroma_3DNOW
-Deint_Diag_Core_Chroma _3DNOW
-
-; creates external C function _Deint_Diag_Core_Chroma_SSE
-Deint_Diag_Core_Chroma _SSE
+; creates external C function _Deint_Diag_Core_Packed_SSE
+Deint_Diag_Core_Packed _SSE

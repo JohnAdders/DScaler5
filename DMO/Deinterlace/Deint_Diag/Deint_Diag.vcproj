@@ -194,15 +194,16 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Performing Registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Description="$(InputName)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Performing Registration"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>

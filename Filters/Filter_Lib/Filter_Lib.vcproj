@@ -133,6 +133,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -141,6 +142,7 @@
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -152,6 +154,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -160,6 +163,7 @@
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -171,6 +175,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -179,6 +184,7 @@
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -190,6 +196,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
@@ -198,6 +205,7 @@
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
+						Description="$(InputName)"
 						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
