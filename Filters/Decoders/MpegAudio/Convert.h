@@ -27,7 +27,7 @@ extern long DitherCounter;
 #define DITHER_MASK  (2048 - 1)
 
 #define CREATE_CONVERT_TO_16(BITSINSAMPLE) \
-static __inline short Convert##BITSINSAMPLE##To16(long Sample) \
+static __inline void Convert##BITSINSAMPLE##To16(BYTE*& pOutput, long Sample) \
 {\
     /* Dither - add some 2Q triangular noise */ \
     Sample += DitherTable[((DitherCounter++)&DITHER_MASK)] >> (32 - BITSINSAMPLE); \
@@ -37,44 +37,54 @@ static __inline short Convert##BITSINSAMPLE##To16(long Sample) \
     else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
         Sample = -(1 << (BITSINSAMPLE - 1)); \
     /* quantize */ \
-    return (short)(Sample >> (BITSINSAMPLE - 16)); \
+    Sample = Sample >> (BITSINSAMPLE - 16); \
+    *pOutput++ = (BYTE)(Sample); \
+    *pOutput++ = (BYTE)(Sample>>8); \
 }
 
 #define CREATE_CONVERT_TO_24(BITSINSAMPLE) \
-static __inline int Convert##BITSINSAMPLE##To24(long Sample) \
+static __inline void Convert##BITSINSAMPLE##To24(BYTE*& pOutput, long Sample) \
 {\
-  /* clip */ \
-  if (Sample >= (1 << (BITSINSAMPLE - 1))) \
+    /* clip */ \
+    if (Sample >= (1 << (BITSINSAMPLE - 1))) \
     Sample = (1 << (BITSINSAMPLE - 1)) - 1; \
-  else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
+    else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
     Sample = -(1 << (BITSINSAMPLE - 1)); \
-  /* quantize */ \
-  return Sample >> (BITSINSAMPLE - 24); \
+    /* quantize */ \
+    Sample = Sample >> (BITSINSAMPLE - 24); \
+    *pOutput++ = (BYTE)(Sample); \
+    *pOutput++ = (BYTE)(Sample>>8); \
+    *pOutput++ = (BYTE)(Sample>>16); \
 }
 
 #define CREATE_CONVERT_TO_32(BITSINSAMPLE) \
-static __inline int Convert##BITSINSAMPLE##To32(long Sample) \
+static __inline void Convert##BITSINSAMPLE##To32(BYTE*& pOutput, long Sample) \
 {\
-  /* clip */ \
-  if (Sample >= (1 << (BITSINSAMPLE - 1))) \
+    /* clip */ \
+    if (Sample >= (1 << (BITSINSAMPLE - 1))) \
     Sample = (1 << (BITSINSAMPLE - 1)) - 1; \
-  else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
+    else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
     Sample = -(1 << (BITSINSAMPLE - 1)); \
-  /* requantize */ \
-  return Sample << (32 - BITSINSAMPLE); \
+    /* requantize */ \
+    Sample = Sample << (32 - BITSINSAMPLE); \
+    *pOutput++ = (BYTE)(Sample); \
+    *pOutput++ = (BYTE)(Sample>>8); \
+    *pOutput++ = (BYTE)(Sample>>16); \
+    *pOutput++ = (BYTE)(Sample>>24); \
 }
 
 
 #define CREATE_CONVERT_TO_FLOAT(BITSINSAMPLE) \
-static __inline float Convert##BITSINSAMPLE##ToFloat(long Sample) \
+static __inline void Convert##BITSINSAMPLE##ToFloat(BYTE*& pOutput, long Sample) \
 {\
-  /* clip */ \
-  if (Sample >= (1 << (BITSINSAMPLE - 1))) \
+    /* clip */ \
+    if (Sample >= (1 << (BITSINSAMPLE - 1))) \
     Sample = (1 << (BITSINSAMPLE - 1)) - 1; \
-  else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
+    else if (Sample < -(1 << (BITSINSAMPLE - 1))) \
     Sample = -(1 << (BITSINSAMPLE - 1)); \
-  /* requantize */ \
-  return Sample / double(1 << (BITSINSAMPLE - 1)); \
+    /* requantize */ \
+    *(float*)pOutput = Sample / double(1 << (BITSINSAMPLE - 1)); \
+    pOutput += 4; \
 }
 
 // these conversion routines rely on being fed floating
@@ -86,7 +96,7 @@ static __inline float Convert##BITSINSAMPLE##ToFloat(long Sample) \
 
 // \todo could probably optimize with MMX instructions
 
-static __inline short ConvertDoubleTo16(double Sample)
+static __inline void ConvertDoubleTo16(BYTE*& pOutput, double Sample)
 {
     Sample += 3158737.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
@@ -102,10 +112,12 @@ static __inline short ConvertDoubleTo16(double Sample)
     {
         qwSample.LowPart = 0;
     }
-    return (short)((long)(qwSample.LowPart - 0x80000000) >> 16);
+    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 16;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
 }
 
-static __inline short ConvertDoubleTo24(double Sample)
+static __inline void ConvertDoubleTo24(BYTE*& pOutput, double Sample)
 {
     Sample += 3158736.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
@@ -118,10 +130,13 @@ static __inline short ConvertDoubleTo24(double Sample)
     {
         qwSample.LowPart = 0;
     }
-    return (short)((long)(qwSample.LowPart - 0x80000000) >> 8);
+    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 8;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
 }
 
-static __inline int ConvertDoubleTo32(double Sample)
+static __inline void ConvertDoubleTo32(BYTE*& pOutput, double Sample)
 {
     Sample += 3158736.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
@@ -134,10 +149,14 @@ static __inline int ConvertDoubleTo32(double Sample)
     {
         qwSample.LowPart = 0;
     }
-    return (long)(qwSample.LowPart - 0x80000000);
+    long lSample = qwSample.LowPart - 0x80000000;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
+    *pOutput++ = (BYTE)(lSample>>24);
 }
 
-static __inline short ConvertFloatTo16(float Sample)
+static __inline void ConvertFloatTo16(BYTE*& pOutput, float Sample)
 {
     double dSample = Sample + 3158736.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
@@ -153,10 +172,12 @@ static __inline short ConvertFloatTo16(float Sample)
     {
         qwSample.LowPart = 0;
     }
-    return (short)((long)(qwSample.LowPart - 0x80000000) >> 16);
+    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 16;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
 }
 
-static __inline int ConvertFloatTo24(float Sample)
+static __inline void ConvertFloatTo24(BYTE*& pOutput, float Sample)
 {
     double dSample = Sample + 3158736.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
@@ -169,10 +190,13 @@ static __inline int ConvertFloatTo24(float Sample)
     {
         qwSample.LowPart = 0;
     }
-    return ((long)(qwSample.LowPart - 0x80000000) >> 8);
+    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 8;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
 }
 
-static __inline int ConvertFloatTo32(float Sample)
+static __inline void ConvertFloatTo32(BYTE*& pOutput, float Sample)
 {
     double dSample = Sample + 3158736.0;
     LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
@@ -185,5 +209,22 @@ static __inline int ConvertFloatTo32(float Sample)
     {
         qwSample.LowPart = 0;
     }
-    return (long)(qwSample.LowPart - 0x80000000);
+    long lSample = qwSample.LowPart - 0x80000000;
+    *pOutput++ = (BYTE)(lSample);
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
+    *pOutput++ = (BYTE)(lSample>>24);
+}
+
+
+static __inline void ConvertFloatToFloat(BYTE*& pOutput, float Sample)
+{
+    *(float*)pOutput = Sample;
+    pOutput += 4;
+}
+
+static __inline void ConvertDoubleToFloat(BYTE*& pOutput, double Sample)
+{
+    *(float*)pOutput = Sample;
+    pOutput += 4;
 }

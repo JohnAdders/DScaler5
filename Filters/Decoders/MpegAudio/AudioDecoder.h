@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.7 2004-03-15 17:17:05 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.8 2004-03-25 18:01:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -78,18 +78,20 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(SPCFG_3F2R, SPCFG_DOLBY, L"Speaker Config")
     DEFINE_PARAM_BOOL(1, L"Dynamic Range Control")
     DEFINE_PARAM_BOOL(1, L"Normalize")
-    DEFINE_PARAM_BOOL(0, L"Decode LFE Channel")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF for AC3 & DTS")
     DEFINE_PARAM_BOOL(1, L"Jitter Remover")
     DEFINE_PARAM_BOOL(0, L"MPEG Audio over SPDIF")
 END_PARAM_LIST()
 
+public:
     enum eSpeakerConfig
     {
         SPCFG_STEREO,
         SPCFG_DOLBY,
         SPCFG_2F2R,
+        SPCFG_2F2R1S,
         SPCFG_3F2R,
+        SPCFG_3F2R1S,
     };
 
     enum eMpegAudioParams
@@ -97,12 +99,19 @@ END_PARAM_LIST()
         SPEAKERCONFIG,
         DYNAMICRANGECONTROL,
         NORMALIZE,
-        DECODE_LFE,
         USESPDIF,
         JITTERREMOVER,
         MPEGOVERSPDIF,
     };
 
+    enum eOutputSampleType
+    {
+        OUTSAMPLE_FLOAT,
+        OUTSAMPLE_32BIT,
+        OUTSAMPLE_24BIT,
+        OUTSAMPLE_16BIT,
+        OUTSAMPLE_LASTONE
+    };
 
 public:
     // IBaseFilter
@@ -164,14 +173,6 @@ protected:
     HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
 
 private:
-    enum eOutputSampleType
-    {
-        OUTSAMPLE_FLOAT,
-        OUTSAMPLE_32BIT,
-        OUTSAMPLE_24BIT,
-        OUTSAMPLE_16BIT,
-    };
-
     AM_MEDIA_TYPE m_InternalMT;
 	WAVEFORMATEXTENSIBLE m_InternalWFE;
     bool m_NeedToAttachFormat;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.2 2004-02-27 17:04:38 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.3 2004-03-25 18:01:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/27 17:04:38  adcockj
+// Added support for fixed point libraries
+// Added dither to 16 conversions
+// Changes to support library fixes
+//
 // Revision 1.1  2004/02/25 17:14:02  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -78,6 +83,27 @@ s_scmap_ac3[2*11] =
 	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_DOLBY|A52_LFE
 };
 
+
+static sample_t Silence[256] = {
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+};
+
+
 #if defined(LIBA52_FIXED)
 
 #define LEVEL (1<<26)
@@ -88,30 +114,45 @@ CREATE_CONVERT_TO_24(31)
 CREATE_CONVERT_TO_16(31)
 CREATE_CONVERT_TO_FLOAT(31)
 
-#define ConvertToFloat Convert31ToFloat
-#define ConvertTo16 Convert31To16
-#define ConvertTo24 Convert31To24
-#define ConvertTo32 Convert31To32
+typedef void (CONV_FUNC)(BYTE*&, long);
+
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    Convert31ToFloat,
+    Convert31To32,
+    Convert31To24,
+    Convert31To16,
+};
 
 #elif defined(LIBA52_DOUBLE)
 
 #define LEVEL 1
 #define BIAS 1
 
-#define ConvertToFloat (float)
-#define ConvertTo16 ConvertDoubleTo16
-#define ConvertTo24 ConvertDoubleTo24
-#define ConvertTo32 ConvertDoubleTo32
+typedef void (CONV_FUNC)(BYTE*&, double);
+
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    ConvertDoubleToFloat,
+    ConvertDoubleTo32,
+    ConvertDoubleTo24,
+    ConvertDoubleTo16,
+};
 
 #else
 
 #define LEVEL 1
 #define BIAS 1
 
-#define ConvertToFloat
-#define ConvertTo16 ConvertFloatTo16
-#define ConvertTo24 ConvertFloatTo24
-#define ConvertTo32 ConvertFloatTo32
+typedef void (CONV_FUNC)(BYTE*&, float);
+
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    ConvertFloatToFloat,
+    ConvertFloatTo32,
+    ConvertFloatTo24,
+    ConvertFloatTo16,
+};
 
 #endif
 
@@ -164,6 +205,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 				}
 				else
 				{
+                    int ChannelsRequested = 2;
                     switch(GetParamEnum(SPEAKERCONFIG))
                     {
                     case SPCFG_STEREO:
@@ -174,13 +216,22 @@ HRESULT CAudioDecoder::ProcessAC3()
                         break;
                     case SPCFG_2F2R:
                         flags = A52_2F2R;
+                        ChannelsRequested = 4;
+                        break;
+                    case SPCFG_2F2R1S:
+                        flags = A52_2F2R | A52_LFE;
+                        ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R:
                         flags = A52_3F2R;
+                        ChannelsRequested = 5;
+                        break;
+                    case SPCFG_3F2R1S:
+                        flags = A52_3F2R | A52_LFE;
+                        ChannelsRequested = 6;
                         break;
                     }
 				    
-                    flags += GetParamBool(DECODE_LFE)?A52_LFE:0;
                     flags += A52_ADJUST_LEVEL;
 
 					sample_t level = LEVEL, gain = 1, bias = 0;
@@ -198,91 +249,45 @@ HRESULT CAudioDecoder::ProcessAC3()
                         CHECK(hr);
 
                         SI(IMediaSample) pOut;
-                        DWORD len = 6*256*scmap.nChannels*m_SampleSize; 
-                        float* pDataOut = NULL;
+                        DWORD len = 6*256*ChannelsRequested*m_SampleSize; 
+                        BYTE* pDataOut = NULL;
 
-                        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
                         CHECK(hr);
                     
 						int i = 0;
-                        BYTE* pbDataOut = (BYTE*)pDataOut;
+                        CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
 
-                        switch(m_OutputSampleType)
-                        {
-                        case OUTSAMPLE_FLOAT:
-						    for(; i < 6 && a52_block(m_a52_state) == 0; i++)
-						    {
-							    sample_t* samples = a52_samples(m_a52_state);
-                            
-							    for(int j = 0; j < 256; j++, samples++)
-							    {
-								    for(int ch = 0; ch < scmap.nChannels; ch++)
-								    {
-									    ASSERT(scmap.ch[ch] != -1);
-									    *pDataOut++ = ConvertToFloat(*(samples + 256*scmap.ch[ch]));
-								    }
-							    }
-						    }
-                            break;
-                        case OUTSAMPLE_32BIT:
-						    for(; i < 6 && a52_block(m_a52_state) == 0; i++)
-						    {
-							    sample_t* samples = a52_samples(m_a52_state);
-                            
-							    for(int j = 0; j < 256; j++, samples++)
-							    {
-								    for(int ch = 0; ch < scmap.nChannels; ch++)
-								    {
-									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = ConvertTo32(*(samples + 256*scmap.ch[ch]));
-			                            *pbDataOut++ = (BYTE)(Sample);
-			                            *pbDataOut++ = (BYTE)(Sample>>8);
-			                            *pbDataOut++ = (BYTE)(Sample>>16);
-			                            *pbDataOut++ = (BYTE)(Sample>>24);
-								    }
-							    }
-						    }
-                            break;
-                        case OUTSAMPLE_24BIT:
-						    for(; i < 6 && a52_block(m_a52_state) == 0; i++)
-						    {
-							    sample_t* samples = a52_samples(m_a52_state);
-                            
-							    for(int j = 0; j < 256; j++, samples++)
-							    {
-								    for(int ch = 0; ch < scmap.nChannels; ch++)
-								    {
-									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = ConvertTo24(*(samples + 256*scmap.ch[ch]));
-			                            *pbDataOut++ = (BYTE)(Sample);
-			                            *pbDataOut++ = (BYTE)(Sample>>8);
-			                            *pbDataOut++ = (BYTE)(Sample>>16);
-								    }
-							    }
+						for(; i < 6 && a52_block(m_a52_state) == 0; i++)
+						{
+							sample_t* samples = a52_samples(m_a52_state);
+                            sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
+                            int ch = 0;
+
+                            for(int outch = 0; outch < ChannelsRequested; outch++)
+                            {
+                                if((scmap.dwChannelMask & (1 << ch)) != 0)
+                                {
+                                    Channels[outch] = samples + 256*scmap.ch[ch];
+                                    ch++;
+                                }
                             }
-                            break;
-                        case OUTSAMPLE_16BIT:
-						    for(; i < 6 && a52_block(m_a52_state) == 0; i++)
-						    {
-							    sample_t* samples = a52_samples(m_a52_state);
-                            
-							    for(int j = 0; j < 256; j++, samples++)
-							    {
-								    for(int ch = 0; ch < scmap.nChannels; ch++)
-								    {
-									    ASSERT(scmap.ch[ch] != -1);
-                                        short Sample = ConvertTo16(*(samples + 256*scmap.ch[ch]));
-			                            *pbDataOut++ = (BYTE)(Sample);
-			                            *pbDataOut++ = (BYTE)(Sample>>8);
-								    }
-							    }
-                            }
-                            break;
-                        }
+
+                            ASSERT(ch == scmap.nChannels);
+                        
+							for(int j = 0; j < 256; j++, samples++)
+							{
+								for(int ch = 0; ch < ChannelsRequested; ch++)
+								{
+									ASSERT(scmap.ch[ch] != -1);
+									pConvFunc(pDataOut, *(Channels[ch]++));
+								}
+							}
+						}
 
 						if(i == 6)
 						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * scmap.nChannels); // should be 320000 * 100ns
+					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * ChannelsRequested); // should be 320000 * 100ns
                             hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
 						    if(S_OK != hr)
 							    return hr;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Dither.cpp,v 1.2 2004-03-01 13:05:05 adcockj Exp $
+// $Id: Dither.cpp,v 1.3 2004-03-25 18:01:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/03/01 13:05:05  adcockj
+// Included rounding within dither values
+//
 // Revision 1.1  2004/02/27 17:04:38  adcockj
 // Added support for fixed point libraries
 // Added dither to 16 conversions
@@ -2089,3 +2092,4 @@ long DitherTable[DITHER_COUNT] =
     22917,
     -19656,
 };
+

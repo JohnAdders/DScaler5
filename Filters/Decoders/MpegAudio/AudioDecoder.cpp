@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.8 2004-03-15 17:15:37 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.9 2004-03-25 18:01:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/03/15 17:15:37  adcockj
+// Better PES header handling - Inspired by Gabest's latest MPC patch
+//
 // Revision 1.7  2004/03/11 16:51:20  adcockj
 // Improve LPCM support
 //
@@ -793,7 +796,7 @@ HRESULT CAudioDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
 
 HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
 {
-    wchar_t SpeakerText[] = L"Speaker Config\0" L"None\0" L"Stereo\0" L"Dolby Stereo\0" L"2 Front 2 Rear\0" L"3 Front 2 Rear\0";
+    wchar_t SpeakerText[] = L"Speaker Config\0" L"None\0" L"Stereo\0" L"Dolby Stereo\0" L"4.0 (2 Front 2 Rear)\0"  L"4.1 (2 Front 2 Rear 1 Sub)\0" L"5.0 (3 Front 2 Rear)\0" L"5.1 (3 Front 2 Rear 1 Sub)\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(SpeakerText));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, SpeakerText, sizeof(SpeakerText));

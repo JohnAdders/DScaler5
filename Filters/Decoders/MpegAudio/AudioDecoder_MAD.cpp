@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.5 2004-03-05 22:14:25 laurentg Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.6 2004-03-25 18:01:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/03/05 22:14:25  laurentg
+// Padding to make MP3 over S/PDIF working - work only with MP3 48 KHz
+//
 // Revision 1.4  2004/03/01 15:50:24  adcockj
 // Added MPEG over spdif as a option
 //
@@ -63,6 +66,18 @@ using namespace libmad;
 CREATE_CONVERT_TO_32(29)
 CREATE_CONVERT_TO_24(29)
 CREATE_CONVERT_TO_16(29)
+CREATE_CONVERT_TO_FLOAT(29)
+
+typedef void (CONV_FUNC)(BYTE*&, long);
+
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    Convert29ToFloat,
+    Convert29To32,
+    Convert29To24,
+    Convert29To16,
+};
+
 
 HRESULT CAudioDecoder::ProcessMPA()
 {
@@ -156,57 +171,23 @@ HRESULT CAudioDecoder::ProcessMPA()
             CHECK(hr);
 
             unsigned short i;
+            CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
 
-            switch(m_OutputSampleType)
+			if(m_synth.pcm.channels == 2)
             {
-            case OUTSAMPLE_32BIT:
 		        for(i = 0; i < m_synth.pcm.length; i++)
 		        {
-                    int outvalue = Convert29To32(*left_ch++);
-			        *pDataOut++ = (BYTE)(outvalue);
-			        *pDataOut++ = (BYTE)(outvalue>>8);
-			        *pDataOut++ = (BYTE)(outvalue>>16);
-			        *pDataOut++ = (BYTE)(outvalue>>24);
-			        if(m_synth.pcm.channels == 2)
-                    {
-                        int outvalue = Convert29To32(*right_ch++);
-			            *pDataOut++ = (BYTE)(outvalue);
-			            *pDataOut++ = (BYTE)(outvalue>>8);
-			            *pDataOut++ = (BYTE)(outvalue>>16);
-			            *pDataOut++ = (BYTE)(outvalue>>24);
-                    }
+                    pConvFunc(pDataOut, *left_ch++);
+                    pConvFunc(pDataOut, *right_ch++);
 		        }
-                break;
-            case OUTSAMPLE_24BIT:
+            }
+            else
+            {
+                // mono \todo may need to route this to centre speaker if available.
 		        for(i = 0; i < m_synth.pcm.length; i++)
 		        {
-                    int outvalue = Convert29To24(*left_ch++);
-			        *pDataOut++ = (BYTE)(outvalue);
-			        *pDataOut++ = (BYTE)(outvalue>>8);
-			        *pDataOut++ = (BYTE)(outvalue>>16);
-			        if(m_synth.pcm.channels == 2)
-                    {
-                        outvalue = Convert29To24(*right_ch++);
-			            *pDataOut++ = (BYTE)(outvalue);
-			            *pDataOut++ = (BYTE)(outvalue>>8);
-			            *pDataOut++ = (BYTE)(outvalue>>16);
-                    }
+                    pConvFunc(pDataOut, *left_ch++);
 		        }
-                break;
-            case OUTSAMPLE_16BIT:
-		        for(i = 0; i < m_synth.pcm.length; i++)
-		        {
-                    short outvalue = Convert29To16(*left_ch++);
-			        *pDataOut++ = (BYTE)(outvalue);
-			        *pDataOut++ = (BYTE)(outvalue>>8);
-			        if(m_synth.pcm.channels == 2)
-                    {
-                        outvalue = Convert29To16(*right_ch++);
-			            *pDataOut++ = (BYTE)(outvalue);
-			            *pDataOut++ = (BYTE)(outvalue>>8);
-                    }
-		        }
-                break;
             }
     
     	    REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_synth.pcm.channels*m_SampleSize);

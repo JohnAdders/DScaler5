@@ -945,7 +945,7 @@ int dts_subsubframe (dts_state_t * state)
                 subband_samples[k][l][m] = 
                     high_freq_vq[state->high_freq_vq[k][l]][subsubframe*8+m]
                         * (double)state->scale_factor[k][l][0] / 16.0;
-            }
+            }   
         }
     }
 
