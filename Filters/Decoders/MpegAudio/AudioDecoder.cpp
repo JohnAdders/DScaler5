@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.22 2004-07-20 20:00:27 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.23 2004-07-20 20:01:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.22  2004/07/20 20:00:27  adcockj
+// Fixes for compilation under VS 6
+//
 // Revision 1.21  2004/07/20 16:37:48  adcockj
 // Fixes for main issues raised in testing of 0.0.1
 //  - Improved parameter handling
@@ -718,7 +721,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFEREN
 
     rtDur += m_rtOutputStart;
 
-    //pOut->SetTime(&m_rtOutputStart, NULL);
+    pOut->SetTime(&m_rtOutputStart, NULL);
 
 	if(!m_Preroll)
 	{
