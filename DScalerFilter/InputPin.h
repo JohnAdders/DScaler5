@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.9 2003-09-19 16:12:14 adcockj Exp $
+// $Id: InputPin.h,v 1.10 2003-09-24 16:33:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -108,6 +108,7 @@ public:
 	CComPtr<IMemAllocator> m_MyMemAlloc;
 	REFERENCE_TIME m_ExpectedStartIn;
 	REFERENCE_TIME m_ExpectedStartOut;
+	BYTE m_Counter;
 private:
     void InternalDisconnect();
     void GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props);

@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.2 2003-09-24 07:01:02 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.3 2003-09-24 16:33:00 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.2  2003/09/24 07:01:02  adcockj
+;// fix some release issues
+;//
 ;// Revision 1.1  2003/07/18 09:26:34  adcockj
 ;// Corrections to assembler files (does not compile)
 ;//
@@ -13,7 +16,7 @@ USE32
 
 segment .data
 
-ShiftMask dd 0x7f7f7f7f, 0x7f7f7f7f
+ShiftMask dd 0xfefffeff, 0xfefffeff
 YMask dd 0x00ff00ff, 0x00ff00ff
 UVMask dd 0xff00ff00, 0xff00ff00
 

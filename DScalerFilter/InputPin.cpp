@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.23 2003-09-19 16:12:14 adcockj Exp $
+// $Id: InputPin.cpp,v 1.24 2003-09-24 16:33:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.23  2003/09/19 16:12:14  adcockj
+// Further improvements
+//
 // Revision 1.21  2003/08/21 16:17:58  adcockj
 // Changed filter to wrap the deinterlacing DMO, fixed many bugs
 //
@@ -109,6 +112,8 @@ CInputPin::CInputPin()
 	m_dwFlags = AM_GBF_PREVFRAMESKIPPED;
 	m_MyMemAlloc = new CComObject<CInputMemAlloc>;
 	m_ExpectedStartIn = 0;
+	m_ExpectedStartOut = 0;
+	m_Counter = 0;
 }
 
 CInputPin::~CInputPin()
@@ -424,6 +429,7 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
         // may block so be careful
         CProtectCode WhileVarInScope(this);
 		m_ExpectedStartIn = tStart;
+		m_ExpectedStartOut = tStart;
         hr = m_OutputPin->m_ConnectedPin->NewSegment(tStart, tStop, dRate);
         CHECK(hr);
     }
@@ -515,20 +521,6 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         hr = GetSampleProperties(InSample, &InSampleProperties);
         CHECK(hr);
 
-		BOOL HurryUp(FALSE);
-		if(m_Filter->m_RefClock)
-		{
-			REFERENCE_TIME Now;
-			hr = m_Filter->m_RefClock->GetTime(&Now);
-			Now -= m_Filter->m_StartTime;
-			CHECK(hr);
-			//LOG(DBGLOG_FLOW, ("Got Start %d at %d\n", (long)InSampleProperties.tStart, (long)Now));
-			if(InSampleProperties.tStart < Now)
-			{
-				HurryUp = TRUE;
-			}
-		}
-
         // just pass through any non-media messages
         if(InSampleProperties.dwStreamId != AM_STREAM_MEDIA) 
         {
@@ -571,7 +563,10 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         // need to check this before we get each sample
         CheckForBlocking();
 
-        hr = GetOutputSample(&OutSample);
+        hr = m_Filter->CheckProcessingLine();
+        CHECK(hr);
+
+		hr = GetOutputSample(&OutSample);
         CHECK(hr);
 
 		if(OutSample == NULL)
@@ -579,31 +574,28 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 			return S_FALSE;
 		}
 
-        hr = m_Filter->CheckProcessingLine();
-        CHECK(hr);
-
         // if there was a discontinuity then we need to ask for the buffer
         // differently 
         if(InSampleProperties.dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
 		{
-			if(m_ExpectedStartIn == 0)
-			{
-				LOG(DBGLOG_FLOW, ("Handled Discontinuity %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
-				InSampleProperties.tStop = m_ExpectedStartIn + (InSampleProperties.tStop - InSampleProperties.tStart);
-				InSampleProperties.tStart = m_ExpectedStartIn;
-				m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-			}
-			else
+			if(m_ExpectedStartIn != 0)
 			{
 				LOG(DBGLOG_FLOW, ("Discontinuity\n"));
 				hr = m_Filter->m_CurrentDeinterlacingMethod->Discontinuity(0);
 				CHECK(hr);
 
 				hr = InternalProcessOutput(&OutSample, FALSE);
-				m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
+				
+				m_ExpectedStartIn = 0;
 			}
+			else
+			{
+				LOG(DBGLOG_FLOW, ("Ignored First Discontinuity\n"));
+			}
+			m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
 		}
-		else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn != InSampleProperties.tStart)
+		// if we get a later sample then flush the buffers
+		else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn < InSampleProperties.tStart)
         {
 			LOG(DBGLOG_FLOW, ("Skipped Frames expected %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
 
@@ -613,21 +605,43 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         }
+
+		LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.pbBuffer));
 		
 		m_ExpectedStartIn = InSampleProperties.tStop;
 
 		// pass input buffer to DMO
-        IMediaBuffer* InBuffer = CMediaBufferWrapper::CreateBuffer(InSample);
+		IMediaBuffer* InBuffer = CMediaBufferWrapper::CreateBuffer(InSample);
 
-		hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessInput(
-																	0, 
-																	InBuffer, 
-																	DMO_INPUT_DATA_BUFFERF_TIME | DMO_INPUT_DATA_BUFFERF_TIMELENGTH, 
-																	InSampleProperties.tStart,
-																	InSampleProperties.tStop - InSampleProperties.tStart
-   																 );
-        InSample->Release();
+		if((InSampleProperties.tStop - InSampleProperties.tStart) != 400000 &&
+			(InSampleProperties.tStop - InSampleProperties.tStart) != 333333)
+		{
+			LOG(DBGLOG_FLOW, ("Odd Time %d\n", (long)(InSampleProperties.tStop - InSampleProperties.tStart)));
+		}
 
+		switch((long)(InSampleProperties.tStop - InSampleProperties.tStart))
+		{
+		case 0:
+			// cope with End entries from Sonic
+		case 1:
+			// cope with rubbish periods from WinDVD
+			
+		case 400000:
+		case 333333:
+			// it's video so off we go
+		default:
+			// may need to detect film here don't know yet
+			hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessInput(
+																		0, 
+																		InBuffer, 
+																		DMO_INPUT_DATA_BUFFERF_TIME | DMO_INPUT_DATA_BUFFERF_TIMELENGTH, 
+																		InSampleProperties.tStart,
+																		InSampleProperties.tStop - InSampleProperties.tStart
+   																	);
+			break;
+		}
+
+		InBuffer->Release();
 
 		if(hr == DMO_E_NOTACCEPTING)
 		{
@@ -635,7 +649,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 		}
 		CHECK(hr);
 
-		hr = InternalProcessOutput(&OutSample, HurryUp);
+		hr = InternalProcessOutput(&OutSample, FALSE);
 
 		if(FAILED(hr) || hr == S_FALSE)
 		{
@@ -706,86 +720,71 @@ HRESULT CInputPin::InternalProcessOutput(IMediaSample** OutSample, BOOL HurryUp)
 
 	while(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
 	{
-		if(HurryUp == FALSE || TRUE)
+		IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(*OutSample);
+
+		OutDataBuffer.pBuffer = OutBuffer;
+		OutDataBuffer.rtTimelength = 0;
+		OutDataBuffer.rtTimestamp = 0;
+
+		DWORD Status(0);
+
+		hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
+																	0, 
+																	1,
+																	&OutDataBuffer, 
+																	&Status
+																	);
+
+	
+		if(hr == S_OK && m_Flushing == FALSE)
 		{
-			IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(*OutSample);
-
-			OutDataBuffer.pBuffer = OutBuffer;
-			OutDataBuffer.rtTimelength = 0;
-			OutDataBuffer.rtTimestamp = 0;
-
-			DWORD Status(0);
-
-			hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
-																		0, 
-																		1,
-																		&OutDataBuffer, 
-																		&Status
-																		);
-
-		
-			if(hr == S_OK && m_Flushing == FALSE)
+			if(m_ExpectedStartOut == 0 || OutDataBuffer.rtTimestamp != m_ExpectedStartOut)
 			{
-				OutDataBuffer.rtTimelength += OutDataBuffer.rtTimestamp;
-				//OutDataBuffer.rtTimelength += 200000; 
-				//OutDataBuffer.rtTimestamp += 200000;
-				(*OutSample)->SetTime(&OutDataBuffer.rtTimestamp, &OutDataBuffer.rtTimelength);
-				// finally send the processed sample on it's way
-				hr = m_OutputPin->m_MemInputPin->Receive(*OutSample);
-
-				if(m_Filter->m_RefClock)
-				{
-					REFERENCE_TIME Now;
-					HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
-					Now -= m_Filter->m_StartTime;
-					CHECK(hr);
-					LOG(DBGLOG_FLOW, ("Output %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
-				}
+				(*OutSample)->SetDiscontinuity(TRUE);		
 			}
-			// if we are at the start then we might need to send 
-			// a couple of frames in before getting a response
-			else if(hr == S_FALSE)
+			OutDataBuffer.rtTimelength += OutDataBuffer.rtTimestamp;
+			m_ExpectedStartOut = OutDataBuffer.rtTimelength;
+
+			(*OutSample)->SetTime(&OutDataBuffer.rtTimestamp, &OutDataBuffer.rtTimelength);
+			// finally send the processed sample on it's way
+			hr = m_OutputPin->m_MemInputPin->Receive(*OutSample);
+
+			if(m_Filter->m_RefClock)
 			{
-				if(m_Filter->m_RefClock)
-				{
-					REFERENCE_TIME Now;
-					HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
-					Now -= m_Filter->m_StartTime;
-					CHECK(hr);
-					LOG(DBGLOG_FLOW, ("Skipped %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
-				}
-				hr = S_OK;
-			}
-
-			OutBuffer->Release();
-
-			if(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
-			{
-				if(*OutSample != NULL)
-				{
-					(*OutSample)->Release();
-					*OutSample = NULL;
-				}
-
-				hr = GetOutputSample(OutSample);
+				REFERENCE_TIME Now;
+				HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
+				Now -= m_Filter->m_StartTime;
 				CHECK(hr);
+				//LOG(DBGLOG_FLOW, ("Output %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
 			}
 		}
-		else
+		// if we are at the start then we might need to send 
+		// a couple of frames in before getting a response
+		else if(hr == S_FALSE)
 		{
-			DWORD Status(0);
-			OutDataBuffer.pBuffer = NULL;
-			OutDataBuffer.rtTimelength = 0;
-			OutDataBuffer.rtTimestamp = 0;
-			hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
-																		DMO_PROCESS_OUTPUT_DISCARD_WHEN_NO_BUFFER, 
-																		1,
-																		&OutDataBuffer, 
-																		&Status
-																		);
-			m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-			HurryUp = FALSE;
+			if(m_Filter->m_RefClock)
+			{
+				REFERENCE_TIME Now;
+				HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
+				Now -= m_Filter->m_StartTime;
+				CHECK(hr);
+				LOG(DBGLOG_FLOW, ("Skipped %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
+			}
+			hr = S_OK;
+		}
 
+		OutBuffer->Release();
+
+		if(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
+		{
+			if(*OutSample != NULL)
+			{
+				(*OutSample)->Release();
+				*OutSample = NULL;
+			}
+
+			hr = GetOutputSample(OutSample);
+			CHECK(hr);
 		}
 	}
 	return hr;
