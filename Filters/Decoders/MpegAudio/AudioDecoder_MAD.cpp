@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.4 2004-03-01 15:50:24 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.5 2004-03-05 22:14:25 laurentg Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/03/01 15:50:24  adcockj
+// Added MPEG over spdif as a option
+//
 // Revision 1.3  2004/02/29 13:47:47  adcockj
 // Format change fixes
 // Minor library updates
@@ -51,6 +54,9 @@
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
 #include "Convert.h"
+
+#define	BLOCK_SIZE_LAYER1	1536
+#define	BLOCK_SIZE_LAYER23	4608
 
 using namespace libmad;
 
@@ -99,9 +105,12 @@ HRESULT CAudioDecoder::ProcessMPA()
 	        SI(IMediaSample) pOut;
 	        WORD* pDataOut = NULL;
 
-            hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len + 8);
+			DWORD block_size = (m_frame.header.layer == MAD_LAYER_I) ? BLOCK_SIZE_LAYER1 : BLOCK_SIZE_LAYER23;
+
+            hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, block_size);
             CHECK(hr);
             
+			memset((char*)pDataOut, 0, block_size);
 			pDataOut[0] = 0xf872;
 			pDataOut[1] = 0x4e1f;
             if(m_frame.header.layer == MAD_LAYER_I)
