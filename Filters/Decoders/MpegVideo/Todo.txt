@@ -1,0 +1,16 @@
+Known bugs to fix
+
+- There are some issues with highlights on DVD's
+
+New functionality to add
+
+- Film detection
+- Support for post processing
+- Work on colour upsampling
+- Support for AFD in DVB streams
+
+Issues to think about
+
+- There are issues with the timestamps on the MPEG files produced by the Nebula DVB-T card
+  Need to come up with a work around for these (note that the Elecard demuxer has a use bitrate
+  flag that works for these)
