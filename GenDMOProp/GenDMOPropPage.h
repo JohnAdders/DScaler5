@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.10 2004-10-31 14:20:39 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.11 2004-11-04 16:09:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -53,17 +53,15 @@ BEGIN_MSG_MAP(CGenDMOPropPage)
     COMMAND_HANDLER(IDC_EDIT, EN_CHANGE, OnEditChange);
     COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
     COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
-    COMMAND_HANDLER(IDC_SAVEDEFAULTS, BN_CLICKED, OnSaveDefaultsClick);
     COMMAND_HANDLER(IDC_RESETDEFAULTS, BN_CLICKED, OnBnClickedResetdefaults)
-        COMMAND_HANDLER(IDC_LOADDEFAULTS, BN_CLICKED, OnBnClickedLoaddefaults)
-        CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
+    CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
 END_MSG_MAP()
 // Handler prototypes:
     LRESULT OnListSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnComboChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
 	STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 	STDMETHOD(Apply)(void);
@@ -103,9 +101,6 @@ private:
     WCHAR** m_ParamTexts;
     DWORD m_NumParams;
     DWORD m_CurrentParam;
-public:
-    LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
-    LRESULT OnBnClickedLoaddefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };
 
 #endif //__GENDMOPROPPAGE_H_

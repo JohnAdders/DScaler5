@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.18 2004-10-31 14:20:39 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.19 2004-11-04 16:09:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2004/10/31 14:20:39  adcockj
+// fixed issues with settings dialog
+//
 // Revision 1.17  2004/10/29 11:49:23  adcockj
 // Added load from registry button
 //
@@ -157,16 +160,21 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
             if(hr == S_FALSE)
             {
                 ShowMessage = true;
-                // since we tell the user that it will be set next time
-                // we had better save it so that it actually is set next time
-                hr = m_SaveDefaults->SaveDefaultToRegistry(i);
             }
         }
     }
 
+    // save the values to the registry on apply
+    if(m_SaveDefaults)
+    {
+        m_SaveDefaults->SaveDefaultsToRegistry();
+    }
+
     if(ShowMessage)
     {
-        MessageBox("Some of the properties you attempted to change cannot be altered while filter is connected, you will need to restart the program for the change to take effect.", "Warning", MB_OK); 
+        MessageBox("Some of the properties you attempted to change cannot be altered "
+                   "while filter is connected, you will need to restart the program "
+                   "for the change to take effect.", "Warning", MB_OK); 
     }
 
     m_bDirty = FALSE;
@@ -558,16 +566,6 @@ LRESULT CGenDMOPropPage::OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCt
     return 0;
 }
 
-LRESULT CGenDMOPropPage::OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
-{
-    if(m_SaveDefaults)
-    {
-        // save the current values before setting them as default
-        Apply();
-        m_SaveDefaults->SaveDefaultsToRegistry();
-    }
-    return 0;
-}
 
 // we need to override this to get 
 // the normal apply and cancel  behaviour
@@ -592,18 +590,3 @@ LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*w
 	return 0;
 }
 
-LRESULT CGenDMOPropPage::OnBnClickedLoaddefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
-{
-    if(m_SaveDefaults)
-    {
-        m_SaveDefaults->LoadDefaultsFromRegistry();
-        for(DWORD i(0); i < m_NumParams; ++i)
-        {
-            HRESULT hr = m_MediaParams->GetParam(i, &m_Params[i]);
-            if(FAILED(hr)) return hr;
-        }
-        SetDirty(TRUE);
-        SetupControls();
-    }
-    return 0;
-}
