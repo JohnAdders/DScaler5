@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.19 2004-09-23 14:27:59 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.20 2004-11-02 17:59:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2004/09/23 14:27:59  adcockj
+// preliminary fixed for reconnection issues
+//
 // Revision 1.18  2004/09/10 15:35:57  adcockj
 // Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
 //
@@ -635,8 +638,8 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
-//        m_Allocator.Detach();
-//        return VFW_E_NO_TRANSPORT;
+        m_Allocator.Detach();
+        return VFW_E_NO_TRANSPORT;
     }
     
     LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
