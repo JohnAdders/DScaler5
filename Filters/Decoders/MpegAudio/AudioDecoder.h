@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.5 2004-02-27 17:04:38 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.6 2004-03-01 15:50:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -78,8 +78,9 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Dynamic Range Control")
     DEFINE_PARAM_BOOL(1, L"Normalize")
     DEFINE_PARAM_BOOL(0, L"Decode LFE Channel")
-    DEFINE_PARAM_BOOL(0, L"Use SPDIF")
+    DEFINE_PARAM_BOOL(0, L"Use SPDIF for AC3 & DTS")
     DEFINE_PARAM_BOOL(1, L"Jitter Remover")
+    DEFINE_PARAM_BOOL(0, L"MPEG Audio over SPDIF")
 END_PARAM_LIST()
 
     enum eSpeakerConfig
@@ -98,6 +99,7 @@ END_PARAM_LIST()
         DECODE_LFE,
         USESPDIF,
         JITTERREMOVER,
+        MPEGOVERSPDIF,
     };
 
 
