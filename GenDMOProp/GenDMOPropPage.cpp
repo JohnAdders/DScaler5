@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.3 2003-05-02 15:52:25 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.4 2003-05-06 07:01:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/02 15:52:25  adcockj
+// Initial limited version of Generic prop page
+//
 // Revision 1.2  2003/05/01 12:34:41  adcockj
 // Added headers and new license page
 //
@@ -46,7 +49,25 @@ CGenDMOPropPage::CGenDMOPropPage()
 
 CGenDMOPropPage::~CGenDMOPropPage() 
 {
-    Deactivate();
+    m_ListBox.Detach();
+    m_EditBox.Detach();
+    m_CheckBox.Detach();
+    m_Slider.Detach();
+    m_Scrollbar.Detach();
+    m_Combo.Detach();
+    Detach();
+
+    for(DWORD i(0); i < m_NumParams; ++i)
+    {
+        CoTaskMemFree(m_ParamTexts[i]);
+    }
+    m_NumParams = 0;
+    CoTaskMemFree(m_ParamTexts);
+    m_ParamTexts = NULL;
+    CoTaskMemFree(m_Params);
+    m_Params = NULL;
+    CoTaskMemFree(m_ParamInfos);
+    m_ParamInfos = NULL;
 }
 
 STDMETHODIMP CGenDMOPropPage::Apply(void)
@@ -162,31 +183,6 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
     SetupControls();
 
     return hr;
-}
-
-// try to make sure this function can be called repeatedly without error
-// so that we can use it in the destructor too
-STDMETHODIMP CGenDMOPropPage::Deactivate()
-{
-    m_ListBox.Detach();
-    m_EditBox.Detach();
-    m_CheckBox.Detach();
-    m_Slider.Detach();
-    m_Scrollbar.Detach();
-    m_Combo.Detach();
-    Detach();
-    for(DWORD i(0); i < m_NumParams; ++i)
-    {
-        CoTaskMemFree(m_ParamTexts[i]);
-    }
-    m_NumParams = 0;
-    CoTaskMemFree(m_ParamTexts);
-    m_ParamTexts = NULL;
-    CoTaskMemFree(m_Params);
-    m_Params = NULL;
-    CoTaskMemFree(m_ParamInfos);
-    m_ParamInfos = NULL;
-    return S_OK;
 }
 
 void CGenDMOPropPage::SetupControls()
