@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.12 2004-05-06 06:38:06 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.13 2004-05-12 15:55:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/05/06 06:38:06  adcockj
+// Interim fixes for connection and PES streams
+//
 // Revision 1.11  2004/04/20 16:30:06  adcockj
 // Improved Dynamic Connections
 //
@@ -115,7 +118,6 @@ CAudioDecoder::CAudioDecoder() :
     m_rtNextFrameStart = _I64_MIN;
     m_rtOutputStart = 0;
     m_sample_max = 0.1;
-    m_NeedToAttachFormat = false;
     m_OutputSampleType = OUTSAMPLE_16BIT;
     m_SampleSize = 2;
     
@@ -636,11 +638,6 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 
     LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
 
-	if(m_NeedToAttachFormat)
-	{
-		m_AudioOutPin->SetType(&m_InternalMT);
-		pOut->SetMediaType(&m_InternalMT);
-	}
 
 	pOut->SetTime(&m_rtOutputStart, NULL);
 	pOut->SetMediaTime(NULL, NULL);
@@ -650,10 +647,23 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 
 	if(m_rtOutputStart >= 0)
     {
-	    pOut->SetDiscontinuity(m_IsDiscontinuity); 
+		if(m_NeedToAttachFormat)
+		{
+			m_AudioOutPin->SetType(&m_InternalMT);
+			pOut->SetMediaType(&m_InternalMT);
+			pOut->SetDiscontinuity(TRUE); 
+		}
+		else
+		{
+			pOut->SetDiscontinuity(m_IsDiscontinuity); 
+		}
+
+		
         m_IsDiscontinuity = false;
 
     	hr = m_AudioOutPin->SendSample(pOut);
+
+		m_NeedToAttachFormat = false;
     }
 
     m_rtOutputStart += rtDur;
@@ -679,10 +689,6 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
         }
         m_NeedToAttachFormat = true;
 	}
-    else
-    {
-        m_NeedToAttachFormat = false;
-    }
     return S_OK;
 }
 
