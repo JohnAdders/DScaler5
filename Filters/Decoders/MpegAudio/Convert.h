@@ -230,8 +230,10 @@ static __inline void Convert16ToFloat(BYTE*& pOutput, short Sample)
 
 static __inline void Convert16To32(BYTE*& pOutput, short Sample)
 {
-    *(long*)pOutput = (long)Sample << 16;
-    pOutput += 4;
+    *pOutput++ = 0;
+    *pOutput++ = 0;
+    *pOutput++ = (BYTE)(Sample);
+    *pOutput++ = (BYTE)(Sample>>8);
 }
 
 static __inline void Convert16To24(BYTE*& pOutput, short Sample)

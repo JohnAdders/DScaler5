@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.17 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.18 2004-07-11 14:35:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.16  2004/07/01 21:16:55  adcockj
 // Another load of fixes to recent changes
 //
@@ -131,7 +135,6 @@ CAudioDecoder::CAudioDecoder() :
 
     m_rtNextFrameStart = _I64_MIN;
     m_rtOutputStart = 0;
-    m_sample_max = 0.1;
     m_OutputSampleType = OUTSAMPLE_16BIT;
     m_SampleSize = 2;
     m_NeedToAttachFormat = false;
@@ -340,7 +343,8 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
     {
         Result = (pmt->majortype == MEDIATYPE_Audio) && 
                   (pmt->subtype == MEDIASUBTYPE_PCM ||
-                    pmt->subtype == MEDIASUBTYPE_IEEE_FLOAT);
+                    pmt->subtype == MEDIASUBTYPE_IEEE_FLOAT ||
+                    pmt->subtype == MEDIASUBTYPE_DOLBY_AC3_SPDIF);
     }
     return Result;
 }
@@ -507,7 +511,6 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
     {
         m_IsDiscontinuity = true;
         m_buff.resize(0);
-        m_sample_max = 0.1f;
         //m_rtOutputStart = 0;
     }
 
@@ -546,7 +549,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBitsPerSample)
 {
     m_InternalMT.majortype = MEDIATYPE_Audio;
-    m_InternalMT.subtype = MEDIASUBTYPE_PCM;
+    m_InternalMT.subtype = MEDIASUBTYPE_DOLBY_AC3_SPDIF;
     m_InternalMT.formattype = FORMAT_WaveFormatEx;
 
     m_InternalWFE.Format.nSamplesPerSec = nSamplesPerSec;
@@ -746,7 +749,7 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
     return S_OK;
 }
 
-HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
+    HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
 {
 
     if(pPin == m_AudioOutPin)
@@ -806,28 +809,31 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
         int ChannelsRequested = 2;
         DWORD ChannelMask = 0;
 
-        switch(GetParamEnum(SPEAKERCONFIG))
+        if(!UseSpdif)
         {
-        case SPCFG_STEREO:
-            break;
-        case SPCFG_DOLBY:
-            break;
-        case SPCFG_2F2R:
-            ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-            ChannelsRequested = 4;
-            break;
-        case SPCFG_2F2R1S:
-            ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-            ChannelsRequested = 5;
-            break;
-        case SPCFG_3F2R:
-            ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-            ChannelsRequested = 5;
-            break;
-        case SPCFG_3F2R1S:
-            ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-            ChannelsRequested = 6;
-            break;
+            switch(GetParamEnum(SPEAKERCONFIG))
+            {
+            case SPCFG_STEREO:
+                break;
+            case SPCFG_DOLBY:
+                break;
+            case SPCFG_2F2R:
+                ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+                ChannelsRequested = 4;
+                break;
+            case SPCFG_2F2R1S:
+                ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+                ChannelsRequested = 5;
+                break;
+            case SPCFG_3F2R:
+                ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+                ChannelsRequested = 5;
+                break;
+            case SPCFG_3F2R1S:
+                ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+                ChannelsRequested = 6;
+                break;
+            }
         }
         wfe->Format.nChannels = ChannelsRequested;
         wfe->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
@@ -851,6 +857,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             wfe->Format.wBitsPerSample = 16;
             if(UseSpdif)
             {
+                pmt->subtype = MEDIASUBTYPE_DOLBY_AC3_SPDIF;
                 wfe->Format.wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
                 wfe->Format.cbSize = 0;
                 pmt->cbFormat = sizeof(WAVEFORMATEX);
@@ -910,7 +917,6 @@ HRESULT CAudioDecoder::Deactivate()
 
     m_IsDiscontinuity = false; 
 
-    m_sample_max = 0.1f; 
     return S_OK;
 }
 
@@ -926,7 +932,6 @@ HRESULT CAudioDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME 
     {
         LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
         m_buff.resize(0);
-        m_sample_max = 0.1f;
         return S_OK;
     }
     else
@@ -951,7 +956,8 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
 
         WAVEFORMATEX* wfe = (WAVEFORMATEX*)(pMediaType->pbFormat);
         m_InputSampleRate = wfe->nSamplesPerSec;
-
+        m_IsDiscontinuity = true;
+        
         // cope with dynamic format changes
         // these can happen during DVD playback
         // as the DVD navigator always connectes with AC3 first
@@ -1155,6 +1161,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
             }
 
             m_ConnectedAsSpdif = (wfe->Format.wFormatTag == MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1);
+            CopyMediaType(&m_InternalMT, pMediaType);
         }
     }
     return S_OK;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.13 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.14 2004-07-11 14:35:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -163,8 +163,6 @@ protected:
     REFERENCE_TIME m_rtNextFrameStart;
     REFERENCE_TIME m_rtOutputStart;
     DWORD m_OutputBufferSize;
-
-    double m_sample_max;
 
     HRESULT ProcessLPCM();
     HRESULT ProcessAC3();

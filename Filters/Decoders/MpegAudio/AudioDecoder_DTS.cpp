@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.6 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.7 2004-07-11 14:35:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.5  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -200,7 +204,7 @@ HRESULT CAudioDecoder::ProcessDTS()
             {
                 if(m_ConnectedAsSpdif)
                 {
-                    DWORD len = 0x800; 
+                    DWORD len = frame_length * 4; 
 
                     SI(IMediaSample) pOut;
                     WORD* pDataOut = NULL;
@@ -210,11 +214,33 @@ HRESULT CAudioDecoder::ProcessDTS()
 
                     pDataOut[0] = 0xf872;
                     pDataOut[1] = 0x4e1f;
-                    pDataOut[2] = 0x000b;
+                    if(frame_length == 512)
+                    {
+                        pDataOut[2] = 0x000b;
+                    }
+                    else if(frame_length == 1024)
+                    {
+                        pDataOut[2] = 0x000c;
+                    }
+                    else
+                    {
+                        pDataOut[2] = 0x000d;
+                    }
                     pDataOut[3] = size*8;
-                    _swab((char*)p, (char*)&pDataOut[4], size);
 
-                    REFERENCE_TIME rtDur = 10000000i64 * size * 8 / bit_rate; // should be 106667 * 100 ns
+                    if(size + 8 > len)
+                    {
+                        return E_UNEXPECTED;
+                    }
+
+                    _swab((char*)p, (char*)&pDataOut[4], size);
+                  
+                    if((len - size - 8) > 0)
+                    {
+                        ZeroMemory((char*)pDataOut + size + 8, len - size - 8);
+                    }
+
+                    REFERENCE_TIME rtDur = 10000000i64 * frame_length / sample_rate; // should be 106667 * 100 ns
 
                     hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
                     if(S_OK != hr)
