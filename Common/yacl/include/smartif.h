@@ -102,7 +102,7 @@ inline BOOL IsSameObject(const SmartToken& pUnk1, const SmartToken& pUnk2)
     return IsSameObject(pUnk1.m_pif, pUnk2.m_pif);
 }
 
-template <class If, const IID *piid>
+template <class If, const IID * const piid>
 class SmartInterface 
 {
     If *m_pif;

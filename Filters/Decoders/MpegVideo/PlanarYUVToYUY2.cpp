@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.1 2004-02-06 12:17:16 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:16  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 //  Notes: 
 ///////////////////////////////////////////////////////////////////////////////
 //  - BitBltFromI420ToRGB is from VirtualDub
@@ -511,8 +516,15 @@ bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 
 bool BitBltFromI420ToYUY2_Int(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	if(w<=0 || h<=0 || (w&1) || (h&1))
+	// need at least a mulitple of 4 for height
+    if(w<=0 || h<=0 || (w&1) || (h&3))
 		return(false);
+
+    // we need at least 12 rows to work on
+    if(h < 12)
+    {
+        BitBltFromI420ToYUY2(w, h, dst, dstpitch, srcy, srcu, srcv, srcpitch);
+    }
 
 	if(srcpitch == 0) srcpitch = w;
 
@@ -542,21 +554,47 @@ bool BitBltFromI420ToYUY2_Int(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy,
 	if(!yuvtoyuy2row) 
 		return(false);
 
-    // \todo: Fix me .....
+    // copy first chroma row and first luma row for first row
+	yuvtoyuy2row(dst, srcy, srcu, srcv, w);
+	dst += dstpitch;
+	srcy += srcpitch;
+
+    // copy second chroma row an second luma row for second row
+	yuvtoyuy2row(dst, srcy, srcu + srcpitch/2, srcv + srcpitch/2, w);
+	dst += dstpitch;
+	srcy += srcpitch;
+
+    h -= 2;
+
 	do
 	{
-		yuvtoyuy2row(dst, srcy, srcu, srcv, w);
-		yuvtoyuy2row_avg(dst + dstpitch, srcy + srcpitch, srcu, srcv, w, srcpitch/2);
+        // average between rows for field 1
+		yuvtoyuy2row_avg(dst, srcy, srcu, srcv, w, srcpitch);
+	    dst += dstpitch;
+	    srcy += srcpitch;
 
-		dst += 2*dstpitch;
-		srcy += srcpitch*2;
-		srcu += srcpitch/2;
-		srcv += srcpitch/2;
+        // put in chroma for field 2 line
+		yuvtoyuy2row(dst, srcy, srcu + srcpitch/2, srcv + srcpitch/2, w);
+	    dst += dstpitch;
+	    srcy += srcpitch;
+
+        // put in chroma for field 1 line
+		yuvtoyuy2row(dst, srcy, srcu + srcpitch, srcv + srcpitch, w);
+	    dst += dstpitch;
+	    srcy += srcpitch;
+
+        // average between rows for field 2
+		yuvtoyuy2row_avg(dst, srcy, srcu + srcpitch/2, srcv + srcpitch/2, w, srcpitch);
+	    dst += dstpitch;
+	    srcy += srcpitch;
+
+		srcu += srcpitch;
+		srcv += srcpitch;
 	}
-	while((h -= 2) > 2);
+	while((h -= 4) > 2);
 
-	yuvtoyuy2row(dst, srcy, srcu, srcv, w);
-	yuvtoyuy2row(dst + dstpitch, srcy + srcpitch, srcu, srcv, w);
+	yuvtoyuy2row(dst, srcy, srcu , srcv, w);
+	yuvtoyuy2row(dst + dstpitch, srcy + srcpitch, srcu + srcpitch/2, srcv + srcpitch/2, w);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
 		__asm emms

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.2 2004-02-06 16:41:42 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.3 2004-02-10 13:24:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -48,6 +48,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281AB
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
+    IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(IAMDecoderCaps)
 END_INTERFACE_TABLE()
 

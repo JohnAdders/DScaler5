@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: Utils.cpp,v 1.2 2004-02-10 13:24:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 // Revision 1.9  2003/09/30 16:59:26  adcockj
 // Improved handling of small format changes
 //
@@ -333,3 +338,23 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
 
 #endif // NOLOGGING
 
+HRESULT RegisterFilter(const CLSID& clsidFilter, LPCWSTR wszName, const REGFILTER2* pRegFilter)
+{
+    SI(IFilterMapper2) FilterMapper;
+
+    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
+    CHECK(hr);
+    hr = FilterMapper->RegisterFilter(clsidFilter, wszName, NULL, NULL, NULL, pRegFilter);
+    CHECK(hr);
+    return hr;
+}
+
+HRESULT UnregisterFilter(const CLSID& clsidFilter)
+{
+    SI(IFilterMapper2) FilterMapper;
+    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
+    CHECK(hr);
+    hr = FilterMapper->UnregisterFilter(NULL, NULL, clsidFilter);
+    CHECK(hr);
+    return hr;
+}

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.3 2004-02-09 07:57:33 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.4 2004-02-10 13:24:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/09 07:57:33  adcockj
+// Stopping big fix
+// Timestamps issue test fix
+//
 // Revision 1.2  2004/02/06 16:41:41  adcockj
 // Added frame smoothing and forced subs parameters
 //
@@ -596,8 +600,6 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
     // \todo use pSampleProperties properly
-	CProtectCode WhileInScope(&m_DeliverLock);
-
 	HRESULT hr;
 
     if(pSampleProperties->dwStreamId != AM_STREAM_MEDIA)
@@ -979,11 +981,11 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	if(FAILED(hr = ReconnectOutput(m_fb.w, m_fb.h)))
 		return hr;
 
-	IMediaSample* pOut;
+	SI(IMediaSample) pOut;
 	BYTE* pDataOut = NULL;
     
-    hr = m_VideoOutPin->GetOutputSample(&pOut, false);
-    if(hr != S_OK)
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false);
+    if(FAILED(hr) || !pOut)
         return hr;
 
     if(FAILED(hr = pOut->GetPointer(&pDataOut)))
@@ -993,9 +995,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_fb.rtStart, m_fb.rtStop, rtStart, rtStop));
 
-	IMediaSample2* pOut2 = NULL;
-	hr = pOut->QueryInterface(IID_IMediaSample2, (void**)&pOut2);
-    if(SUCCEEDED(hr) && pOut2)
+	SI(IMediaSample2) pOut2 = pOut;
+    if(pOut2)
     {
         AM_SAMPLE2_PROPERTIES Props;
         if(FAILED(hr = pOut2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
@@ -1036,7 +1037,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
             return hr;
-		pOut2->Release();
     }
     else
     {
@@ -1081,9 +1081,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		Copy422(pDataOut, buf, m_fb.w, m_fb.h, m_fb.pitch);
 	}
 
-	hr = m_VideoOutPin->SendSample(pOut);
-
-	pOut->Release();
+	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
 
 	return hr;
 }
@@ -1144,8 +1142,8 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		if(FAILED(hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &mt)))
 			return hr;
 
-        IMediaSample* pOut = NULL; 
-        if(SUCCEEDED(m_VideoOutPin->GetOutputSample(&pOut, false))) 
+        SI(IMediaSample) pOut; 
+        if(SUCCEEDED(m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false))) 
         { 
             AM_MEDIA_TYPE* pmt; 
             if(SUCCEEDED(pOut->GetMediaType(&pmt)) && pmt) 
@@ -1158,7 +1156,6 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
                 long size = pOut->GetSize(); 
                 bmi->biWidth = size / bmi->biHeight * 8 / bmi->biBitCount; 
             } 
-			pOut->Release();
         } 
 
         m_wout = m_win; 
@@ -1201,7 +1198,10 @@ void CMpegDecoder::ResetMpeg2Decoder()
     if(m_dec != NULL)
     {
     	mpeg2_reset(m_dec, 1);
+        if(cbSequenceHeader > 0)
+        {
     	mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
+        }
     }
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -64,7 +69,7 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     {
         return E_POINTER;
     }
-	
+
     // find out who the pin belongs to
     // we will process differently depending on 
     // the filter at the other end
@@ -189,6 +194,9 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
     LOG(DBGLOG_ALL, ("CDSInputPin::EndFlush\n"));
 
 	CProtectCode WhileVarInScope(m_Filter);
+
+    // Make sure we've finished in the processing thread as well
+	CProtectCode WhileVarInScope2(this);
 
     if(m_Block == TRUE)
     {

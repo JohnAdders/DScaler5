@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.1 2004-02-06 12:17:16 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:16  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -30,7 +35,6 @@
 #include "MoreUuids.h"
 #include "CPUID.h"
 
-#include <uuids.h>
 #include "..\GenDMOProp\GenDMOProp_i.c"
 #include "yacl\include\combook.cpp"
 
@@ -45,7 +49,6 @@ IMPLEMENT_DLL_MODULE_ROUTINES()
 /////////////////////////////////////////////////////////////////////////////
 // DLL Entry Point
 
-extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
     if (dwReason == DLL_PROCESS_ATTACH)
@@ -78,7 +81,6 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
-    SI(IFilterMapper2) FilterMapper;
 
 	REGPINTYPES InputTypes[] = {	
         {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
@@ -103,18 +105,9 @@ STDAPI DllRegisterServer(void)
     RegInfo.cPins2 = 2;
     RegInfo.rgPins2 = Pins;
     
-    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
-        return hr;
-    }
-    hr = FilterMapper->RegisterFilter(CLSID_CMpegDecoder, L"Mpeg2 Video Decoder", NULL, NULL, NULL, &RegInfo);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to Register Filter %08x\n", hr));
-        return hr;
-    }
+  
+    HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"Mpeg2 Video Decoder", &RegInfo);
+   
 
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
@@ -124,20 +117,8 @@ STDAPI DllRegisterServer(void)
 
 STDAPI DllUnregisterServer(void)
 {
-    SI(IFilterMapper2) FilterMapper;
-    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
-        return hr;
-    }
-    hr = FilterMapper->UnregisterFilter(NULL, NULL, CLSID_CMpegDecoder);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to Unregister Filter %08x\n", hr));
-        return hr;
-    }
-
+    HRESULT hr = UnregisterFilter(CLSID_CMpegDecoder);
+    CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
