@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.63 2005-01-04 17:53:43 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.64 2005-01-21 13:54:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.63  2005/01/04 17:53:43  adcockj
+// added option to force dscalewr filter to be loaded2
+//
 // Revision 1.62  2004/12/20 08:51:52  adcockj
 // added back statistics
 //
@@ -1163,7 +1166,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // when we're not really ready
 
     TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
         frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
         m_CurrentPicture->m_NumFields,
@@ -1248,15 +1251,26 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     SI(IMediaSample) pOut;
     BYTE* pDataOut = NULL;
     
-    //hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
     if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return hr;
     }
 
-    LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
+    REFERENCE_TIME Now = 0;
+    static REFERENCE_TIME Last = 0;
+    LARGE_INTEGER Freq;
+    LARGE_INTEGER Now2;
+    static LARGE_INTEGER Last2;
+    QueryPerformanceFrequency(&Freq);
+    QueryPerformanceCounter(&Now2);
+
+    m_RefClock->GetTime(&Now);
+
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, (Now2.QuadPart - Last2.QuadPart) * 10000000/ Freq.QuadPart, Now - m_rtStartTime, Now - Last));
+    Last = Now;
+    Last2 = Now2;
 
     SI(IMediaSample2) pOut2 = pOut;
     if(pOut2)
