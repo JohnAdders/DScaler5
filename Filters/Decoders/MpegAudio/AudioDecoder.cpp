@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.43 2004-10-29 09:11:58 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.44 2004-10-31 14:19:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.43  2004/10/29 09:11:58  adcockj
+// Fixed spdif connection issue
+//
 // Revision 1.42  2004/10/27 12:10:55  adcockj
 // checked over Laurent's changes
 //
@@ -817,15 +820,12 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 		rtStop += DelayMs * 10000;
 	}
 
-    // Don't know if this test is necessary ...
 	if (rtStart < 0)
 	{
 		rtStart = 0;
 		rtStop = rtStart + rtDur;
 	}
     m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
-	//
-	////////////////////////////////////////////////////
 	m_CurrentOutputSample->SetMediaTime(NULL, NULL);
 
 	if(!m_Preroll)
