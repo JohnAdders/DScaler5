@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.45 2004-10-21 18:51:41 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.46 2004-10-22 07:34:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.45  2004/10/21 18:51:41  adcockj
+// Simple VMR compatable quality control
+//
 // Revision 1.44  2004/09/27 20:59:17  adcockj
 // Not fully tested MCE fixes
 //
@@ -983,7 +986,7 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
     {
         CLSID Clsid;
 
-        HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
+        HRESULT hr = m_VideoInPin->GetConnectedFilterCLSID(&Clsid);
         if(Clsid == CLSID_DVDNavigator)
         {
             m_ConnectedToIn = DVD_INFILTER;
@@ -1512,126 +1515,7 @@ void CMpegDecoder::FlushMPEG()
     ResetMpeg2Decoder();
 }
 
-
-HRESULT CMpegDecoder::ReconnectVMR9()
-{
-    HRESULT hr = S_OK;
-
-    CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
-
-    BITMAPINFOHEADER* bmi = NULL;
-
-    if(m_InternalMT.formattype == FORMAT_VideoInfo)
-    {
-        VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
-        bmi = &vih->bmiHeader;
-        vih->AvgTimePerFrame = m_AvgTimePerFrame;
-        SetRect(&vih->rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
-    }
-    else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
-    {
-        VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
-        bmi = &vih->bmiHeader;
-        vih->AvgTimePerFrame = m_AvgTimePerFrame;
-        vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
-        vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
-        Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
-        SetRect(&vih->rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
-    }
-
-    bmi->biXPelsPerMeter = m_MpegWidth * m_ARMpegY * m_ARAdjustY;
-    bmi->biYPelsPerMeter = m_MpegHeight * m_ARMpegX * m_ARAdjustX;
-    Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
-
-    bool NeedReconnect = false;
-
-    if(m_OutputWidth > bmi->biWidth)
-    {
-        bmi->biWidth = m_OutputWidth;
-        NeedReconnect = true;
-    }
-    if(bmi->biHeight < 0)
-    {
-        if(m_OutputHeight > -bmi->biHeight)
-        {
-            bmi->biHeight = -m_OutputHeight;
-            NeedReconnect = true;
-        }
-    }
-    else
-    {
-        if(m_OutputHeight > bmi->biHeight)
-        {
-            bmi->biHeight = m_OutputHeight;
-            NeedReconnect = true;
-        }
-    }
-
-    bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
-
-	m_InternalMT.bFixedSizeSamples = 1;
-	m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-
-	SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
-	if(m_PinConnection)
-	{
-		hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-	else
-	{
-		hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-
-	// if the new type would be greater than the old one then
-	// we need to reconnect otherwise just attach the type to the next sample
-	// for the VMR9 the ReceiveConnection only works when 
-	// you haven't displayed anything but at least 
-	// attaching new formats seems to work properly
-	if(NeedReconnect)
-	{
-        hr = m_VideoOutPin->m_Allocator->Decommit();
-        CHECK(hr);
-
-		hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-
-        // this seems to be required to avoid exiting with
-        // from the reconnection dyuring playback
-        while(hr == VFW_E_BUFFERS_OUTSTANDING)
-        {
-            Sleep(50);
-			LOG(DBGLOG_FLOW, ("Wait for buffers to be freed\n"));
-    		hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-        }
-
-        CHECK(hr);
-
-        // as per documentation on Dynamic reconnection
-        hr = m_VideoOutPin->m_MemInputPin->NotifyAllocator(m_VideoOutPin->m_Allocator.GetNonAddRefedInterface(), FALSE);
-        CHECK(hr);
-        
-        hr = m_VideoOutPin->m_Allocator->Commit();
-    }
-    else
-    {
-    	m_NeedToAttachFormat = true; 
-    }
-
-    return hr;
-}
-
-
-HRESULT CMpegDecoder::ReconnectVMR7()
+HRESULT CMpegDecoder::ReconnectVMR()
 {
     HRESULT hr = S_OK;
 
@@ -2055,10 +1939,8 @@ HRESULT CMpegDecoder::CheckForReconnection()
         switch(m_ConnectedToOut)
         {
         case VMR7_OUTFILTER:
-            hr = ReconnectVMR7();
-            break;
         case VMR9_OUTFILTER:
-            hr = ReconnectVMR9();
+            hr = ReconnectVMR();
             break;
         case GABEST_OUTFILTER:
             hr = ReconnectOverlay();

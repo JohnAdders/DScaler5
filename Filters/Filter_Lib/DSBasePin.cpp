@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.9 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.10 2004-10-22 07:34:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/08/31 16:33:42  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.8  2004/07/28 16:32:35  adcockj
 // Fixes Blight's problems from the forum
 //
@@ -273,7 +278,7 @@ HRESULT CDSBasePin::GetConnectedFilterCLSID(CLSID* pClsid)
     BOOL RetVal = TRUE;
 
 
-    if(!m_ConnectedPin)
+    if(m_ConnectedPin == NULL)
     {
         return VFW_E_NOT_CONNECTED;
     }

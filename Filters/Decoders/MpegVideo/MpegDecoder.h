@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.25 2004-09-23 14:27:58 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.26 2004-10-22 07:34:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -242,8 +242,7 @@ private:
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
     HRESULT CheckForReconnection();
-    HRESULT ReconnectVMR9();
-    HRESULT ReconnectVMR7();
+    HRESULT ReconnectVMR();
     HRESULT ReconnectGabest();
     HRESULT ReconnectOverlay();
     HRESULT ReconnectOther();

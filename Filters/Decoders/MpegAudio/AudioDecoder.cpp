@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.39 2004-10-21 18:52:09 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.40 2004-10-22 07:34:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.39  2004/10/21 18:52:09  adcockj
+// Sync fixes
+//
 // Revision 1.38  2004/10/05 19:27:08  adcockj
 // Correct some stuttering/timing issues
 //
@@ -871,7 +874,6 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
                     UseSpdif = 0;
                 }
             }
-            TypeNum = 2;
         }
         else
         {
@@ -886,6 +888,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             if(TypeNum > 3) return VFW_S_NO_MORE_ITEMS;
             TypeNum--;
             #endif
+            TypeNum = 2;
         }
 
         pmt->majortype = MEDIATYPE_Audio;
