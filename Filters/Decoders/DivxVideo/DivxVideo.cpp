@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxVideo.cpp,v 1.1 2004-11-05 17:45:53 adcockj Exp $
+// $Id: DivxVideo.cpp,v 1.2 2004-11-09 17:21:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/11/05 17:45:53  adcockj
+// Added new decoder
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -99,8 +102,6 @@ STDAPI DllRegisterServer(void)
             { &MEDIATYPE_Video, &MEDIASUBTYPE_MP42 },
             { &MEDIATYPE_Video, &MEDIASUBTYPE_mp41 },
             { &MEDIATYPE_Video, &MEDIASUBTYPE_MP41 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_H263 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_h263 },
     };
 
     REGPINTYPES OutputTypes[] = {   

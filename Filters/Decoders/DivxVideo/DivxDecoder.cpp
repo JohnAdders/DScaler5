@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.4 2004-11-06 14:36:08 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.5 2004-11-09 17:21:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/11/06 14:36:08  adcockj
+// VS6 project update
+//
 // Revision 1.3  2004/11/06 14:07:00  adcockj
 // Fixes for WM10 and seeking
 //
@@ -61,7 +64,7 @@ CDivxDecoder::CDivxDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CDivxDecoder::CreatePins\n"));
     
-    m_VideoInPin = new CDSBufferedInputPin;
+    m_VideoInPin = new CDSInputPin;
     if(m_VideoInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
@@ -90,14 +93,14 @@ CDivxDecoder::CDivxDecoder() :
     m_ARDivxX = 4;
     m_ARDivxY = 3;
 
+    m_Rate = 10000;
+
     m_CodecID = CODEC_ID_NONE;
     m_Codec = NULL;
     m_CodecContext = NULL;
 
     av_set_memory(malloc,free,realloc);
     avcodec_init();
-    avcodec_register_all();
-    av_register_all();
     av_log_set_callback(avlog);
 }
 
@@ -279,9 +282,7 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                      pmt->subtype == MEDIASUBTYPE_mp42 ||
                      pmt->subtype == MEDIASUBTYPE_MP42 ||
                      pmt->subtype == MEDIASUBTYPE_mp41 ||
-                     pmt->subtype == MEDIASUBTYPE_MP41 ||
-                     pmt->subtype == MEDIASUBTYPE_h263 ||
-                     pmt->subtype == MEDIASUBTYPE_H263));
+                     pmt->subtype == MEDIASUBTYPE_MP41));
     }
     else if(pPin == m_VideoOutPin)
     {
@@ -396,6 +397,8 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_ExtraSize = 0;
         m_ExtraData = NULL;
         RECT* pSourceRect;
+    
+        m_fWaitForKeyFrame = true;
 
         if(pMediaType->formattype == FORMAT_VideoInfo2)
         {
@@ -436,14 +439,12 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_DivxHeight = min(abs(m_DivxHeight), pSourceRect->bottom);
         }
 
-
         m_VideoOutPin->SetAspectX(m_DivxWidth);
         m_VideoOutPin->SetAspectY(m_DivxHeight);
         m_VideoOutPin->SetWidth(m_DivxWidth);
         m_VideoOutPin->SetHeight(m_DivxHeight);
         m_VideoOutPin->SetPanScanX(0);
         m_VideoOutPin->SetPanScanY(0);
-
 
         m_VideoOutPin->SetAvgTimePerFrame(m_AvgTimePerFrame);
 
@@ -471,9 +472,8 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         case MAKEFOURCC('m', 'p', '4', '1'):
             m_CodecID = CODEC_ID_MSMPEG4V1;
             break;
-        case MAKEFOURCC('H', '2', '6', '3'):
-        case MAKEFOURCC('h', '2', '6', '3'):
-            m_CodecID = CODEC_ID_H263;
+        default:
+            return E_UNEXPECTED;
             break;
         }
         m_FourCC = bih->biCompression;
@@ -525,7 +525,7 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
         m_CurrentPicture->m_rtStart = pSampleProperties->tStart;
-        m_CurrentPicture->m_rtStop = pSampleProperties->tStart + m_AvgTimePerFrame;
+        m_CurrentPicture->m_rtStop = pSampleProperties->tStart + m_AvgTimePerFrame * m_Rate / 10000;
     }
 
     int GotPicture = 0;
@@ -553,19 +553,15 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
 
 HRESULT CDivxDecoder::Deliver()
 {
-    /*
-    TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    TCHAR frametype[] = {'?','I', 'P', 'B', 'S', '1', '2',};
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d]\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
-        frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
-        m_CurrentPicture->m_NumFields,
-        !!(m_CurrentPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME),
-        !!(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST),
-        !!(m_CurrentPicture->m_NumFields == 3),
-        m_OutputWidth, m_OutputHeight, m_InternalPitch,
-        !!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
-        !!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
-    */
+        frametype[m_CurrentPicture->m_Picture.pict_type],
+        m_CurrentPicture->m_Picture.repeat_pict,
+        m_CurrentPicture->m_Picture.key_frame,
+        m_CurrentPicture->m_Picture.interlaced_frame,
+        m_CurrentPicture->m_Picture.top_field_first));
+
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
     
@@ -598,9 +594,19 @@ HRESULT CDivxDecoder::Deliver()
         rtStop = rtStart + 100;
     }
 
+    HRESULT hr = S_OK;
     m_LastOutputTime = rtStop;
-
-    HRESULT hr;
+    if(m_fWaitForKeyFrame)
+    {
+        if(m_CurrentPicture->m_Picture.key_frame)
+        {
+            m_fWaitForKeyFrame = false;
+        }
+        else
+        {
+            return hr;
+        }
+    }
 
     // cope with dynamic format changes from our side
     // will possibly call NegotiateAllocator on the output pins
@@ -758,10 +764,25 @@ void CDivxDecoder::ResetDivxDecoder()
     m_CodecContext->height = m_DivxHeight;
     m_CodecContext->idct_algo = FF_IDCT_AUTO;
     m_CodecContext->codec_tag = m_FourCC;
-    m_CodecContext->error_concealment = 3;
-    m_CodecContext->error_resilience = 1;
+    m_CodecContext->error_concealment = FF_EC_GUESS_MVS | FF_EC_DEBLOCK;
+    m_CodecContext->error_resilience = FF_ER_COMPLIANT;
 
-    m_Codec = avcodec_find_decoder(m_CodecID);
+    switch(m_CodecID)
+    {
+    case CODEC_ID_MSMPEG4V3:
+        m_Codec = &msmpeg4v3_decoder;
+        break;
+    case CODEC_ID_MSMPEG4V2:
+        m_Codec = &msmpeg4v2_decoder;
+        break;
+    case CODEC_ID_MSMPEG4V1:
+        m_Codec = &msmpeg4v1_decoder;
+        break;
+    default:
+    case CODEC_ID_MPEG4:
+        m_Codec = &mpeg4_decoder;
+        break;
+    }
 
     if (avcodec_open(m_CodecContext, m_Codec) < 0) 
     {
@@ -814,7 +835,7 @@ HRESULT CDivxDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
     {
         LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
         m_LastOutputTime = 0;
-        //Rate = (LONG)(10000 / dRate);
+        m_Rate = (DWORD)(10000 / dRate);
         m_IsDiscontinuity = true;
         return S_OK;
     }

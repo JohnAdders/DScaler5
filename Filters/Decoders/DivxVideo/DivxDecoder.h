@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.1 2004-11-05 17:45:53 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.2 2004-11-09 17:21:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -108,6 +108,7 @@ protected:
 private:
     REFERENCE_TIME m_AvgTimePerFrame;
     REFERENCE_TIME m_LastOutputTime;
+    DWORD m_Rate;
     bool m_fWaitForKeyFrame;
     bool m_fFilm;
     CCanLock m_DeliverLock;

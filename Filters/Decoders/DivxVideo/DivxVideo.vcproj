@@ -54,6 +54,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				ModuleDefinitionFile=".\DivxVideo.def"
 				ProgramDatabaseFile=".\Release/DivxVideo.pdb"
 				SubSystem="2"
+				OptimizeReferences="2"
 				ImportLibrary=".\Release/DivxVideo.lib"
 				TargetMachine="1"/>
 			<Tool
