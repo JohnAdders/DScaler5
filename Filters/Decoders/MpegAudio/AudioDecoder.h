@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.22 2004-08-31 16:33:41 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.23 2004-10-27 12:10:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -81,6 +81,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Dynamic Range Control")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF for AC3 & DTS")
     DEFINE_PARAM_BOOL(0, L"MPEG Audio over SPDIF")
+    DEFINE_PARAM_INT(-600, 600, 0, L"ms", L"SP/DIF Audio Time Offset")
 END_PARAM_LIST()
 
 public:
@@ -100,6 +101,7 @@ public:
         DYNAMICRANGECONTROL,
         USESPDIF,
         MPEGOVERSPDIF,
+        AUDIOTIMEOFFSET,
     };
 
     enum eOutputSampleType
@@ -174,7 +176,7 @@ protected:
     HRESULT ProcessAC3();
     HRESULT ProcessDTS();
     HRESULT ProcessMPA();
-    HRESULT Deliver();
+    HRESULT Deliver(bool IsSpdif);
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
 

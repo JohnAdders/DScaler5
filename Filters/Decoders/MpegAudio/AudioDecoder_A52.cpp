@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.12 2004-08-16 16:08:45 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.13 2004-10-27 12:10:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/08/16 16:08:45  adcockj
+// timestamp fixes
+//
 // Revision 1.11  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -302,7 +305,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                                 ASSERT(m_BytesLeftInBuffer >=0);
                                 if(m_BytesLeftInBuffer == 0)
                                 {
-                                    hr = Deliver();
+                                    hr = Deliver(false);
                                     if(hr != S_OK)
                                     {
                                         return hr;

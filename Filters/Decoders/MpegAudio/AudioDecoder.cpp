@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.41 2004-10-24 16:24:28 laurentg Exp $
+// $Id: AudioDecoder.cpp,v 1.42 2004-10-27 12:10:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.41  2004/10/24 16:24:28  laurentg
+// Negative delay added when doing S/PDIF passthrough
+//
 // Revision 1.40  2004/10/22 07:34:40  adcockj
 // fix for some connection issues
 //
@@ -797,37 +800,25 @@ HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nC
 
 }
 
-HRESULT CAudioDecoder::Deliver()
+HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 {
     HRESULT hr = S_OK;
     REFERENCE_TIME rtDur = 10000000i64 * m_InternalMT.lSampleSize / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
 	REFERENCE_TIME rtStop = m_rtOutputStart + rtDur;
 
-	////////////////////////////////////////////////////
-	// Changed by Laurent (to be checked by John)
-	// Constant AUDIO_DELAY_OVER_SPDIF has to be replaced
-	// by a user setting named "Audio delay over S/PDIF"
-	// with at least -400 as minimum value. Default value
-	// has to be decided (not easy to adjust).
-	// And this delay must be checked with MPEG over S/PDIF
-	// as soon as it works again.
-	//
-    AM_MEDIA_TYPE* pMediaType = &m_AudioInPin->m_ConnectedMediaType;
-    BOOL UseSpdif = (GetParamBool(USESPDIF) &&
-                    (IsMediaTypeAC3(pMediaType) || IsMediaTypeDTS(pMediaType))) ||
-                    (GetParamBool(MPEGOVERSPDIF) && IsMediaTypeMP3(pMediaType));
 	REFERENCE_TIME rtStart = m_rtOutputStart;
-    if(UseSpdif)
+    if(IsSpdif)
     {
-		#define AUDIO_DELAY_OVER_SPDIF	-400
-		rtStart += AUDIO_DELAY_OVER_SPDIF * 10000;
-		rtStop += AUDIO_DELAY_OVER_SPDIF * 10000;
-		// Don't know if this test is necessary ...
-		if (rtStart < 0)
-		{
-			rtStart = 0;
-			rtStop = rtStart + rtDur;
-		}
+        int DelayMs = GetParamInt(AUDIOTIMEOFFSET);
+		rtStart += DelayMs * 10000;
+		rtStop += DelayMs * 10000;
+	}
+
+    // Don't know if this test is necessary ...
+	if (rtStart < 0)
+	{
+		rtStart = 0;
+		rtStop = rtStart + rtDur;
 	}
     m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
 	//
@@ -1160,7 +1151,7 @@ HRESULT CAudioDecoder::SendOutLastSamples(CDSBasePin* pPin)
     if(pPin == m_AudioInPin && m_BytesLeftInBuffer > 0)
     {
         memset(m_pDataOut, 0, m_BytesLeftInBuffer);
-        hr = Deliver();
+        hr = Deliver(false);
         m_CurrentOutputSample.Detach();
         m_BytesLeftInBuffer = 0;
         m_pDataOut = NULL;
@@ -1523,7 +1514,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     ASSERT(m_BytesLeftInBuffer >=0);
     if(m_BytesLeftInBuffer == 0)
     {
-        hr = Deliver();
+        hr = Deliver(true);
         if(hr != S_OK)
         {
             return hr;
@@ -1551,7 +1542,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     ASSERT(m_BytesLeftInBuffer >=0);
     if(m_BytesLeftInBuffer == 0)
     {
-        hr = Deliver();
+        hr = Deliver(true);
         if(hr != S_OK)
         {
             return hr;
@@ -1571,7 +1562,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
             _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
             pData += m_BytesLeftInBuffer;
             BytesToGo -= m_BytesLeftInBuffer;
-            hr = Deliver();
+            hr = Deliver(true);
             if(hr != S_OK)
             {
                 return hr;
@@ -1583,9 +1574,6 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
         m_pDataOut += BytesToGo;
         m_BytesLeftInBuffer -= BytesToGo;
-		// Laurent to John : are you sure that m_BytesLeftInBuffer
-		// could not be negative after that ?
-
         BytesToGo = FinalLength - DigitalLength - 8;
     }
     else
@@ -1596,12 +1584,9 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 
     if(BytesToGo > 0)
     {
-		////////////////////////////////////////////////////
-		// Added by Laurent (to be checked by John)
-		//
 		if(m_BytesLeftInBuffer == 0)
 		{
-			hr = Deliver();
+			hr = Deliver(true);
 			if(hr != S_OK)
 			{
 				return hr;
@@ -1609,14 +1594,12 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 			hr = GetOutputSampleAndPointer();
 			CHECK(hr);
 		}
-		//
-		////////////////////////////////////////////////////
 
         if (BytesToGo > m_BytesLeftInBuffer)
         {
             ZeroMemory(m_pDataOut, m_BytesLeftInBuffer);
             BytesToGo -= m_BytesLeftInBuffer;
-            hr = Deliver();
+            hr = Deliver(true);
             if(hr != S_OK)
             {
                 return hr;
@@ -1628,13 +1611,12 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         ZeroMemory(m_pDataOut, BytesToGo);
         m_pDataOut += BytesToGo;
         m_BytesLeftInBuffer -= BytesToGo;
-		// Laurent to John : are you sure that m_BytesLeftInBuffer
-		// could not be negative after that ?
+        ASSERT(m_BytesLeftInBuffer >= 0);
     }
 
     if(m_BytesLeftInBuffer == 0)
     {
-        hr = Deliver();
+        hr = Deliver(true);
         if(hr != S_OK)
         {
             return hr;

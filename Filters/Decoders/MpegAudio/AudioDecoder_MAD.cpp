@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.20 2004-08-16 16:08:45 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.21 2004-10-27 12:10:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2004/08/16 16:08:45  adcockj
+// timestamp fixes
+//
 // Revision 1.19  2004/08/04 15:19:25  adcockj
 // Change output sample rate on dynamic change
 //
@@ -265,7 +268,7 @@ HRESULT CAudioDecoder::ProcessMPA()
                 ASSERT(m_BytesLeftInBuffer >=0);
                 if(m_BytesLeftInBuffer == 0)
                 {
-                    hr = Deliver();
+                    hr = Deliver(false);
                     if(hr != S_OK)
                     {
                         return hr;

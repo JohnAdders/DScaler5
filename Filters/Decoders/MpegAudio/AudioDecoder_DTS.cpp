@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.14 2004-08-16 16:08:45 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.15 2004-10-27 12:10:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/08/16 16:08:45  adcockj
+// timestamp fixes
+//
 // Revision 1.13  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -334,7 +337,7 @@ HRESULT CAudioDecoder::ProcessDTS()
                                 ASSERT(m_BytesLeftInBuffer >=0);
                                 if(m_BytesLeftInBuffer == 0)
                                 {
-                                    hr = Deliver();
+                                    hr = Deliver(false);
                                     if(hr != S_OK)
                                     {
                                         return hr;
