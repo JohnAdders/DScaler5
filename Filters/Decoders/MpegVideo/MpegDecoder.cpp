@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.61 2004-12-13 16:59:57 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.62 2004-12-20 08:51:52 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.61  2004/12/13 16:59:57  adcockj
+// flag based film detection
+//
 // Revision 1.60  2004/12/12 20:35:15  adcockj
 // fixed leak
 //
@@ -1425,7 +1428,6 @@ void CMpegDecoder::ResetMpeg2Decoder()
     if(m_dec != NULL)
     {
 		mpeg2_close(m_dec);
-        mpeg2_free(m_dec);
         m_dec = mpeg2_init();
         if(cbSequenceHeader > 0)
         {
@@ -1484,7 +1486,6 @@ HRESULT CMpegDecoder::Deactivate()
     if(m_dec != NULL)
     {
         mpeg2_close(m_dec);
-        mpeg2_free(m_dec);
         m_dec = NULL;
     }
     return S_OK;
