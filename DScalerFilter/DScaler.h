@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.3 2003-05-01 18:15:17 adcockj Exp $
+// $Id: DScaler.h,v 1.4 2003-05-02 16:22:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -30,7 +30,7 @@
 class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScaler : 
 	public CComObjectRootEx<CComMultiThreadModel>,
 	public CComCoClass<CDScaler, &__uuidof(CDScaler)>,
-    public ISpecifyPropertyPages,
+    public ISpecifyPropertyPagesImpl<CDScaler>,
     public IBaseFilter,
 	public IPersistStream,
     public IMediaParamInfo,
@@ -55,6 +55,12 @@ BEGIN_COM_MAP(CDScaler)
 	COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, m_pUnkMarshaler.p)
 END_COM_MAP()
 
+BEGIN_PROP_MAP(CDScaler)
+	PROP_PAGE(CLSID_GenDMOPropPage)
+	PROP_PAGE(CLSID_LicensePropPage)
+END_PROP_MAP()
+
+
 	HRESULT FinalConstruct();
 	void FinalRelease();
 
@@ -74,11 +80,6 @@ public:
     STDMETHOD(SetSyncSource)(IReferenceClock *pClock);
     STDMETHOD(GetSyncSource)(IReferenceClock **pClock);
     STDMETHOD(GetClassID)(CLSID __RPC_FAR *pClassID);
-
-
-// ISpecifyPropertyPages
-public:
-    STDMETHOD(GetPages)(CAUUID *pPages);
 
 // IPersistStream
 public:
