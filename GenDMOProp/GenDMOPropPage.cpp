@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.9 2004-03-15 17:17:06 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.10 2004-05-10 16:50:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/03/15 17:17:06  adcockj
+// Basic registry saving support
+//
 // Revision 1.8  2003/07/21 08:44:41  adcockj
 // Added HScroll patch from Torbjorn
 //
@@ -495,6 +498,8 @@ LRESULT CGenDMOPropPage::OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hW
 {
     if(m_SaveDefaults)
     {
+		// save the current values before setting them as default
+		Apply();
         m_SaveDefaults->SaveDefaultsToRegistry();
     }
     return 0;
