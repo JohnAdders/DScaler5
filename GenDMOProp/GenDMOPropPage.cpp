@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.14 2004-07-24 21:45:51 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.15 2004-07-30 20:13:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/07/24 21:45:51  adcockj
+// Fixed asset errors (thanks Torbjörn)
+//
 // Revision 1.13  2004/07/20 16:37:57  adcockj
 // Fixes for main issues raised in testing of 0.0.1
 //  - Improved parameter handling
@@ -130,6 +133,8 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
         GetValueFromControls();
     }
     
+    bool ShowMessage = false;
+
     for (DWORD i(0); i < m_NumParams; ++i)
     {
         MP_DATA CurrentValue;
@@ -140,14 +145,19 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
             hr = m_MediaParams->SetParam(i, m_Params[i]);
             if(hr == S_FALSE)
             {
-                MessageBox("Can't change this property while filter is connected, you will need to restart the program for the change to take effect.", "Warning", MB_OK); 
+                ShowMessage = true;
                 // since we tell the user that it will be set next time
                 // we had better save it so that it actually is set next time
                 hr = m_SaveDefaults->SaveDefaultToRegistry(i);
-                return hr;
             }
         }
     }
+
+    if(ShowMessage)
+    {
+        MessageBox("Some of the properties you attempted to change cannot be altered while filter is connected, you will need to restart the program for the change to take effect.", "Warning", MB_OK); 
+    }
+
     m_bDirty = FALSE;
 
     if(::IsWindow(m_hWnd))
