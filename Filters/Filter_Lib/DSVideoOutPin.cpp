@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.7 2004-11-25 17:22:10 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.8 2004-11-26 15:03:52 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/11/25 17:22:10  adcockj
+// Fixed some more connection issues
+//
 // Revision 1.6  2004/11/18 07:40:57  adcockj
 // a few test bug fixes
 //
@@ -106,8 +109,7 @@ HRESULT CDSVideoOutPin::NotifyConnected()
     {
         m_ConnectedType = GABEST_OUTFILTER;
     }
-    else if(Clsid == CLSID_OverlayMixer ||
-         Clsid == CLSID_VideoRenderer)
+    else if(Clsid == CLSID_OverlayMixer)
     {
         OnConnectToOverlay();
         m_ConnectedType = OVERLAY_OUTFILTER;
