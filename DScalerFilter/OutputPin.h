@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.1.1.1 2003-04-30 13:01:22 adcockj Exp $
+// $Id: OutputPin.h,v 1.2 2003-05-01 16:22:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -82,9 +82,9 @@ public:
     CComQIPtr<IMemInputPin> m_MemInputPin;
     CComPtr<IMemAllocator> m_Allocator;
     BOOL m_FormatChanged;
+    void InternalDisconnect();
 
 private:
-    void InternalDisconnect();
     void CreateProposedMediaType(AM_MEDIA_TYPE* ProposedType);
     void CreateRGBMediaType(AM_MEDIA_TYPE* ProposedType, const GUID& RGBType);
 };

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.1.1.1 2003-04-30 13:01:21 adcockj Exp $
+// $Id: InputPin.cpp,v 1.2 2003-05-01 16:22:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1.1.1  2003/04/30 13:01:21  adcockj
+// Initial Import
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -59,6 +62,7 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
 {
     LOG(DBGLOG_FLOW, "CInputPin::ReceiveConnection\n");
     HRESULT hr = S_OK;
+    BOOL TryToReconnectOnFail = FALSE;
     if(pConnector == NULL || pmt == NULL)
     {
         return E_POINTER;
@@ -68,14 +72,66 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     {
         return VFW_E_TYPE_NOT_ACCEPTED;
     }
+
+    // save old types in case we fail
+    AM_MEDIA_TYPE OldInput;
+    AM_MEDIA_TYPE OldImplied;
+    InitMediaType(&OldInput);
+    InitMediaType(&OldImplied);
+    CopyMediaType(&OldInput, &m_InputMediaType);
+    CopyMediaType(&OldImplied, &m_ImpliedMediaType);
+
     m_ConnectedPin = pConnector;
     CopyMediaType(&m_InputMediaType, pmt);
     WorkOutImpliedMediaType();
-    LogMediaType(&m_InputMediaType, "Input Connected");
-    m_FormatChanged = TRUE;
+
+    // see if we need to reconnect our output
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
-        hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
+        if(m_Filter->m_State != State_Stopped)
+        {
+            // need to see if we can do a dynamic change on our output
+            // if we are already started
+            CComQIPtr<IPinConnection> PinConnection = m_OutputPin->m_ConnectedPin;
+            if(PinConnection != NULL)
+            {
+                hr = PinConnection->DynamicQueryAccept(&m_ImpliedMediaType);
+                if(hr == S_OK)
+                {
+                    hr = PinConnection->DynamicDisconnect();
+                    if(SUCCEEDED(hr))
+                    {
+                        m_OutputPin->InternalDisconnect();
+                        TryToReconnectOnFail = TRUE;
+                    }
+                }
+            }
+            else
+            {
+                hr = VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
+        if(SUCCEEDED(hr))
+        {
+            //hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin);
+            hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
+        }
+    }
+
+    if(FAILED(hr))
+    {   
+        // revert back to old connection
+        CopyMediaType(&m_InputMediaType, &OldInput);
+        CopyMediaType(&m_ImpliedMediaType, &OldImplied);
+        if(TryToReconnectOnFail)
+        {
+            m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
+        }
+    }
+    else
+    {
+        LogMediaType(&m_InputMediaType, "Input Connected");
+        m_FormatChanged = TRUE;
     }
     return hr;
 }
@@ -349,7 +405,7 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     }
 
     LogSample(pSample, "New Input Sample");
-    // chack for media type changes on the input side
+    // check for media type changes on the input side
     // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* InputType = NULL;
     hr = pSample->GetMediaType(&InputType);
@@ -404,6 +460,8 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     }
     hr = pSample->GetPointer(&pInBuffer);
     hr = OutSample->GetPointer(&pOutBuffer);
+    
+    CComQIPtr<IDirectDrawMediaSample> pTest = OutSample;
     memcpy(pOutBuffer, pInBuffer, Size);
 
     SampleProperties.dwSampleFlags &= m_VideoSampleMask;

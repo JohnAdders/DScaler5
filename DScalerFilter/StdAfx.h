@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.1.1.1 2003-04-30 13:01:22 adcockj Exp $
+// $Id: StdAfx.h,v 1.2 2003-05-01 16:22:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -44,6 +44,7 @@ extern CComModule _Module;
 #include <d3d9.h>
 #include <vmr9.h>
 #include <amvideo.h>
+#include <amstream.h>
 #include <dvdmedia.h>
 #include <medparam.h>
 

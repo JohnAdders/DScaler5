@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.1.1.1 2003-04-30 13:01:22 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.2 2003-05-01 16:22:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
+// Initial Import
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -152,7 +155,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     // we loop down until we find an alignment it does like
     ALLOCATOR_PROPERTIES Props;
     ALLOCATOR_PROPERTIES PropsAct;
-    hr = m_InputPin->GetAllocatorRequirements(&Props);
+    hr = m_Allocator->GetProperties(&Props);
     
     Props.cBuffers = max(3, Props.cBuffers);
     Props.cbBuffer = max(max(ProposedType.lSampleSize, m_CurrentMediaType.lSampleSize), (ULONG)Props.cbBuffer);
@@ -487,19 +490,22 @@ BOOL COutputPin::HasChanged()
 
 void COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
 {   
-    if(m_ConnectedPin != NULL)
+    if(m_CurrentMediaType.majortype != GUID_NULL)
     {
-        NumTypes = 2;
-        CopyMediaType(Types, &m_DesiredMediaType);
-        ++Types;
-        CopyMediaType(Types, &m_CurrentMediaType);
-    }
-    else if(m_InputPin->m_ConnectedPin != NULL)
-    {
-        NumTypes = 0;
-        CreateProposedMediaType(Types);
-        ++Types;
-        ClearMediaType(Types);
+        if(m_CurrentMediaType.subtype != m_DesiredMediaType.subtype)
+        {
+            NumTypes = 2;
+            CopyMediaType(Types, &m_DesiredMediaType);
+            ++Types;
+            CopyMediaType(Types, &m_CurrentMediaType);
+        }
+        else
+        {
+            NumTypes = 0;
+            CopyMediaType(Types, &m_CurrentMediaType);
+            ++Types;
+            ClearMediaType(Types);
+        }
     }
     else
     {
