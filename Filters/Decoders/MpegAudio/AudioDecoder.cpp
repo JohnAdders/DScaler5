@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.4 2004-02-25 17:14:01 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.5 2004-02-27 17:04:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/25 17:14:01  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.3  2004/02/17 16:39:59  adcockj
 // Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
 //
@@ -84,7 +88,6 @@ CAudioDecoder::CAudioDecoder() :
     m_AudioOutPin->AddRef();
     m_AudioOutPin->SetupObject(this, L"Audio Out");
 
-    m_fDiscontinuity = true;
     m_rtNextFrameStart = _I64_MIN;
     m_rtOutputStart = 0;
     m_sample_max = 0.1;
@@ -92,8 +95,12 @@ CAudioDecoder::CAudioDecoder() :
     m_OutputSampleType = OUTSAMPLE_16BIT;
     m_SampleSize = 2;
     
-    ZeroMemory(&m_InternalMT, sizeof(AM_MEDIA_TYPE));
+    InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
+
+    // request buffer large enough for 100ms of 6 channel 32 bit audio
+	m_OutputBufferSize = 48000*6*(32/8)/10; 
+
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -103,7 +110,7 @@ CAudioDecoder::~CAudioDecoder()
 
 STDMETHODIMP CAudioDecoder::GetClassID(CLSID __RPC_FAR *pClassID)
 {
-    LOG(DBGLOG_FLOW, ("CAudioDecoder::GetClassID\n"));
+    LOG(DBGLOG_ALL, ("CAudioDecoder::GetClassID\n"));
     if(pClassID == NULL)
     {
         return E_POINTER;
@@ -200,8 +207,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     else if(pPin == m_AudioOutPin)
     {
 	    pProperties->cBuffers = 6;
-        // request buffer large enough for 100ms of 6 channel 32 bit audio
-	    pProperties->cbBuffer = 48000*6*(32/8)/10; 
+	    pProperties->cbBuffer = m_OutputBufferSize; 
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
     }
@@ -343,7 +349,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY || 
         pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY)
 	{
-        m_fDiscontinuity = true;
+        m_IsDiscontinuity = true;
 		m_buff.resize(0);
         m_sample_max = 0.1f;
 		m_rtOutputStart = 0;
@@ -360,7 +366,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-        //LOG(DBGLOG_FLOW, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
+        LOG(DBGLOG_ALL, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
     }
 
 	int tmp = m_buff.size();
@@ -379,7 +385,6 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
 	return hr;
 }
-
 
 
 HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBitsPerSample)
@@ -505,15 +510,19 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 
     if(m_rtNextFrameStart != _I64_MIN)
     {
-        if(!GetParamBool(JITTERREMOVER) || abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 20000)
+        if(!GetParamBool(JITTERREMOVER) || abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > rtDur || m_IsDiscontinuity)
         {
+            if(abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 0)
+            {
+                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", m_rtOutputStart, m_rtNextFrameStart));
+            }
             m_rtOutputStart = m_rtNextFrameStart;
         }
     }
     
     m_rtNextFrameStart = _I64_MIN;
 
-    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
+    LOG(DBGLOG_ALL, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
 
 	if(m_NeedToAttachFormat)
 	{
@@ -529,8 +538,8 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 
 	if(m_rtOutputStart >= 0)
     {
-	    pOut->SetDiscontinuity(m_fDiscontinuity); 
-        m_fDiscontinuity = false;
+	    pOut->SetDiscontinuity(m_IsDiscontinuity); 
+        m_IsDiscontinuity = false;
 
     	hr = m_AudioOutPin->SendSample(pOut);
     }
@@ -544,31 +553,17 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
 {
 	HRESULT hr;
 
-	if(!m_AudioOutPin->m_MemInputPin) return E_NOINTERFACE;
-
-	SI(IMemAllocator) pAllocator;
-	if(FAILED(hr = m_AudioOutPin->m_MemInputPin->GetAllocator(pAllocator.GetReleasedInterfaceReference())) || !pAllocator) 
-		return hr;
-
-	ALLOCATOR_PROPERTIES props, actual;
-	if(FAILED(hr = pAllocator->GetProperties(&props)))
-		return hr;
-
-
-	if(!AreMediaTypesIdentical(&m_InternalMT, m_AudioOutPin->GetMediaType()) || Len > (DWORD)props.cbBuffer)
+	if(!AreMediaTypesIdentical(&m_InternalMT, m_AudioOutPin->GetMediaType()) || Len > m_OutputBufferSize)
 	{
+        // should have already done a QueryAccept when deciding types
+        // so no need to do again here
 
-        if(Len > (DWORD)props.cbBuffer) 
-        { 
-		    props.cBuffers = 4;
-		    props.cbBuffer = Len * 3 / 2;
-
-		    if(FAILED(hr = m_AudioOutPin->m_ConnectedPin->BeginFlush())
-		    || FAILED(hr = m_AudioOutPin->m_ConnectedPin->EndFlush())
-		    || FAILED(hr = pAllocator->Decommit())
-		    || FAILED(hr = pAllocator->SetProperties(&props, &actual))
-		    || FAILED(hr = pAllocator->Commit()))
-			    return hr;
+        if((DWORD)Len > m_OutputBufferSize)
+        {
+            m_OutputBufferSize = Len * 3 / 2;
+            
+            hr = m_AudioOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+            CHECK(hr);
         }
         m_NeedToAttachFormat = true;
 	}
@@ -646,7 +641,7 @@ HRESULT CAudioDecoder::Deactivate()
 	libmad::mad_frame_finish(&m_frame);
 	libmad::mad_stream_finish(&m_stream);
 
-    m_fDiscontinuity = false; 
+    m_IsDiscontinuity = false; 
 
     m_sample_max = 0.1f; 
     return S_OK;
@@ -709,14 +704,12 @@ HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
 HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len)
 {
     HRESULT hr = ReconnectOutput(Len);
-    if(FAILED(hr))
-        return hr;
+    CHECK(hr);
 
     *ppDataOut = NULL;
 
-    hr = m_AudioOutPin->GetOutputSample(pOut, false);
-    if(FAILED(hr) || *pOut == NULL)
-        return E_FAIL;
+    hr = m_AudioOutPin->GetOutputSample(pOut, m_IsDiscontinuity);
+    CHECK(hr);
 
     hr = (*pOut)->GetPointer(ppDataOut);
     CHECK(hr);

@@ -109,6 +109,10 @@ SOURCE=..\libao\audio_out_oss.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\libao\audio_out_peak.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\libao\audio_out_solaris.c
 # End Source File
 # Begin Source File

@@ -189,12 +189,40 @@ typedef int16_t quantizer_t;
 #define MUL(a,b) ((int)(((int64_t)(a) * (b) + (1 << 29)) >> 30))
 #define MUL_L(a,b) ((int)(((int64_t)(a) * (b) + (1 << 25)) >> 26))
 #elif 1
-#define MUL(a,b) \
-({ int32_t _ta=(a), _tb=(b), _tc; \
-   _tc=(_ta & 0xffff)*(_tb >> 16)+(_ta >> 16)*(_tb & 0xffff); (int32_t)(((_tc >> 14))+ (((_ta >> 16)*(_tb >> 16)) << 2 )); })
-#define MUL_L(a,b) \
-({ int32_t _ta=(a), _tb=(b), _tc; \
-   _tc=(_ta & 0xffff)*(_tb >> 16)+(_ta >> 16)*(_tb & 0xffff); (int32_t)((_tc >> 10) + (((_ta >> 16)*(_tb >> 16)) << 6)); })
+
+#   pragma warning(push)
+#   pragma warning(disable: 4035)  /* no return value */
+static __forceinline
+int32_t MUL_L(int32_t x, int32_t y)
+{
+  enum {
+    fracbits = 26
+  };
+
+  __asm {
+    mov eax, x
+    imul y
+    shrd eax, edx, fracbits
+  }
+
+  /* implicit return of eax */
+}
+static __forceinline
+int32_t MUL(int32_t x, int32_t y)
+{
+  enum {
+    fracbits = 30
+  };
+
+  __asm {
+    mov eax, x
+    imul y
+    shrd eax, edx, fracbits
+  }
+
+  /* implicit return of eax */
+}
+#   pragma warning(pop)
 #else
 #define MUL(a,b) (((a) >> 15) * ((b) >> 15))
 #define MUL_L(a,b) (((a) >> 13) * ((b) >> 13))

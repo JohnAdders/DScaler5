@@ -1,7 +1,16 @@
 /* vc++/config.h - manually adapted from include/config.h.in */
 
+/* a52dec profiling */
+/* #undef A52DEC_GPROF */
+
 /* maximum supported data alignment */
 /* #undef ATTRIBUTE_ALIGNED_MAX */
+
+/* debug mode configuration */
+/* #undef DEBUG */
+
+/* Define if you have the `__builtin_expect' function. */
+/* #undef HAVE_BUILTIN_EXPECT */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
@@ -36,6 +45,9 @@
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H 1
 
+/* Define to 1 if the system has the type `struct timeval'. */
+/* #undef HAVE_STRUCT_TIMEVAL */
+
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H 1
 
@@ -48,6 +60,9 @@
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H 1
 
+/* Define to 1 if you have the <time.h> header file. */
+/* #undef HAVE_TIME_H */
+
 /* Define to 1 if you have the <unistd.h> header file. */
 /* #undef HAVE_UNISTD_H */
 
@@ -56,6 +71,9 @@
 
 /* a52 sample precision */
 /* #undef LIBA52_DOUBLE */
+
+/* use fixed-point arithmetic */
+/* #undef LIBA52_FIXED */
 
 /* libao al support */
 /* #undef LIBAO_AL */
@@ -96,8 +114,14 @@
 /* The size of a `int', as computed by sizeof. */
 #define SIZEOF_INT 4
 
+/* The size of a `long', as computed by sizeof. */
+#define SIZEOF_LONG 4
+
 /* The size of a `short', as computed by sizeof. */
 #define SIZEOF_SHORT 2
+
+/* The size of a `void*', as computed by sizeof. */
+#define SIZEOF_VOIDP 4
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

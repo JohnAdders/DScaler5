@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.1 2004-02-25 17:14:02 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.2 2004-02-27 17:04:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,58 +31,23 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
+#include "Convert.h"
 
 using namespace libmad;
 
-static inline int scaleto24(mad_fixed_t sample)
-{
-  /* round */
-  sample += (1L << (MAD_F_FRACBITS - 24));
-
-  /* clip */
-  if (sample >= MAD_F_ONE)
-    sample = MAD_F_ONE - 1;
-  else if (sample < -MAD_F_ONE)
-    sample = -MAD_F_ONE;
-
-  /* quantize */
-  return sample >> (MAD_F_FRACBITS + 1 - 24);
-}
-
-static inline short scaleto16(mad_fixed_t sample)
-{
-  /* round */
-  sample += (1L << (MAD_F_FRACBITS - 16));
-
-  /* clip */
-  if (sample >= MAD_F_ONE)
-    sample = MAD_F_ONE - 1;
-  else if (sample < -MAD_F_ONE)
-    sample = -MAD_F_ONE;
-
-  /* quantize */
-  return sample >> (MAD_F_FRACBITS + 1 - 16);
-}
-
-static inline int scaleto32(mad_fixed_t sample)
-{
-  /* clip */
-  if (sample >= MAD_F_ONE)
-    sample = MAD_F_ONE - 1;
-  else if (sample < -MAD_F_ONE)
-    sample = -MAD_F_ONE;
-
-  /* requantize */
-  return sample << (31 - MAD_F_FRACBITS);
-}
-
-
+CREATE_CONVERT_TO_32(29)
+CREATE_CONVERT_TO_24(29)
+CREATE_CONVERT_TO_16(29)
 
 HRESULT CAudioDecoder::ProcessMPA()
 {
@@ -148,14 +113,14 @@ HRESULT CAudioDecoder::ProcessMPA()
         case OUTSAMPLE_32BIT:
 		    for(i = 0; i < m_synth.pcm.length; i++)
 		    {
-                int outvalue = scaleto32(*left_ch++);
+                int outvalue = Convert29To32(*left_ch++);
 			    *pDataOut++ = (BYTE)(outvalue);
 			    *pDataOut++ = (BYTE)(outvalue>>8);
 			    *pDataOut++ = (BYTE)(outvalue>>16);
 			    *pDataOut++ = (BYTE)(outvalue>>24);
 			    if(m_synth.pcm.channels == 2)
                 {
-                    int outvalue = scaleto32(*right_ch++);
+                    int outvalue = Convert29To32(*right_ch++);
 			        *pDataOut++ = (BYTE)(outvalue);
 			        *pDataOut++ = (BYTE)(outvalue>>8);
 			        *pDataOut++ = (BYTE)(outvalue>>16);
@@ -166,13 +131,13 @@ HRESULT CAudioDecoder::ProcessMPA()
         case OUTSAMPLE_24BIT:
 		    for(i = 0; i < m_synth.pcm.length; i++)
 		    {
-                int outvalue = scaleto24(*left_ch++);
+                int outvalue = Convert29To24(*left_ch++);
 			    *pDataOut++ = (BYTE)(outvalue);
 			    *pDataOut++ = (BYTE)(outvalue>>8);
 			    *pDataOut++ = (BYTE)(outvalue>>16);
 			    if(m_synth.pcm.channels == 2)
                 {
-                    outvalue = scaleto24(*right_ch++);
+                    outvalue = Convert29To24(*right_ch++);
 			        *pDataOut++ = (BYTE)(outvalue);
 			        *pDataOut++ = (BYTE)(outvalue>>8);
 			        *pDataOut++ = (BYTE)(outvalue>>16);
@@ -182,12 +147,12 @@ HRESULT CAudioDecoder::ProcessMPA()
         case OUTSAMPLE_16BIT:
 		    for(i = 0; i < m_synth.pcm.length; i++)
 		    {
-                short outvalue = scaleto16(*left_ch++);
+                short outvalue = Convert29To16(*left_ch++);
 			    *pDataOut++ = (BYTE)(outvalue);
 			    *pDataOut++ = (BYTE)(outvalue>>8);
 			    if(m_synth.pcm.channels == 2)
                 {
-                    outvalue = scaleto16(*right_ch++);
+                    outvalue = Convert29To16(*right_ch++);
 			        *pDataOut++ = (BYTE)(outvalue);
 			        *pDataOut++ = (BYTE)(outvalue>>8);
                 }

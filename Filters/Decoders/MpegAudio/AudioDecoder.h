@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.4 2004-02-25 17:14:02 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.5 2004-02-27 17:04:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -40,6 +40,7 @@ namespace liba52
     #include "a52dec\include\mm_accel.h"
 }
 
+
 namespace libdts
 {
     #include "dtsdec\vc++\inttypes.h"
@@ -78,7 +79,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Normalize")
     DEFINE_PARAM_BOOL(0, L"Decode LFE Channel")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF")
-    DEFINE_PARAM_BOOL(0, L"Jitter Remover")
+    DEFINE_PARAM_BOOL(1, L"Jitter Remover")
 END_PARAM_LIST()
 
     enum eSpeakerConfig
@@ -141,7 +142,7 @@ protected:
 	std::vector<BYTE> m_buff;
 	REFERENCE_TIME m_rtNextFrameStart;
 	REFERENCE_TIME m_rtOutputStart;
-    bool m_fDiscontinuity;
+    DWORD m_OutputBufferSize;
 
 	double m_sample_max;
 

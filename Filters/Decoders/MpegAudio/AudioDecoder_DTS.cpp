@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.1 2004-02-25 17:14:02 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.2 2004-02-27 17:04:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.3  2004/02/17 16:39:59  adcockj
 // Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
 //
@@ -55,6 +59,7 @@
 #include "AudioDecoder.h"
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
+#include "Convert.h"
 
 using namespace libdts;
 
@@ -87,8 +92,45 @@ s_scmap_dts[2*10] =
            {5, {1, 2, 0, 4, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // DTS_3F1R|DTS_LFE 
            {5, {0, 1, 4, 2, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_2F2R|DTS_LFE 
            {6, {1, 2, 0, 5, 3, 4}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R|DTS_LFE 
- };
+};
 
+
+#if defined(LIBDTS_FIXED)
+
+#define LEVEL (1<<26)
+#define BIAS 1
+
+CREATE_CONVERT_TO_32(31)
+CREATE_CONVERT_TO_24(31)
+CREATE_CONVERT_TO_16(31)
+CREATE_CONVERT_TO_FLOAT(31)
+
+#define ConvertToFloat Convert31ToFloat
+#define ConvertTo16 Convert31To16
+#define ConvertTo24 Convert31To24
+#define ConvertTo32 Convert31To32
+
+#elif defined(LIBDTS_DOUBLE)
+
+#define LEVEL 1
+#define BIAS 1
+
+#define ConvertToFloat (float)
+#define ConvertTo16 ConvertDoubleTo16
+#define ConvertTo24 ConvertDoubleTo24
+#define ConvertTo32 ConvertDoubleTo32
+
+#else
+
+#define LEVEL 1
+#define BIAS 1
+
+#define ConvertToFloat
+#define ConvertTo16 ConvertFloatTo16
+#define ConvertTo24 ConvertFloatTo24
+#define ConvertTo32 ConvertFloatTo32
+
+#endif
 
 HRESULT CAudioDecoder::ProcessDTS()
 {
@@ -127,7 +169,7 @@ HRESULT CAudioDecoder::ProcessDTS()
 				    pDataOut[3] = size*8;
 				    _swab((char*)p, (char*)&pDataOut[4], size);
 
-				    REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 106667 * 100 ns
+                    REFERENCE_TIME rtDur = 10000000i64 * size * 8 / bit_rate; // should be 106667 * 100 ns
 
                     hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
 				    if(S_OK != hr)
@@ -192,7 +234,7 @@ HRESULT CAudioDecoder::ProcessDTS()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-									    *pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
+									    *pDataOut++ = ConvertToFloat(*(samples + 256*scmap.ch[ch]));
 								    }
 							    }
 						    }
@@ -207,7 +249,7 @@ HRESULT CAudioDecoder::ProcessDTS()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = (long)(*(samples + 256*scmap.ch[ch]) * (1<<31) / level);
+                                        long Sample = ConvertTo32(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 			                            *pbDataOut++ = (BYTE)(Sample>>16);
@@ -226,7 +268,7 @@ HRESULT CAudioDecoder::ProcessDTS()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = (long)(*(samples + 256*scmap.ch[ch]) * (1<<23) / level);
+                                        long Sample = ConvertTo24(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 			                            *pbDataOut++ = (BYTE)(Sample>>16);
@@ -244,7 +286,7 @@ HRESULT CAudioDecoder::ProcessDTS()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        short Sample = (DWORD)(*(samples + 256*scmap.ch[ch]) * (1<<15) / level);
+                                        short Sample = ConvertTo16(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 								    }

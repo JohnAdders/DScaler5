@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.1 2004-02-25 17:14:02 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.2 2004-02-27 17:04:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,12 +31,17 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
+#include "Convert.h"
 
 using namespace liba52;
 
@@ -73,6 +78,43 @@ s_scmap_ac3[2*11] =
 	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_DOLBY|A52_LFE
 };
 
+#if defined(LIBA52_FIXED)
+
+#define LEVEL (1<<26)
+#define BIAS 1
+
+CREATE_CONVERT_TO_32(31)
+CREATE_CONVERT_TO_24(31)
+CREATE_CONVERT_TO_16(31)
+CREATE_CONVERT_TO_FLOAT(31)
+
+#define ConvertToFloat Convert31ToFloat
+#define ConvertTo16 Convert31To16
+#define ConvertTo24 Convert31To24
+#define ConvertTo32 Convert31To32
+
+#elif defined(LIBA52_DOUBLE)
+
+#define LEVEL 1
+#define BIAS 1
+
+#define ConvertToFloat (float)
+#define ConvertTo16 ConvertDoubleTo16
+#define ConvertTo24 ConvertDoubleTo24
+#define ConvertTo32 ConvertDoubleTo32
+
+#else
+
+#define LEVEL 1
+#define BIAS 1
+
+#define ConvertToFloat
+#define ConvertTo16 ConvertFloatTo16
+#define ConvertTo24 ConvertFloatTo24
+#define ConvertTo32 ConvertFloatTo32
+
+#endif
+
 
 HRESULT CAudioDecoder::ProcessAC3()
 {
@@ -88,12 +130,12 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 		if((size = a52_syncinfo(p, &flags, &sample_rate, &bit_rate)) > 0)
 		{
-			LOG(DBGLOG_FLOW, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
-
 			bool fEnoughData = p + size <= end;
 
 			if(fEnoughData)
 			{
+    			LOG(DBGLOG_ALL, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
+
 				if(GetParamBool(USESPDIF))
 				{
                     HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
@@ -113,7 +155,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 					pDataOut[3] = size*8;
 					_swab((char*)p, (char*)&pDataOut[4], size);
 
-					REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 320000 * 100ns
+                    // each frame contains 6 * 256 samples
+					REFERENCE_TIME rtDur = 10000000i64 * 6 * 256 / sample_rate;
 
                     hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
 					if(S_OK != hr)
@@ -140,7 +183,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                     flags += GetParamBool(DECODE_LFE)?A52_LFE:0;
                     flags += A52_ADJUST_LEVEL;
 
-					sample_t level = 1, gain = 1, bias = 0;
+					sample_t level = LEVEL, gain = 1, bias = 0;
 					level *= gain;
 
 					if(a52_frame(m_a52_state, p, &flags, &level, bias) == 0)
@@ -176,7 +219,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-									    *pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
+									    *pDataOut++ = ConvertToFloat(*(samples + 256*scmap.ch[ch]));
 								    }
 							    }
 						    }
@@ -191,7 +234,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = (long)(*(samples + 256*scmap.ch[ch]) * (1<<31) / level);
+                                        long Sample = ConvertTo32(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 			                            *pbDataOut++ = (BYTE)(Sample>>16);
@@ -210,7 +253,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        long Sample = (long)(*(samples + 256*scmap.ch[ch]) * (1<<23) / level);
+                                        long Sample = ConvertTo24(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 			                            *pbDataOut++ = (BYTE)(Sample>>16);
@@ -228,7 +271,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 								    for(int ch = 0; ch < scmap.nChannels; ch++)
 								    {
 									    ASSERT(scmap.ch[ch] != -1);
-                                        short Sample = (DWORD)(*(samples + 256*scmap.ch[ch]) * (1<<15) / level);
+                                        short Sample = ConvertTo16(*(samples + 256*scmap.ch[ch]));
 			                            *pbDataOut++ = (BYTE)(Sample);
 			                            *pbDataOut++ = (BYTE)(Sample>>8);
 								    }
