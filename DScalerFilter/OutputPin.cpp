@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.3 2003-05-01 18:15:17 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.4 2003-05-02 07:03:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/01 18:15:17  adcockj
+// Moved IMedaiSeeking to output pin
+//
 // Revision 1.2  2003/05/01 16:22:24  adcockj
 // Dynamic connection test code
 //
@@ -302,6 +305,7 @@ STDMETHODIMP COutputPin::QueryId(LPWSTR *Id)
 STDMETHODIMP COutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_FLOW, "COutputPin::QueryAccept\n");
+    LogMediaType(pmt, "COutputPin::QueryAccept");
     if(pmt->majortype != MEDIATYPE_Video)
     {
         return S_FALSE;
@@ -504,7 +508,7 @@ void COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
         }
         else
         {
-            NumTypes = 0;
+            NumTypes = 1;
             CopyMediaType(Types, &m_CurrentMediaType);
             ++Types;
             ClearMediaType(Types);
@@ -512,10 +516,20 @@ void COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
     }
     else
     {
-        NumTypes = 0;
-        ClearMediaType(Types);
-        ++Types;
-        ClearMediaType(Types);
+        if(m_InputPin->m_ConnectedPin != NULL)
+        {
+            NumTypes = 1;
+            CopyMediaType(Types, &m_InputPin->m_ImpliedMediaType);
+            ++Types;
+            ClearMediaType(Types);
+        }
+        else
+        {
+            NumTypes = 0;
+            ClearMediaType(Types);
+            ++Types;
+            ClearMediaType(Types);
+        }
     }
 }
 

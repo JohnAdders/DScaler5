@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.2 2003-05-01 16:22:24 adcockj Exp $
+// $Id: InputPin.cpp,v 1.3 2003-05-02 07:03:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 16:22:24  adcockj
+// Dynamic connection test code
+//
 // Revision 1.1.1.1  2003/04/30 13:01:21  adcockj
 // Initial Import
 //
@@ -88,7 +91,7 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     // see if we need to reconnect our output
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
-        if(m_Filter->m_State != State_Stopped)
+        if(m_Filter->m_State != State_Stopped && FALSE)
         {
             // need to see if we can do a dynamic change on our output
             // if we are already started
@@ -101,7 +104,7 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
                     hr = PinConnection->DynamicDisconnect();
                     if(SUCCEEDED(hr))
                     {
-                        m_OutputPin->InternalDisconnect();
+                        //m_OutputPin->InternalDisconnect();
                         TryToReconnectOnFail = TRUE;
                     }
                 }
@@ -113,7 +116,7 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         }
         if(SUCCEEDED(hr))
         {
-            //hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin);
+            hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin, NULL);
             hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
         }
     }
@@ -133,6 +136,7 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         LogMediaType(&m_InputMediaType, "Input Connected");
         m_FormatChanged = TRUE;
     }
+    LOG(DBGLOG_FLOW, "CInputPin::ReceiveConnection Exit\n");
     return hr;
 }
 
@@ -240,6 +244,8 @@ STDMETHODIMP CInputPin::QueryId(LPWSTR *Id)
 STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_FLOW, "CInputPin::QueryAccept\n");
+
+    LogMediaType(pmt, "CInputPin::QueryAccept");
     
     if(pmt->majortype != MEDIATYPE_Video)
     {
@@ -257,7 +263,7 @@ STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     {
         return S_FALSE;
     }
-
+    
     return S_OK;
 }
 
@@ -506,6 +512,9 @@ STDMETHODIMP CInputPin::ReceiveCanBlock(void)
 STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_FLOW, "CInputPin::DynamicQueryAccept\n");
+
+    LogMediaType(pmt, "CInputPin::DynamicQueryAccept");
+    
     // first see if we can propogate this downstream
     if(m_OutputPin->m_PinConnection != NULL)
     {

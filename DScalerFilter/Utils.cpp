@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.2 2003-05-01 16:21:53 adcockj Exp $
+// $Id: Utils.cpp,v 1.3 2003-05-02 07:03:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 16:21:53  adcockj
+// Better pUnk handling in media type
+//
 // Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
 // Initial Import
 //
@@ -45,7 +48,7 @@ void ClearMediaType(AM_MEDIA_TYPE* TypeToClear)
 {
     if(TypeToClear->pUnk != NULL)
     {
-        TypeToClear->pUnk->AddRef();
+        TypeToClear->pUnk->Release();
     }
     if(TypeToClear->cbFormat > 0)
     {
@@ -69,12 +72,12 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     // just in case
     if(Dest->pUnk != NULL)
     {
-        Dest->pUnk->Release();
+        //Dest->pUnk->Release();
     }
     Dest->pUnk = Source->pUnk;
     if(Dest->pUnk != NULL)
     {
-        Dest->pUnk->AddRef();
+        //Dest->pUnk->AddRef();
     }
     Dest->cbFormat = Source->cbFormat;
     if(Source->cbFormat > 0)
@@ -139,7 +142,7 @@ void LogSample(IMediaSample* Sample, LPCSTR Desc)
 
 }
 
-void LogMediaType(AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
+void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
 {
     BYTE* Uuid;
     
@@ -151,7 +154,7 @@ void LogMediaType(AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
     }
     else
     {
-        UuidToString(&MediaType->majortype, &Uuid);
+        UuidToString((GUID*)&MediaType->majortype, &Uuid);
         LOG(DBGLOG_ALL, " Major Type {%s}\n", Uuid);
         RpcStringFree(&Uuid);
     }
@@ -169,7 +172,7 @@ void LogMediaType(AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
     }
     else
     {
-        UuidToString(&MediaType->subtype, &Uuid);
+        UuidToString((GUID*)&MediaType->subtype, &Uuid);
         LOG(DBGLOG_ALL, " Sub Type {%s}\n", Uuid);
         RpcStringFree(&Uuid);
     }
@@ -201,7 +204,7 @@ void LogMediaType(AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
     }
     else
     {
-        UuidToString(&MediaType->formattype, &Uuid);
+        UuidToString((GUID*)&MediaType->formattype, &Uuid);
         LOG(DBGLOG_ALL, " Format Type {%s}\n", Uuid);
         RpcStringFree(&Uuid);
     }
