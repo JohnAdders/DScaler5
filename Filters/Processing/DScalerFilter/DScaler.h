@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.16 2005-01-04 17:53:44 adcockj Exp $
+// $Id: DScaler.h,v 1.17 2005-02-08 15:32:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -217,7 +217,7 @@ protected:
 
     class CMap: public IMediaBuffer
     {
-    public:
+    public: 
 		CMap();
 		~CMap();
 	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);

@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "DeCSS"=..\..\DeCSS\DeCSS.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "Filter_Lib"=..\..\Filter_Lib\Filter_Lib.dsp - Package Owner=<4>
 
 Package=<5>
@@ -46,6 +58,9 @@ Package=<4>
     End Project Dependency
     Begin Project Dependency
     Project_Dep_Name libmpeg2
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name DeCSS
     End Project Dependency
 }}}
 

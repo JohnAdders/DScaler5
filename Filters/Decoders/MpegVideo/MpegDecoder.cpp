@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.65 2005-02-03 13:40:54 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.66 2005-02-08 15:32:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.65  2005/02/03 13:40:54  adcockj
+// Improved seek support
+//
 // Revision 1.64  2005/01/21 13:54:45  adcockj
 // Reset some test changes and added soem clock monitoring code
 //
@@ -264,7 +267,7 @@
 #include "stdafx.h"
 #include "MpegDecoder.h"
 #include "EnumPins.h"
-#include "DSInputPin.h"
+#include "DSCSSInputPin.h"
 #include "DSBufferedInputPin.h"
 #include "DSVideoOutPin.h"
 #include "MediaBufferWrapper.h"
@@ -281,7 +284,7 @@ CMpegDecoder::CMpegDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::CreatePins\n"));
     
-    m_VideoInPin = new CDSInputPin;
+    m_VideoInPin = new CDSCSSInputPin;
     if(m_VideoInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
@@ -289,7 +292,7 @@ CMpegDecoder::CMpegDecoder() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Video In");
 
-    m_SubpictureInPin = new CDSInputPin;
+    m_SubpictureInPin = new CDSCSSInputPin;
     if(m_SubpictureInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -526,12 +529,7 @@ HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     {
         return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
-    else
-    {
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin)
@@ -544,12 +542,7 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     {
         return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
-    else
-    {
-        return E_NOTIMPL;
-    }
-
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)

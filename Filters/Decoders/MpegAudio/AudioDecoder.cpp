@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.47 2005-02-05 13:39:33 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.48 2005-02-08 15:32:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.47  2005/02/05 13:39:33  adcockj
+// fixed rate addition issues
+//
 // Revision 1.46  2005/02/03 13:36:49  adcockj
 // added rate change interface
 //
@@ -203,7 +206,7 @@
 #include "stdafx.h"
 #include "AudioDecoder.h"
 #include "EnumPins.h"
-#include "DSBufferedInputPin.h"
+#include "DSCSSInputPin.h"
 #include "DSOutputPin.h"
 #include "MediaBufferWrapper.h"
 #include "MoreUuids.h"
@@ -218,7 +221,7 @@ CAudioDecoder::CAudioDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CAudioDecoder::CreatePins\n"));
     
-    m_AudioInPin = new CDSInputPin();
+    m_AudioInPin = new CDSCSSInputPin();
     if(m_AudioInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));

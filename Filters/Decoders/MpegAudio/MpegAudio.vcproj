@@ -23,7 +23,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE"
 				StringPooling="TRUE"
 				RuntimeLibrary="0"
@@ -93,7 +93,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -163,7 +163,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="3"
@@ -231,7 +231,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_FIXED;LIBDTS_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -292,6 +292,24 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
+			Name="djbfft"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+			Name="Filter_Lib"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+			Name="GenDMOProp"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{B215D073-1246-432F-A047-B98D47434C82}"
+			Name="liba52"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
+			Name="libdts"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
+			Name="libmad"/>
 	</References>
 	<Files>
 		<Filter

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.32 2005-01-04 17:53:43 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.33 2005-02-08 15:32:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -296,8 +296,6 @@ private:
     void PillarBox(long YAdjust, long XAdjust);
     void ForceDelivery();
     bool m_LastPictureWasStill;
-
-
 };
 
 #define m_VideoInPin m_InputPins[0]
