@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.10 2004-09-13 17:14:53 adcockj Exp $
+// $Id: Utils.cpp,v 1.11 2004-11-06 14:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/09/13 17:14:53  adcockj
+// Better MPEG diagnostics
+//
 // Revision 1.9  2004/09/10 15:35:57  adcockj
 // Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
 //
@@ -190,13 +193,11 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     return S_OK;
 }
 
-#ifndef NOLOGGING
-
 /**
  * Function to get a string describing the guid.
  * @return Name of the guid. The return value is only valid until the next call to this function
  */
-char* GetGUIDName(const GUID &guid)
+const char* GetGUIDName(const GUID &guid)
 {
     static char fourcc_buffer[20];
     struct TGUID2NAME
@@ -238,6 +239,8 @@ char* GetGUIDName(const GUID &guid)
     RpcStringFree(&Uuid);
     return uuidbuffer;
 }
+
+#ifndef NOLOGGING
 
 void _LOG(LPCSTR szFormat, ...)
 {

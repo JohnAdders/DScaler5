@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.8 2004-09-10 15:35:57 adcockj Exp $
+// $Id: Utils.h,v 1.9 2004-11-06 14:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -29,6 +29,7 @@ void FreeMediaType(AM_MEDIA_TYPE* TypeToClear);
 HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source);
 bool AreMediaTypesIdentical(const AM_MEDIA_TYPE* Type1, const AM_MEDIA_TYPE* Type2);
 bool IsRunningInGraphEdit();
+const char* GetGUIDName(const GUID &guid);
 
 
 HRESULT RegisterFilter(const CLSID& clsidFilter, LPCWSTR wszName, const REGFILTER2* pRegFilter);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.20 2004-11-02 17:59:56 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.21 2004-11-06 14:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2004/11/02 17:59:56  adcockj
+// fix for vmr9 issues
+//
 // Revision 1.19  2004/09/23 14:27:59  adcockj
 // preliminary fixed for reconnection issues
 //
@@ -467,11 +470,19 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
     *OutSample = NULL;
 
     DWORD dwFlags = PrevFrameSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
+    AM_MEDIA_TYPE* pMediaType = NULL;
 
     // get a sample to output to
     HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
+	if(hr == VFW_E_SIZENOTSET)
+	{
+		hr = NegotiateAllocator(NULL, &m_ConnectedMediaType);
+        CHECK(hr);
+	    hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
+	}
     if(FAILED(hr))
     {
+        LOG(DBGLOG_FLOW, ("GetBuffer Failed %08x\n", *OutSample));
         return hr;
     }
 
@@ -482,8 +493,6 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 
     // check for media type changes on the output side
     // a NULL means the type is the same as last time
-    AM_MEDIA_TYPE* pMediaType = NULL;
-
     hr = (*OutSample)->GetMediaType(&pMediaType);
 
     CHECK(hr);
@@ -527,6 +536,10 @@ HRESULT CDSOutputPin::Activate()
                 hr = m_Allocator->Commit();
             }
         }
+		if(FAILED(hr))
+		{
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+		}
     }
     return hr;
 }
@@ -605,6 +618,14 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     hr = SetType(pmt);
     CHECK(hr);
 
+    hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
+    if(FAILED(hr))
+    {
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+		m_Allocator.Detach();
+        return VFW_E_NO_TRANSPORT;
+    }
+
     ALLOCATOR_PROPERTIES PropsWeWant;
     ZeroMemory(&PropsWeWant, sizeof(PropsWeWant));
 
@@ -643,13 +664,6 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     }
     
     LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
-
-    hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return VFW_E_NO_TRANSPORT;
-    }
 
     if(pReceivePin != NULL)
     {

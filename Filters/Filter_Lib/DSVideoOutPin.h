@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.2 2004-11-01 14:09:39 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.3 2004-11-06 14:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,9 +48,9 @@ public:
 	void OnConnectToOverlay();
     HRESULT CheckForReconnection();
     HRESULT ReconnectVMR();
-    HRESULT ReconnectGabest();
     HRESULT ReconnectOverlay();
     HRESULT ReconnectOther();
+    HRESULT ReconnectWM10();
 
 
     void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn, bool ProgressiveChroma);
@@ -85,7 +85,8 @@ public:
         GABEST_OUTFILTER,
         OVERLAY_OUTFILTER,
         VMR7_OUTFILTER,
-        VMR9_OUTFILTER
+        VMR9_OUTFILTER,
+        WM10_OUTFILTER,
     } OUT_TYPE;
 
     OUT_TYPE GetConnectedType();

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.2 2004-11-05 18:09:44 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.3 2004-11-06 14:07:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/11/05 18:09:44  adcockj
+// Fix for unusual headers
+//
 // Revision 1.1  2004/11/05 17:45:53  adcockj
 // Added new decoder
 //
@@ -711,11 +714,18 @@ HRESULT CDivxDecoder::Deliver()
 void CDivxDecoder::FlushDivx()
 {
     CProtectCode WhileVarInScope(m_VideoInPin);
+    CProtectCode WhileVarInScope2(&m_DeliverLock);
         
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
     m_IsDiscontinuity = true;
-    ResetDivxDecoder();
+
+	if(m_CurrentPicture != NULL)
+    {
+        m_CurrentPicture->Release();
+        m_CurrentPicture = NULL;
+    }
+	avcodec_flush_buffers(m_CodecContext);
 }
 
 void CDivxDecoder::ResetDivxDecoder()

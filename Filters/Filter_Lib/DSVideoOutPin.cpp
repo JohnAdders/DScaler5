@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.4 2004-11-02 16:57:24 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.5 2004-11-06 14:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/11/02 16:57:24  adcockj
+// fix for crashing problem on exit
+//
 // Revision 1.3  2004/11/01 14:09:39  adcockj
 // More DScaler filter insipred changes
 //
@@ -102,14 +105,20 @@ HRESULT CDSVideoOutPin::NotifyConnected()
         OnConnectToOverlay();
         m_ConnectedType = OVERLAY_OUTFILTER;
     }
+	else if(Clsid == CLSID_WM10RENDERER)
+	{
+        m_ConnectedType = WM10_OUTFILTER;
+	}
     else
     {
+	    LOG(DBGLOG_FLOW, ("Unknown Renderer - %s", GetGUIDName(Clsid)));
         SI(IPinConnection) PinConnection = m_ConnectedPin;
         if(!PinConnection)
         {
             return VFW_E_NO_TRANSPORT;
         }
         m_ConnectedType = DEFAULT_OUTFILTER;
+		return VFW_E_NO_TRANSPORT;
     }
     return hr;
 }
@@ -285,7 +294,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
     }
     else
     {
-        if(TypeNum >= VariationsPerType * countof(fmts)) 
+        if(TypeNum >= (int)(VariationsPerType * countof(fmts))) 
             return VFW_S_NO_MORE_ITEMS;
     }
 
@@ -529,8 +538,11 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         case FFDSHOW_OUTFILTER:
             hr = ReconnectOverlay();
             break;
+		case WM10_OUTFILTER:
+			hr = ReconnectWM10();
+			break;
         case DEFAULT_OUTFILTER:
-            hr = ReconnectOther();
+            hr = ReconnectOverlay();
             break;
         }
 
@@ -865,6 +877,55 @@ HRESULT CDSVideoOutPin::ReconnectOther()
 	}
 
     return hr;
+}
+
+HRESULT CDSVideoOutPin::ReconnectWM10()
+{
+    HRESULT hr = S_OK;
+
+    CopyMediaType(&m_InternalMT, GetMediaType());
+
+    BITMAPINFOHEADER* bmi = NULL;
+
+    if(m_InternalMT.formattype == FORMAT_VideoInfo)
+    {
+        VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
+        bmi = &vih->bmiHeader;
+        vih->AvgTimePerFrame = m_AvgTimePerFrame;
+        SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
+    }
+    else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
+    {
+        VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
+        bmi = &vih->bmiHeader;
+        vih->AvgTimePerFrame = m_AvgTimePerFrame;
+        vih->dwPictAspectRatioX = m_AspectX;
+        vih->dwPictAspectRatioY = m_AspectY;
+        Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
+        SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
+    }
+
+    bmi->biXPelsPerMeter = m_Width * m_AspectY;
+    bmi->biYPelsPerMeter = m_Height * m_AspectX;
+    Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
+
+    bmi->biWidth = max(m_Width, bmi->biWidth);
+    if(bmi->biHeight < 0)
+    {
+        bmi->biHeight = min(-m_Height, bmi->biHeight);
+    }
+    else
+    {
+        bmi->biHeight = max(m_Height, bmi->biHeight);
+    }
+
+    bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
+
+	m_InternalMT.bFixedSizeSamples = 1;
+	m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+	m_NeedToAttachFormat = true; 
+	return S_OK;
 }
 
 
