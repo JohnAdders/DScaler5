@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.3 2004-07-01 16:12:47 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.4 2004-07-01 21:16:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.2  2004/03/11 16:51:23  adcockj
 // Improve LPCM support
 //
@@ -78,7 +82,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
 	WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 	static bool DownSample = true;
 
-	if(m_CanReconnect && m_ConnectedAsSpdif)
+	if(m_CanReconnect && (m_ConnectedAsSpdif || wfein->nSamplesPerSec != m_OutputSampleRate))
 	{
 		HRESULT hr = CreateInternalPCMMediaType(wfein->nSamplesPerSec, wfein->nChannels, 0, wfein->wBitsPerSample);
 		DownSample = true;
@@ -110,8 +114,8 @@ HRESULT CAudioDecoder::ProcessLPCM()
 	{
 		return S_OK;
 	}
-	DWORD lenOut = ThreeFrames * 3 *  m_OutputSampleRate * m_ChannelsRequested * m_SampleSize;
-	DWORD lenIn = ThreeFrames * 3 *  wfein->nSamplesPerSec * wfein->nChannels * (wfein->wBitsPerSample / 8);
+	DWORD lenOut = ThreeFrames * 3 *  (m_OutputSampleRate/600) * m_ChannelsRequested * m_SampleSize;
+	DWORD lenIn = ThreeFrames * 3 *  (wfein->nSamplesPerSec/600) * wfein->nChannels * (wfein->wBitsPerSample / 8);
     
     // each unit of three frames is 5ms long
 	REFERENCE_TIME rtDur = 50000 * ThreeFrames;

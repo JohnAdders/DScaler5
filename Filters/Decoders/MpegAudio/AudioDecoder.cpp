@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.15 2004-07-01 20:03:08 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.16 2004-07-01 21:16:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/07/01 20:03:08  adcockj
+// Silly bugs fixed
+//
 // Revision 1.14  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -218,7 +221,7 @@ HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
 	case SPEAKERCONFIG:
     case USESPDIF:
     case MPEGOVERSPDIF:
-        if(m_AudioInPin->m_ConnectedPin)
+        if(m_AudioOutPin->m_ConnectedPin)
         {
 		    return VFW_E_ALREADY_CONNECTED;
         }
@@ -781,21 +784,23 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 		}
 
 	    pmt->majortype = MEDIATYPE_Audio;
-		if(TypeNum > -1)
-		{
-			pmt->subtype = MEDIASUBTYPE_PCM;
-		}
-		else
-		{
-			pmt->subtype = MEDIASUBTYPE_IEEE_FLOAT;
-		}
 	    pmt->formattype = FORMAT_WaveFormatEx;
         pmt->cbFormat = sizeof(WAVEFORMATEXTENSIBLE);
 	    WAVEFORMATEXTENSIBLE* wfe = (WAVEFORMATEXTENSIBLE*)CoTaskMemAlloc(pmt->cbFormat);
 	    memset(wfe, 0, sizeof(WAVEFORMATEXTENSIBLE));
+		if(TypeNum > -1)
+		{
+			pmt->subtype = MEDIASUBTYPE_PCM;
+            wfe->SubFormat = MEDIASUBTYPE_PCM;
+		}
+		else
+		{
+			pmt->subtype = MEDIASUBTYPE_IEEE_FLOAT;
+            wfe->SubFormat = MEDIASUBTYPE_IEEE_FLOAT;
+		}
 
         int ChannelsRequested = 2;
-		DWORD ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
+		DWORD ChannelMask = 0;
 
         switch(GetParamEnum(SPEAKERCONFIG))
         {
@@ -848,7 +853,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 			}
 			else if(ChannelsRequested != 2)
 			{
-				wfe->Format.wFormatTag = WAVE_FORMAT_PCM;
+				wfe->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
 			}
 			else
 			{
@@ -861,6 +866,8 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 	    wfe->Format.nSamplesPerSec = m_InputSampleRate;
 	    wfe->Format.nBlockAlign = wfe->Format.nChannels*wfe->Format.wBitsPerSample/8;
 	    wfe->Format.nAvgBytesPerSec = wfe->Format.nSamplesPerSec*wfe->Format.nBlockAlign;
+        wfe->Samples.wValidBitsPerSample = wfe->Format.wBitsPerSample;
+
         pmt->pbFormat = (BYTE*)wfe;
         return S_OK;
     }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.9 2004-07-01 20:03:08 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.10 2004-07-01 21:16:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/01 20:03:08  adcockj
+// Silly bugs fixed
+//
 // Revision 1.8  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -174,7 +177,7 @@ HRESULT CAudioDecoder::ProcessMPA()
 			}
 
 
-            DWORD len = m_synth.pcm.length*m_synth.pcm.channels*m_SampleSize;
+            DWORD len = m_synth.pcm.length*m_ChannelsRequested*m_SampleSize;
 
 	        SI(IMediaSample) pOut;
 	        BYTE* pDataOut = NULL;
@@ -254,7 +257,7 @@ HRESULT CAudioDecoder::ProcessMPA()
 				}
 			}
     
-    	    REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_synth.pcm.channels*m_SampleSize);
+    	    REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_ChannelsRequested*m_SampleSize);
             REFERENCE_TIME rtDur2 = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;
 
             hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur2);

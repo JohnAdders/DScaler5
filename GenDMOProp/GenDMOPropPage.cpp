@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.11 2004-07-01 16:12:48 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.12 2004-07-01 21:16:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/07/01 16:12:48  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.10  2004/05/10 16:50:26  adcockj
 // Added apply before save defaults to make UI a bit more intuituve
 //
@@ -126,7 +130,10 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
     }
     m_bDirty = FALSE;
 
-	SetupControls();
+    if(::IsWindow(m_hWnd))
+    {
+        SetupControls();
+    }
 
     return S_OK;
 }
