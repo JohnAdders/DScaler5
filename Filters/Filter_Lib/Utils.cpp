@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.11 2004-11-06 14:07:01 adcockj Exp $
+// $Id: Utils.cpp,v 1.12 2005-02-17 09:39:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/11/06 14:07:01  adcockj
+// Fixes for WM10 and seeking
+//
 // Revision 1.10  2004/09/13 17:14:53  adcockj
 // Better MPEG diagnostics
 //
@@ -376,6 +379,17 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
         LOG(LogLevel, (" biSizeImage %d\n", pBMI->biSizeImage));
         LOG(LogLevel, (" biXPelsPerMeter %d\n", pBMI->biXPelsPerMeter));
         LOG(LogLevel, (" biYPelsPerMeter %d\n", pBMI->biYPelsPerMeter));
+    }
+    else if(MediaType->formattype==FORMAT_WaveFormatEx)
+    {
+        WAVEFORMATEX* wfe = (WAVEFORMATEX*)MediaType->pbFormat;
+        LOG(LogLevel, (" wFormatTag %d\n", wfe->wFormatTag));
+        LOG(LogLevel, (" nChannels %d\n", wfe->nChannels));
+        LOG(LogLevel, (" nSamplesPerSec %d\n", wfe->nSamplesPerSec));
+        LOG(LogLevel, (" nAvgBytesPerSec %d\n", wfe->nAvgBytesPerSec));
+        LOG(LogLevel, (" nBlockAlign %d\n", wfe->nBlockAlign));
+        LOG(LogLevel, (" wBitsPerSample %d\n", wfe->wBitsPerSample));
+        LOG(LogLevel, (" cbSize %d\n", wfe->cbSize));
     }
 }
 

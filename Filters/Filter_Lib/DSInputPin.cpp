@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.16 2004-12-21 14:46:59 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.17 2005-02-17 09:39:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/12/21 14:46:59  adcockj
+// fixed connection and settings issues
+//
 // Revision 1.15  2004/08/31 16:33:42  adcockj
 // Minor improvements to quality control
 // Preparation for next version
@@ -345,7 +348,29 @@ STDMETHODIMP CDSInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadO
     m_bReadOnly = bReadOnly;
 
     // save the properties as we will need to check then later
-    return m_Allocator->GetProperties(&m_AllocatorProperties);
+    HRESULT hr =  m_Allocator->GetProperties(&m_AllocatorProperties);
+
+    LOG(DBGLOG_FLOW, ("CDSInputPin::NotifyAllocator %d %d %d\n", m_AllocatorProperties.cBuffers, m_AllocatorProperties.cbBuffer, bReadOnly));
+
+
+    // some filters e.g MS Mpeg 1 decoder don't repect out wishes
+    // on allocator requirements so we force in what we want at this point
+    ALLOCATOR_PROPERTIES WhatWeWant;
+    hr = m_Filter->GetAllocatorRequirements(&WhatWeWant, this);
+    if(SUCCEEDED(hr) && (m_AllocatorProperties.cBuffers < WhatWeWant.cBuffers ||
+                        m_AllocatorProperties.cbBuffer < WhatWeWant.cbBuffer))
+    {
+        WhatWeWant.cBuffers = max(m_AllocatorProperties.cBuffers, WhatWeWant.cBuffers);
+        WhatWeWant.cbBuffer = max(m_AllocatorProperties.cbBuffer, WhatWeWant.cbBuffer);
+        hr = m_Allocator->SetProperties(&WhatWeWant, &m_AllocatorProperties);
+        if(FAILED(hr))
+        {
+            LOG(DBGLOG_FLOW, ("CDSInputPin::NotifyAllocator Can't change number of buffers\n"));
+            hr = S_OK;
+        }
+    }
+
+    return hr;
 }
 
 STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
