@@ -8,7 +8,6 @@ New functionality to add
 - Film detection
 - Support for post processing
 - Work on colour upsampling
-- Support for AFD in DVB streams
 
 Issues to think about
 

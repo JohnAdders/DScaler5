@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.7 2004-04-20 16:30:31 adcockj Exp $
+// $Id: DScaler.cpp,v 1.8 2004-04-28 16:32:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/04/20 16:30:31  adcockj
+// Improved Dynamic Connections
+//
 // Revision 1.6  2004/03/08 17:20:05  adcockj
 // Minor bug fixes
 //
@@ -518,9 +521,18 @@ HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBase
     }
     else if(pPin == m_VideoOutPin)
     {
-        // make sure we have enough room for largest SD signal
-		pProps->cBuffers = 3;
-        pProps->cbBuffer = 768 * 2 * 576;
+		if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo)
+		{
+			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pPin->GetMediaType()->pbFormat;
+			pProps->cbBuffer = vih->bmiHeader.biSizeImage;
+		}
+		else if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo2)
+		{
+			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pPin->GetMediaType()->pbFormat;
+			pProps->cbBuffer = vih->bmiHeader.biSizeImage;
+		}
+
+	    pProps->cBuffers = 3;
         pProps->cbAlign = 1;
         return S_OK;
     }
@@ -864,7 +876,7 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
         // check that the incoming format is SDTV    
         result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
 
-        result &= (BitmapInfo->biWidth <= 768);
+        //result &= (BitmapInfo->biWidth <= 768);
     }
     }
     return result;

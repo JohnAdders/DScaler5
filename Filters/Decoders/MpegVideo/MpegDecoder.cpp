@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.20 2004-04-20 16:30:16 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.21 2004-04-28 16:32:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2004/04/20 16:30:16  adcockj
+// Improved Dynamic Connections
+//
 // Revision 1.19  2004/04/16 16:19:44  adcockj
 // Better reconnection and improved AFD support
 //
@@ -1410,43 +1413,62 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 
 
 		SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
-
-        hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-        if(hr != S_OK)
-        {
-    		LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-            return VFW_E_TYPE_NOT_ACCEPTED;
-        }
-
-		if(m_ConnectedToOut == DEFAULT_OUTFILTER)
+		if(m_PinConnection)
 		{
-			if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
 
-			SI(IGraphConfig) GraphConfig = m_Graph;
-
-			if(GraphConfig)
+			hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+			if(hr != S_OK)
 			{
-				hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-				CHECK(hr);
-
-				if(m_Pitch != 0)
-				{
-					bmi->biWidth = m_Pitch;
-					bmi->biHeight = m_Height;
-					bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-					m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-					hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-					CHECK(hr);
-				}
-				m_NeedToAttachFormat = true; 
+    			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+				return VFW_E_TYPE_NOT_ACCEPTED;
 			}
 		}
 		else
 		{
-			if(m_OutputWidth > m_CurrentWidth || m_OutputHeight > m_CurrentHeight)
+    		LOG(DBGLOG_FLOW, ("Can't get IPinConnection in ReconnectOutput\n"));
+			return VFW_E_TYPE_NOT_ACCEPTED;
+		}
+
+		if(m_ConnectedToOut == DEFAULT_OUTFILTER || m_ConnectedToOut == VMR7_OUTFILTER)
+		{
+			if(!ForceReconnect)
 			{
 				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+
+				SI(IGraphConfig) GraphConfig = m_Graph;
+
+				if(GraphConfig)
+				{
+					hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+					CHECK(hr);
+
+					if(m_Pitch != 0)
+					{
+						bmi->biWidth = m_Pitch;
+						bmi->biHeight = m_Height;
+						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+						m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+						hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+						CHECK(hr);
+					}
+					m_NeedToAttachFormat = true; 
+				}
+			}
+		}
+		else
+		{
+			if(!ForceReconnect)
+			{
+				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+				
+				hr = m_VideoOutPin->m_ConnectedPin->BeginFlush();
+				CHECK(hr);
+				hr = m_VideoOutPin->m_ConnectedPin->EndFlush();
+				CHECK(hr);
+
+				hr = m_VideoOutPin->m_Allocator->Decommit();
+				CHECK(hr);
 
 				hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
 
@@ -1463,13 +1485,17 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 					CHECK(hr);
 				}
 
+				hr = m_VideoOutPin->m_Allocator->Commit();
+				CHECK(hr);
+
+
 				ALLOCATOR_PROPERTIES AllocatorProps;
 				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
 				CHECK(hr);
 
 				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer && ForceReconnect)
 				{
-					//hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
 					CHECK(hr);
 				}
 			}
