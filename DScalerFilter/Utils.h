@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.2 2003-05-02 07:03:14 adcockj Exp $
+// $Id: Utils.h,v 1.3 2003-05-02 16:05:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -31,7 +31,10 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source);
 #define DBGLOG_ALL    3
 
 #ifndef NOLOGGING
-void LOG(int DebugLevel, LPCSTR sFormat, ...);
+extern int CurrentDebugLevel;
+void _LOG(LPCSTR sFormat, ...);
+#define LOG(x,y) {if(x <= CurrentDebugLevel){_LOG("%s(%d) : ", __FILE__, (DWORD)__LINE__); _LOG##y;}}
+#define TRACE(x,y) { if(x <= TRACE_LEVEL) {DbgPrint(FunctionName); DbgPrint(" - "); DbgPrint##y; DbgPrint("\n");}}
 void LogSample(IMediaSample* Sample, LPCSTR Desc);
 void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc);
 #else

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.3 2003-05-02 07:03:13 adcockj Exp $
+// $Id: InputPin.cpp,v 1.4 2003-05-02 16:05:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/02 07:03:13  adcockj
+// Some minor changes most not really improvements
+//
 // Revision 1.2  2003/05/01 16:22:24  adcockj
 // Dynamic connection test code
 //
@@ -37,7 +40,7 @@
 
 CInputPin::CInputPin()
 {
-    LOG(DBGLOG_FLOW, "CInputPin::CInputPin\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::CInputPin\n"));
     m_Flushing = FALSE;
     m_bReadOnly = FALSE;
     m_NotifyEvent = NULL;
@@ -48,7 +51,7 @@ CInputPin::CInputPin()
 
 CInputPin::~CInputPin()
 {
-    LOG(DBGLOG_FLOW, "CInputPin::~CInputPin\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::~CInputPin\n"));
     ClearMediaType(&m_InputMediaType);
     ClearMediaType(&m_ImpliedMediaType);
     m_FormatChanged = FALSE;
@@ -57,13 +60,13 @@ CInputPin::~CInputPin()
 
 STDMETHODIMP CInputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - CInputPin::Connect\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - CInputPin::Connect\n"));
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::ReceiveConnection\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ReceiveConnection\n"));
     HRESULT hr = S_OK;
     BOOL TryToReconnectOnFail = FALSE;
     if(pConnector == NULL || pmt == NULL)
@@ -136,13 +139,13 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         LogMediaType(&m_InputMediaType, "Input Connected");
         m_FormatChanged = TRUE;
     }
-    LOG(DBGLOG_FLOW, "CInputPin::ReceiveConnection Exit\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ReceiveConnection Exit\n"));
     return hr;
 }
 
 STDMETHODIMP CInputPin::Disconnect(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::Disconnect\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::Disconnect\n"));
     if(m_ConnectedPin == NULL)
     {
         return S_FALSE;
@@ -160,7 +163,7 @@ STDMETHODIMP CInputPin::Disconnect(void)
 
 STDMETHODIMP CInputPin::ConnectedTo(IPin **pPin)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::ConnectedTo\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ConnectedTo\n"));
     if(pPin == NULL)
     {
         return E_POINTER;
@@ -179,7 +182,7 @@ STDMETHODIMP CInputPin::ConnectedTo(IPin **pPin)
 
 STDMETHODIMP CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::ConnectionMediaType\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ConnectionMediaType\n"));
     if(pmt == NULL)
     {
         return E_POINTER;
@@ -199,7 +202,7 @@ STDMETHODIMP CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP CInputPin::QueryPinInfo(PIN_INFO *pInfo)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::QueryPinInfo\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::QueryPinInfo\n"));
     if(pInfo == NULL)
     {
         return E_POINTER;
@@ -213,7 +216,7 @@ STDMETHODIMP CInputPin::QueryPinInfo(PIN_INFO *pInfo)
 
 STDMETHODIMP CInputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::QueryDirection\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::QueryDirection\n"));
     if(pPinDir == NULL)
     {
         return E_POINTER;
@@ -224,7 +227,7 @@ STDMETHODIMP CInputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 
 STDMETHODIMP CInputPin::QueryId(LPWSTR *Id)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::QueryId\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::QueryId\n"));
 
     if(Id == NULL)
     {
@@ -243,7 +246,7 @@ STDMETHODIMP CInputPin::QueryId(LPWSTR *Id)
 
 STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::QueryAccept\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::QueryAccept\n"));
 
     LogMediaType(pmt, "CInputPin::QueryAccept");
     
@@ -269,7 +272,7 @@ STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::EnumMediaTypes\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::EnumMediaTypes\n"));
     CComObject<CEnumMediaTypes>* NewEnum = new CComObject<CEnumMediaTypes>;
     NewEnum->SetUpdate(this);
     NewEnum->AddRef();
@@ -279,14 +282,14 @@ STDMETHODIMP CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 
 STDMETHODIMP CInputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::QueryInternalConnections\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::QueryInternalConnections\n"));
     // don't bother with this as we are a simple filter
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CInputPin::EndOfStream(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::EndOfStream\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::EndOfStream\n"));
     // synchronize with Recieve
     Lock();
     if(m_OutputPin->m_ConnectedPin != NULL)
@@ -308,7 +311,7 @@ STDMETHODIMP CInputPin::EndOfStream(void)
 
 STDMETHODIMP CInputPin::BeginFlush(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::BeginFlush\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::BeginFlush\n"));
     // pass the Flush downstream
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
@@ -321,7 +324,7 @@ STDMETHODIMP CInputPin::BeginFlush(void)
 
 STDMETHODIMP CInputPin::EndFlush(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::EndFlush\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::EndFlush\n"));
 
     // \todo Waits for all queued samples to be discarded. 
     // \todo Frees any buffered data, including any pending end-of-stream notifications. 
@@ -338,7 +341,7 @@ STDMETHODIMP CInputPin::EndFlush(void)
 
 STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::NewSegment\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::NewSegment\n"));
     HRESULT hr = S_OK;
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
@@ -349,7 +352,7 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
 
 STDMETHODIMP CInputPin::GetAllocator(IMemAllocator **ppAllocator)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::GetAllocator\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::GetAllocator\n"));
     if(ppAllocator == NULL)
     {
         return E_POINTER;
@@ -368,7 +371,7 @@ STDMETHODIMP CInputPin::GetAllocator(IMemAllocator **ppAllocator)
 
 STDMETHODIMP CInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnly)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::NotifyAllocator\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::NotifyAllocator\n"));
     m_Allocator = pAllocator;
     m_bReadOnly = bReadOnly;
     return S_OK;
@@ -376,7 +379,7 @@ STDMETHODIMP CInputPin::NotifyAllocator(IMemAllocator *pAllocator, BOOL bReadOnl
 
 STDMETHODIMP CInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::GetAllocatorRequirements\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::GetAllocatorRequirements\n"));
     if(pProps == NULL)
     {
         return E_POINTER;
@@ -392,7 +395,7 @@ STDMETHODIMP CInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
 
 STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
 {
-    //LOG(DBGLOG_FLOW, "CInputPin::Receive\n");
+    //LOG(DBGLOG_FLOW, ("CInputPin::Receive\n"));
     HRESULT hr = S_OK;
 
     static DWORD dwFlags = AM_GBF_PREVFRAMESKIPPED;
@@ -436,7 +439,7 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     hr = m_OutputPin->m_Allocator->GetBuffer(&OutSample, NULL, NULL, dwFlags);
     if(FAILED(hr) || OutSample == NULL)
     {
-        LOG(DBGLOG_FLOW, "Frame Skipped\n");
+        LOG(DBGLOG_FLOW, ("Frame Skipped\n"));
         dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         return S_FALSE;
     }
@@ -483,7 +486,7 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
 
 STDMETHODIMP CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::ReceiveMultiple\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ReceiveMultiple\n"));
     HRESULT hr;
     if(nSamplesProcessed == NULL)
     {
@@ -505,13 +508,13 @@ STDMETHODIMP CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, 
 
 STDMETHODIMP CInputPin::ReceiveCanBlock(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::ReceiveCanBlock\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::ReceiveCanBlock\n"));
     return S_OK;
 }
 
 STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::DynamicQueryAccept\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::DynamicQueryAccept\n"));
 
     LogMediaType(pmt, "CInputPin::DynamicQueryAccept");
     
@@ -538,7 +541,7 @@ STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP CInputPin::NotifyEndOfStream(HANDLE hNotifyEvent)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::NotifyEndOfStream\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::NotifyEndOfStream\n"));
     // generate required return code
     // see docs
     // we don't really ever expect to get called on
@@ -555,13 +558,13 @@ STDMETHODIMP CInputPin::NotifyEndOfStream(HANDLE hNotifyEvent)
 
 STDMETHODIMP CInputPin::IsEndPin(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::IsEndPin\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::IsEndPin\n"));
     return S_FALSE;
 }
 
 STDMETHODIMP CInputPin::DynamicDisconnect(void)
 {
-    LOG(DBGLOG_FLOW, "CInputPin::DynamicDisconnect\n");
+    LOG(DBGLOG_FLOW, ("CInputPin::DynamicDisconnect\n"));
     if(m_ConnectedPin == NULL)
     {
         return S_FALSE;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.3 2003-05-02 07:03:14 adcockj Exp $
+// $Id: Utils.cpp,v 1.4 2003-05-02 16:05:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/02 07:03:14  adcockj
+// Some minor changes most not really improvements
+//
 // Revision 1.2  2003/05/01 16:21:53  adcockj
 // Better pUnk handling in media type
 //
@@ -33,9 +36,9 @@
 #include "Utils.h"
 
 #ifdef _DEBUG
-static int CurrentDebugLevel = DBGLOG_ALL;
+int CurrentDebugLevel = DBGLOG_ALL;
 #else
-static int CurrentDebugLevel = DBGLOG_ERROR;
+int CurrentDebugLevel = DBGLOG_ERROR;
 #endif
 
 
@@ -102,22 +105,19 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
 }
 
 #ifndef NOLOGGING
-void LOG(int DebugLevel, LPCSTR szFormat, ...)
+void _LOG(LPCSTR szFormat, ...)
 {
-    if(DebugLevel <= CurrentDebugLevel)
-    {
-        char szMessage[2048];
-        va_list Args;
+    char szMessage[2048];
+    va_list Args;
 
-        va_start(Args, szFormat);
-        int result=_vsnprintf(szMessage,2048, szFormat, Args);
-        va_end(Args);
-        if(result==-1)
-	    {
-		    OutputDebugString("DebugString too long, truncated!!\n");
-	    }
-	    OutputDebugString(szMessage);
-    }
+    va_start(Args, szFormat);
+    int result=_vsnprintf(szMessage,2048, szFormat, Args);
+    va_end(Args);
+    if(result==-1)
+	{
+		OutputDebugString("DebugString too long, truncated!!\n");
+	}
+	OutputDebugString(szMessage);
 }
 
 void LogSample(IMediaSample* Sample, LPCSTR Desc)
@@ -127,14 +127,14 @@ void LogSample(IMediaSample* Sample, LPCSTR Desc)
     if(Sample2 != NULL)
     {
         Sample2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&SampleProperties);
-        LOG(DBGLOG_FLOW, "%s - IMediaSample2 Dump\n", Desc);
-        LOG(DBGLOG_ALL, " cbData %d\n", SampleProperties.cbData);
-        LOG(DBGLOG_ALL, " dwTypeSpecificFlags %08x\n", SampleProperties.dwTypeSpecificFlags);
-        LOG(DBGLOG_ALL, " dwSampleFlags %08x\n", SampleProperties.dwSampleFlags);
-        LOG(DBGLOG_ALL, " lActual %d\n", SampleProperties.lActual);
-        LOG(DBGLOG_ALL, " length %d\n", (long)(SampleProperties.tStop - SampleProperties.tStart));
-        LOG(DBGLOG_ALL, " dwStreamId %08x\n", SampleProperties.dwStreamId);
-        LOG(DBGLOG_ALL, " cbBuffer %d\n", SampleProperties.cbBuffer);
+        LOG(DBGLOG_FLOW, ("%s - IMediaSample2 Dump\n", Desc));
+        LOG(DBGLOG_ALL, (" cbData %d\n", SampleProperties.cbData));
+        LOG(DBGLOG_ALL, (" dwTypeSpecificFlags %08x\n", SampleProperties.dwTypeSpecificFlags));
+        LOG(DBGLOG_ALL, (" dwSampleFlags %08x\n", SampleProperties.dwSampleFlags));
+        LOG(DBGLOG_ALL, (" lActual %d\n", SampleProperties.lActual));
+        LOG(DBGLOG_ALL, (" length %d\n", (long)(SampleProperties.tStop - SampleProperties.tStart)));
+        LOG(DBGLOG_ALL, (" dwStreamId %08x\n", SampleProperties.dwStreamId));
+        LOG(DBGLOG_ALL, (" cbBuffer %d\n", SampleProperties.cbBuffer));
     }
     else
     {
@@ -146,66 +146,66 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
 {
     BYTE* Uuid;
     
-    LOG(DBGLOG_FLOW, "%s - AM_MEDIA_TYPE Dump\n", Desc);
+    LOG(DBGLOG_FLOW, ("%s - AM_MEDIA_TYPE Dump\n", Desc));
 
     if(MediaType->majortype == MEDIATYPE_Video)
     {
-        LOG(DBGLOG_ALL, " MEDIATYPE_Video\n");
+        LOG(DBGLOG_ALL, (" MEDIATYPE_Video\n"));
     }
     else
     {
         UuidToString((GUID*)&MediaType->majortype, &Uuid);
-        LOG(DBGLOG_ALL, " Major Type {%s}\n", Uuid);
+        LOG(DBGLOG_ALL, (" Major Type {%s}\n", Uuid));
         RpcStringFree(&Uuid);
     }
     if(MediaType->subtype == MEDIASUBTYPE_YUY2)
     {
-        LOG(DBGLOG_ALL, " MEDIASUBTYPE_YUY2\n");
+        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_YUY2\n"));
     }
     else if(MediaType->subtype == MEDIASUBTYPE_YV12)
     {
-        LOG(DBGLOG_ALL, " MEDIASUBTYPE_YV12\n");
+        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_YV12\n"));
     }
     else if(MediaType->subtype == MEDIASUBTYPE_RGB32)
     {
-        LOG(DBGLOG_ALL, " MEDIASUBTYPE_RGB32\n");
+        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_RGB32\n"));
     }
     else
     {
         UuidToString((GUID*)&MediaType->subtype, &Uuid);
-        LOG(DBGLOG_ALL, " Sub Type {%s}\n", Uuid);
+        LOG(DBGLOG_ALL, (" Sub Type {%s}\n", Uuid));
         RpcStringFree(&Uuid);
     }
     if(MediaType->formattype == FORMAT_VideoInfo)
     {
-        LOG(DBGLOG_ALL, " FORMAT_VideoInfo\n");
+        LOG(DBGLOG_ALL, (" FORMAT_VideoInfo\n"));
         VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)MediaType->pbFormat;
-        LOG(DBGLOG_ALL, " cbData %d\n", Format->bmiHeader);
-        LOG(DBGLOG_ALL, " biSize %d\n", Format->bmiHeader.biSize);
-        LOG(DBGLOG_ALL, " biWidth %d\n", Format->bmiHeader.biWidth);
-        LOG(DBGLOG_ALL, " biHeight %d\n", Format->bmiHeader.biHeight);
-        LOG(DBGLOG_ALL, " biPlanes %d\n", Format->bmiHeader.biPlanes);
-        LOG(DBGLOG_ALL, " biBitCount %d\n", Format->bmiHeader.biBitCount);
-        LOG(DBGLOG_ALL, " biCompression %d\n", Format->bmiHeader.biCompression);
-        LOG(DBGLOG_ALL, " biSizeImage %d\n", Format->bmiHeader.biSizeImage);
+        LOG(DBGLOG_ALL, (" cbData %d\n", Format->bmiHeader));
+        LOG(DBGLOG_ALL, (" biSize %d\n", Format->bmiHeader.biSize));
+        LOG(DBGLOG_ALL, (" biWidth %d\n", Format->bmiHeader.biWidth));
+        LOG(DBGLOG_ALL, (" biHeight %d\n", Format->bmiHeader.biHeight));
+        LOG(DBGLOG_ALL, (" biPlanes %d\n", Format->bmiHeader.biPlanes));
+        LOG(DBGLOG_ALL, (" biBitCount %d\n", Format->bmiHeader.biBitCount));
+        LOG(DBGLOG_ALL, (" biCompression %d\n", Format->bmiHeader.biCompression));
+        LOG(DBGLOG_ALL, (" biSizeImage %d\n", Format->bmiHeader.biSizeImage));
     }
     else if(MediaType->formattype == FORMAT_VIDEOINFO2)
     {
-        LOG(DBGLOG_ALL, " FORMAT_VIDEOINFO2\n");
+        LOG(DBGLOG_ALL, (" FORMAT_VIDEOINFO2\n"));
         VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)MediaType->pbFormat;
-        LOG(DBGLOG_ALL, " cbData %d\n", Format->bmiHeader);
-        LOG(DBGLOG_ALL, " biSize %d\n", Format->bmiHeader.biSize);
-        LOG(DBGLOG_ALL, " biWidth %d\n", Format->bmiHeader.biWidth);
-        LOG(DBGLOG_ALL, " biHeight %d\n", Format->bmiHeader.biHeight);
-        LOG(DBGLOG_ALL, " biPlanes %d\n", Format->bmiHeader.biPlanes);
-        LOG(DBGLOG_ALL, " biBitCount %d\n", Format->bmiHeader.biBitCount);
-        LOG(DBGLOG_ALL, " biCompression %d\n", Format->bmiHeader.biCompression);
-        LOG(DBGLOG_ALL, " biSizeImage %d\n", Format->bmiHeader.biSizeImage);
+        LOG(DBGLOG_ALL, (" cbData %d\n", Format->bmiHeader));
+        LOG(DBGLOG_ALL, (" biSize %d\n", Format->bmiHeader.biSize));
+        LOG(DBGLOG_ALL, (" biWidth %d\n", Format->bmiHeader.biWidth));
+        LOG(DBGLOG_ALL, (" biHeight %d\n", Format->bmiHeader.biHeight));
+        LOG(DBGLOG_ALL, (" biPlanes %d\n", Format->bmiHeader.biPlanes));
+        LOG(DBGLOG_ALL, (" biBitCount %d\n", Format->bmiHeader.biBitCount));
+        LOG(DBGLOG_ALL, (" biCompression %d\n", Format->bmiHeader.biCompression));
+        LOG(DBGLOG_ALL, (" biSizeImage %d\n", Format->bmiHeader.biSizeImage));
     }
     else
     {
         UuidToString((GUID*)&MediaType->formattype, &Uuid);
-        LOG(DBGLOG_ALL, " Format Type {%s}\n", Uuid);
+        LOG(DBGLOG_ALL, (" Format Type {%s}\n", Uuid));
         RpcStringFree(&Uuid);
     }
 }

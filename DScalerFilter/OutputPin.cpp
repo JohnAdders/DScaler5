@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.5 2003-05-02 10:51:49 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.6 2003-05-02 16:05:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2003/05/02 10:51:49  adcockj
+// Improved Allocator negotiation and added stub for Block
+//
 // Revision 1.4  2003/05/02 07:03:13  adcockj
 // Some minor changes most not really improvements
 //
@@ -43,7 +46,7 @@
 
 COutputPin::COutputPin()
 {
-    LOG(DBGLOG_FLOW, "COutputPin::COutputPin\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::COutputPin\n"));
     InitMediaType(&m_CurrentMediaType);
     InitMediaType(&m_DesiredMediaType);
     m_FormatChanged = FALSE;
@@ -51,7 +54,7 @@ COutputPin::COutputPin()
 
 COutputPin::~COutputPin()
 {
-    LOG(DBGLOG_FLOW, "COutputPin::~COutputPin\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::~COutputPin\n"));
     ClearMediaType(&m_CurrentMediaType);
     ClearMediaType(&m_DesiredMediaType);
 }
@@ -59,7 +62,7 @@ COutputPin::~COutputPin()
 
 STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::Connect\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::Connect\n"));
     HRESULT hr;
     
 
@@ -205,7 +208,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         return VFW_E_NO_TRANSPORT;
     }
 
-    LOG(DBGLOG_ALL, " Allocator Negotiated %d Buffers %d Size, %d Align\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign);
+    LOG(DBGLOG_ALL, ("Allocator Negotiated %d Buffers %d Size, %d Align\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign));
 
     hr = m_MemInputPin->NotifyAllocator(m_Allocator, FALSE);
     if(FAILED(hr))
@@ -225,13 +228,13 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP COutputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::ReceiveConnection\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::ReceiveConnection\n"));
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP COutputPin::Disconnect(void)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::Disconnect\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::Disconnect\n"));
     if(m_ConnectedPin == NULL)
     {
         return S_FALSE;
@@ -250,7 +253,7 @@ STDMETHODIMP COutputPin::Disconnect(void)
 
 STDMETHODIMP COutputPin::ConnectedTo(IPin **pPin)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::ConnectedTo\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::ConnectedTo\n"));
     if(pPin == NULL)
     {
         return E_POINTER;
@@ -269,7 +272,7 @@ STDMETHODIMP COutputPin::ConnectedTo(IPin **pPin)
 
 STDMETHODIMP COutputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::ConnectionMediaType\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::ConnectionMediaType\n"));
     if(pmt == NULL)
     {
         return E_POINTER;
@@ -287,7 +290,7 @@ STDMETHODIMP COutputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP COutputPin::QueryPinInfo(PIN_INFO *pInfo)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::QueryPinInfo\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::QueryPinInfo\n"));
     if(pInfo == NULL)
     {
         return E_POINTER;
@@ -301,7 +304,7 @@ STDMETHODIMP COutputPin::QueryPinInfo(PIN_INFO *pInfo)
 
 STDMETHODIMP COutputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::QueryDirection\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::QueryDirection\n"));
     if(pPinDir == NULL)
     {
         return E_POINTER;
@@ -312,7 +315,7 @@ STDMETHODIMP COutputPin::QueryDirection(PIN_DIRECTION *pPinDir)
 
 STDMETHODIMP COutputPin::QueryId(LPWSTR *Id)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::QueryId\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::QueryId\n"));
     if(Id == NULL)
     {
         return E_POINTER;
@@ -330,7 +333,7 @@ STDMETHODIMP COutputPin::QueryId(LPWSTR *Id)
 
 STDMETHODIMP COutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::QueryAccept\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::QueryAccept\n"));
     LogMediaType(pmt, "COutputPin::QueryAccept");
     if(pmt->majortype != MEDIATYPE_Video)
     {
@@ -354,7 +357,7 @@ STDMETHODIMP COutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::EnumMediaTypes\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::EnumMediaTypes\n"));
     CComObject<CEnumMediaTypes>* NewEnum = new CComObject<CEnumMediaTypes>;
     NewEnum->SetUpdate(this);
     NewEnum->AddRef();
@@ -364,41 +367,41 @@ STDMETHODIMP COutputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 
 STDMETHODIMP COutputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::QueryInternalConnections\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::QueryInternalConnections\n"));
     // don't bother with this as we are a simple filter
     return E_NOTIMPL;
 }
 
 STDMETHODIMP COutputPin::EndOfStream(void)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::EndOfStream\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::EndOfStream\n"));
     // shouldn't be called on output pin
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP COutputPin::BeginFlush(void)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::BeginFlush\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::BeginFlush\n"));
     // shouldn't be called on output pin
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP COutputPin::EndFlush(void)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::EndFlush\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::EndFlush\n"));
     // shouldn't be called on output pin
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP COutputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::NewSegment\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::NewSegment\n"));
     return E_UNEXPECTED;
 }
 
 STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::Notify \n Type %d Proportion %d Late %d", q.Type, q.Proportion, (long)q.Late);
+    LOG(DBGLOG_FLOW, ("COutputPin::Notify \n Type %d Proportion %d Late %d\n", q.Type, q.Proportion, (long)q.Late));
     // \todo see what we get sent here and work out how to handle some
     // of ethe more common messages
     // in the mean time just pass the messages downstream
@@ -415,13 +418,13 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
 
 STDMETHODIMP COutputPin::SetSink(IQualityControl *piqc)
 {
-    LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::SetSink\n");
+    LOG(DBGLOG_FLOW, ("*Unexpected Call* - COutputPin::SetSink\n"));
     return E_NOTIMPL;
 }
 
 STDMETHODIMP COutputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)
 {
-    LOG(DBGLOG_FLOW, "COutputPin::Block\n");
+    LOG(DBGLOG_FLOW, ("COutputPin::Block\n"));
     // \todo need to implement this and think about threading issues
     return S_OK;
 }

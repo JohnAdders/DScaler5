@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.2 2003-05-01 16:20:30 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.3 2003-05-02 16:05:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 16:20:30  adcockj
+// Include generic property pages uuids
+//
 // Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
 // Initial Import
 //
@@ -96,13 +99,13 @@ STDAPI DllRegisterServer(void)
     HRESULT hr = FilterMapper.CoCreateInstance(CLSID_FilterMapper, NULL, CLSCTX_INPROC_SERVER);
     if(FAILED(hr))
     {
-        LOG(DBGLOG_ERROR, "Failed to create Filter Mapper %08x", hr);
+        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
         return hr;
     }
     hr = FilterMapper->RegisterFilter(__uuidof(CDScaler), L"DScaler Filter", NULL, NULL, NULL, &RegInfo);
     if(FAILED(hr))
     {
-        LOG(DBGLOG_ERROR, "Failed to Register Filter %08x", hr);
+        LOG(DBGLOG_ERROR, ("Failed to Register Filter %08x\n", hr));
         return hr;
     }
 
@@ -121,13 +124,13 @@ STDAPI DllUnregisterServer(void)
     HRESULT hr = FilterMapper.CoCreateInstance(CLSID_FilterMapper, NULL, CLSCTX_INPROC_SERVER);
     if(FAILED(hr))
     {
-        LOG(DBGLOG_ERROR, "Failed to create Filter Mapper %08x", hr);
+        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
         return hr;
     }
     hr = FilterMapper->UnregisterFilter(NULL, NULL, __uuidof(CDScaler));
     if(FAILED(hr))
     {
-        LOG(DBGLOG_ERROR, "Failed to Unregister Filter %08x", hr);
+        LOG(DBGLOG_ERROR, ("Failed to Unregister Filter %08x\n", hr));
         return hr;
     }
 

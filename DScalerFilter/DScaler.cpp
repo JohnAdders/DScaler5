@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.4 2003-05-02 10:53:07 adcockj Exp $
+// $Id: DScaler.cpp,v 1.5 2003-05-02 16:05:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/02 10:53:07  adcockj
+// Returns test parameter for testing property page
+//
 // Revision 1.3  2003/05/01 18:15:17  adcockj
 // Moved IMedaiSeeking to output pin
 //
@@ -48,7 +51,7 @@ CDScaler::CDScaler()
 
 HRESULT CDScaler::FinalConstruct()
 {
-    LOG(DBGLOG_FLOW, "CDScaler::FinalConstruct\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::FinalConstruct\n"));
     m_InputPin = new CComObject<CInputPin>;
     m_InputPin->AddRef();
     m_OutputPin = new CComObject<COutputPin>;
@@ -57,13 +60,12 @@ HRESULT CDScaler::FinalConstruct()
     m_InputPin->m_OutputPin = m_OutputPin;
     m_OutputPin->m_Filter = this;
     m_OutputPin->m_InputPin = m_InputPin;
-	return CoCreateFreeThreadedMarshaler(
-		GetControllingUnknown(), &m_pUnkMarshaler.p);
+	return CoCreateFreeThreadedMarshaler(GetControllingUnknown(), &m_pUnkMarshaler.p);
 }
 
 void CDScaler::FinalRelease()
 {
-    LOG(DBGLOG_FLOW, "CDScaler::FinalRelease\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::FinalRelease\n"));
     m_InputPin->Release();
     m_OutputPin->Release();
 	m_pUnkMarshaler.Release();
@@ -71,7 +73,7 @@ void CDScaler::FinalRelease()
 
 STDMETHODIMP CDScaler::EnumPins(IEnumPins **ppEnum)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::EnumPins\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::EnumPins\n"));
     if(ppEnum == NULL)
     {
         return E_POINTER;
@@ -91,7 +93,7 @@ STDMETHODIMP CDScaler::EnumPins(IEnumPins **ppEnum)
 
 STDMETHODIMP CDScaler::FindPin(LPCWSTR Id, IPin **ppPin)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::FindPin\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::FindPin\n"));
     if(wcscmp(Id, L"Input") == 0)
     {
         *ppPin = m_InputPin;
@@ -113,7 +115,7 @@ STDMETHODIMP CDScaler::FindPin(LPCWSTR Id, IPin **ppPin)
 
 STDMETHODIMP CDScaler::QueryFilterInfo(FILTER_INFO *pInfo)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::QueryFilterInfo\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::QueryFilterInfo\n"));
     if(pInfo == NULL)
     {
         return E_POINTER;
@@ -129,7 +131,7 @@ STDMETHODIMP CDScaler::QueryFilterInfo(FILTER_INFO *pInfo)
 
 STDMETHODIMP CDScaler::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::JoinFilterGraph\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::JoinFilterGraph\n"));
     if(pGraph != NULL)
     {
         // we need the FilterGraph2 interface
@@ -159,7 +161,7 @@ STDMETHODIMP CDScaler::QueryVendorInfo(LPWSTR *pVendorInfo)
 
 STDMETHODIMP CDScaler::Stop(void)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::Stop\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::Stop\n"));
     if(m_OutputPin->m_Allocator != NULL)
     {
         HRESULT hr = m_OutputPin->m_Allocator->Decommit();
@@ -170,7 +172,7 @@ STDMETHODIMP CDScaler::Stop(void)
 
 STDMETHODIMP CDScaler::Pause(void)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::Pause\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::Pause\n"));
     if(m_OutputPin->m_Allocator != NULL)
     {
         if(m_State == State_Stopped)
@@ -184,14 +186,14 @@ STDMETHODIMP CDScaler::Pause(void)
 
 STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::Run\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::Run\n"));
     m_State = State_Running;
     return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetState(DWORD dwMilliSecsTimeout, FILTER_STATE *State)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::GetState\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::GetState\n"));
     if(State == NULL)
     {
         return E_POINTER;
@@ -202,21 +204,21 @@ STDMETHODIMP CDScaler::GetState(DWORD dwMilliSecsTimeout, FILTER_STATE *State)
 
 STDMETHODIMP CDScaler::SetSyncSource(IReferenceClock *pClock)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::SetSyncSource\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::SetSyncSource\n"));
     m_RefClock = pClock;
     return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetSyncSource(IReferenceClock **pClock)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::GetSyncSource\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::GetSyncSource\n"));
     m_RefClock.CopyTo(pClock);
     return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::GetClassID\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::GetClassID\n"));
     if(pClassID == NULL)
     {
         return E_POINTER;
@@ -227,7 +229,7 @@ STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
 
 STDMETHODIMP CDScaler::GetPages(CAUUID *pPages)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::GetPages\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::GetPages\n"));
     if(pPages == NULL)
     {
         return E_POINTER;
@@ -246,13 +248,13 @@ STDMETHODIMP CDScaler::GetPages(CAUUID *pPages)
 
 STDMETHODIMP CDScaler::IsDirty(void)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::IsDirty\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::IsDirty\n"));
     return m_IsDirty?S_OK:S_FALSE;
 }
 
 STDMETHODIMP CDScaler::Load(IStream __RPC_FAR *pStm)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::Load\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::Load\n"));
     if(pStm == NULL)
     {
         return E_POINTER;
@@ -263,7 +265,7 @@ STDMETHODIMP CDScaler::Load(IStream __RPC_FAR *pStm)
 
 STDMETHODIMP CDScaler::Save(IStream __RPC_FAR *pStm, BOOL fClearDirty)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::Save\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::Save\n"));
     if(pStm == NULL)
     {
         return E_POINTER;
@@ -278,7 +280,7 @@ STDMETHODIMP CDScaler::Save(IStream __RPC_FAR *pStm, BOOL fClearDirty)
 
 STDMETHODIMP CDScaler::GetSizeMax(ULARGE_INTEGER __RPC_FAR *pcbSize)
 {
-    LOG(DBGLOG_FLOW, "CDScaler::GetSizeMax\n");
+    LOG(DBGLOG_FLOW, ("CDScaler::GetSizeMax\n"));
     if(pcbSize == NULL)
     {
         return E_POINTER;
@@ -299,6 +301,21 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
         *pValue = 5;
         return S_OK;
     }
+    if(dwParamIndex == 1)
+    {
+        *pValue = 4.5;
+        return S_OK;
+    }
+    if(dwParamIndex == 2)
+    {
+        *pValue = 1;
+        return S_OK;
+    }
+    if(dwParamIndex == 3)
+    {
+        *pValue = 2;
+        return S_OK;
+    }
     else
     {
         return E_INVALIDARG;
@@ -308,7 +325,7 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
 STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
 {
     // \todo get working
-    if(dwParamIndex == 0)
+    if(dwParamIndex < 4)
     {
         return S_OK;
     }
@@ -342,7 +359,7 @@ STDMETHODIMP CDScaler::GetParamCount(DWORD *pdwParams)
     {
         return E_POINTER;
     }
-    *pdwParams = 1;
+    *pdwParams = 4;
     return S_OK;
 }
 
@@ -359,8 +376,41 @@ STDMETHODIMP CDScaler::GetParamInfo(DWORD dwParamIndex,MP_PARAMINFO *pInfo)
         pInfo->mpdMinValue = -10;
         pInfo->mpdMaxValue = 20;
         pInfo->mpdNeutralValue = 0;
-        wcscpy(pInfo->szUnitText, L"Units");
-        wcscpy(pInfo->szLabel, L"Name");
+        wcscpy(pInfo->szUnitText, L"Units1");
+        wcscpy(pInfo->szLabel, L"Name2");
+        return S_OK;
+    }
+    else if(dwParamIndex == 1)
+    {
+        pInfo->mpType = MPT_FLOAT;
+        pInfo->mopCaps = 0;
+        pInfo->mpdMinValue = -10;
+        pInfo->mpdMaxValue = 20;
+        pInfo->mpdNeutralValue = 0;
+        wcscpy(pInfo->szUnitText, L"Units2");
+        wcscpy(pInfo->szLabel, L"Name2");
+        return S_OK;
+    }
+    else if(dwParamIndex == 2)
+    {
+        pInfo->mpType = MPT_BOOL;
+        pInfo->mopCaps = 0;
+        pInfo->mpdMinValue = 0;
+        pInfo->mpdMaxValue = 1;
+        pInfo->mpdNeutralValue = 0;
+        wcscpy(pInfo->szUnitText, L"Units3");
+        wcscpy(pInfo->szLabel, L"Name3");
+        return S_OK;
+    }
+    else if(dwParamIndex == 3)
+    {
+        pInfo->mpType = MPT_ENUM;
+        pInfo->mopCaps = 0;
+        pInfo->mpdMinValue = 0;
+        pInfo->mpdMaxValue = 3;
+        pInfo->mpdNeutralValue = 0;
+        wcscpy(pInfo->szUnitText, L"Units4");
+        wcscpy(pInfo->szLabel, L"Name4");
         return S_OK;
     }
     else
@@ -380,7 +430,28 @@ STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
     {
         *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
         if(*ppwchText == NULL) return E_OUTOFMEMORY;
-        wcscpy(*ppwchText, L"Name\0Units\0");
+        memcpy(*ppwchText, L"Name1\0Units1\0", 28);
+        return S_OK;
+    }
+    else if(dwParamIndex == 1)
+    {
+        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+        if(*ppwchText == NULL) return E_OUTOFMEMORY;
+        memcpy(*ppwchText, L"Name2\0Units2\0", 28);
+        return S_OK;
+    }
+    else if(dwParamIndex == 2)
+    {
+        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+        if(*ppwchText == NULL) return E_OUTOFMEMORY;
+        memcpy(*ppwchText, L"Name3\0Units3\0", 28);
+        return S_OK;
+    }
+    else if(dwParamIndex == 3)
+    {
+        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+        if(*ppwchText == NULL) return E_OUTOFMEMORY;
+        memcpy(*ppwchText, L"Name4\0Units4\0Val1\0Val2\0Val3\0Val4\0", 68);
         return S_OK;
     }
     else
