@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.8 2004-07-16 15:45:19 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.9 2004-07-24 21:20:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/16 15:45:19  adcockj
+// Fixed compilation issues under .NET
+// Improved (hopefully) handling of negative times and preroll
+// Changed name of filter
+//
 // Revision 1.7  2004/07/11 14:35:25  adcockj
 // Fixed spdif connections and some dts issues
 //
@@ -116,7 +121,7 @@ s_scmap_dts[2*10] =
            {6, {1, 2, 0, 5, 3, 4}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R|DTS_LFE 
 };
 
-static sample_t Silence[256] = {
+static const sample_t Silence[256] = {
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -274,10 +279,9 @@ HRESULT CAudioDecoder::ProcessDTS()
                         break;
                     }
                     
-                    flags += DTS_ADJUST_LEVEL;
+                    flags |= DTS_ADJUST_LEVEL;
 
                     sample_t level = 1, gain = 1, bias = 0;
-                    level *= gain;
 
                     if(dts_frame(m_dts_state, p, &flags, &level, bias) == 0)
                     {
@@ -302,7 +306,7 @@ HRESULT CAudioDecoder::ProcessDTS()
                         for(; i < blocks && dts_block(m_dts_state) == 0; i++)
                         {
                             sample_t* samples = dts_samples(m_dts_state);
-                            sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
+                            const sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
                             int ch = 0;
                             int outch = 0;
 
@@ -322,7 +326,7 @@ HRESULT CAudioDecoder::ProcessDTS()
                             ASSERT(outch == m_ChannelsRequested);
                             ASSERT(ch == scmap.nChannels);
 
-                            for(int j = 0; j < 256; j++, samples++)
+                            for(int j = 0; j < 256; j++)
                             {
                                 for(int ch = 0; ch < m_ChannelsRequested; ch++)
                                 {
