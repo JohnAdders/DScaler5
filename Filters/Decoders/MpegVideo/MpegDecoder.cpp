@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.38 2004-08-03 08:55:56 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.39 2004-08-06 08:38:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.38  2004/08/03 08:55:56  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.37  2004/07/29 13:44:59  adcockj
 // More fixes for Laurent's issues
 //
@@ -413,6 +416,12 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
             }
         }
         break;
+    case OUTPUTSPACE:
+        if(m_VideoOutPin->m_ConnectedPin)
+        {
+            return S_FALSE;
+        }
+        break;
     }
     return hr;
 }
@@ -534,9 +543,6 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
     }
     else if(pPin == m_VideoOutPin)
     {
-        BITMAPINFOHEADER bih;
-        ExtractBIH(pPin->GetMediaType(), &bih);
-
         pProperties->cBuffers = 3;
         if(m_InsideReconnect)
         {
@@ -544,7 +550,8 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
         }
         else
         {
-            pProperties->cbBuffer = bih.biSizeImage;
+
+            pProperties->cbBuffer = ExtractBIH(&m_VideoOutPin->m_ConnectedMediaType)->biSizeImage;
         }
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
@@ -597,6 +604,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
         Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
+                   pmt->subtype == MEDIASUBTYPE_YV12 ||
                     pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
@@ -646,6 +654,10 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
     {
         return GetEnumTextIDCTToUse(ppwchText);
     }
+    else if(dwParamIndex == OUTPUTSPACE)
+    {
+        return GetEnumTextOutputSpace(ppwchText);
+    }
     else
     {
         return E_NOTIMPL;
@@ -655,28 +667,37 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
 
 HRESULT CMpegDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
 {
-    wchar_t DeintText[] = L"Deinterlace Mode\0" L"None\0" L"Automatic\0" L"Force Weave\0" L"Force Bob\0";
-    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    wchar_t Text[] = L"Deinterlace Mode\0" L"None\0" L"Automatic\0" L"Force Weave\0" L"Force Bob\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    memcpy(*ppwchText, Text, sizeof(Text));
     return S_OK;
 }
 
 HRESULT CMpegDecoder::GetEnumTextIDCTToUse(WCHAR **ppwchText)
 {
-    wchar_t DeintText[] = L"IDCT To Use\0" L"None\0" L"Reference\0" L"MMX Only\0" L"Accelerated\0";
-    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    wchar_t Text[] = L"IDCT To Use\0" L"None\0" L"Reference\0" L"MMX Only\0" L"Accelerated\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    memcpy(*ppwchText, Text, sizeof(Text));
     return S_OK;
 }
 
 HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
 {
-    wchar_t DeintText[] = L"DVB Aspect Preferences\0" L"None\0" L"16:9 Display\0" L"4:3 Display Center Cut out\0" L"4:3 Display LetterBox\0";
-    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    wchar_t Text[] = L"DVB Aspect Preferences\0" L"None\0" L"16:9 Display\0" L"4:3 Display Center Cut out\0" L"4:3 Display LetterBox\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextOutputSpace(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"OutputColoure Space\0" L"None\0" L"YV12\0" L"YUY2\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
     return S_OK;
 }
 
@@ -736,6 +757,7 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 
         struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
         {
+            {&MEDIASUBTYPE_YV12, 1, 12, '21VY'},
             {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
             {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
             {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
@@ -748,6 +770,11 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
             {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
             {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
         };
+
+        if(GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)
+        {
+            TypeNum += 3;
+        }
 
         // this will make sure we won't connect to the old renderer in dvd mode
         // that renderer can't switch the format dynamically
@@ -814,7 +841,7 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
             pmt->cbFormat = sizeof(VIDEOINFOHEADER2);       
             CorrectSourceTarget(vih->rcSource, vih->rcTarget);
         }
-        
+        pmt->lSampleSize = bihOut.biSizeImage;
         CorrectMediaType(pmt);
         return S_OK;
     }
@@ -924,7 +951,7 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             aryout == m_ARAdjustY * m_ARMpegY)
         {
             m_CurrentWidth = wout; 
-            m_CurrentHeight = hout; 
+            m_CurrentHeight = abs(hout); 
             m_ARCurrentOutX = arxout; 
             m_ARCurrentOutY = aryout; 
 
@@ -1180,7 +1207,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // when we're not really ready
 
     TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
         frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
         m_CurrentPicture->m_NumFields,
@@ -1673,6 +1700,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
         m_CurrentHeight = m_OutputHeight;
         m_ARCurrentOutX = m_ARMpegX * m_ARAdjustX; 
         m_ARCurrentOutY = m_ARMpegY * m_ARAdjustY; 
+
     }
     else
     {
@@ -1724,8 +1752,7 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
 void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-    BITMAPINFOHEADER bihOut;
-    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    const BITMAPINFOHEADER* bihOut = ExtractBIH(m_VideoOutPin->GetMediaType());
 
     BYTE* pIn = ppIn[0];
     BYTE* pInU = ppIn[1];
@@ -1742,35 +1769,42 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     }
 
 
-    if(bihOut.biCompression == '2YUY')
+    if(bihOut->biCompression == '2YUY')
     {
         if(m_ProgressiveChroma)
         {
-            BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+            BitBltFromI420ToYUY2(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
         }
         else
         {
             if(m_NextFrameDeint == DIWeave)
             {
-                BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+                BitBltFromI420ToYUY2(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
             }
             else
             {
-                BitBltFromI420ToYUY2_Int(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+                BitBltFromI420ToYUY2_Int(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
             }
         }
     }
-    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    else if(bihOut->biCompression == '21VY')
     {
-        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+        BYTE* pOutV = pOut + h * bihOut->biWidth;
+        BYTE* pOutU = pOutV + h * bihOut->biWidth / 4;
 
-        if(bihOut.biHeight > 0)
+        BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut->biWidth*bihOut->biBitCount>>3;
+
+        if(bihOut->biHeight > 0)
         {
             pOut += pitchOut*(h-1);
             pitchOut = -pitchOut;
         }
 
-        if(!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
+        if(!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut->biBitCount, pIn, pInU, pInV, pitchIn))
         {
             for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
                 memset(pOut, 0, pitchOut);
@@ -1780,8 +1814,7 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 
 void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-    BITMAPINFOHEADER bihOut;
-    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    const BITMAPINFOHEADER* bihOut = ExtractBIH(m_VideoOutPin->GetMediaType());
 
     BYTE* pIn = ppIn[0];
     BYTE* pInU = ppIn[1];
@@ -1790,21 +1823,28 @@ void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     w = (w+7)&~7;
     ASSERT(w <= pitchIn);
 
-    if(bihOut.biCompression == '2YUY')
+    if(bihOut->biCompression == '2YUY')
     {
-        BitBltFromI422ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+        BitBltFromI422ToYUY2(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
     }
-    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    else if(bihOut->biCompression == '21VY')
     {
-        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+        BYTE* pOutV = pOut + h * bihOut->biWidth;
+        BYTE* pOutU = pOutV + h * bihOut->biWidth / 4;
 
-        if(bihOut.biHeight > 0)
+        BitBltFromI422ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut->biWidth*bihOut->biBitCount>>3;
+
+        if(bihOut->biHeight > 0)
         {
             pOut += pitchOut*(h-1);
             pitchOut = -pitchOut;
         }
 
-        if(!BitBltFromI422ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
+        if(!BitBltFromI422ToRGB(w, h, pOut, pitchOut, bihOut->biBitCount, pIn, pInU, pInV, pitchIn))
         {
             for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
                 memset(pOut, 0, pitchOut);
@@ -1814,8 +1854,7 @@ void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 
 void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-    BITMAPINFOHEADER bihOut;
-    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    const BITMAPINFOHEADER* bihOut = ExtractBIH(m_VideoOutPin->GetMediaType());
 
     BYTE* pIn = ppIn[0];
     BYTE* pInU = ppIn[1];
@@ -1824,15 +1863,22 @@ void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     w = (w+7)&~7;
     ASSERT(w <= pitchIn);
 
-    if(bihOut.biCompression == '2YUY')
+    if(bihOut->biCompression == '2YUY')
     {
-        BitBltFromI444ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+        BitBltFromI444ToYUY2(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
     }
-    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    else if(bihOut->biCompression == '21VY')
     {
-        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+        BYTE* pOutV = pOut + h * bihOut->biWidth;
+        BYTE* pOutU = pOutV + h * bihOut->biWidth / 4;
 
-        if(bihOut.biHeight > 0)
+        BitBltFromI444ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut->biWidth*bihOut->biBitCount>>3;
+
+        if(bihOut->biHeight > 0)
         {
             pOut += pitchOut*(h-1);
             pitchOut = -pitchOut;

@@ -24,6 +24,6 @@
 extern IBaseFilter* GetFilterFromPin(IPin* pPin);
 extern CLSID GetCLSID(IBaseFilter* pBF);
 extern CLSID GetCLSID(IPin* pPin);
-bool ExtractBIH(const AM_MEDIA_TYPE* pmt, BITMAPINFOHEADER* bih);
+const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt);
 extern bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary);
 

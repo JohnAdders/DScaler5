@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.6 2004-07-16 15:58:01 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.7 2004-08-06 08:38:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/16 15:58:01  adcockj
+// Fixed compilation issues under .NET
+// Changed name of filter
+// Some performance improvements to libmpeg2
+//
 // Revision 1.5  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -105,7 +110,7 @@ bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
     return(true);
 }
 
-bool BitBltFromI422ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltFromI422ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
     if(w&1) return(false);
 
@@ -120,10 +125,10 @@ bool BitBltFromI422ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 
     pitch = min(abs(srcpitch), abs(dstpitch));
 
-    for(y = 0; y < h; y+=1, srcu += srcpitch, dstu += dstpitch)
+    for(y = 0; y < h; y+=2, srcu += 2 * srcpitch, dstu += dstpitch)
         memcpy_accel(dstu, srcu, pitch);
 
-    for(y = 0; y < h; y+=1, srcv += srcpitch, dstv += dstpitch)
+    for(y = 0; y < h; y+=2, srcv += 2 * srcpitch, dstv += dstpitch)
         memcpy_accel(dstv, srcv, pitch);
 
     if(CpuFeatureFlags & FEATURE_MMX)
@@ -135,7 +140,7 @@ bool BitBltFromI422ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 // \todo optimise and filter
 // we should probably do much better than this simple decimation
 // but this is really just here for completeness
-bool BitBltFromI444ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+bool BitBltFromI444ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
     if(w&1) return(false);
 
@@ -148,13 +153,13 @@ bool BitBltFromI444ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 
     dstpitch >>= 1;
 
-    pitch = min(abs(srcpitch), abs(dstpitch));
+    pitch = min(abs(srcpitch)>>1, abs(dstpitch));
 
-    for(y = 0; y < h; y++, srcu += srcpitch, dstu += dstpitch)
+    for(y = 0; y < h; y+=2, srcu += 2 * srcpitch, dstu += dstpitch)
         for(z = 0; z < pitch; z++)
             dstu[z] = srcu[z<<1];
 
-    for(y = 0; y < h; y++, srcv += srcpitch, dstv += dstpitch)
+    for(y = 0; y < h; y+=2, srcv += 2 * srcpitch, dstv += dstpitch)
         for(z = 0; z < pitch; z++)
             dstv[z] = srcv[z<<1];
 

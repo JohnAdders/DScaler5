@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.5 2004-07-29 13:44:59 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.6 2004-08-06 08:38:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/29 13:44:59  adcockj
+// More fixes for Laurent's issues
+//
 // Revision 1.4  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -74,36 +77,36 @@ CLSID GetCLSID(IPin* pPin)
 {
     return(GetCLSID(GetFilterFromPin(pPin)));
 }
-bool ExtractBIH(const AM_MEDIA_TYPE* pmt, BITMAPINFOHEADER* bih)
+const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
 {
     if(pmt)
     {
         if(pmt->formattype == FORMAT_VideoInfo)
         {
             VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
-            memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
+            return &vih->bmiHeader;
         }
         else if(pmt->formattype == FORMAT_VideoInfo2)
         {
             VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pmt->pbFormat;
-            memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
+            return &vih->bmiHeader;
         }
         if(pmt->formattype == FORMAT_MPEGVideo)
         {
             VIDEOINFOHEADER* vih = &((MPEG1VIDEOINFO*)pmt->pbFormat)->hdr;
-            memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
+            return &vih->bmiHeader;
         }
         else if(pmt->formattype == FORMAT_MPEG2_VIDEO)
         {
             VIDEOINFOHEADER2* vih = &((MPEG2VIDEOINFO*)pmt->pbFormat)->hdr;
-            memcpy(bih, &vih->bmiHeader, sizeof(BITMAPINFOHEADER));
+            return &vih->bmiHeader;
         }
-
-        return(true);
     }
     
-    return(false);
+    return NULL;
 }
+
+
 
 bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
 {

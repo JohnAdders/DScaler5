@@ -1,5 +1,5 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: a_yuv2yuy2.asm,v 1.1 2004-03-08 17:04:02 adcockj Exp $
+;// $Id: a_yuv2yuy2.asm,v 1.2 2004-08-06 08:38:54 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;//	This program is free software; you can redistribute it and/or modify
 ;//	it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.1  2004/03/08 17:04:02  adcockj
+;// Removed all inline assembler to remove dependence on MS compilers
+;//
 ;//////////////////////////////////////////////////////////////////////////////
 
 USE32
@@ -335,9 +338,13 @@ yuvtoyuy2row_avg2_loop_SSEMMX:
 endproc
 
 proc _memcpy_accel_SSE, 0
-    %$src arg
     %$dst arg
+    %$src arg
     %$len arg
+
+	push	edi
+	push	esi
+	push	ebx
 
 	mov     esi, [ebp+%$src]
 	mov     edi, [ebp+%$dst]
@@ -377,12 +384,20 @@ memcpy_accel_sse_loop2:
 	jne		memcpy_accel_sse_loop2
 memcpy_accel_sse_end:
 	sfence
+
+	pop		ebx
+	pop		esi
+	pop		edi
 endproc
 
 proc _memcpy_accel_MMX, 0
-    %$src arg
     %$dst arg
+    %$src arg
     %$len arg
+
+	push	edi
+	push	esi
+	push	ebx
 
 	mov     esi, [ebp+%$src]
 	mov     edi, [ebp+%$dst]
@@ -420,6 +435,10 @@ memcpy_accel_mmx_loop2:
 	dec		ecx
 	jne		memcpy_accel_mmx_loop2
 memcpy_accel_mmx_end:
+
+	pop		ebx
+	pop		esi
+	pop		edi
 endproc
 
 end

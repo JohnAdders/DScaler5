@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.22 2004-07-23 21:00:12 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.23 2004-08-06 08:38:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -69,6 +69,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(DVBLETTERBOX, DVB169, L"DVB Aspect Preferences")
     DEFINE_PARAM_BOOL(0, L"Hardcode for PAL with ffdshow")
     DEFINE_PARAM_ENUM(ACCELERATED_IDCT, ACCELERATED_IDCT, L"IDCT to Use")
+    DEFINE_PARAM_ENUM(SPACE_YUY2, SPACE_YUY2, L"Colour space to output")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
@@ -81,6 +82,7 @@ END_PARAM_LIST()
         DVBASPECTPREFS,
 		HARDCODEFORPAL,
 		IDCT,
+		OUTPUTSPACE,
     };
 
 public:
@@ -224,6 +226,12 @@ private:
         ACCELERATED_IDCT,
     } eIDCT;
 
+    typedef enum
+    {
+        SPACE_YV12,
+        SPACE_YUY2,
+    } eOutputSpace;
+
     void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
     void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
     void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
@@ -241,6 +249,7 @@ private:
     HRESULT ProcessPictureDisplay(bool ProgressiveHint);
     HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
     HRESULT GetEnumTextDVBAspectPrefs(WCHAR **ppwchText);
+    HRESULT GetEnumTextOutputSpace(WCHAR **ppwchText);
     void UpdateAspectRatio();
 
     CFrameBuffer* GetNextBuffer();
