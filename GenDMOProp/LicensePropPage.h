@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+// $Id: LicensePropPage.h,v 1.1 2003-05-01 12:34:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -19,36 +19,36 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __GENDMOPROPPAGE_H_
-#define __GENDMOPROPPAGE_H_
+#ifndef __LICENSEPROPPAGE_H_
+#define __LICENSEPROPPAGE_H_
 
 #include "resource.h"       // main symbols
 
-EXTERN_C const CLSID CLSID_GenDMOPropPage;
+EXTERN_C const CLSID CLSID_LicensePropPage;
 
 /////////////////////////////////////////////////////////////////////////////
-// CGenDMOPropPage
-class ATL_NO_VTABLE CGenDMOPropPage :
+// CLicensePropPage
+class ATL_NO_VTABLE CLicensePropPage :
 	public CComObjectRootEx<CComSingleThreadModel>,
-	public CComCoClass<CGenDMOPropPage, &CLSID_GenDMOPropPage>,
-	public IPropertyPageImpl<CGenDMOPropPage>,
-	public CDialogImpl<CGenDMOPropPage>
+	public CComCoClass<CLicensePropPage, &CLSID_LicensePropPage>,
+	public IPropertyPageImpl<CLicensePropPage>,
+	public CDialogImpl<CLicensePropPage>
 {
 public:
-	CGenDMOPropPage();
+	CLicensePropPage();
 
-	enum {IDD = IDD_GENDMOPROPPAGE};
+	enum {IDD = IDD_LICENSEPROPPAGE};
 
-DECLARE_REGISTRY_RESOURCEID(IDR_GENDMOPROPPAGE)
+DECLARE_REGISTRY_RESOURCEID(IDR_LICENSEPROPPAGE)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
-BEGIN_COM_MAP(CGenDMOPropPage) 
+BEGIN_COM_MAP(CLicensePropPage) 
 	COM_INTERFACE_ENTRY(IPropertyPage)
 END_COM_MAP()
 
-BEGIN_MSG_MAP(CGenDMOPropPage)
-	CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
+BEGIN_MSG_MAP(CLicensePropPage)
+	CHAIN_MSG_MAP(IPropertyPageImpl<CLicensePropPage>)
 END_MSG_MAP()
 // Handler prototypes:
 //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
@@ -59,10 +59,7 @@ END_MSG_MAP()
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
 
 private:
-    CComQIPtr<IMediaParamInfo> m_MediaParamInfo;
-    CComQIPtr<IMediaParams> m_MediaParams;
-    long m_CountParams;
-    float* m_Values;
+    CComQIPtr<IAmFreeSoftwareLicensed> m_License;
 };
 
-#endif //__GENDMOPROPPAGE_H_
+#endif //__LICENSEPROPPAGE_H_

@@ -1,8 +1,27 @@
-// GenDMOProp.idl : IDL source for GenDMOProp.dll
+///////////////////////////////////////////////////////////////////////////////
+// $Id: GenDMOProp.idl,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+///////////////////////////////////////////////////////////////////////////////
+// GenDMOProp.dll - Generic DirectShow property page using IMediaParams
+// Copyright (c) 2003 John Adcock
+///////////////////////////////////////////////////////////////////////////////
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+///////////////////////////////////////////////////////////////////////////////
+// CVS Log
 //
-
-// This file will be processed by the MIDL tool to
-// produce the type library (GenDMOProp.tlb) and marshalling code.
+// $Log: not supported by cvs2svn $
+///////////////////////////////////////////////////////////////////////////////
 
 import "oaidl.idl";
 import "ocidl.idl";
@@ -17,12 +36,40 @@ library GENDMOPROPLib
 	importlib("stdole32.tlb");
 	importlib("stdole2.tlb");
 
+    typedef enum
+    {
+        GPL,
+        LGPL,
+        BSD,
+    } eFreeLicense;
+
 
 	[
-		uuid(0E938757-7AED-11D7-B84B-0002A5623377),
-		helpstring("GenDMOPropPage Class")
+        object,
+		uuid(3E119535-D5AB-4520-B0E1-495B322E2A1A),
+		helpstring("IAmFreeSoftwareLicenced Interface"),
+		pointer_default(unique)
 	]
+	interface IAmFreeSoftwareLicensed : IUnknown
+	{
+		HRESULT GetLicense(eFreeLicense* License);
+        HRESULT GetAuthors(BSTR* Authors);
+	};
+    
+    [
+        uuid(0E938757-7AED-11D7-B84B-0002A5623377),
+ 		helpstring("GenDMOPropPage Class")
+    ]
 	coclass GenDMOPropPage
+	{
+		interface IUnknown;
+	};
+
+	[
+		uuid(FDA2243F-7BAA-11D7-B84B-0002A5623377),
+		helpstring("LicensePropPage Class")
+	]
+	coclass LicensePropPage
 	{
 		interface IUnknown;
 	};

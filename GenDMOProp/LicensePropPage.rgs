@@ -1,0 +1,23 @@
+HKCR
+{
+	GenDMOProp.LicensePropPage.1 = s 'LicensePropPage Class'
+	{
+		CLSID = s '{FDA2243F-7BAA-11D7-B84B-0002A5623377}'
+	}
+	GenDMOProp.LicensePropPage = s 'LicensePropPage Class'
+	{
+		CLSID = s '{FDA2243F-7BAA-11D7-B84B-0002A5623377}'
+		CurVer = s 'GenDMOProp.LicensePropPage.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {FDA2243F-7BAA-11D7-B84B-0002A5623377} = s 'LicensePropPage Class'
+		{
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}

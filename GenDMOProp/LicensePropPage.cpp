@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.cpp,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+// $Id: LicensePropPage.cpp,v 1.1 2003-05-01 12:34:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -24,10 +24,41 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include "GenDMOProp.h"
+#include "LicensePropPage.h"
 
-#ifdef _ATL_STATIC_REGISTRY
-#include <statreg.h>
-#include <statreg.cpp>
-#endif
+/////////////////////////////////////////////////////////////////////////////
+// CLicensePropPage
 
-#include <atlimpl.cpp>
+CLicensePropPage::CLicensePropPage() 
+{
+	m_dwTitleID = IDS_TITLELicensePropPage;
+	m_dwHelpFileID = IDS_HELPFILELicensePropPage;
+	m_dwDocStringID = IDS_DOCSTRINGLicensePropPage;
+}
+
+STDMETHODIMP CLicensePropPage::Apply(void)
+{
+	ATLTRACE(_T("CLicensePropPage::Apply\n"));
+	m_bDirty = FALSE;
+	return S_OK;
+}
+
+STDMETHODIMP CLicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
+{
+    if(cObjects != 1)
+    {
+        return E_UNEXPECTED;
+    }
+    m_License = *ppUnk;
+
+    if(m_License != NULL)
+    {
+        return S_OK;
+    }
+    else
+    {
+        m_License.Release();
+        return E_NOINTERFACE;
+    }
+}   

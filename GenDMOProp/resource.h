@@ -8,6 +8,11 @@
 #define IDS_DOCSTRINGGenDMOPropPage     103
 #define IDR_GENDMOPROPPAGE              104
 #define IDD_GENDMOPROPPAGE              105
+#define IDS_TITLELicensePropPage        106
+#define IDS_HELPFILELicensePropPage     107
+#define IDS_DOCSTRINGLicensePropPage    108
+#define IDR_LICENSEPROPPAGE             109
+#define IDD_LICENSEPROPPAGE             110
 
 // Next default values for new objects
 // 
@@ -16,6 +21,6 @@
 #define _APS_NEXT_RESOURCE_VALUE        201
 #define _APS_NEXT_COMMAND_VALUE         32768
 #define _APS_NEXT_CONTROL_VALUE         201
-#define _APS_NEXT_SYMED_VALUE           106
+#define _APS_NEXT_SYMED_VALUE           111
 #endif
 #endif

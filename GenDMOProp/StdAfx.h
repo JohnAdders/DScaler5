@@ -1,6 +1,23 @@
-// stdafx.h : include file for standard system include files,
-//      or project specific include files that are used frequently,
-//      but are changed infrequently
+///////////////////////////////////////////////////////////////////////////////
+// $Id: StdAfx.h,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+///////////////////////////////////////////////////////////////////////////////
+// GenDMOProp.dll - Generic DirectShow property page using IMediaParams
+// Copyright (c) 2003 John Adcock
+///////////////////////////////////////////////////////////////////////////////
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+///////////////////////////////////////////////////////////////////////////////
 
 #if !defined(AFX_STDAFX_H__0E93874E_7AED_11D7_B84B_0002A5623377__INCLUDED_)
 #define AFX_STDAFX_H__0E93874E_7AED_11D7_B84B_0002A5623377__INCLUDED_

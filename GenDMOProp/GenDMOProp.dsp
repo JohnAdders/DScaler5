@@ -129,6 +129,10 @@ SOURCE=.\GenDMOPropPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\LicensePropPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -139,6 +143,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\GenDMOPropPage.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\LicensePropPage.h
 # End Source File
 # Begin Source File
 
@@ -156,6 +164,10 @@ SOURCE=.\StdAfx.h
 
 SOURCE=.\GenDMOPropPage.rgs
 # End Source File
+# Begin Source File
+
+SOURCE=.\LicensePropPage.rgs
+# End Source File
 # End Group
 # End Target
 # End Project
@@ -165,4 +177,11 @@ SOURCE=.\GenDMOPropPage.rgs
 # 	1:18:IDR_GENDMOPROPPAGE:104
 # 	1:23:IDS_TITLEGenDMOPropPage:101
 # 	1:26:IDS_HELPFILEGenDMOPropPage:102
+# End Section
+# Section GenDMOProp : {00008077-0800-7778-7777-777777777777}
+# 	1:19:IDD_LICENCEPROPPAGE:110
+# 	1:24:IDS_TITLELicencePropPage:106
+# 	1:19:IDR_LICENCEPROPPAGE:109
+# 	1:27:IDS_HELPFILELicencePropPage:107
+# 	1:28:IDS_DOCSTRINGLicencePropPage:108
 # End Section
