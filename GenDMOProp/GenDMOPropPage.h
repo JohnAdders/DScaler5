@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.7 2004-03-15 17:17:06 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.8 2004-10-29 11:39:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -54,6 +54,7 @@ BEGIN_MSG_MAP(CGenDMOPropPage)
     COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
     COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
     COMMAND_HANDLER(IDC_SAVEDEFAULTS, BN_CLICKED, OnSaveDefaultsClick);
+    COMMAND_HANDLER(IDC_RESETDEFAULTS, BN_CLICKED, OnBnClickedResetdefaults)
     CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
 END_MSG_MAP()
 // Handler prototypes:
@@ -100,6 +101,8 @@ private:
     WCHAR** m_ParamTexts;
     DWORD m_NumParams;
     DWORD m_CurrentParam;
+public:
+    LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };
 
 #endif //__GENDMOPROPPAGE_H_

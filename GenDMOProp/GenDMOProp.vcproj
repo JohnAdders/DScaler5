@@ -310,5 +310,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="GenDMOProp.rc"/>
 	</Globals>
 </VisualStudioProject>

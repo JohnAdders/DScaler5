@@ -1,5 +1,5 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
+// Microsoft Visual C++ generated include file.
 // Used by GenDMOProp.rc
 //
 #define IDS_PROJNAME                    100
@@ -27,6 +27,7 @@
 #define IDC_LICENSE                     211
 #define IDC_HOMEPAGE                    212
 #define IDC_SAVEDEFAULTS                213
+#define IDC_RESETDEFAULTS               214
 
 // Next default values for new objects
 // 

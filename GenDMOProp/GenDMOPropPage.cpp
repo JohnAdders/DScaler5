@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.15 2004-07-30 20:13:20 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.16 2004-10-29 11:39:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/07/30 20:13:20  adcockj
+// Make property page behave sensibly when there are multiple changes
+//
 // Revision 1.14  2004/07/24 21:45:51  adcockj
 // Fixed asset errors (thanks Torbjörn)
 //
@@ -76,6 +79,7 @@
 #include "stdafx.h"
 #include "GenDMOProp.h"
 #include "GenDMOPropPage.h"
+#include ".\gendmoproppage.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CGenDMOPropPage
@@ -563,4 +567,15 @@ void CGenDMOPropPage::SetDirty(BOOL bDirty)
         m_bDirty = bDirty;
         m_pPageSite->OnStatusChange(bDirty ? PROPPAGESTATUS_DIRTY : 0);
     }
+}
+
+LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+    for (DWORD i(0); i < m_NumParams; ++i)
+    {
+        m_Params[i] = m_ParamInfos[i].mpdNeutralValue;
+    }
+    SetDirty(HasAnythingChanged());
+    SetupControls();
+    return 0;
 }
