@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.6 2004-03-08 17:04:02 adcockj Exp $
+// $Id: Utils.h,v 1.7 2004-04-29 16:16:46 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -46,7 +46,7 @@ void _LOG(LPCSTR sFormat, ...);
 #define LOG(x,y) {if(x <= CurrentDebugLevel){_LOG("%s(%d) : ", __FILE__, (DWORD)__LINE__); _LOG##y;}}
 #define TRACE(x,y) { if(x <= TRACE_LEVEL) {DbgPrint(FunctionName); DbgPrint(" - "); DbgPrint##y; DbgPrint("\n");}}
 void LogSample(IMediaSample* Sample, LPCSTR Desc);
-void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc);
+void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel);
 void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line);
 #define CHECK(hr) if(FAILED(hr)) { LogBadHRESULT(hr, __FILE__, (DWORD)__LINE__); return hr;}
 #else

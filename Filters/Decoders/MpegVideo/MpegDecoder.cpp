@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.21 2004-04-28 16:32:36 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.22 2004-04-29 16:16:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2004/04/28 16:32:36  adcockj
+// Better dynamic connection
+//
 // Revision 1.20  2004/04/20 16:30:16  adcockj
 // Improved Dynamic Connections
 //
@@ -806,14 +809,17 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 			m_ControlFlags = mvih->hdr.dwControlFlags;
 			if(mvih->dwFlags & AMMPEG2_DoPanScan)
 			{
+			    LOG(DBGLOG_FLOW, ("Pan & Scan Sent\n"));
 				m_DoPanAndScan = true;
 			}
 			if(mvih->dwFlags & AMMPEG2_FilmCameraMode)
 			{
+			    LOG(DBGLOG_FLOW, ("Film Hint Sent\n"));
 				m_FilmCameraModeHint = true;
 			}
 			if(mvih->dwFlags & AMMPEG2_SourceIsLetterboxed)
 			{
+			    LOG(DBGLOG_FLOW, ("L Sent\n"));
 				m_LetterBoxed = true;
 			}
 		}
@@ -1258,6 +1264,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	{
 		m_VideoOutPin->SetType(&m_InternalMT);
 		pOut->SetMediaType(&m_InternalMT);
+	    LogMediaType(&m_InternalMT, "AttachFormat", DBGLOG_FLOW);
 		m_NeedToAttachFormat = false;
 	}
 
@@ -1381,28 +1388,32 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 		}
 
-		if(m_ConnectedToOut != DEFAULT_OUTFILTER)
+		if(!ForceReconnect)
 		{
-			if((m_OutputWidth > bmi->biWidth))
+			if(m_ConnectedToOut != DEFAULT_OUTFILTER)
+			{
+				if(!ForceReconnect && (m_OutputWidth > bmi->biWidth))
+				{
+					bmi->biWidth = m_OutputWidth;
+				}
+			}
+			else
 			{
 				bmi->biWidth = m_OutputWidth;
 			}
-		}
-		else
-		{
-			bmi->biWidth = m_OutputWidth;
-		}
 
-		if(bmi->biHeight > 0)
-		{
-    		bmi->biHeight = m_OutputHeight;
-		}
-		else
-		{
-    		bmi->biHeight = -m_OutputHeight;
-		}
+			if(bmi->biHeight > 0)
+			{
+    			bmi->biHeight = m_OutputHeight;
+			}
+			else
+			{
+    			bmi->biHeight = -m_OutputHeight;
+			}
 
-		bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+			bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+
+		}
         
 		m_InternalMT.bFixedSizeSamples = 1;
 		m_InternalMT.lSampleSize = bmi->biSizeImage;
@@ -1429,7 +1440,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 			return VFW_E_TYPE_NOT_ACCEPTED;
 		}
 
-		if(m_ConnectedToOut == DEFAULT_OUTFILTER || m_ConnectedToOut == VMR7_OUTFILTER)
+		if(m_ConnectedToOut == DEFAULT_OUTFILTER)
 		{
 			if(!ForceReconnect)
 			{
@@ -1460,43 +1471,37 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 		{
 			if(!ForceReconnect)
 			{
-				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
-				
-				hr = m_VideoOutPin->m_ConnectedPin->BeginFlush();
-				CHECK(hr);
-				hr = m_VideoOutPin->m_ConnectedPin->EndFlush();
-				CHECK(hr);
-
-				hr = m_VideoOutPin->m_Allocator->Decommit();
-				CHECK(hr);
-
-				hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-
-				CHECK(hr);
-
-				if(m_Pitch != 0)
-				{
-					bmi->biWidth = m_Pitch;
-					bmi->biHeight = m_Height;
-					bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-					m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-					hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-					CHECK(hr);
-				}
-
-				hr = m_VideoOutPin->m_Allocator->Commit();
-				CHECK(hr);
-
-
 				ALLOCATOR_PROPERTIES AllocatorProps;
 				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
 				CHECK(hr);
 
-				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer && ForceReconnect)
+				// if the new type would be greater than the old one then
+				// we need to reconnect otherwise just attach the type to the next sample
+				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
 				{
-					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
 					CHECK(hr);
+
+					if(m_Pitch != 0)
+					{
+						bmi->biWidth = m_Pitch;
+						bmi->biHeight = m_Height;
+						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+						m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+						hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+						CHECK(hr);
+					}
+
+					// recheck the buffers and only call negotiate if we need to
+					hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+					CHECK(hr);
+
+					if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+					{
+						hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+						CHECK(hr);
+					}
 				}
 			}
 			m_NeedToAttachFormat = true; 

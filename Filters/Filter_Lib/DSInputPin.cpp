@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.7 2004-04-20 16:30:31 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.8 2004-04-29 16:16:46 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/04/20 16:30:31  adcockj
+// Improved Dynamic Connections
+//
 // Revision 1.6  2004/04/14 16:31:34  adcockj
 // Subpicture fixes, AFD started and minor fixes
 //
@@ -124,7 +127,7 @@ STDMETHODIMP CDSInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_ALL, ("CDSInputPin::QueryAccept\n"));
 
-    LogMediaType(pmt, "CDSInputPin::QueryAccept");
+    LogMediaType(pmt, "CDSInputPin::QueryAccept", DBGLOG_ALL);
 
     if(m_Filter->IsThisATypeWeCanWorkWith(pmt, this) == false)
     {
@@ -409,7 +412,7 @@ STDMETHODIMP CDSInputPin::ReceiveCanBlock(void)
 STDMETHODIMP CDSInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_ALL, ("CDSInputPin::DynamicQueryAccept\n"));
-    LogMediaType(pmt, "CDSInputPin::DynamicQueryAccept");
+    LogMediaType(pmt, "CDSInputPin::DynamicQueryAccept", DBGLOG_ALL);
 
     HRESULT hr = S_OK;
     if(m_Filter->IsThisATypeWeCanWorkWith(pmt, this) == false)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.10 2004-04-20 16:30:31 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.11 2004-04-29 16:16:46 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/04/20 16:30:31  adcockj
+// Improved Dynamic Connections
+//
 // Revision 1.9  2004/04/16 16:19:44  adcockj
 // Better reconnection and improved AFD support
 //
@@ -172,7 +175,7 @@ STDMETHODIMP CDSOutputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TY
 STDMETHODIMP CDSOutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_ALL, ("CDSOutputPin::QueryAccept\n"));
-    LogMediaType(pmt, "CDSOutputPin::QueryAccept");
+    LogMediaType(pmt, "CDSOutputPin::QueryAccept", DBGLOG_FLOW);
 
     if(m_Filter->IsThisATypeWeCanWorkWith(pmt, this) == false)
     {

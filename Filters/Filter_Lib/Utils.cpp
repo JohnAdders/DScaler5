@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.5 2004-02-25 17:14:03 adcockj Exp $
+// $Id: Utils.cpp,v 1.6 2004-04-29 16:16:46 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/25 17:14:03  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.4  2004/02/17 16:51:34  adcockj
 // Added countof define
 //
@@ -256,7 +260,7 @@ void LogSample(IMediaSample* Sample, LPCSTR Desc)
     }
 }
 
-void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
+void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
 {
     struct TFlag2String
     {
@@ -265,11 +269,11 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
     };
     //BYTE* Uuid;
     
-    LOG(DBGLOG_FLOW, ("%s - AM_MEDIA_TYPE Dump\n", Desc));
-    LOG(DBGLOG_ALL, (" Major Type %s\n", GetGUIDName(MediaType->majortype)));
-    LOG(DBGLOG_ALL, (" Sub Type %s\n",GetGUIDName(MediaType->subtype)));
-    LOG(DBGLOG_ALL, (" Format size %d\n", MediaType->cbFormat));
-    LOG(DBGLOG_ALL, (" Format Type %s\n", GetGUIDName(MediaType->formattype)));
+    LOG(LogLevel, ("%s - AM_MEDIA_TYPE Dump\n", Desc));
+    LOG(LogLevel, (" Major Type %s\n", GetGUIDName(MediaType->majortype)));
+    LOG(LogLevel, (" Sub Type %s\n",GetGUIDName(MediaType->subtype)));
+    LOG(LogLevel, (" Format size %d\n", MediaType->cbFormat));
+    LOG(LogLevel, (" Format Type %s\n", GetGUIDName(MediaType->formattype)));
 
     if(MediaType->formattype==FORMAT_VideoInfo || MediaType->formattype==FORMAT_VideoInfo2)
     {
@@ -277,10 +281,10 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
         VIDEOINFOHEADER* pHeader = (VIDEOINFOHEADER*)MediaType->pbFormat;
 
         //parts of the struct that is common to both VIDEOINFOHEADER and VIDEOINFOHEADER2
-        LOG(DBGLOG_ALL, (" Source RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcSource.left,pHeader->rcSource.top,pHeader->rcSource.right,pHeader->rcSource.bottom));
-        LOG(DBGLOG_ALL, (" Target RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcTarget.left,pHeader->rcTarget.top,pHeader->rcTarget.right,pHeader->rcTarget.bottom));
-        LOG(DBGLOG_ALL, (" BitRate: %lu ErrorRate: %lu\n",pHeader->dwBitRate,pHeader->dwBitErrorRate));
-        LOG(DBGLOG_ALL, (" AvgTimePerFrame: %g fps\n",1/(pHeader->AvgTimePerFrame/(double)10000000)));
+        LOG(LogLevel, (" Source RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcSource.left,pHeader->rcSource.top,pHeader->rcSource.right,pHeader->rcSource.bottom));
+        LOG(LogLevel, (" Target RECT: (L: %ld T: %ld R: %ld B: %ld )\n",pHeader->rcTarget.left,pHeader->rcTarget.top,pHeader->rcTarget.right,pHeader->rcTarget.bottom));
+        LOG(LogLevel, (" BitRate: %lu ErrorRate: %lu\n",pHeader->dwBitRate,pHeader->dwBitErrorRate));
+        LOG(LogLevel, (" AvgTimePerFrame: %g fps\n",1/(pHeader->AvgTimePerFrame/(double)10000000)));
 
         if(MediaType->formattype == FORMAT_VideoInfo)
         {
@@ -317,32 +321,32 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
                     strcat(buffer,flags[i].szName);
                 }
             }
-            LOG(DBGLOG_ALL, (" InterlaceFlags: %lu (%s)\n",pHeader2->dwInterlaceFlags,buffer));
-            LOG(DBGLOG_ALL, (" AspectRatio: %lux%lu (%g)\n",pHeader2->dwPictAspectRatioX,pHeader2->dwPictAspectRatioY,pHeader2->dwPictAspectRatioX/(double)pHeader2->dwPictAspectRatioY));
+            LOG(LogLevel, (" InterlaceFlags: %lu (%s)\n",pHeader2->dwInterlaceFlags,buffer));
+            LOG(LogLevel, (" AspectRatio: %lux%lu (%g)\n",pHeader2->dwPictAspectRatioX,pHeader2->dwPictAspectRatioY,pHeader2->dwPictAspectRatioX/(double)pHeader2->dwPictAspectRatioY));
             if(pHeader2->dwControlFlags&AMCONTROL_USED)
             {
                 if(pHeader2->dwControlFlags&AMCONTROL_PAD_TO_4x3)
                 {
-                    LOG(DBGLOG_ALL, (" ControllFlags: AMCONTROL_PAD_TO_4x3"));
+                    LOG(LogLevel, (" ControllFlags: AMCONTROL_PAD_TO_4x3"));
                 }
                 else if(pHeader2->dwControlFlags&AMCONTROL_PAD_TO_16x9)
                 {
-                    LOG(DBGLOG_ALL, (" ControllFlags: AMCONTROL_PAD_TO_16x9"));
+                    LOG(LogLevel, (" ControllFlags: AMCONTROL_PAD_TO_16x9"));
                 }
                 else
                 {
-                    LOG(DBGLOG_ALL, (" ControllFlags: Unknown (%lu)",pHeader2->dwControlFlags));
+                    LOG(LogLevel, (" ControllFlags: Unknown (%lu)",pHeader2->dwControlFlags));
                 }
             }
         }
         //BITMAPINFOHEADER
-        LOG(DBGLOG_ALL, (" biSize %d\n", pBMI->biSize));
-        LOG(DBGLOG_ALL, (" biWidth %d\n", pBMI->biWidth));
-        LOG(DBGLOG_ALL, (" biHeight %d\n", pBMI->biHeight));
-        LOG(DBGLOG_ALL, (" biPlanes %d\n", pBMI->biPlanes));
-        LOG(DBGLOG_ALL, (" biBitCount %d\n", pBMI->biBitCount));
-        LOG(DBGLOG_ALL, (" biCompression %d\n", pBMI->biCompression));
-        LOG(DBGLOG_ALL, (" biSizeImage %d\n", pBMI->biSizeImage));
+        LOG(LogLevel, (" biSize %d\n", pBMI->biSize));
+        LOG(LogLevel, (" biWidth %d\n", pBMI->biWidth));
+        LOG(LogLevel, (" biHeight %d\n", pBMI->biHeight));
+        LOG(LogLevel, (" biPlanes %d\n", pBMI->biPlanes));
+        LOG(LogLevel, (" biBitCount %d\n", pBMI->biBitCount));
+        LOG(LogLevel, (" biCompression %d\n", pBMI->biCompression));
+        LOG(LogLevel, (" biSizeImage %d\n", pBMI->biSizeImage));
     }
 }
 

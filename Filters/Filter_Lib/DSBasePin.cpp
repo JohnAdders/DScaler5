@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.4 2004-04-20 16:30:29 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.5 2004-04-29 16:16:46 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/04/20 16:30:29  adcockj
+// Improved Dynamic Connections
+//
 // Revision 1.3  2004/04/16 16:19:44  adcockj
 // Better reconnection and improved AFD support
 //
@@ -223,7 +226,7 @@ HRESULT CDSBasePin::SetType(const AM_MEDIA_TYPE *pmt)
     // save the media type to local variable
     HRESULT hr = CopyMediaType(&m_ConnectedMediaType, pmt);
     CHECK(hr);
-    LogMediaType(&m_ConnectedMediaType, "Connected");
+    LogMediaType(&m_ConnectedMediaType, "Connected", DBGLOG_FLOW);
     ++m_FormatVersion;
 
     hr = m_Filter->NotifyFormatChange(pmt, this);
