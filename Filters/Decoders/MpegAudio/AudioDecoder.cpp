@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.46 2005-02-03 13:36:49 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.47 2005-02-05 13:39:33 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.46  2005/02/03 13:36:49  adcockj
+// added rate change interface
+//
 // Revision 1.45  2005/01/21 13:52:42  adcockj
 // Discontinuity and preroll changes
 //
@@ -378,7 +381,7 @@ HRESULT CAudioDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstance
 {
     if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
-        return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
+        return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
     else
     {

@@ -56,8 +56,8 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\Debug/MpegAudio.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug
-TargetPath=\source\deinterlace\DScaler5\Debug\MpegAudio.dll
-InputPath=\source\deinterlace\DScaler5\Debug\MpegAudio.dll
+TargetPath=\Source\deinterlace\DScaler5\Debug\MpegAudio.dll
+InputPath=\Source\deinterlace\DScaler5\Debug\MpegAudio.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -92,8 +92,8 @@ LINK32=link.exe
 # SUBTRACT LINK32 /nodefaultlib
 # Begin Custom Build - Performing registration
 OutDir=.\Release
-TargetPath=\source\deinterlace\DScaler5\Release\MpegAudio.dll
-InputPath=\source\deinterlace\DScaler5\Release\MpegAudio.dll
+TargetPath=\Source\deinterlace\DScaler5\Release\MpegAudio.dll
+InputPath=\Source\deinterlace\DScaler5\Release\MpegAudio.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -128,8 +128,8 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\Debug/MpegAudio.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug_Fixed_Point
-TargetPath=\source\deinterlace\DScaler5\Debug\MpegAudio.dll
-InputPath=\source\deinterlace\DScaler5\Debug\MpegAudio.dll
+TargetPath=\Source\deinterlace\DScaler5\Debug\MpegAudio.dll
+InputPath=\Source\deinterlace\DScaler5\Debug\MpegAudio.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -166,8 +166,8 @@ LINK32=link.exe
 # SUBTRACT LINK32 /nodefaultlib
 # Begin Custom Build - Performing registration
 OutDir=.\Release_Fixed_Point
-TargetPath=\source\deinterlace\DScaler5\Release\MpegAudio.dll
-InputPath=\source\deinterlace\DScaler5\Release\MpegAudio.dll
+TargetPath=\Source\deinterlace\DScaler5\Release\MpegAudio.dll
+InputPath=\Source\deinterlace\DScaler5\Release\MpegAudio.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -206,6 +206,10 @@ SOURCE=.\AudioDecoder_MAD.cpp
 # Begin Source File
 
 SOURCE=.\AudioDecoder_PCM.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AudioDecoder_Rate.cpp
 # End Source File
 # Begin Source File
 
