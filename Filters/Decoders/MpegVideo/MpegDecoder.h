@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.11 2004-04-08 16:41:57 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.12 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -64,7 +64,9 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Display Forced Subtitles")
     DEFINE_PARAM_BOOL(1, L"3:2 playback smoothing")
     DEFINE_PARAM_ENUM(DIBob, DIAuto, L"Deinterlace Mode")
-    DEFINE_PARAM_INT(0, 50, 0, L"ms", L"Video Delay")
+    DEFINE_PARAM_INT(0, 200, 0, L"ms", L"Video Delay")
+    DEFINE_PARAM_BOOL(1, L"Use accurate aspect ratios")
+    DEFINE_PARAM_ENUM(DVBLETTERBOX, DVB169, L"DVB Aspect Preferences")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
@@ -72,7 +74,9 @@ END_PARAM_LIST()
         DISPLAYFORCEDSUBS,
         FRAMESMOOTH32,
         DEINTMODE,
-        VIDEODELAY
+        VIDEODELAY,
+		DOACCURATEASPECT,
+		DVBASPECTPREFS
     };
 
 public:
@@ -119,14 +123,16 @@ private:
 	bool m_fFilm;
 	bool m_ProgressiveChroma;
 	CCanLock m_DeliverLock;
-    int m_InternalWidth;
-    int m_InternalHeight;
+    int m_OutputWidth;
+    int m_OutputHeight;
     int m_InternalPitch;
 	bool m_DoPanAndScan;
 	bool m_FilmCameraModeHint;
 	bool m_LetterBoxed;
-	DWORD m_PanScanOffset;
+	DWORD m_PanScanOffsetX;
+	DWORD m_PanScanOffsetY;
 	DWORD m_ControlFlags;
+	BYTE m_AFD;
 	
     typedef enum 
 	{
@@ -163,8 +169,16 @@ private:
     CFrameBuffer* m_CurrentPicture;
     CFrameBuffer m_SubPicBuffer;
 
-	int m_win, m_hin, m_arxin, m_aryin;
-	int m_wout, m_hout, m_arxout, m_aryout;
+	int m_MpegWidth;
+	int m_MpegHeight;
+	int m_CurrentWidth;
+	int m_CurrentHeight;
+	long m_ARMpegX;
+	long m_ARMpegY;
+	long m_ARAdjustX;
+	long m_ARAdjustY;
+	long m_ARCurrentOutX;
+	long m_ARCurrentOutY;
     
     typedef enum 
 	{
@@ -174,6 +188,13 @@ private:
 	} eDeintType;
 	eDeintType m_NextFrameDeint;
 
+	typedef enum
+	{
+		DVB169,
+		DVBCCO,
+		DVBLETTERBOX
+	} eDVBAspectPrefs;
+
 	void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 	void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 	void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
@@ -181,13 +202,14 @@ private:
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
-    HRESULT ReconnectOutput(int w, int h);
+    HRESULT ReconnectOutput();
     void ResetMpeg2Decoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
     HRESULT ProcessNewSequence();
     HRESULT ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT ProcessPictureDisplay();
     HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
+    HRESULT GetEnumTextDVBAspectPrefs(WCHAR **ppwchText);
 
     CFrameBuffer* GetNextBuffer();
 
@@ -245,6 +267,10 @@ private:
     bool HasSubpicsToRender(REFERENCE_TIME rt);
     void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
+	void Simplify(long& u, long& v);
+	void Simplify(unsigned long& u, unsigned long& v);
+	void CorrectSourceTarget(RECT& rcSource, RECT& rcTarget);
+	void CorrectOutputSize();
 };
 
 #define m_VideoInPin m_InputPins[0]

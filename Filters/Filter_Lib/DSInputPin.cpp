@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.5 2004-02-27 17:08:16 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.6 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/27 17:08:16  adcockj
+// Improved locking at state changes
+// Better error handling at state changes
+//
 // Revision 1.4  2004/02/25 17:14:03  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -367,6 +371,8 @@ STDMETHODIMP CDSInputPin::ReceiveMultiple(IMediaSample **InSamples, long nSample
     {
         return E_POINTER;
     }
+
+    CProtectCode WhileVarInScope(this);
 
     *nSamplesProcessed = 0;
     for(int i(0); i < nSamples; ++i)

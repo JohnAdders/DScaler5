@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.9 2004-04-06 20:08:04 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.10 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -77,7 +77,6 @@ public:
 BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(SPCFG_3F2R1S, SPCFG_DOLBY, L"Speaker Config")
     DEFINE_PARAM_BOOL(1, L"Dynamic Range Control")
-    DEFINE_PARAM_BOOL(1, L"Normalize")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF for AC3 & DTS")
     DEFINE_PARAM_BOOL(1, L"Jitter Remover")
     DEFINE_PARAM_BOOL(0, L"MPEG Audio over SPDIF")
@@ -98,7 +97,6 @@ public:
     {
         SPEAKERCONFIG,
         DYNAMICRANGECONTROL,
-        NORMALIZE,
         USESPDIF,
         JITTERREMOVER,
         MPEGOVERSPDIF,

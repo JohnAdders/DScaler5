@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.17 2004-04-13 06:23:42 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.18 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/04/13 06:23:42  adcockj
+// Start to improve aspect handling
+//
 // Revision 1.16  2004/04/08 16:41:57  adcockj
 // Tidy up subpicture support
 //
@@ -179,8 +182,13 @@ CMpegDecoder::CMpegDecoder() :
     m_CorrectTS = false;
     m_dec = NULL;
 
-    m_InternalWidth = 0;
-    m_InternalHeight = 0;
+	m_MpegWidth = 0;
+	m_MpegHeight = 0;
+	m_CurrentWidth = 0;
+	m_CurrentHeight = 0;
+
+    m_OutputWidth = 0;
+    m_OutputHeight = 0;
     m_InternalPitch = 0;
     m_CurrentPicture = NULL;
 
@@ -188,8 +196,16 @@ CMpegDecoder::CMpegDecoder() :
 	m_DoPanAndScan = false;
 	m_FilmCameraModeHint = false;
 	m_LetterBoxed = false;
-	m_PanScanOffset = 0;
+	m_PanScanOffsetX = 0;
+	m_PanScanOffsetY = 0;
 
+	m_ARMpegX = 0;
+	m_ARMpegY = 0;
+	m_ARCurrentOutX = 0;
+	m_ARCurrentOutY = 0;
+	m_ARAdjustX = 0;
+	m_ARAdjustY = 0;
+	m_AFD = 0;
 
     InitMediaType(&m_InternalMT);
     m_NeedToAttachFormat = false;
@@ -451,9 +467,10 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     }
     else if(pPin == m_VideoOutPin)
     {
-    	int wout = 0, hout = 0, arxout = 0, aryout = 0;
+    	int wout = 0, hout = 0;
+		long arxout = 0, aryout = 0;
     	Result = (ExtractDim(pmt, wout, hout, arxout, aryout) &&
-		            m_hin == abs((int)hout)) && 
+		            m_OutputHeight == abs((int)hout)) && 
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
 				    pmt->subtype == MEDIASUBTYPE_ARGB32 ||
@@ -492,6 +509,10 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
     {
         return GetEnumTextDeintMode(ppwchText);
     }
+    else if(dwParamIndex == DVBASPECTPREFS)
+    {
+        return GetEnumTextDVBAspectPrefs(ppwchText);
+    }
     else
     {
         return E_NOTIMPL;
@@ -502,6 +523,15 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
 HRESULT CMpegDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
 {
     wchar_t DeintText[] = L"Deinterlace Mode\0" L"None\0" L"Automatic\0" L"Force Weave\0" L"Force Bob\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
+{
+    wchar_t DeintText[] = L"DVB Aspect Preferences\0" L"None\0" L"16:9 Display\0" L"4:3 Display Center Cut out\0" L"4:3 Display Letterbox\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, DeintText, sizeof(DeintText));
@@ -548,6 +578,28 @@ HRESULT CMpegDecoder::SendOutLastSamples(CDSBasePin* pPin)
     return S_OK;
 }
 
+void CMpegDecoder::CorrectSourceTarget(RECT& rcSource, RECT& rcTarget)
+{
+	SetRect(&rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
+	if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
+	{
+		SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
+	}
+	else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+	{
+		SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
+	}
+	else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+	{
+		SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
+	}
+	else
+	{
+		SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
+	}
+}
+
+
 HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
 {
 
@@ -585,12 +637,12 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 	    BITMAPINFOHEADER bihOut;
 	    memset(&bihOut, 0, sizeof(bihOut));
 	    bihOut.biSize = sizeof(bihOut);
-	    bihOut.biWidth = m_win;
-	    bihOut.biHeight = m_hin;
+	    bihOut.biWidth = m_OutputWidth;
+	    bihOut.biHeight = m_OutputHeight;
 	    bihOut.biPlanes = fmts[FormatNum].biPlanes;
 	    bihOut.biBitCount = fmts[FormatNum].biBitCount;
 	    bihOut.biCompression = fmts[FormatNum].biCompression;
-	    bihOut.biSizeImage = m_win*m_hin*bihOut.biBitCount>>3;
+	    bihOut.biSizeImage = bihOut.biWidth * bihOut.biHeight * bihOut.biBitCount>>3;
 
 	    if(TypeNum%3 == 2)
 	    {
@@ -598,13 +650,15 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 		    VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
 		    memset(vih, 0, sizeof(VIDEOINFOHEADER));
 		    vih->bmiHeader = bihOut;
-		    vih->bmiHeader.biXPelsPerMeter = vih->bmiHeader.biWidth * m_aryin;
-		    vih->bmiHeader.biYPelsPerMeter = vih->bmiHeader.biHeight * m_arxin;
+		    vih->bmiHeader.biXPelsPerMeter = vih->bmiHeader.biWidth * m_ARMpegX * m_ARAdjustX;
+		    vih->bmiHeader.biYPelsPerMeter = vih->bmiHeader.biHeight * m_ARMpegY * m_ARAdjustY;
+			Simplify(vih->bmiHeader.biXPelsPerMeter, vih->bmiHeader.biYPelsPerMeter);
 	        vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
 	        vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
 	        vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
             pmt->pbFormat = (BYTE*)vih;
-            pmt->cbFormat = sizeof(VIDEOINFOHEADER);	    
+            pmt->cbFormat = sizeof(VIDEOINFOHEADER);
+			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
         }
 	    else
 	    {
@@ -612,8 +666,9 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 		    VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
 		    memset(vih, 0, sizeof(VIDEOINFOHEADER2));
 		    vih->bmiHeader = bihOut;
-		    vih->dwPictAspectRatioX = m_arxin;
-		    vih->dwPictAspectRatioY = m_aryin;
+		    vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
+		    vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
+			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
             if(TypeNum%3 == 0)
             {
     		    vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
@@ -624,8 +679,9 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 			vih->dwControlFlags = m_ControlFlags;
             pmt->pbFormat = (BYTE*)vih;
             pmt->cbFormat = sizeof(VIDEOINFOHEADER2);	    
+			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 	    }
-
+		
 	    CorrectMediaType(pmt);
         return S_OK;
     }
@@ -682,12 +738,15 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 {
     if(pPin == m_VideoInPin)
     {
-		m_win = m_hin = m_arxin = m_aryin = 0;
-		ExtractDim(pMediaType, m_win, m_hin, m_arxin, m_aryin);
+		m_MpegWidth = m_MpegHeight = 0;
+		m_ARMpegX = m_ARMpegY = 0;
+		m_ARAdjustX = m_ARAdjustY = 1;
+		ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY);
 		m_ControlFlags = 0;
 		m_DoPanAndScan = false;
 		m_FilmCameraModeHint = false;
 		m_LetterBoxed = false;
+		m_AFD = 0;
 
 		if(pMediaType->formattype == FORMAT_VideoInfo2)
 		{
@@ -710,27 +769,27 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 			{
 				m_LetterBoxed = true;
 			}
-			
 		}
 
-        ResetMpeg2Decoder();
+		CorrectOutputSize();
     }
     else if(pPin == m_VideoOutPin)
     {
-        int wout = 0, hout = 0, arxout = 0, aryout = 0; 
+        int wout = 0, hout = 0;
+		long arxout = 0, aryout = 0; 
         ExtractDim(pMediaType, wout, hout, arxout, aryout); 
-        if(m_win == wout && m_hin == hout && m_arxin == arxout && m_aryin == aryout) 
-        { 
-            m_wout = wout; 
-            m_hout = hout; 
-            m_arxout = arxout; 
-            m_aryout = aryout; 
-        } 
+
+		if(wout == m_OutputWidth && hout == m_OutputHeight &&
+			arxout == m_ARAdjustX * m_ARMpegX &&
+			aryout == m_ARAdjustY * m_ARMpegY)
+		{
+			m_CurrentWidth = wout; 
+			m_CurrentHeight = hout; 
+			m_ARCurrentOutX = arxout; 
+			m_ARCurrentOutY = aryout; 
+		}
+
     }
-	else if(pPin == m_SubpictureInPin)
-	{
-		m_win = m_win;
-	}
     return S_OK;
 }
 
@@ -915,14 +974,14 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// when we're not really ready
 
 	TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-	LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+	LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
 		m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
 		frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
 		m_CurrentPicture->m_NumFields,
 		!!(m_CurrentPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME),
 		!!(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST),
 		!!(m_CurrentPicture->m_NumFields == 3),
-		m_InternalWidth, m_InternalHeight, m_InternalPitch,
+		m_OutputWidth, m_OutputHeight, m_InternalPitch,
 		!!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
 		!!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
 
@@ -977,7 +1036,24 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     {
         rtStart = m_LastOutputTime;
     }
-    if(rtStop <= rtStart)
+
+	if(fRepeatLast)
+	{
+		// if we are being called to refresh the subpicture
+		// and the proposed start time is in the past then
+		// we need to pass an up to date media time
+		// otherwise the renderer may drop the sample
+		// which means the user can't see the new subpicture
+		REFERENCE_TIME CurTime;
+		m_RefClock->GetTime(&CurTime);
+		if(rtStart < CurTime)
+		{
+			rtStart = CurTime - m_rtStartTime;
+			rtStop = rtStart + 10000;
+		}
+	}
+	
+	if(rtStop <= rtStart)
 	{
 		rtStop = rtStart + 100;
 	}
@@ -985,11 +1061,12 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     m_LastOutputTime = rtStop;
 
 	HRESULT hr;
+	m_NeedToAttachFormat = false;
 
 	// cope with dynamic format changes from our side
 	// will possibly call NegotiateAllocator on the output pins
 	// which flushes so we shouldn't have any samples outstanding here
-	if(FAILED(hr = ReconnectOutput(m_InternalWidth, m_InternalHeight)))
+	if(FAILED(hr = ReconnectOutput()))
 	{
         LogBadHRESULT(hr, __FILE__, __LINE__);
 		return hr;
@@ -1012,7 +1089,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// formats properly and should never call NegotiateAllocator
 	if(hr == S_FALSE && m_NeedToAttachFormat)
 	{
-		if(FAILED(hr = ReconnectOutput(m_InternalWidth, m_InternalHeight)))
+		if(FAILED(hr = ReconnectOutput()))
 		{
 			LogBadHRESULT(hr, __FILE__, __LINE__);
 			return hr;
@@ -1029,8 +1106,11 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         if(pMES)
         {
 		    // some renderers don't send this
-		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_win, m_hin), 0);
+		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
         }
+
+	    m_NeedToAttachFormat = false;
+
 	}
 
     if(FAILED(hr = pOut->GetPointer(&pDataOut)))
@@ -1053,7 +1133,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         Props.tStart = rtStart;
         Props.tStop = rtStop;
 
-        if(m_IsDiscontinuity)
+        if(m_IsDiscontinuity || fRepeatLast)
 		{
 		    Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
 		}
@@ -1061,7 +1141,10 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		{
 		    Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
 		}
-        
+        if(fRepeatLast)
+		{
+			Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
+		}
         Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
         Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
@@ -1093,7 +1176,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		pOut->SetTime(&rtStart, &rtStop);
 		pOut->SetMediaTime(NULL, NULL);
 
-        if(m_IsDiscontinuity)
+        if(m_IsDiscontinuity || fRepeatLast)
 			pOut->SetDiscontinuity(TRUE);
         else
     	    pOut->SetDiscontinuity(FALSE);
@@ -1113,21 +1196,21 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		    
 		    buf = &m_SubPicBuffer.m_Buf[0];
 
-		    RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_InternalHeight);
+		    RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_OutputHeight);
 	    }
 	    else
 	    {
 		    ClearOldSubpics(m_CurrentPicture->m_rtStart);
 	    }
-		Copy420(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
+		Copy420(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
 	}
 	else if(m_ChromaType == CHROMA_422)
 	{
-		Copy422(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
+		Copy422(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
 	}
 	else
 	{
-		Copy444(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
+		Copy444(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
 	}
 
 	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
@@ -1139,7 +1222,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             // supress the error and  set
             // discontinuity flag so that the
             // overlay will do a mini reset
-        	LOG(DBGLOG_ALL, ("SendSample failed\n"));
+        	LOG(DBGLOG_FLOW, ("SendSample failed\n"));
     	    m_IsDiscontinuity = true;
             hr = S_OK;
         }
@@ -1167,82 +1250,55 @@ void CMpegDecoder::FlushMPEG()
 	ResetMpeg2Decoder();
 }
 
-HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
+HRESULT CMpegDecoder::ReconnectOutput()
 {
-	bool fForceReconnection = false;
-	if(w != m_win || h != m_hin)
-	{
-		LOG(DBGLOG_FLOW, ("CMpeg2DecFilter : ReconnectOutput (%dx%d %dx%d)\n", w, h, m_win, m_hin));
-		fForceReconnection = true;
-		m_win = w;
-		m_hin = h;
-	}
-
 	HRESULT hr = S_OK;
 
-	if(fForceReconnection || m_win != m_wout || m_hin != m_hout || ((m_arxin != m_arxout) && m_arxout) || ((m_aryin != m_aryout) && m_aryout))
+	if((m_OutputWidth != m_CurrentWidth) || 
+		(m_OutputHeight != m_CurrentHeight) || 
+		(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
+		(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY))
 	{
         CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
 	
     	BITMAPINFOHEADER* bmi = NULL;
-		RECT* pSource;
-		RECT* pTarget;
 
 		if(m_InternalMT.formattype == FORMAT_VideoInfo)
 		{
 			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
-			pSource = &vih->rcSource;
-			pTarget = &vih->rcTarget;
 			bmi = &vih->bmiHeader;
-			bmi->biXPelsPerMeter = m_win * m_aryin;
-			bmi->biYPelsPerMeter = m_hin * m_arxin;
+			bmi->biXPelsPerMeter = m_MpegWidth * m_ARMpegX * m_ARAdjustX;
+			bmi->biYPelsPerMeter = m_MpegHeight * m_ARMpegY * m_ARAdjustY;
+			Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
+			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 		}
 		else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
 		{
 			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
-			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
-			pSource = &vih->rcSource;
-			pTarget = &vih->rcTarget;
 			bmi = &vih->bmiHeader;
-			vih->dwPictAspectRatioX = m_arxin;
-			vih->dwPictAspectRatioY = m_aryin;
+		    vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
+		    vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
+			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
+			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 		}
 		
-		SetRect(pSource, 0, 0, m_win, m_hin);
-		if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+		if(m_OutputWidth > bmi->biWidth)
 		{
-			SetRect(pTarget, 8, 0, m_win * 2, m_hin * 2);
-		}
-		else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
-		{
-			SetRect(pTarget, 8, 0, m_win * 2, m_hin);
-		}
-		else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
-		{
-			SetRect(pTarget, 8, 0, m_win, m_hin);
-		}
-		else
-		{
-			SetRect(pTarget, 0, 0, m_win, m_hin);
+			bmi->biWidth = m_OutputWidth;
 		}
 
-		if(m_win > bmi->biWidth)
-		{
-			bmi->biWidth = m_win;
-		}
-
-		if(m_hin > abs(bmi->biHeight))
+		if(m_OutputHeight > abs(bmi->biHeight))
 		{
 			if(bmi->biHeight > 0)
 			{
-    			bmi->biHeight = m_hin;
+    			bmi->biHeight = m_OutputHeight;
 			}
 			else
 			{
-    			bmi->biHeight = -m_hin;
+    			bmi->biHeight = -m_OutputHeight;
 			}
 		}
-		bmi->biSizeImage = m_hin*bmi->biWidth*bmi->biBitCount>>3;
+		bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
         
         hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
         if(hr != S_OK)
@@ -1257,14 +1313,6 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 	    hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
         CHECK(hr);
 
-        // if the height changes or if the width increses
-        // call reconnect to inform the renderer of the change
-        if(m_win > m_wout || m_hin > m_hout)
-        {
-            hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-            CHECK(hr);
-        }
-
         if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
         {
             hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
@@ -1274,20 +1322,14 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
                 return hr;
             }
         }
-        
-        m_NeedToAttachFormat = true;
+     
+		m_NeedToAttachFormat = true; 
 
-		m_wout = m_win; 
-		m_hout = m_hin; 
-        m_arxout = m_arxin; 
-        m_aryout = m_aryin; 
-
-        return S_OK;
+		m_CurrentWidth = m_OutputWidth;
+		m_CurrentHeight = m_OutputHeight;
+        m_ARCurrentOutX = m_ARMpegX * m_ARAdjustX; 
+        m_ARCurrentOutY = m_ARMpegY * m_ARAdjustY; 
 	}
-    else
-    {
-        m_NeedToAttachFormat = false;
-    }
 
 	return S_OK;
 }
@@ -1345,9 +1387,9 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 
 	if(m_DoPanAndScan)
 	{
-		pIn += m_PanScanOffset;
-		pInU += m_PanScanOffset / 2;
-		pInV += m_PanScanOffset / 2;
+		pIn += m_PanScanOffsetX + pitchIn*m_PanScanOffsetY;
+		pInU += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/2;
+		pInV += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/2;
 	}
 
 
@@ -1368,14 +1410,6 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 				BitBltFromI420ToYUY2_Int(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
 			}
 		}
-	}
-	else if(bihOut.biCompression == 'I420' || bihOut.biCompression == 'VUYI')
-	{
-		BitBltFromI420ToI420(w, h, pOut, pOut + bihOut.biWidth*h, pOut + bihOut.biWidth*h*5/4, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
-	}
-	else if(bihOut.biCompression == '21VY')
-	{
-		BitBltFromI420ToI420(w, h, pOut, pOut + bihOut.biWidth*h*5/4, pOut + bihOut.biWidth*h, bihOut.biWidth, pIn, pInU, pInV, pitchIn);
 	}
 	else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
 	{
@@ -1503,12 +1537,12 @@ HRESULT CMpegDecoder::Deactivate()
 //
 // This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
 // See http://libmpeg2.sourceforge.net/ for updates.
-void Simplify(int * u, int * v)
+void CMpegDecoder::Simplify(long& u, long& v)
 {
-    int a, b, tmp;
+    long a, b, tmp;
 
-    a = *u;	
-    b = *v;
+    a = u;	
+    b = v;
     
     while (a) 
     {	
@@ -1517,8 +1551,26 @@ void Simplify(int * u, int * v)
         a = b % tmp;	
         b = tmp;
     }
-    *u /= b;
-    *v /= b;
+    u /= b;
+    v /= b;
+}
+
+void CMpegDecoder::Simplify(unsigned long& u, unsigned long& v)
+{
+    unsigned long a, b, tmp;
+
+    a = u;	
+    b = v;
+    
+    while (a) 
+    {	
+        /* find greatest common divisor */
+	    tmp = a;	
+        a = b % tmp;	
+        b = tmp;
+    }
+    u /= b;
+    v /= b;
 }
 
 
@@ -1552,19 +1604,19 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	}
 
 	// frame buffer
-	m_InternalWidth = mpeg2_info(m_dec)->sequence->picture_width;
-	m_InternalHeight = mpeg2_info(m_dec)->sequence->picture_height;
+	m_MpegWidth = mpeg2_info(m_dec)->sequence->picture_width;
+	m_MpegHeight = mpeg2_info(m_dec)->sequence->picture_height;
 	m_InternalPitch = mpeg2_info(m_dec)->sequence->width;
 
     mpeg2_custom_fbuf(m_dec, 1);
 
     for(int i(0); i < NUM_BUFFERS; ++i)
     {
-        hr = m_Buffers[i].AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+        hr = m_Buffers[i].AllocMem(m_MpegHeight * m_InternalPitch, m_MpegHeight * m_InternalPitch / ChromaSizeDivider);
         CHECK(hr);
     }
 
-    hr = m_SubPicBuffer.AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+    hr = m_SubPicBuffer.AllocMem(m_MpegHeight * m_InternalPitch, m_MpegHeight * m_InternalPitch / ChromaSizeDivider);
     CHECK(hr);
 
     m_CurrentPicture = NULL;
@@ -1577,26 +1629,35 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
 
-    // \todo crop 1088 images
 
-    // \todo optionally use accurate aspect ratio
+    // reset any aspect adjusments on new sequence
+	m_ARAdjustX = m_ARAdjustY = 1;
 
-	m_arxin = mpeg2_info(m_dec)->sequence->pixel_width * m_InternalWidth;
-	m_aryin = mpeg2_info(m_dec)->sequence->pixel_height * m_InternalHeight;
+	m_OutputWidth = m_MpegWidth;
+	m_OutputHeight = m_MpegHeight;
 
-    Simplify(&m_arxin, &m_aryin);
+	m_AFD = 0;
 
-	if(m_DoPanAndScan)
+	CorrectOutputSize();
+
+    // optionally use accurate aspect ratio
+	if(GetParamBool(DOACCURATEASPECT))
 	{
-		if(m_InternalWidth >= 704)
-		{
-			m_arxin = 4;
-			m_aryin = 3;
-			m_PanScanOffset = (m_InternalWidth - 540) / 2;
-			m_InternalWidth = 540;
-		}
+		unsigned int PixelX, PixelY;
+		mpeg2_guess_aspect(mpeg2_info(m_dec)->sequence, &PixelX, &PixelY);
+		m_ARMpegX = PixelX;
+		m_ARMpegY = PixelY;
+	}
+	else
+	{
+		m_ARMpegX = mpeg2_info(m_dec)->sequence->pixel_width;
+		m_ARMpegY = mpeg2_info(m_dec)->sequence->pixel_height;
 	}
 
+	m_ARMpegX *= m_OutputWidth;
+	m_ARMpegY *= m_OutputHeight;
+
+    Simplify(m_ARMpegX, m_ARMpegY);
 
     return S_OK;
 }
@@ -1791,3 +1852,111 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
 
     return hr;
 }
+
+void CMpegDecoder::CorrectOutputSize()
+{
+
+	if(m_MpegHeight == 1088)
+	{
+		m_OutputHeight = 1080;
+	}
+	else
+	{
+		m_OutputHeight = m_MpegHeight;
+	}
+
+	m_OutputWidth = m_MpegWidth;
+
+
+	if(m_AFD)
+	{
+		if(m_ARMpegX * 100 / m_ARMpegY  > 144)
+		{
+			// reset all the adjustments
+			m_DoPanAndScan = false;
+			m_ARAdjustX = 1;
+			m_ARAdjustY = 1;
+			m_PanScanOffsetX = 0;
+			m_PanScanOffsetY = 0;
+
+			// if we are in a 4:3 type mode
+			switch(m_AFD)
+			{
+			// box 16:9 top
+			case 2:
+				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				{
+					m_OutputHeight = m_OutputHeight * 3;
+					m_OutputHeight /= 4;
+					m_ARAdjustX = 4;
+					m_ARAdjustY = 3;
+				}
+			// box 14:9 top
+			case 3:
+				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				{
+					m_OutputHeight = m_OutputHeight * 6;
+					m_OutputHeight /= 7;
+					m_ARAdjustX = 7;
+					m_ARAdjustY = 6;
+				}
+			// box 16:6 centre
+			case 4:
+				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				{
+					m_OutputHeight = m_OutputHeight * 3;
+					m_OutputHeight /= 4;
+					m_ARAdjustX = 4;
+					m_ARAdjustY = 3;
+					m_DoPanAndScan = true;
+					m_PanScanOffsetY = 0;
+				}
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 13:
+			case 14:
+			case 15:
+			// reserved
+			default:
+				break;
+
+			}
+		}
+		else
+		{
+			// otherwise we must be in a 16:9 type mode
+			switch(m_AFD)
+			{
+			case 2:
+			// box 14:9 top
+			case 3:
+			// box 16:6 centre
+			case 4:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 13:
+			case 14:
+			case 15:
+			// reserved
+			default:
+				break;
+			}
+		}
+	}
+	else if(m_DoPanAndScan)
+	{
+		if(m_MpegWidth >= 704)
+		{
+			m_PanScanOffsetX = (m_MpegWidth - 540) / 2;
+			m_OutputWidth = 540;
+			m_ARMpegX = 4;
+			m_ARMpegY = 3;
+		}
+	}
+
+}
+

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.8 2004-04-08 16:41:57 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.9 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/04/08 16:41:57  adcockj
+// Tidy up subpicture support
+//
 // Revision 1.7  2004/04/06 16:46:12  adcockj
 // DVD Test Annex Compatability fixes
 //
@@ -201,10 +204,7 @@ HRESULT CMpegDecoder::SupportPropSetSubPic(DWORD dwPropID, DWORD *pTypeSupport)
 
 HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
-	HRESULT hr;
-
 	BYTE* pDataIn = pSampleProperties->pbBuffer;
-
 	long len = pSampleProperties->lActual;
 
 	if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
@@ -241,21 +241,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
         return S_OK;
 	}
 
-
-	REFERENCE_TIME rtStart = 0, rtStop = 0;
-	hr = InSample->GetTime(&rtStart, &rtStop);
-	
-	if(FAILED(hr))
-	{
-		CProtectCode WhileVarInScope(&m_SubPictureLock);
-		if(m_SubPicureList.size() > 0)
-		{
-			CSubPicture* sp = m_SubPicureList.back();
-			sp->pData.resize(sp->pData.size() + len);
-			memcpy(&sp->pData[0] + sp->pData.size() - len, pDataIn, len);
-		}
-	}
-	else
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
 	{
 		CProtectCode WhileVarInScope(&m_SubPictureLock);
 
@@ -264,27 +250,47 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 		{
 			it--;
 			CSubPicture* sp = *it;
-			if(sp->rtStop == _I64_MAX && sp->rtStart < rtStart)
+			if(sp->rtStop == _I64_MAX && sp->rtStart < pSampleProperties->tStart)
 			{
-				sp->rtStop = rtStart;
+				sp->rtStop = pSampleProperties->tStart;
 				break;
 			}
 		}
 
 		CSubPicture* p = new CSubPicture();
-		p->rtStart = rtStart;
+		p->rtStart = pSampleProperties->tStart;
 		p->rtStop = _I64_MAX;
 		p->pData.resize(len);
 		memcpy(&(p->pData[0]), pDataIn, len);
 
 		m_SubPicureList.push_back(p);
 	}
+	else
+	{
+		CProtectCode WhileVarInScope(&m_SubPictureLock);
+		if(m_SubPicureList.size() > 0)
+		{
+			CSubPicture* sp = m_SubPicureList.back();
+			sp->pData.resize(sp->pData.size() + len);
+			memcpy(&sp->pData[0] + sp->pData.size() - len, pDataIn, len);
+		}
+		else
+		{
+			LOG(DBGLOG_FLOW,("Hanging subpicture\n"));
+		}
+	}	
 
 	if(m_SubPicureList.size() > 0)
 	{
-		LOG(DBGLOG_ALL,("Refresh Image\n"));
-    	CProtectCode WhileVarInScope(&m_DeliverLock);
-		Deliver(true);
+		AM_PROPERTY_SPHLI sphli;
+		DWORD offset1;
+		DWORD offset2;
+		if(!DecodeSubpic(m_SubPicureList.back(), sphli, offset1, offset2))
+		{
+			LOG(DBGLOG_ALL,("Refresh Image\n"));
+    		CProtectCode WhileVarInScope(&m_DeliverLock);
+			Deliver(true);
+		}
 	}
 
 	return S_OK;
@@ -425,7 +431,7 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 {
 	if(contrast == 0) return;
 
-	if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+	if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
 	{
 		if ((pt.x & 1) || (pt.y & 1))
 		{
@@ -434,7 +440,7 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 		pt.y = pt.y /2;
 		pt.x = max((pt.x - 8)/2, 0);
 	}
-	else if(m_win == 352)
+	else if(m_OutputWidth == 352)
 	{
 		if ((pt.x & 1))
 		{
@@ -442,15 +448,15 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 		}
 		pt.x = max((pt.x - 8)/2, 0);
 	}
-	else if(m_win == 704)
+	else if(m_OutputWidth == 704)
 	{
 		pt.x = max(pt.x - 8, 0);
 	}
-	else if(m_DoPanAndScan && m_win == 540)
+	else if(m_DoPanAndScan && m_OutputWidth == 540)
 	{
 		pt.x *= 540;
 		pt.x /= 720;
-		pt.x += m_PanScanOffset;
+		pt.x += m_PanScanOffsetX;
 	}
 
 
@@ -714,8 +720,8 @@ void CMpegDecoder::RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h)
 	}
 	if(pDone == false && sphli_hli)
 	{
-		RenderHighlight(p, w, h, sphli_hli);
-		LOG(DBGLOG_ALL,("RenderHighlight: %I64d\n", rt));
+		//RenderHighlight(p, w, h, sphli_hli);
+		LOG(DBGLOG_ALL,("RenderHighlight commented out: %I64d\n", rt));
 	}
 }
 

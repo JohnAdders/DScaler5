@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.5 2004-03-15 17:17:05 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.6 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/03/15 17:17:05  adcockj
+// Basic registry saving support
+//
 // Revision 1.4  2004/03/01 13:04:28  adcockj
 // Fixed another locking problem
 //
@@ -47,6 +50,7 @@ CDSBaseFilter::CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOu
 {
     m_State = State_Stopped;
     m_Graph = NULL;
+	m_rtStartTime = 0;
     wcscpy(m_Name, Name);
     m_NumInputPins = NumberOfInputPins;
     m_NumOutputPins = NumberOfOutputPins;
@@ -293,6 +297,8 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
     }
 
     m_State = State_Running;
+
+	m_rtStartTime = tStart;
 
 
     LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run end\n"));

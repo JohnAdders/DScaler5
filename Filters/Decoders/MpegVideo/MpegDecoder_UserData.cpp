@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.3 2004-04-13 06:23:42 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.4 2004-04-14 16:31:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/04/13 06:23:42  adcockj
+// Start to improve aspect handling
+//
 // Revision 1.2  2004/02/29 13:47:48  adcockj
 // Format change fixes
 // Minor library updates
@@ -64,14 +67,24 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
 		hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
         CHECK(hr);
 	}
+    // process Active Format Descriptor
+    // see http://www.dtg.org.uk/publications/books/afd.pdf
+    // and ETSI TR 101 154
+    if(UserDataLen >=6 && *(DWORD*)UserData == 0x31475444)
+    {
+		// check that the active format flag and the reserved bytes
+		// are what we expect
+		if(UserData[4] == 65)
+		{
+			if((UserData[4] & 0x0F) != m_AFD)
+			{
+				m_AFD = UserData[4] & 0x0F;
+				CorrectOutputSize();
+			}
+		}
+    }
     else
     {
-        // process Advanced Format Descriptor
-        // see http://www.dtg.org.uk/publications/books/afd.pdf
-        // and \todo find standard
-        if(UserDataLen > 4 && *(DWORD*)UserData == 0x31475444)
-        {
-        }
 	    if(mpeg2_info(m_dec)->user_data_len > 4)
 	    {
 		    LOG(DBGLOG_FLOW, ("User Data State %d First DWORD %08x Length %d\n", State, *(DWORD*)UserData, UserDataLen));
