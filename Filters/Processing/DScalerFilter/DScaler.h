@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.15 2004-12-21 14:47:00 adcockj Exp $
+// $Id: DScaler.h,v 1.16 2005-01-04 17:53:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -253,6 +253,7 @@ private:
 	REFERENCE_TIME m_LastStartEnd;
     REFERENCE_TIME m_FieldTiming;
     CMap m_MovementMap;
+    long m_CatchUpModulo;
 };
 
 #define m_VideoInPin m_InputPins[0]

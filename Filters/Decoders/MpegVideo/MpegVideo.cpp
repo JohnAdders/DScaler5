@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.8 2004-10-28 15:52:24 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.9 2005-01-04 17:53:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.7  2004/07/16 15:58:01  adcockj
 // Fixed compilation issues under .NET
 // Changed name of filter
@@ -53,6 +56,7 @@
 
 #include "stdafx.h"
 #include "resource.h"
+#include "moreuuids.h"
 #include <initguid.h>
 #include "MpegDecoder.h"
 #include "CPUID.h"
@@ -115,6 +119,9 @@ STDAPI DllRegisterServer(void)
 
     REGPINTYPES OutputTypes[] = {   
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
+        {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2},
+        {&CLSID_CDScaler, &MEDIASUBTYPE_YV12},
     };
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 

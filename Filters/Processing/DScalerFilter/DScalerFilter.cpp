@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.4 2004-12-06 18:05:01 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.5 2005-01-04 17:53:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/12/06 18:05:01  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.3  2004/03/05 15:56:30  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -101,7 +104,9 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
-	REGPINTYPES Types[] = {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,
+	REGPINTYPES Types[] = {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2,
+							&CLSID_CDScaler, &MEDIASUBTYPE_YV12,
+                            &MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,
 							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12};
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(Types), Types, 0, NULL, &GUID_NULL}, 
@@ -110,7 +115,7 @@ STDAPI DllRegisterServer(void)
     REGFILTER2 RegInfo;
    
     RegInfo.dwVersion = 2;
-    RegInfo.dwMerit = MERIT_DO_NOT_USE;
+    RegInfo.dwMerit = MERIT_UNLIKELY;
     RegInfo.cPins2 = 2;
     RegInfo.rgPins2 = Pins;
 

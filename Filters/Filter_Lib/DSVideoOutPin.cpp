@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.9 2004-12-06 18:05:00 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.10 2005-01-04 17:53:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/12/06 18:05:00  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.8  2004/11/26 15:03:52  adcockj
 // fixed reconnection issue with old video renderer
 //
@@ -316,7 +319,14 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
 
     int FormatNum = TypeNum/VariationsPerType;
 
-    pmt->majortype = MEDIATYPE_Video;
+    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_DSCALER)
+    {
+        pmt->majortype = CLSID_CDScaler;
+    }
+    else
+    {
+        pmt->majortype = MEDIATYPE_Video;
+    }
     pmt->subtype = *fmts[FormatNum].subtype;
 
     BITMAPINFOHEADER bihOut;

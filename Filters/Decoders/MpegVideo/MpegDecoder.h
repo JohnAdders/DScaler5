@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.31 2004-12-06 18:05:00 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.32 2005-01-04 17:53:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -70,6 +70,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(0, L"Hardcode for PAL with ffdshow")
     DEFINE_PARAM_ENUM(ACCELERATED_IDCT, ACCELERATED_IDCT, L"IDCT to Use")
     DEFINE_PARAM_ENUM(SPACE_YUY2, SPACE_YUY2, L"Colour space to output")
+    DEFINE_PARAM_BOOL(0, L"Force DScaler Filter")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
@@ -83,6 +84,7 @@ END_PARAM_LIST()
 		HARDCODEFORPAL,
 		IDCT,
 		OUTPUTSPACE,
+		FORCEDSCALERFILTER,
     };
 
 public:

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.17 2004-12-21 14:47:00 adcockj Exp $
+// $Id: DScaler.cpp,v 1.18 2005-01-04 17:53:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/12/21 14:47:00  adcockj
+// fixed connection and settings issues
+//
 // Revision 1.16  2004/12/15 13:04:08  adcockj
 // added simple statistics display
 //
@@ -167,6 +170,7 @@ CDScaler::CDScaler() :
     {
         throw(std::runtime_error("Can't load DMOs"));
     }
+    m_CatchUpModulo = 100;
 }
 
 CDScaler::~CDScaler()
@@ -688,7 +692,7 @@ HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBase
 			pProps->cbBuffer = vih->bmiHeader.biSizeImage;
 		}
 
-	    pProps->cBuffers = 3;
+	    pProps->cBuffers = 1;
         pProps->cbAlign = 1;
         return S_OK;
     }
@@ -1101,6 +1105,7 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
 
 HRESULT CDScaler::Activate()
 {
+    m_CatchUpModulo = 100;
     return S_OK;
 }
 
@@ -1117,7 +1122,7 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 
     if(pPin == m_VideoInPin || pPin == m_VideoOutPin)
     {
-        result = !!(pmt->majortype == MEDIATYPE_Video);
+        result = !!(pmt->majortype == MEDIATYPE_Video || pmt->majortype == CLSID_CDScaler);
 
         result &= (pmt->formattype == FORMAT_VIDEOINFO2 || 
                 (pmt->formattype == FORMAT_VideoInfo && pPin == m_VideoInPin));

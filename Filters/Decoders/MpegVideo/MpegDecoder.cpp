@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.62 2004-12-20 08:51:52 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.63 2005-01-04 17:53:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.62  2004/12/20 08:51:52  adcockj
+// added back statistics
+//
 // Revision 1.61  2004/12/13 16:59:57  adcockj
 // flag based film detection
 //
@@ -261,6 +264,7 @@
 #include "MediaBufferWrapper.h"
 #include "MediaTypes.h"
 #include "DSUtil.h"
+#include "MoreUuids.h"
 
 extern HINSTANCE g_hInstance;
 
@@ -482,6 +486,12 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
             return S_FALSE;
         }
         break;
+    case FORCEDSCALERFILTER:
+        if(m_VideoOutPin->m_ConnectedPin)
+        {
+            return S_FALSE;
+        }
+        break;
     }
     return hr;
 }
@@ -564,12 +574,12 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
             if(QualityControl)
             {
-                LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
+                LOG(DBGLOG_FLOW, ("Coped With Famine - %d\n", q.Late));
                 return QualityControl->Notify(pSelf, q);
             }
             else
             {
-                LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
+                LOG(DBGLOG_FLOW, ("Ignored Famine - %d\n", q.Late));
                 return E_FAIL;
             }
         }
@@ -622,7 +632,7 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
     }
     else if(pPin == m_VideoOutPin)
     {
-        pProperties->cBuffers = 3;
+        pProperties->cBuffers = 1;
         pProperties->cbBuffer = ExtractBIH(&m_VideoOutPin->m_ConnectedMediaType)->biSizeImage;
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
@@ -672,7 +682,8 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     {
         int wout = 0, hout = 0;
         long arxout = 0, aryout = 0;
-        Result = ((pmt->majortype == MEDIATYPE_Video) && 
+        Result = ((pmt->majortype == MEDIATYPE_Video ||
+                    pmt->majortype == CLSID_CDScaler) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
                     pmt->subtype == MEDIASUBTYPE_ARGB32 ||
@@ -814,6 +825,10 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
         DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
+        if(GetParamBool(FORCEDSCALERFILTER))
+        {
+            VideoFlags |= VIDEOTYPEFLAG_FORCE_DSCALER;
+        }
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
     else if(pPin == m_SubpictureInPin)
@@ -1233,7 +1248,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     SI(IMediaSample) pOut;
     BYTE* pDataOut = NULL;
     
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
+    //hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
