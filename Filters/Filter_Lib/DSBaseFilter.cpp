@@ -1,0 +1,309 @@
+///////////////////////////////////////////////////////////////////////////////
+// $Id: DSBaseFilter.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+///////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2004 John Adcock 
+///////////////////////////////////////////////////////////////////////////////
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2.1 of the License, or (at your option) any later version.
+// 
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Lesser General Public License for more details.
+// 
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+///////////////////////////////////////////////////////////////////////////////
+// CVS Log
+//
+// $Log: not supported by cvs2svn $
+///////////////////////////////////////////////////////////////////////////////
+#include "stdafx.h"
+#include "DSBaseFilter.h"
+#include "DSBasePin.h"
+#include "EnumPins.h"
+
+CDSBaseFilter::CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOutputPins)
+{
+    m_State = State_Stopped;
+    m_Graph = NULL;
+    wcscpy(m_Name, Name);
+    m_NumInputPins = NumberOfInputPins;
+    m_NumOutputPins = NumberOfOutputPins;
+    m_InputPins = new CDSInputPin*[m_NumInputPins];
+    if(!m_InputPins)
+    {
+        throw(std::runtime_error("Can't create memory for pins"));
+    }
+    m_OutputPins = new CDSOutputPin*[m_NumOutputPins];
+    if(!m_OutputPins)
+    {
+        throw(std::runtime_error("Can't create memory for pins"));
+    }
+    m_IsDiscontinuity = false;
+}
+
+CDSBaseFilter::~CDSBaseFilter()
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::~CDSBaseFilter\n"));
+    int i;
+    for(i = 0; i < m_NumInputPins; ++i)
+    {
+        ((IPin*)m_InputPins[i])->Release();
+    }
+    for(i = 0; i < m_NumOutputPins; ++i)
+    {
+        ((IPin*)m_OutputPins[i])->Release();
+    }
+    delete [] m_InputPins;
+    delete [] m_OutputPins;
+}
+
+STDMETHODIMP CDSBaseFilter::EnumPins(IEnumPins **ppEnum)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::EnumPins\n"));
+    if(ppEnum == NULL)
+    {
+        return E_POINTER;
+    }
+    CEnumPins* NewEnum = new CEnumPins;
+    if(NewEnum == NULL)
+    {
+        return E_OUTOFMEMORY;
+    }
+
+    NewEnum->SetFilter(this);
+    NewEnum->AddRef();
+    *ppEnum = NewEnum;
+    
+    return S_OK;
+}
+
+CDSBasePin* CDSBaseFilter::GetPin(int PinIndex)
+{
+    if(PinIndex < m_NumInputPins)
+    {
+        return m_InputPins[PinIndex];
+    }
+    else if(PinIndex < m_NumInputPins + m_NumOutputPins)
+    {
+        return m_OutputPins[PinIndex - m_NumInputPins];
+    }
+    else
+    {
+        return NULL;
+    }
+}
+
+
+HRESULT CDSBaseFilter::GetPin(ULONG PinNum, IPin** pPin)
+{
+    *pPin = GetPin(PinNum);
+    if(*pPin != NULL)
+    {
+        (*pPin)->AddRef();
+        return S_OK;
+    }
+    else
+    {
+        return S_FALSE;
+    }
+}
+
+
+STDMETHODIMP CDSBaseFilter::FindPin(LPCWSTR Id, IPin **ppPin)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::FindPin\n"));
+    int i;
+    for(i = 0; i < GetNumPins(); ++i)
+    {
+        LPWSTR PinName = NULL;
+        HRESULT hr = GetPin(i)->QueryId(&PinName);
+        CHECK(hr);
+        if(wcscmp(Id, PinName) == 0)
+        {
+            *ppPin = GetPin(i);
+            (*ppPin)->AddRef();
+            CoTaskMemFree(PinName);
+            return S_OK;
+        }
+        else
+        {
+            CoTaskMemFree(PinName);
+        }
+    }
+    return VFW_E_NOT_FOUND;
+}
+
+STDMETHODIMP CDSBaseFilter::QueryFilterInfo(FILTER_INFO *pInfo)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::QueryFilterInfo\n"));
+    if(pInfo == NULL)
+    {
+        return E_POINTER;
+    }
+    wcscpy(pInfo->achName,m_Name);
+    pInfo->pGraph = m_Graph;
+    if(m_Graph != NULL)
+    {
+        pInfo->pGraph->AddRef();
+    }
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::JoinFilterGraph\n"));
+    if(pGraph != NULL)
+    {
+        // we need the FilterGraph2 interface
+        // so that we can use ReconnectEx for dynamic connections
+        if(FAILED(pGraph->QueryInterface(IID_IFilterGraph2, (void**)&m_Graph)))
+        {
+            return VFW_E_NO_INTERFACE;
+        }
+        // need to release here to avoid circular references
+        m_Graph->Release();
+        if(pName != NULL && wcslen(pName) < MAX_FILTER_NAME)
+        {
+            wcscpy(m_Name, pName);
+        }
+    }
+    else
+    {
+        m_Graph = NULL;
+    }
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::QueryVendorInfo(LPWSTR *pVendorInfo)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CDSBaseFilter::Stop(void)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::Stop\n"));
+
+    CProtectCode WhileVarInScope(this);
+    
+    int i;
+    
+    for(i = 0; i < m_NumInputPins; ++i)
+    {
+        m_InputPins[i]->HandleStop();
+    }
+    for(i = 0; i < m_NumOutputPins; ++i)
+    {
+        m_OutputPins[i]->HandleStop();
+    }
+
+    m_State = State_Stopped;
+
+	LOG(DBGLOG_ALL, ("CDSBaseFilter::End Stop\n"));
+
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::Pause(void)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::Pause\n"));
+
+    CProtectCode WhileVarInScope(this);
+
+    for(int i(0); i < m_NumOutputPins; ++i)
+    {
+        m_OutputPins[i]->HandlePause();
+    }
+
+    m_State = State_Paused;
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::Run\n"));
+
+    CProtectCode WhileVarInScope(this);
+
+    for(int i(0); i < m_NumOutputPins; ++i)
+    {
+        m_OutputPins[i]->HandleRun();
+    }
+
+    m_State = State_Running;
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::GetState(DWORD dwMilliSecsTimeout, FILTER_STATE *State)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::GetState\n"));
+    if(State == NULL)
+    {
+        return E_POINTER;
+    }
+    *State = m_State;
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::SetSyncSource(IReferenceClock *pClock)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::SetSyncSource\n"));
+    m_RefClock = pClock;
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::GetSyncSource(IReferenceClock **pClock)
+{
+    LOG(DBGLOG_ALL, ("CDSBaseFilter::GetSyncSource\n"));
+    *pClock = m_RefClock.GetAddRefedInterface();
+    return S_OK;
+}
+
+STDMETHODIMP CDSBaseFilter::GetPages(CAUUID* pPages)
+{
+    pPages->cElems = 2;
+    pPages->pElems = (CLSID*)CoTaskMemAlloc(sizeof(CLSID) * 2);
+    if(pPages->pElems == NULL)
+        return E_OUTOFMEMORY;
+    pPages->pElems[0] = CLSID_GenDMOPropPage;
+    pPages->pElems[1] = CLSID_LicensePropPage;
+    return S_OK;
+}
+
+HRESULT CDSBaseFilter::GetOutputSample(IMediaSample** OutSample, int PinIndex)
+{
+    *OutSample = NULL;
+
+	// get a sample to output to
+	DWORD dwFlags = (m_IsDiscontinuity?AM_GBF_PREVFRAMESKIPPED:0);
+	HRESULT hr = m_OutputPins[PinIndex]->m_Allocator->GetBuffer(OutSample, NULL, NULL, dwFlags);
+	if(FAILED(hr) || *OutSample == NULL)
+	{
+		//LOG(DBGLOG_ALL, ("Frame Skipped\n"));
+		m_IsDiscontinuity = true;
+		return S_FALSE;
+	}
+	else
+	{
+		m_IsDiscontinuity = false;
+	}
+
+	// check for media type changes on the output side
+	// a NULL means the type is the same as last time
+    AM_MEDIA_TYPE* pMediaType = NULL;
+
+    hr = (*OutSample)->GetMediaType(&pMediaType);
+	CHECK(hr);
+
+	if(hr == S_OK && pMediaType != NULL)
+	{
+		hr = m_OutputPins[PinIndex]->SetType(pMediaType);
+		CHECK(hr);
+        FreeMediaType(pMediaType);
+	}
+    return S_OK;
+}

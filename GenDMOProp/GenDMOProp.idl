@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.6 2003-10-31 17:19:37 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.7 2004-02-06 12:17:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/10/31 17:19:37  adcockj
+// Added support for manual pulldown selection (works with Elecard Filters)
+//
 // Revision 1.5  2003/05/20 16:51:01  adcockj
 // Interim checkin, preparation for DMO processing path
 //
@@ -80,6 +83,14 @@ library GENDMOPROPLib
         POST_DEINT_2,
         POST_DEINT_3,
     } eVideoFilterPosition;
+
+    typedef enum
+    {
+        HINT_NONE,
+        WEAVE_WITH_NEXT_32_3,
+        WEAVE_WITH_NEXT_32_2,
+        WEAVE_WITH_NEXT_22,
+    } eDetectionHint;
     
     [
         object,
@@ -90,6 +101,7 @@ library GENDMOPROPLib
 	interface IInterlacedField : IMediaBuffer
 	{
         [propget] HRESULT TopFieldFirst([out,retval] BOOLEAN* TopFieldFirst);
+        [propget] HRESULT Hint([out,retval] eDetectionHint* HintValue);
     };
 
     [
@@ -154,6 +166,18 @@ library GENDMOPROPLib
 	{
         [propget] HRESULT ComplexityIndex([out, retval] long* pComplexity);
         HRESULT Process([in] IInterlacedBufferStack* Stack, [in] IMediaBuffer* pBuffer);
+    }
+
+	[
+        object,
+		uuid(2FDD175D-5AFA-40e9-81B2-4B67B4698CF1),
+		helpstring("IFilmDetect Interface"),
+		pointer_default(unique)
+	]
+	interface IFilmDetect : IUnknown
+	{
+        HRESULT DetectFilm([in] IInterlacedBufferStack* Stack, [in, out] eDeinterlaceType* DetectedType, [in, out] DWORD* DetectedIndex);
+        HRESULT ResetDectection();
     }
 
     [

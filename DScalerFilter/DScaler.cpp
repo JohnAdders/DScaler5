@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.15 2003-12-09 11:45:51 adcockj Exp $
+// $Id: DScaler.cpp,v 1.16 2004-02-06 12:17:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2003/12/09 11:45:51  adcockj
+// Improved implementation of EnumPins
+//
 // Revision 1.14  2003/10/31 17:19:37  adcockj
 // Added support for manual pulldown selection (works with Elecard Filters)
 //
@@ -211,7 +214,7 @@ STDMETHODIMP CDScaler::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
     {
         // we need the FilterGraph2 interface
         // so that we can use ReconnectEx for dynamic connections
-        if(FAILED(pGraph->QueryInterface(__uuidof(IFilterGraph2), (void**)&m_Graph)))
+        if(FAILED(pGraph->QueryInterface(IID_IFilterGraph2, (void**)&m_Graph)))
         {
             return VFW_E_NO_INTERFACE;
         }

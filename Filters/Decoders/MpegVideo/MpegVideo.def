@@ -1,0 +1,9 @@
+; MpegVideo.def : Declares the module parameters.
+
+LIBRARY      "MpegVideo.DLL"
+
+EXPORTS
+	DllCanUnloadNow     PRIVATE
+	DllGetClassObject   PRIVATE
+	DllRegisterServer   PRIVATE
+	DllUnregisterServer	PRIVATE

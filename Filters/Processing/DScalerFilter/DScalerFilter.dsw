@@ -1,0 +1,191 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "DMO_Lib"=..\..\..\DMO\DMO_Lib\DMO_Lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "DScalerFilter"=.\DScalerFilter.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Bob
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Diag
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Weave
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Video_Gamma
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Filter_Lib
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Bob"=..\..\..\DMO\Deinterlace\Deint_Bob\Deint_Bob.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Diag"=..\..\..\DMO\Deinterlace\Deint_Diag\Deint_Diag.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Weave"=..\..\..\DMO\Deinterlace\Deint_Weave\Deint_Weave.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Filter_Lib"=..\..\Filter_Lib\Filter_Lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "GenDMOProp"=..\..\..\GenDMOProp\GenDMOProp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "MpegVideo"=..\..\Decoders\MpegVideo\MpegVideo.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name Filter_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libmpeg2
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Video_Gamma"=..\..\..\DMO\Video\Video_Gamma\Video_Gamma.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libmpeg2"="..\..\Decoders\MpegVideo\mpeg2dec\vc++\libmpeg2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+

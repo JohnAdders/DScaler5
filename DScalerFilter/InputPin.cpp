@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.30 2003-12-09 11:45:57 adcockj Exp $
+// $Id: InputPin.cpp,v 1.31 2004-02-06 12:17:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.30  2003/12/09 11:45:57  adcockj
+// Improved implementation of EnumPins
+//
 // Revision 1.29  2003/11/13 21:39:50  adcockj
 // fix for diag to work properly
 //
@@ -897,10 +900,6 @@ STDMETHODIMP CInputPin::DynamicDisconnect(void)
 
 void CInputPin::InternalDisconnect()
 {
-    ClearMediaType(&m_InputMediaType);
-    m_ConnectedPin.Release();
-    m_Allocator.Release();
-    ++m_FormatVersion;
 }
 
 ULONG CInputPin::FormatVersion()
