@@ -143,6 +143,10 @@ SOURCE=.\LicensePropPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\StatisticsPropPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -164,6 +168,10 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\StatisticsPropPage.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
 # End Source File
 # End Group
@@ -178,20 +186,24 @@ SOURCE=.\GenDMOPropPage.rgs
 
 SOURCE=.\LicensePropPage.rgs
 # End Source File
+# Begin Source File
+
+SOURCE=.\StatisticsPropPage.rgs
+# End Source File
 # End Group
 # End Target
 # End Project
-# Section GenDMOProp : {00008077-0800-7778-7777-777777777777}
-# 	1:19:IDD_LICENCEPROPPAGE:110
-# 	1:24:IDS_TITLELicencePropPage:106
-# 	1:19:IDR_LICENCEPROPPAGE:109
-# 	1:27:IDS_HELPFILELicencePropPage:107
-# 	1:28:IDS_DOCSTRINGLicencePropPage:108
-# End Section
 # Section GenDMOProp : {00708077-0000-0000-80B6-7826C4B70800}
 # 	1:27:IDS_DOCSTRINGGenDMOPropPage:103
 # 	1:18:IDD_GENDMOPROPPAGE:105
 # 	1:18:IDR_GENDMOPROPPAGE:104
 # 	1:23:IDS_TITLEGenDMOPropPage:101
 # 	1:26:IDS_HELPFILEGenDMOPropPage:102
+# End Section
+# Section GenDMOProp : {00008077-0800-7778-7777-777777777777}
+# 	1:19:IDD_LICENCEPROPPAGE:110
+# 	1:24:IDS_TITLELicencePropPage:106
+# 	1:19:IDR_LICENCEPROPPAGE:109
+# 	1:27:IDS_HELPFILELicencePropPage:107
+# 	1:28:IDS_DOCSTRINGLicencePropPage:108
 # End Section

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.12 2004-12-15 13:04:09 adcockj Exp $
+// $Id: DScaler.h,v 1.13 2004-12-18 13:26:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -24,13 +24,12 @@
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
 #include "moreuuids.h"
-#include "Statistics.h"
+//#include "Statistics.h"
 
 class CDScaler : 
     public CDSBaseFilter,
     public IInterlacedBufferStack,
-    public IAmFreeSoftwareLicensed,
-    public CHaveStatistics
+    public IAmFreeSoftwareLicensed
 {
 public:
 
@@ -45,7 +44,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CDScaler, "{0D71870A-7563-11D7-B84A-0002A5623377}
     IMPLEMENTS_INTERFACE(IPersistStream)
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(ISaveDefaults)
-    IMPLEMENTS_INTERFACE(IHaveStatistics)
+//    IMPLEMENTS_INTERFACE(IHaveStatistics)
 END_INTERFACE_TABLE()
 
 public:
@@ -64,10 +63,10 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(0, 0, L"Film Detect Mode")
 END_PARAM_LIST()
 
-BEGIN_STATISTICS_LIST()
-    DEFINE_STATISTIC(L"Current State")
-    DEFINE_STATISTIC(L"Current Pulldown Index")
-END_STATISTICS_LIST()
+//BEGIN_STATISTICS_LIST()
+//    DEFINE_STATISTIC(L"Current State")
+//    DEFINE_STATISTIC(L"Current Pulldown Index")
+//END_STATISTICS_LIST()
 
     enum eDScalerFilterParams
     {

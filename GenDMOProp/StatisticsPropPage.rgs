@@ -1,0 +1,23 @@
+HKCR
+{
+	GenDMOProp.StatisticsPropPage.1 = s 'StatisticsPropPage Class'
+	{
+		CLSID = s '{3DDF3FE5-24D4-4289-9143-E1FFD70CD934}'
+	}
+	GenDMOProp.StatisticsPropPage = s 'StatisticsPropPage Class'
+	{
+		CLSID = s '{3DDF3FE5-24D4-4289-9143-E1FFD70CD934}'
+		CurVer = s 'GenDMOProp.StatisticsPropPage.1'
+	}
+	NoRemove CLSID
+	{
+		ForceRemove {3DDF3FE5-24D4-4289-9143-E1FFD70CD934} = s 'StatisticsPropPage Class'
+		{
+			ForceRemove 'Programmable'
+			InprocServer32 = s '%MODULE%'
+			{
+				val ThreadingModel = s 'Apartment'
+			}
+		}
+	}
+}
