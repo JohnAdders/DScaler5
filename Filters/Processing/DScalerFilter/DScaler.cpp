@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.11 2004-11-01 14:09:39 adcockj Exp $
+// $Id: DScaler.cpp,v 1.12 2004-11-25 21:55:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/11/01 14:09:39  adcockj
+// More DScaler filter insipred changes
+//
 // Revision 1.10  2004/08/31 16:33:42  adcockj
 // Minor improvements to quality control
 // Preparation for next version
@@ -966,11 +969,11 @@ HRESULT CDScaler::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, 
         DWORD VideoFlags = VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER | VIDEOTYPEFLAG_PROGRESSIVE;
         if(m_InternalMTInput.subtype == MEDIASUBTYPE_YUY2)
         {
-            VideoFlags = VIDEOTYPEFLAG_FORCE_YUY2;
+            VideoFlags |= VIDEOTYPEFLAG_FORCE_YUY2;
         }
         else
         {
-            VideoFlags = VIDEOTYPEFLAG_FORCE_YV12;
+            VideoFlags |= VIDEOTYPEFLAG_FORCE_YV12;
         }
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, 0);
     }
