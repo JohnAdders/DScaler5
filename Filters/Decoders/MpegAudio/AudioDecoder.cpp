@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.31 2004-07-30 08:13:53 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.32 2004-07-31 18:52:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.31  2004/07/30 08:13:53  adcockj
+// Fix for spdif delay
+//
 // Revision 1.30  2004/07/29 13:44:59  adcockj
 // More fixes for Laurent's issues
 //
@@ -971,7 +974,8 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     m_pDataOut = NULL;
     m_rtNextFrameStart = _I64_MIN;
     m_BufferSizeAtFrameStart = 0;
-    m_rtOutputStart = 0;
+    // hmmm,thought this was required but it screws up seeking
+    //m_rtOutputStart = 0;
 
     if(m_ConnectedAsSpdif && m_ProcessingType == PROCESS_AC3)
     {
