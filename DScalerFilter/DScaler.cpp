@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.1.1.1 2003-04-30 13:01:20 adcockj Exp $
+// $Id: DScaler.cpp,v 1.2 2003-05-01 16:19:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
+// Initial Import
+//
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DScaler.h"
@@ -216,8 +219,6 @@ STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
     return S_OK;
 }
 
-class DECLSPEC_UUID("0E938757-7AED-11D7-B84B-0002A5623377") GenDMOPropPage;
-
 STDMETHODIMP CDScaler::GetPages(CAUUID *pPages)
 {
     LOG(DBGLOG_FLOW, "CDScaler::GetPages\n");
@@ -232,8 +233,8 @@ STDMETHODIMP CDScaler::GetPages(CAUUID *pPages)
         return E_OUTOFMEMORY;
     }
     // \todo get property pages working
-    pPages->pElems[0] = __uuidof(GenDMOPropPage);
-    pPages->pElems[1] = GUID_NULL;
+    pPages->pElems[0] = CLSID_GenDMOPropPage;
+    pPages->pElems[1] = CLSID_LicensePropPage;
     return S_OK;
 }
 
