@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.10 2004-02-29 19:06:36 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.11 2004-03-02 07:54:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/02/29 19:06:36  adcockj
+// Futher dynamic format change fix
+//
 // Revision 1.9  2004/02/29 13:47:48  adcockj
 // Format change fixes
 // Minor library updates
@@ -834,7 +837,18 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	REFERENCE_TIME rtStart;
 	REFERENCE_TIME rtStop;
-	rtStart = m_LastOutputTime;
+    
+    if(m_IsDiscontinuity)
+    {
+        // if we're at a Discontinuity use the times we're being sent in
+	    rtStart = m_rate.StartTime + (m_CurrentPicture->m_rtStart - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+    }
+    else
+    {
+        // if we're not at a Discontinuity
+        // make sure that time are contiguous
+	    rtStart = m_LastOutputTime;
+    }
 
     // if we want smooth frames then we simply adjust the stop time by half
     // a frame so that 3:2 becomes 2.5:2.5
@@ -851,10 +865,18 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
     rtStop += GetParamInt(VIDEODELAY) * 10000;
 
-	if(rtStop <= rtStart)
+    // ensure that times always go up
+    // and that Stop is always greater than start
+    if(rtStart < m_LastOutputTime)
+    {
+        rtStart = m_LastOutputTime;
+    }
+    if(rtStop <= rtStart)
 	{
 		rtStop = rtStart + 1;
 	}
+
+    m_LastOutputTime = rtStop;
 
 	HRESULT hr;
 
@@ -878,8 +900,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	}
 
 	// cope with dynamic format changes from the renderer
-	// we care about this we think we need to change the format too
-	// and the video renderer sends up a new format
+	// we care about this when we think we need to change the format
+	// and the video renderer sends up a new format too
 	// calling ReconnectOutput again will merge the two 
 	// formats properly and should never call NegotiateAllocator
 	if(hr == S_FALSE && m_NeedToAttachFormat)
@@ -901,7 +923,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         if(pMES)
         {
 		    // some renderers don't send this
-
 		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_win, m_hin), 0);
         }
 	}
@@ -912,8 +933,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		return hr;
 	}
 	
-	m_LastOutputTime = rtStop;
-
 	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
 
 	SI(IMediaSample2) pOut2 = pOut;
@@ -927,9 +946,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		}
         Props.tStart = rtStart;
         Props.tStop = rtStop;
-        // FIXME: hell knows why but without this the overlay mixer starts very skippy
-    	// (don't enable this for other renderers, the old for example will go crazy if you do)
-		if(m_IsDiscontinuity)
+
+        if(m_IsDiscontinuity)
 		{
 		    Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
 		}
@@ -962,16 +980,14 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		{
 			LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
-    }
+        }
     }
     else
     {
 		pOut->SetTime(&rtStart, &rtStop);
 		pOut->SetMediaTime(NULL, NULL);
 
-		// FIXME: hell knows why but without this the overlay mixer starts very skippy
-		// (don't enable this for other renderers, the old for example will go crazy if you do)
-		if(m_IsDiscontinuity)
+        if(m_IsDiscontinuity)
 			pOut->SetDiscontinuity(TRUE);
         else
     	    pOut->SetDiscontinuity(FALSE);
@@ -1011,11 +1027,26 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
 	if(FAILED(hr))
 	{
-        LogBadHRESULT(hr, __FILE__, __LINE__);
+        if(hr == E_FAIL)
+        {
+            // sometime happens with overlay
+            // supress the error and  set
+            // discontinuity flag so that the
+            // overlay will do a mini reset
+        	LOG(DBGLOG_ALL, ("SendSample failed\n"));
+    	    m_IsDiscontinuity = true;
+            hr = S_OK;
+        }
+        else
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+        }
 	}
-
-	// reset discontinuity flag
-	m_IsDiscontinuity = false;
+    else
+    {
+	    // reset discontinuity flag
+	    m_IsDiscontinuity = false;
+    }
 
 	return hr;
 }

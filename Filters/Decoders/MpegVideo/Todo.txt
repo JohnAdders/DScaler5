@@ -1,6 +1,7 @@
 Known bugs to fix
 
 - There are some issues with highlights on DVD's
+- Subpicture issues with overlay renderer
 
 New functionality to add
 
