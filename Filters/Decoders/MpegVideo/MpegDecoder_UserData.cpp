@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.5 2004-04-16 16:19:44 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.6 2004-05-06 06:38:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/04/16 16:19:44  adcockj
+// Better reconnection and improved AFD support
+//
 // Revision 1.4  2004/04/14 16:31:34  adcockj
 // Subpicture fixes, AFD started and minor fixes
 //
@@ -79,9 +82,9 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
 		// are what we expect
 		if(UserData[4] == 65)
 		{
-			if((UserData[4] & 0x0F) != m_AFD)
+			if((UserData[5] & 0x0F) != m_AFD)
 			{
-				m_AFD = UserData[4] & 0x0F;
+				m_AFD = UserData[5] & 0x0F;
 				CorrectOutputSize();
 			}
 		}

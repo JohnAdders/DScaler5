@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.2 2004-04-14 16:31:34 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.3 2004-05-06 06:38:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/04/14 16:31:34  adcockj
+// Subpicture fixes, AFD started and minor fixes
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -116,6 +119,10 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
 	}
 	else
 	{
+        w = 720;
+        h = 480;
+        arx = 4;
+        ary = 3;
 		return(false);
 	}
 

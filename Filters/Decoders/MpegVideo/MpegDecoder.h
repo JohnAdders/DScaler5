@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.14 2004-04-20 16:30:28 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.15 2004-05-06 06:38:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -173,6 +173,8 @@ private:
 	enum
 	{
 		DEFAULT_OUTFILTER,
+		FFDSHOW_OUTFILTER,
+		VR_OUTFILTER,
 		VMR7_OUTFILTER,
 		VMR9_OUTFILTER
 	} m_ConnectedToOut;
@@ -297,3 +299,5 @@ private:
 #define m_SubpictureInPin m_InputPins[1]
 #define m_VideoOutPin m_OutputPins[0]
 #define m_CCOutPin m_OutputPins[1]
+
+DEFINE_GUID(CLSID_FFDShow, 0x0B390488, 0xd80f, 0x4a68, 0x84, 0x08, 0x48, 0xdc, 0x19, 0x9f, 0x0e, 0x97);
