@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.3 2004-03-25 18:01:30 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.4 2004-04-06 16:46:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/03/25 18:01:30  adcockj
+// Fixed issues with downmixing
+//
 // Revision 1.2  2004/02/27 17:04:38  adcockj
 // Added support for fixed point libraries
 // Added dither to 16 conversions
@@ -58,17 +61,17 @@ static struct scmap_t
 }
 s_scmap_ac3[2*11] =
 {
-	{2, {0, 1,-1,-1,-1,-1}, 0},	// A52_CHANNEL
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_MONO
-	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_STEREO
+	{2, {0, 1,-1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT},	// A52_CHANNEL
+	{1, {0,-1,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER}, // A52_MONO
+	{2, {0, 1,-1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT}, // A52_STEREO
 	{3, {0, 2, 1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER}, // A52_3F
 	{3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER}, // A52_2F1R
 	{4, {0, 2, 1, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER}, // A52_3F1R
 	{4, {0, 1, 2, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_2F2R
 	{5, {0, 2, 1, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_3F2R
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL1
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL2
-	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_DOLBY
+	{1, {0,-1,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER}, // A52_CHANNEL1
+	{1, {0,-1,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER                  }, // A52_CHANNEL2
+	{2, {0, 1,-1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT}, // A52_DOLBY
 
 	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY},	// A52_CHANNEL|A52_LFE
 	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_MONO|A52_LFE
@@ -206,6 +209,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 				else
 				{
                     int ChannelsRequested = 2;
+					DWORD ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
+
                     switch(GetParamEnum(SPEAKERCONFIG))
                     {
                     case SPCFG_STEREO:
@@ -216,18 +221,22 @@ HRESULT CAudioDecoder::ProcessAC3()
                         break;
                     case SPCFG_2F2R:
                         flags = A52_2F2R;
+						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
                         ChannelsRequested = 4;
                         break;
                     case SPCFG_2F2R1S:
                         flags = A52_2F2R | A52_LFE;
+						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
                         ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R:
                         flags = A52_3F2R;
+						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
                         ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R1S:
                         flags = A52_3F2R | A52_LFE;
+						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
                         ChannelsRequested = 6;
                         break;
                     }
@@ -245,7 +254,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 						int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
 
-                        HRESULT hr = CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
+                        HRESULT hr = CreateInternalIEEEMediaType(sample_rate, ChannelsRequested, ChannelMask);
                         CHECK(hr);
 
                         SI(IMediaSample) pOut;
@@ -263,24 +272,29 @@ HRESULT CAudioDecoder::ProcessAC3()
 							sample_t* samples = a52_samples(m_a52_state);
                             sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
                             int ch = 0;
+							int outch = 0;
 
-                            for(int outch = 0; outch < ChannelsRequested; outch++)
+                            for(int SpkFlag = 0; SpkFlag < 6; SpkFlag++)
                             {
-                                if((scmap.dwChannelMask & (1 << ch)) != 0)
+                                if((scmap.dwChannelMask & (1 << SpkFlag) ) != 0)
                                 {
                                     Channels[outch] = samples + 256*scmap.ch[ch];
                                     ch++;
                                 }
+								if((ChannelMask & (1 << SpkFlag) ) != 0)
+								{
+									outch++;
+								}
                             }
 
-                            ASSERT(ch == scmap.nChannels);
+                            ASSERT(outch == ChannelsRequested);
+							ASSERT(ch == scmap.nChannels);
                         
 							for(int j = 0; j < 256; j++, samples++)
 							{
 								for(int ch = 0; ch < ChannelsRequested; ch++)
 								{
-									ASSERT(scmap.ch[ch] != -1);
-									pConvFunc(pDataOut, *(Channels[ch]++));
+									pConvFunc(pDataOut, Channels[ch][j]);
 								}
 							}
 						}

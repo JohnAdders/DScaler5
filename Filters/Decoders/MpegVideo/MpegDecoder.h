@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.9 2004-03-15 17:16:02 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.10 2004-04-06 16:46:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -122,6 +122,11 @@ private:
     int m_InternalWidth;
     int m_InternalHeight;
     int m_InternalPitch;
+	bool m_DoPanAndScan;
+	bool m_FilmCameraModeHint;
+	bool m_LetterBoxed;
+	DWORD m_PanScanOffset;
+	DWORD m_ControlFlags;
 	
     typedef enum 
 	{

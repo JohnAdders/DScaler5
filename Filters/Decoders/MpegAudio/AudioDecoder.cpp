@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.9 2004-03-25 18:01:30 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.10 2004-04-06 16:46:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/03/25 18:01:30  adcockj
+// Fixed issues with downmixing
+//
 // Revision 1.8  2004/03/15 17:15:37  adcockj
 // Better PES header handling - Inspired by Gabest's latest MPC patch
 //
@@ -502,7 +505,7 @@ HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD w
 	m_InternalWFE.Format.nBlockAlign = 2 * wBitsPerSample / 8;
 	m_InternalWFE.Format.nAvgBytesPerSec = nSamplesPerSec * m_InternalWFE.Format.nBlockAlign;
 
-    m_InternalWFE.Format.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+    m_InternalWFE.Format.wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
 	m_InternalWFE.Format.cbSize = 0;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
@@ -696,7 +699,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 	    wfe->cbSize = 0;
         if(GetParamBool(USESPDIF))
         {
-	        wfe->wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+	        wfe->wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
         }
         else
         {

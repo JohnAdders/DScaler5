@@ -18,9 +18,7 @@
 #include <windows.h>
 #include "clstable.h"
 
-#ifndef _INLINEISEQUALGUID_DEFINED
-#define _INLINEISEQUALGUID_DEFINED
-inline BOOL  InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
+static __inline BOOL  MyInlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
 {
    return (
       ((PLONG) &rguid1)[0] == ((PLONG) &rguid2)[0] &&
@@ -28,7 +26,6 @@ inline BOOL  InlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
       ((PLONG) &rguid1)[2] == ((PLONG) &rguid2)[2] &&
       ((PLONG) &rguid1)[3] == ((PLONG) &rguid2)[3]);
 }
-#endif
 
 
 
@@ -43,7 +40,7 @@ ClassTableGetClassObject(COCLASS_ENTRY *pTable,
     {
         while (pTable->pclsid != &GUID_NULL)
         {
-            if (InlineIsEqualGUID(*pTable->pclsid, rclsid))
+            if (MyInlineIsEqualGUID(*pTable->pclsid, rclsid))
             {
                 if (pTable->pfnGetClassObject)
                     hr = pTable->pfnGetClassObject(riid, ppv);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.6 2004-03-11 16:52:22 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.7 2004-04-06 16:46:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/03/11 16:52:22  adcockj
+// Improved subpicture drawing with different video widths/heights
+//
 // Revision 1.5  2004/02/25 17:14:02  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -453,6 +456,12 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 	else if(m_win == 704)
 	{
 		pt.x = max(pt.x - 8, 0);
+	}
+	else if(m_DoPanAndScan && m_win == 540)
+	{
+		pt.x *= 540;
+		pt.x /= 720;
+		pt.x += m_PanScanOffset;
 	}
 
 

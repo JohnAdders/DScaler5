@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.14 2004-03-15 17:16:02 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.15 2004-04-06 16:46:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/03/15 17:16:02  adcockj
+// Better PES header handling - Inspired by Gabest's latest MPC patch
+//
 // Revision 1.13  2004/03/11 16:52:21  adcockj
 // Improved subpicture drawing with different video widths/heights
 //
@@ -175,6 +178,13 @@ CMpegDecoder::CMpegDecoder() :
     m_InternalHeight = 0;
     m_InternalPitch = 0;
     m_CurrentPicture = NULL;
+
+	m_ControlFlags = 0;
+	m_DoPanAndScan = false;
+	m_FilmCameraModeHint = false;
+	m_LetterBoxed = false;
+	m_PanScanOffset = 0;
+
 
     InitMediaType(&m_InternalMT);
     m_NeedToAttachFormat = false;
@@ -610,6 +620,7 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 	        vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
 	        vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
 	        vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
+			vih->dwControlFlags = m_ControlFlags;
             pmt->pbFormat = (BYTE*)vih;
             pmt->cbFormat = sizeof(VIDEOINFOHEADER2);	    
 	    }
@@ -672,6 +683,35 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
     {
 		m_win = m_hin = m_arxin = m_aryin = 0;
 		ExtractDim(pMediaType, m_win, m_hin, m_arxin, m_aryin);
+		m_ControlFlags = 0;
+		m_DoPanAndScan = false;
+		m_FilmCameraModeHint = false;
+		m_LetterBoxed = false;
+
+		if(pMediaType->formattype == FORMAT_VideoInfo2)
+		{
+			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
+			m_ControlFlags = vih->dwControlFlags;
+		}
+		else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
+		{
+			MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
+			m_ControlFlags = mvih->hdr.dwControlFlags;
+			if(mvih->dwFlags & AMMPEG2_DoPanScan)
+			{
+				m_DoPanAndScan = true;
+			}
+			if(mvih->dwFlags & AMMPEG2_FilmCameraMode)
+			{
+				m_FilmCameraModeHint = true;
+			}
+			if(mvih->dwFlags & AMMPEG2_SourceIsLetterboxed)
+			{
+				m_LetterBoxed = true;
+			}
+			
+		}
+
         ResetMpeg2Decoder();
     }
     else if(pPin == m_VideoOutPin)
@@ -686,6 +726,10 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_aryout = aryout; 
         } 
     }
+	else if(pPin == m_SubpictureInPin)
+	{
+		m_win = m_win;
+	}
     return S_OK;
 }
 
@@ -1141,27 +1185,14 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
         CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
 	
     	BITMAPINFOHEADER* bmi = NULL;
+		RECT* pSource;
+		RECT* pTarget;
 
 		if(m_InternalMT.formattype == FORMAT_VideoInfo)
 		{
 			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
-			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
-			if(m_win == 352 && (m_hin == 240 || m_hin == 288))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win * 2, m_hin * 2);
-			}
-			else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win * 2, m_hin);
-			}
-			else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win, m_hin);
-			}
-			else
-			{
-				SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
-			}
+			pSource = &vih->rcSource;
+			pTarget = &vih->rcTarget;
 			bmi = &vih->bmiHeader;
 			bmi->biXPelsPerMeter = m_win * m_aryin;
 			bmi->biYPelsPerMeter = m_hin * m_arxin;
@@ -1170,25 +1201,29 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		{
 			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
 			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
-			if(m_win == 352 && (m_hin == 240 || m_hin == 288))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win * 2 + 8, m_hin * 2);
-			}
-			else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win * 2 + 8, m_hin);
-			}
-			else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
-			{
-				SetRect(&vih->rcTarget, 8, 0, m_win + 8, m_hin);
-			}
-			else
-			{
-				SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
-			}
+			pSource = &vih->rcSource;
+			pTarget = &vih->rcTarget;
 			bmi = &vih->bmiHeader;
 			vih->dwPictAspectRatioX = m_arxin;
 			vih->dwPictAspectRatioY = m_aryin;
+		}
+		
+		SetRect(pSource, 0, 0, m_win, m_hin);
+		if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+		{
+			SetRect(pTarget, 8, 0, m_win * 2, m_hin * 2);
+		}
+		else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
+		{
+			SetRect(pTarget, 8, 0, m_win * 2, m_hin);
+		}
+		else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
+		{
+			SetRect(pTarget, 8, 0, m_win, m_hin);
+		}
+		else
+		{
+			SetRect(pTarget, 0, 0, m_win, m_hin);
 		}
 
 		if(m_win > bmi->biWidth)
@@ -1307,6 +1342,14 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 
 	w = (w+7)&~7;
 	ASSERT(w <= pitchIn);
+
+	if(m_DoPanAndScan)
+	{
+		pIn += m_PanScanOffset;
+		pInU += m_PanScanOffset / 2;
+		pInV += m_PanScanOffset / 2;
+	}
+
 
 	if(bihOut.biCompression == '2YUY')
 	{
@@ -1510,6 +1553,18 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
+
+	if(m_DoPanAndScan)
+	{
+		if(m_InternalWidth >= 704)
+		{
+			m_arxin = 4;
+			m_aryin = 3;
+			m_PanScanOffset = (m_InternalWidth - 540) / 2;
+			m_InternalWidth = 540;
+		}
+	}
+
 
     return S_OK;
 }
