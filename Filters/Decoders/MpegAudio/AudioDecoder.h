@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.19 2004-07-28 13:59:29 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.20 2004-07-29 10:26:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -113,6 +113,14 @@ public:
         OUTSAMPLE_LASTONE
     };
 
+    enum eProcessingType
+    {
+        PROCESS_AC3,
+        PROCESS_MPA,
+        PROCESS_DTS,
+        PROCESS_PCM,
+    };
+
 public:
     // IBaseFilter
     STDMETHOD(GetClassID)(CLSID __RPC_FAR *pClassID);
@@ -201,6 +209,7 @@ private:
     BYTE* m_pDataOut;
     long m_BufferSizeAtFrameStart;
     long m_AC3SilenceFrames;
+    eProcessingType m_ProcessingType;
 };
 
 #define m_AudioInPin m_InputPins[0]

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.15 2004-07-28 13:59:30 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.16 2004-07-29 10:26:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/07/28 13:59:30  adcockj
+// spdif fixes
+//
 // Revision 1.14  2004/07/27 16:53:21  adcockj
 // Some spdif fixes
 //
@@ -152,7 +155,7 @@ HRESULT CAudioDecoder::ProcessMPA()
             if(m_InputSampleRate > m_frame.header.samplerate)
                 continue;
 
-            long FinalLen = m_frame.header.duration.fraction * m_frame.header.samplerate * 4 / MAD_TIMER_RESOLUTION;
+            long FinalLen = MulDiv(m_frame.header.duration.fraction, m_frame.header.samplerate * 4, MAD_TIMER_RESOLUTION);
 
             if(m_frame.header.layer == MAD_LAYER_I)
             {
