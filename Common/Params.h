@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.8 2004-07-20 16:37:48 adcockj Exp $
+// $Id: Params.h,v 1.9 2004-10-28 09:05:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -411,7 +411,15 @@ public:
                 {
                     if(RegType == REG_DWORD)
                     {
-                        SetParam(i, (MP_DATA)dwValue);
+                        if(Params[i].MParamInfo.mpType == MPT_INT)
+                        {
+                            int IntValue = *(int*)&dwValue;
+                            SetParam(i, (MP_DATA)IntValue);
+                        }
+                        else
+                        {
+                            SetParam(i, (MP_DATA)dwValue);
+                        }
                     }
                     else
                     {

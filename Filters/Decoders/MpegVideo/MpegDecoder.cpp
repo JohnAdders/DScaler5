@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.47 2004-10-26 16:23:44 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.48 2004-10-28 09:05:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.47  2004/10/26 16:23:44  adcockj
+// Improve subpicture performance
+//
 // Revision 1.46  2004/10/22 07:34:40  adcockj
 // fix for some connection issues
 //
@@ -465,7 +468,11 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
     {
         return SupportPropSetSubPic(dwPropID, pTypeSupport);
     }
-    return E_NOTIMPL;
+    else
+    {
+        return E_NOTIMPL;
+    }
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, CDSBasePin* pPin)
