@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.1 2004-11-05 17:45:53 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.2 2004-11-05 18:09:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/11/05 17:45:53  adcockj
+// Added new decoder
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -382,18 +385,12 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_ARDivxX = 4; 
         m_ARDivxY = 3;
         ExtractDim(pMediaType, m_DivxWidth, m_DivxHeight, m_ARDivxX, m_ARDivxY);
-        m_DivxHeight = abs(m_DivxHeight);
-
-        m_VideoOutPin->SetAspectX(m_ARDivxX);
-        m_VideoOutPin->SetAspectY(m_ARDivxY);
-        m_VideoOutPin->SetWidth(m_DivxWidth);
-        m_VideoOutPin->SetHeight(m_DivxHeight);
-        m_VideoOutPin->SetPanScanX(0);
-        m_VideoOutPin->SetPanScanY(0);
 
         BITMAPINFOHEADER* bih = NULL;
         m_ExtraSize = 0;
         m_ExtraData = NULL;
+        RECT* pSourceRect;
+
         if(pMediaType->formattype == FORMAT_VideoInfo2)
         {
             VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
@@ -404,7 +401,8 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
                 m_ExtraSize = pMediaType->cbFormat - sizeof(VIDEOINFOHEADER2);
                 m_ExtraData = pMediaType->pbFormat + sizeof(VIDEOINFOHEADER2);
             }
-		}
+	        pSourceRect = &vih->rcSource;
+    	}
 		else if(pMediaType->formattype == FORMAT_VideoInfo)
 		{
             VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pMediaType->pbFormat;
@@ -415,11 +413,31 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
                 m_ExtraSize = pMediaType->cbFormat - sizeof(VIDEOINFOHEADER);
                 m_ExtraData = pMediaType->pbFormat + sizeof(VIDEOINFOHEADER);
             }
+            pSourceRect = &vih->rcSource;
 		}
         else
         {
             return E_UNEXPECTED;
         }
+
+        if(pSourceRect->right != 0)
+        {
+            m_DivxWidth = min(m_DivxWidth, pSourceRect->right);
+        }
+
+        if(pSourceRect->bottom != 0)
+        {
+            m_DivxHeight = min(abs(m_DivxHeight), pSourceRect->bottom);
+        }
+
+
+        m_VideoOutPin->SetAspectX(m_DivxWidth);
+        m_VideoOutPin->SetAspectY(m_DivxHeight);
+        m_VideoOutPin->SetWidth(m_DivxWidth);
+        m_VideoOutPin->SetHeight(m_DivxHeight);
+        m_VideoOutPin->SetPanScanX(0);
+        m_VideoOutPin->SetPanScanY(0);
+
 
         m_VideoOutPin->SetAvgTimePerFrame(m_AvgTimePerFrame);
 
