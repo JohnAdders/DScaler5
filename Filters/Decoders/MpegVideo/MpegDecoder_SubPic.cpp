@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.14 2004-10-28 15:52:24 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.15 2004-12-06 18:05:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.13  2004/10/26 16:23:44  adcockj
 // Improve subpicture performance
 //
@@ -89,6 +92,7 @@
 #include "stdafx.h"
 #include "MpegDecoder.h"
 #include "DSInputPin.h"
+#include "DSVideoOutPin.h"
 
 #define PTS2RT(pts) (10000i64*pts/90)
 #define ComparePTSWithRt(rt, pts) (abs((int)(rt - 10000i64*pts/90)) <= 90000)
@@ -187,12 +191,39 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 
     if(fRefresh && m_LastPictureWasStill)
     {
-        LOG(DBGLOG_ALL,("Refresh Image\n"));
-        CProtectCode WhileVarInScope(&m_DeliverLock);
-        Deliver(true);
+        ForceDelivery();
     }
 
     return S_OK;
+}
+
+void CMpegDecoder::ForceDelivery()
+{
+    CProtectCode WhileVarInScope(&m_DeliverLock);
+    int Counter = 6;
+    int DroppedFramesBefore;
+    int DroppedFramesAfter;
+    do
+    {
+        if(Counter != 6)
+        {
+            Sleep(0);
+            LOG(DBGLOG_FLOW, ("Refresh Image %d\n", Counter));
+        }
+        else
+        {
+            LOG(DBGLOG_ALL, ("Refresh Image\n"));
+        }
+        DroppedFramesBefore = m_VideoOutPin->GetDroppedFrames();
+        Deliver(true);
+        DroppedFramesAfter = m_VideoOutPin->GetDroppedFrames();
+    }
+    while(--Counter && DroppedFramesAfter != DroppedFramesBefore);
+
+    if(!Counter)
+    {
+        LOG(DBGLOG_FLOW, ("!!!!! Can't Refresh Image\n", Counter));
+    }
 }
 
 HRESULT CMpegDecoder::GetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned)
@@ -309,7 +340,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
             if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart) && m_LastPictureWasStill)
             {
                 LOG(DBGLOG_ALL,("Refresh Image\n"));
-                hr = Deliver(true);
+                ForceDelivery();
             }
         }
     }

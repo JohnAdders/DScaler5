@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.3 2004-03-05 15:56:30 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.4 2004-12-06 18:05:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/03/05 15:56:30  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.2  2004/02/17 16:51:34  adcockj
 // Added countof define
 //
@@ -99,8 +102,7 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer(void)
 {
 	REGPINTYPES Types[] = {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,
-							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12, 
-							&MEDIATYPE_Video, &MEDIASUBTYPE_NV12 };
+							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12};
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(Types), Types, 0, NULL, &GUID_NULL}, 
                               { REG_PINFLAG_B_OUTPUT , 1, countof(Types), Types, 0, NULL, &GUID_NULL}};

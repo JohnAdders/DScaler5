@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.58 2004-11-27 22:15:22 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.59 2004-12-06 18:04:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.58  2004/11/27 22:15:22  adcockj
+// whoops, shouldn't have checked in css tests
+//
 // Revision 1.57  2004/11/26 15:15:03  adcockj
 // Fixed overlay stutter
 //
@@ -660,8 +663,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     {
         int wout = 0, hout = 0;
         long arxout = 0, aryout = 0;
-        Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
-                  (pmt->majortype == MEDIATYPE_Video) && 
+        Result = ((pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
                     pmt->subtype == MEDIASUBTYPE_ARGB32 ||
@@ -669,7 +671,6 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555));
-        Result &= (abs(m_VideoOutPin->GetHeight()) == abs(hout)) && (m_VideoOutPin->GetWidth() == wout);
     }
     else if(pPin == m_CCOutPin)
     {
@@ -1272,7 +1273,9 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
         // send video flags to VMR only
         // causes wierd strobing effect on film otherwise
-        if(m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR7_OUTFILTER || m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR9_OUTFILTER)
+        if(m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR7_OUTFILTER || 
+            m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR9_OUTFILTER ||
+            m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::DSCALER_OUTFILTER)
         {
             if(m_CurrentPicture->m_NumFields == 3)
                 if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)

@@ -1,9 +1,14 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.5 2004-08-31 16:33:40 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.6 2004-12-06 18:04:56 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.5  2004/08/31 16:33:40  adcockj
+;// Minor improvements to quality control
+;// Preparation for next version
+;// Start on integrating film detect
+;//
 ;// Revision 1.4  2003/10/31 17:19:37  adcockj
 ;// Added support for manual pulldown selection (works with Elecard Filters)
 ;//
@@ -22,12 +27,19 @@ USE32
 
 segment .data
 
+Still dd 0xffffffff, 0xffffffff
 ShiftMask dd 0xfefffeff, 0xfefffeff
 YMask dd 0x00ff00ff, 0x00ff00ff
 UVMask dd 0xff00ff00, 0xff00ff00
 
 global _MOVE
 _MOVE dd 0x0f0f0f0f, 0x0f0f0f0f
+
+global _MOVE2
+_MOVE2 dd 0x00010001, 0x00010001
+
+global _MOVE3
+_MOVE3 dd 0x01010101, 0x01010101
 
 segment .text
 
@@ -57,7 +69,6 @@ proc _Deint_Diag_Core_YUY2%1, 28
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
-	mov edi, [ebp + %$Dest]
 
     ; PixelCount -= 8
     mov eax, [ebp + %$PixelCount]
@@ -68,7 +79,7 @@ proc _Deint_Diag_Core_YUY2%1, 28
 	movq mm0, [ebx]
 	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
 
-	mov		eax, [ebp + %$Dest]
+	mov	eax, [ebp + %$Dest]
 	DS_MOVNTQ [eax], mm0
 
 	; now loop over the stuff in the middle
@@ -141,7 +152,6 @@ LoopYUY2%1:
     ; [esp] = avg(a, f)
     ; [esp + 8] = avg(c, d)
     
-	pxor	mm7, mm7			
 	pxor	mm0, mm0			
 	psubusb mm4, mm6			; nonzero where mm4 > mm6 
 	pcmpeqb mm4, mm0			; now ff where mm4 <= mm6
@@ -184,74 +194,42 @@ LoopYUY2%1:
     ; mm0 = 0
     ; mm6 = Bob pixels          
 
-    movq mm1, [edi]
-    movq mm2, [esi]
-    movq mm3, mm1			; another copy of our pixel1 value
-    movq mm4, mm2			; another copy of our pixel2 value
+    movq mm1, [esi]
 
-    DS_PABS mm3, mm4, mm5
-
-    DS_PAVGB mm1, mm2, mm4, [ShiftMask]  ; avg of 2 pixels
-
-    ; these must be the values as we exit
-    ; mm0 = 0
-    ; mm1 = weave pixels
-    ; mm3 = "movement" in the centre
-    ; mm6 = Bob pixels          
-
-    ;//////////////////////////////////////////////////////////////////////////
+   ;//////////////////////////////////////////////////////////////////////////
     ; Bottom
     ;//////////////////////////////////////////////////////////////////////////
     ; these should be the values held as we go in
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm3 = "movement" in the centre
     ; mm6 = Bob pixels          
 
-    ; operate only on luma as we will always bob the chroma
-    pand    mm3, [YMask]
-
     mov     eax, [ebp + %$T4]
-    movq	mm2, [ebx]
-    movq	mm4, [eax + ecx]
+    movq	mm2, [eax + ecx]
 
-    DS_PABS mm2, mm4, mm5
-    pand    mm2, [YMask]
+    movq mm3, [edi]
 
     mov     eax, [ebp + %$B4]
-    movq	mm4, [edx]
-    movq	mm7, [eax + ecx]
-
-    DS_PABS mm4, mm7, mm5
-    pand    mm4, [YMask]
+    movq	mm4, [eax + ecx]
     
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm2 = "movement" in the top
-    ; mm3 = "movement" in the centre
-    ; mm4 = "movement" in the bottom
+    ; mm2 = movement map in the top
+    ; mm3 = movement map in the centre
+    ; mm4 = movement map in the bottom
     ; mm6 = Bob pixels          
 
-    psubusb mm2, [_MOVE]           ; non-zero where mm2 > MOVE i.e. Movement
-    pcmpeqd mm2, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqd mm2, mm0            ; all ff where movement in either of the two pixels
+    pcmpgtb mm2, [_MOVE3]           ; FF where still
+    pcmpgtb mm3, [_MOVE3]           ; non-zero where mm3 > MOVE i.e. still
+    pcmpgtb mm4, [_MOVE3]           ; non-zero where mm4 > MOVE i.e. still
 
-    psubusb mm3, [_MOVE]           ; non-zero where mm3 > MOVE i.e. Movement
-    pcmpeqd mm3, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqd mm3, mm0            ; all ff where movement in either of the two pixels
+    por  mm2, mm4                   ; top or bottom still
+    pand  mm3, mm2                   ; middle and top or bottom still
 
-    psubusb mm4, [_MOVE]           ; non-zero where mm4 > MOVE i.e. Movement
-    pcmpeqd mm4, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqd mm4, mm0            ; all ff where movement in either of the two pixels
-
-    por  mm2, mm4              ; top and bottom moving
-    por  mm3, mm2               ; where we should bob
-
-    por mm3, [UVMask]
-
+   
 	mov		eax, [ebp + %$Dest]
-    DS_COMBINE mm6, mm1, mm3
-    DS_MOVNTQ [eax+ecx], mm6
+    DS_COMBINE mm1, mm6, mm3
+    DS_MOVNTQ [eax + ecx], mm1
 
     add     ecx, 8
     cmp     ecx, [ebp + %$PixelCount]          ; done with line?
@@ -298,8 +276,6 @@ proc _Deint_Diag_Core_Luma%1, 28
     %$Dest arg
     %$PixelCount arg
 
-    ;sub     esp, 24                 ; 24 bytes of local stack space 
-	
 	mov [esp+16], esi
 	mov [esp+20], edi
 	mov [esp+24], ebx
@@ -432,20 +408,13 @@ LoopLuma%1:
     ; mm0 = 0
     ; mm6 = Bob pixels          
 
-    movq mm1, [edi]
-    movq mm2, [esi]
-    movq mm3, mm1			; another copy of our pixel1 value
-    movq mm4, mm2			; another copy of our pixel2 value
-
-    DS_PABS mm3, mm4, mm5
-
-    DS_PAVGB mm1, mm2, mm4, [ShiftMask]  ; avg of 2 pixels
+    movq mm1, [esi]
 
     ; these must be the values as we exit
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm3 = "movement" in the centre
     ; mm6 = Bob pixels          
+
 
     ;//////////////////////////////////////////////////////////////////////////
     ; Bottom
@@ -453,20 +422,15 @@ LoopLuma%1:
     ; these should be the values held as we go in
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm3 = "movement" in the centre
     ; mm6 = Bob pixels          
 
     mov     eax, [ebp + %$T4]
-    movq	mm2, [ebx]
-    movq	mm4, [eax + ecx]
+    movq	mm2, [eax + ecx]
 
-    DS_PABS mm2, mm4, mm5
+    movq    mm3, [edi]
 
     mov     eax, [ebp + %$B4]
-    movq	mm4, [edx]
-    movq	mm7, [eax + ecx]
-
-    DS_PABS mm4, mm7, mm5
+    movq	mm4, [eax + ecx]
     
     ; mm0 = 0
     ; mm1 = weave pixels
@@ -475,24 +439,16 @@ LoopLuma%1:
     ; mm4 = "movement" in the bottom
     ; mm6 = Bob pixels          
 
-    psubusb mm2, [_MOVE]           ; non-zero where mm2 > MOVE i.e. Movement
-    pcmpeqw mm2, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqw mm2, mm0            ; all ff where movement in either of the two pixels
+    pcmpgtb mm2, [_MOVE3]
+    pcmpgtb mm3, [_MOVE3]
+    pcmpgtb mm4, [_MOVE3]
 
-    psubusb mm3, [_MOVE]           ; non-zero where mm3 > MOVE i.e. Movement
-    pcmpeqw mm3, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqw mm3, mm0            ; all ff where movement in either of the two pixels
-
-    psubusb mm4, [_MOVE]           ; non-zero where mm4 > MOVE i.e. Movement
-    pcmpeqw mm4, mm0            ; FFFF where the luma has no movement in two pixels
-    pcmpeqw mm4, mm0            ; all ff where movement in either of the two pixels
-
-    pand  mm2, mm4              ; top and bottom moving
-    por  mm3, mm2               ; where we should bob
+    por  mm2, mm4                ; top or bottom still
+    pand  mm3, mm2               ; where we should weave
 
 	mov		eax, [ebp + %$Dest]
-    DS_COMBINE mm6, mm1, mm3
-    DS_MOVNTQ [eax+ecx], mm6
+    DS_COMBINE mm1, mm6, mm3
+    DS_MOVNTQ [eax + ecx], mm1
 
     add     ecx, 8
     cmp     ecx, [ebp + %$PixelCount]          ; done with line?
@@ -519,6 +475,76 @@ LoopLuma%1:
 endproc
 %endmacro
 
+;---------------------------------------------------------------------------
+; Do motion sensitive chroma deinterlacing
+;---------------------------------------------------------------------------
+%imacro Deint_Diag_Core_Chroma 1
+
+global _Deint_Diag_Core_Chroma%1
+
+proc _Deint_Diag_Core_Chroma%1, 4
+
+    %define %1 1
+
+    %$Weave arg
+    %$BobUpper arg
+    %$BobLower arg
+    %$MapUpper arg
+    %$MapMiddle arg
+    %$MapLower arg
+    %$Dest arg
+    %$PixelCount arg
+
+    pxor mm0, mm0
+	mov		ecx, 0				; curr offset into all lines
+
+LoopChroma%1:	
+
+    ; these should be the values held as we go in
+    ; mm0 = 0
+
+    mov     eax, [ebp + %$Weave]
+    movq	mm1, [eax + ecx]
+
+    mov     eax, [ebp + %$BobUpper]
+    movq	mm2, [eax + ecx]
+
+    mov     eax, [ebp + %$BobLower]
+	DS_PAVGB mm2, [eax + ecx], mm3, [ShiftMask]
+	
+
+    mov     eax, [ebp + %$MapUpper]
+    movq	mm3, [eax + ecx]
+
+    mov     eax, [ebp + %$MapMiddle]
+    movq	mm4, [eax + ecx]
+
+    mov     eax, [ebp + %$MapLower]
+    movq	mm5, [eax + ecx]
+
+    pcmpgtb mm3, [_MOVE3]        ; FF where still
+    pcmpgtb mm4, [_MOVE3]        ; FF where still
+    pcmpgtb mm5, [_MOVE3]        ; FF where still
+
+    por  mm3, mm5
+    pand  mm3, mm4
+
+
+	mov		eax, [ebp + %$Dest]
+    DS_COMBINE mm1, mm2, mm3
+    DS_MOVNTQ [eax + ecx], mm1
+
+    add     ecx, 8
+    cmp     ecx, [ebp + %$PixelCount]          ; done with line?
+    jb      LoopChroma%1
+
+	emms
+
+    %undef %1
+endproc
+%endmacro
+
+
 
 ; creates external C function _Deint_Diag_Core_YUY2_MMX
 Deint_Diag_Core_YUY2 _MMX
@@ -537,3 +563,12 @@ Deint_Diag_Core_Luma _3DNOW
 
 ; creates external C function _Deint_Diag_Core_Luma_SSE
 Deint_Diag_Core_Luma _SSE
+
+; creates external C function _Deint_Diag_Core_Chroma_MMX
+Deint_Diag_Core_Chroma _MMX
+
+; creates external C function _Deint_Diag_Core_Chroma_3DNOW
+Deint_Diag_Core_Chroma _3DNOW
+
+; creates external C function _Deint_Diag_Core_Chroma_SSE
+Deint_Diag_Core_Chroma _SSE

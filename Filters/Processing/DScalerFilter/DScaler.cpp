@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.12 2004-11-25 21:55:54 adcockj Exp $
+// $Id: DScaler.cpp,v 1.13 2004-12-06 18:05:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/11/25 21:55:54  adcockj
+// fix issue with interlaced flags on output
+//
 // Revision 1.11  2004/11/01 14:09:39  adcockj
 // More DScaler filter insipred changes
 //
@@ -511,6 +514,11 @@ HRESULT CDScaler::UpdateTypes()
 	CHECK(hr);
 	hr = UpdateTypes(m_FilmDetectors[GetParamInt(FILMDETECTMODE)]);
 	CHECK(hr);
+
+    VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_InternalMTInput.pbFormat;
+
+    m_MovementMap.ReAlloc(vih2->bmiHeader.biSizeImage);
+
     return hr;
 }
 
@@ -569,7 +577,7 @@ STDMETHODIMP CDScaler::GetField(DWORD Index, IInterlacedField** Field)
     }
     if(Index < m_FieldsInBuffer)
     {
-        *Field = &(m_IncomingFields[m_FieldsInBuffer - Index - 1]);
+        *Field = &(m_IncomingFields[Index]);
         (*Field)->AddRef();
     }
     else
@@ -579,14 +587,11 @@ STDMETHODIMP CDScaler::GetField(DWORD Index, IInterlacedField** Field)
     return S_OK;
 }
 
-STDMETHODIMP CDScaler::GetStaticMap(IMediaBuffer** StaticMap)
+STDMETHODIMP CDScaler::GetMovementMap(IMediaBuffer** MovementMap)
 {
-    return E_NOTIMPL;
-}
-
-STDMETHODIMP CDScaler::GetFrameDiffMap(IMediaBuffer** DiffMap)
-{
-    return E_NOTIMPL;
+    *MovementMap = (IMediaBuffer*)&m_MovementMap;
+    m_MovementMap.AddRef();
+    return S_OK;
 }
 
 STDMETHODIMP CDScaler::PopStack()
@@ -606,6 +611,7 @@ STDMETHODIMP CDScaler::ClearAll()
     m_NextFieldNumber = 0;
     m_DetectedPulldownIndex = 0;
     m_DetectedPulldownType = FULLRATEVIDEO;
+    m_MovementMap.Clear();
     return S_OK;
 }
 
@@ -677,16 +683,22 @@ HRESULT CDScaler::Flush(CDSBasePin* pPin)
 
 HRESULT CDScaler::SendOutLastSamples(CDSBasePin* pPin)
 {
-    return InternalProcessOutput(FALSE);
+    return InternalProcessOutput();
 }
 
 
-HRESULT CDScaler::InternalProcessOutput(BOOL HurryUp)
+HRESULT CDScaler::InternalProcessOutput()
 {
     REFERENCE_TIME FrameEndTime = 0;
 	HRESULT hr = S_OK;
-	
-	while(hr == S_OK && m_FieldsInBuffer > m_NumberOfFieldsToBuffer)
+
+	if(m_FieldsInBuffer > 2)
+    {
+        hr = UpdateMovementMap();
+        CHECK(hr)
+    }
+
+	if(m_FieldsInBuffer >= m_NumberOfFieldsToBuffer)
 	{
         switch(WorkOutHowToProcess(FrameEndTime))
         {
@@ -699,10 +711,151 @@ HRESULT CDScaler::InternalProcessOutput(BOOL HurryUp)
             hr = DeinterlaceOutput(FrameEndTime);
             break;
         }
-
-        PopStack();
 	}
+
+    while(m_FieldsInBuffer > max(2, m_NumberOfFieldsToBuffer))
+    {
+        PopStack();
+    }
 	return hr;
+}
+
+HRESULT CDScaler::UpdateMovementMap()
+{
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+
+    SI(IInterlacedField) pNewerBuffer;
+    SI(IInterlacedField) pOlderBuffer;
+
+    HRESULT hr = GetField(0, pNewerBuffer.GetReleasedInterfaceReference()); 
+    if(FAILED(hr)) return hr;
+
+    hr = GetField(2, pOlderBuffer.GetReleasedInterfaceReference()); 
+    if(FAILED(hr)) return hr;
+
+    BOOLEAN IsTopLine = FALSE;
+
+    hr = pNewerBuffer->get_TopFieldFirst(&IsTopLine);
+    if(FAILED(hr)) return hr;
+
+    BYTE* pInputDataNewer;
+    DWORD InputLengthNewer;
+    BYTE* pInputDataOlder;
+    DWORD InputLengthOlder;
+
+    BYTE* pMovementMap = m_MovementMap.GetMap();
+
+    
+    hr = pNewerBuffer->GetBufferAndLength(&pInputDataNewer, &InputLengthNewer);
+    if(FAILED(hr)) return hr;
+
+    hr = pOlderBuffer->GetBufferAndLength(&pInputDataOlder, &InputLengthOlder);
+    if(FAILED(hr)) return hr;
+
+    // do 4:2:2 format up here and we need to 
+    // worry about deinterlacing both luma and chroma
+    if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
+    {
+		if(!IsTopLine)
+        {
+            pInputDataNewer += InputInfo->bmiHeader.biWidth * 2;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
+            pMovementMap += InputInfo->bmiHeader.biWidth * 2;
+        }
+
+        for(int i(0); i < InputInfo->bmiHeader.biHeight/2; ++i)
+        {
+            for(int j(0); j < InputInfo->bmiHeader.biWidth * 2; ++j)
+            {
+                int Move = pInputDataNewer[j] - pInputDataOlder[j];
+                if(Move < 8 && Move > -8)
+                {
+                    if(pMovementMap[j] < 127)
+                    {
+                        ++(pMovementMap[j]);
+                    }
+                }
+                else
+                {
+                    pMovementMap[j] = 0;
+                }
+            }
+            pInputDataNewer += InputInfo->bmiHeader.biWidth * 4;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth * 4;
+            pMovementMap += InputInfo->bmiHeader.biWidth * 4;
+        }
+    }
+    else
+    {
+		if(!IsTopLine)
+        {
+            pInputDataNewer += InputInfo->bmiHeader.biWidth;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth;
+            pMovementMap += InputInfo->bmiHeader.biWidth;
+        }
+
+        for(int i(0); i < InputInfo->bmiHeader.biHeight/2; ++i)
+        {
+            for(int j(0); j < InputInfo->bmiHeader.biWidth; ++j)
+            {
+                int Move = pInputDataNewer[j] - pInputDataOlder[j];
+                if(Move < 8 && Move > -8)
+                {
+                    if(pMovementMap[j] < 127)
+                    {
+                        ++pMovementMap[j];
+                    }
+                }
+                else
+                {
+                    pMovementMap[j] = 0;
+                }
+            }
+            pInputDataNewer += InputInfo->bmiHeader.biWidth * 2;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
+            pMovementMap += InputInfo->bmiHeader.biWidth * 2;
+        }
+
+        if(!IsTopLine)
+        {
+            pInputDataNewer -= InputInfo->bmiHeader.biWidth;
+            pInputDataOlder -= InputInfo->bmiHeader.biWidth;
+            pMovementMap -= InputInfo->bmiHeader.biWidth;
+        }
+
+        // do chroma movement map as well
+        if(!IsTopLine)
+        {
+            pInputDataNewer += InputInfo->bmiHeader.biWidth / 2;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth / 2;
+            pMovementMap += InputInfo->bmiHeader.biWidth / 2;
+        }
+
+        for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        {
+            for(int j(0); j < InputInfo->bmiHeader.biWidth / 2; ++j)
+            {
+                int Move = pInputDataNewer[j] - pInputDataOlder[j];
+                if(Move < 8 && Move > -8)
+                {
+                    if(pMovementMap[j] < 127)
+                    {
+                        ++pMovementMap[j];
+                    }
+                }
+                else
+                {
+                    pMovementMap[j] = 0;
+                }
+            }
+            pInputDataNewer += InputInfo->bmiHeader.biWidth;
+            pInputDataOlder += InputInfo->bmiHeader.biWidth;
+            pMovementMap += InputInfo->bmiHeader.biWidth;
+        }
+        
+    }
+
+    return hr;
 }
 
 HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
@@ -781,6 +934,14 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
     CHECK(hr);
 
     hr = m_CurrentDeinterlacingMethod->Process((IInterlacedBufferStack*)this, OutBuffer.GetNonAddRefedInterface());
+
+    if(FALSE)
+    {
+        DumpField(&m_IncomingFields[0], "Field1.txt");
+        DumpField(&m_IncomingFields[1], "Field2.txt");
+        DumpMap("map.txt");
+        DumpOutput(OutBuffer.GetNonAddRefedInterface(), "Output.txt");
+    }
 
 	if(hr == S_OK && m_VideoInPin->IsFlushing() == FALSE)
 	{
@@ -908,8 +1069,7 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
                 (pmt->formattype == FORMAT_VideoInfo && pPin == m_VideoInPin));
 
         result &= (pmt->subtype == MEDIASUBTYPE_YUY2 || 
-               pmt->subtype == MEDIASUBTYPE_YV12 ||
-               pmt->subtype == MEDIASUBTYPE_NV12);
+               pmt->subtype == MEDIASUBTYPE_YV12);
     
 		if(result)
 		{
@@ -1003,17 +1163,15 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
         VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
         if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
         {
-            pSampleProperties->dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
+            pSampleProperties->dwTypeSpecificFlags |= AM_VIDEO_FLAG_FIELD1FIRST;
         }
     }
 
-    HRESULT hr = PushSample(InSample, pSampleProperties);
-    CHECK(hr);
-
-	hr = CheckProcessingLine();
+	HRESULT hr = CheckProcessingLine();
 	CHECK(hr);
 
-	hr = InternalProcessOutput(FALSE);
+    hr = PushSample(InSample, pSampleProperties);
+    CHECK(hr);
 
 	if(FAILED(hr) || hr == S_FALSE)
 	{
@@ -1030,44 +1188,74 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
 
 HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
 {
+    HRESULT hr = S_OK;
+
     if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_REPEAT_FIELD)
     {
-        ShiftUpSamples(3, InputSample);
         if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
         {
-            m_IncomingFields[0].m_IsTopLine = TRUE;
-            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
-            m_IncomingFields[1].m_IsTopLine = FALSE;
-            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            ShiftUpSamples(1, InputSample);
             m_IncomingFields[2].m_IsTopLine = TRUE;
             m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[1].m_IsTopLine = FALSE;
+            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            hr = InternalProcessOutput();
+            CHECK(hr);
         }
         else
         {
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[0].m_IsTopLine = FALSE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
-            m_IncomingFields[1].m_IsTopLine = TRUE;
-            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
-            m_IncomingFields[2].m_IsTopLine = FALSE;
-            m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            hr = InternalProcessOutput();
+            CHECK(hr);
         }
     }
     else
     {
-        ShiftUpSamples(2, InputSample);
         if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
         {
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
-            m_IncomingFields[1].m_IsTopLine = TRUE;
-            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+            hr = InternalProcessOutput();
+            CHECK(hr);
         }
         else
         {
+            ShiftUpSamples(1, InputSample);
+            m_IncomingFields[0].m_IsTopLine = FALSE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+            hr = InternalProcessOutput();
+            CHECK(hr);
+            ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
-            m_IncomingFields[1].m_IsTopLine = FALSE;
-            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+            hr = InternalProcessOutput();
+            CHECK(hr);
         }
     }
     return S_OK;
@@ -1194,4 +1382,134 @@ HRESULT CDScaler::CreateInternalMediaTypes()
     m_TypesChanged = true;
 
     return S_OK;
+}
+
+void CDScaler::DumpField(IInterlacedField* Field, LPCSTR FileName)
+{
+    FILE* hFile = fopen(FileName, "w");
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+
+    BOOLEAN IsTopLine = FALSE;
+
+    Field->get_TopFieldFirst(&IsTopLine);
+
+    BYTE* pInputData;
+    DWORD InputLength;
+    
+    Field->GetBufferAndLength(&pInputData, &InputLength);
+
+    if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
+    {
+        if(!IsTopLine)
+        {
+            pInputData += InputInfo->bmiHeader.biWidth * 2;
+        }
+
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        {
+            DumpLine(hFile, pInputData, InputInfo->bmiHeader.biWidth, 2);
+            pInputData += InputInfo->bmiHeader.biWidth * 4;
+        }
+    }
+    else
+    {
+        if(!IsTopLine)
+        {
+            pInputData += InputInfo->bmiHeader.biWidth;
+        }
+
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        {
+            DumpLine(hFile, pInputData, InputInfo->bmiHeader.biWidth, 1);
+            pInputData += InputInfo->bmiHeader.biWidth * 2;
+        }
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        {
+            DumpLine(hFile, pInputData, InputInfo->bmiHeader.biWidth / 2, 1);
+            pInputData += InputInfo->bmiHeader.biWidth;
+        }
+    }
+
+    fclose(hFile);
+}
+
+void CDScaler::DumpMap(LPCSTR FileName)
+{
+    FILE* hFile = fopen(FileName, "w");
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+
+    BYTE* pMapData = m_MovementMap.GetMap();
+
+    if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
+    {
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight; ++i)
+        {
+            DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth * 2, 1);
+            pMapData += InputInfo->bmiHeader.biWidth;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight; ++i)
+        {
+            DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth, 1);
+            pMapData += InputInfo->bmiHeader.biWidth;
+        }
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
+        {
+            DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth/2, 1);
+            pMapData += InputInfo->bmiHeader.biWidth/2;
+        }
+        for(int i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
+        {
+            DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth/2, 1);
+            pMapData += InputInfo->bmiHeader.biWidth/2;
+        }
+    }
+
+    fclose(hFile);
+}
+
+void CDScaler::DumpOutput(IMediaBuffer* OutBuffer, LPCSTR FileName)
+{
+    FILE* hFile = fopen(FileName, "w");
+
+    VIDEOINFOHEADER2* OutputInfo = (VIDEOINFOHEADER2*)(m_VideoOutPin->m_ConnectedMediaType.pbFormat);
+
+    BOOLEAN IsTopLine = FALSE;
+
+    BYTE* pData;
+    DWORD Length;
+    
+    OutBuffer->GetBufferAndLength(&pData, &Length);
+
+    if(OutputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
+    {
+        for(int i = 0; i < abs(OutputInfo->bmiHeader.biHeight); ++i)
+        {
+            DumpLine(hFile, pData, OutputInfo->bmiHeader.biWidth, 2);
+            pData += OutputInfo->bmiHeader.biWidth * 2;
+        }
+    }
+    else
+    {
+        for(int i = 0; i < abs(OutputInfo->bmiHeader.biHeight); ++i)
+        {
+            DumpLine(hFile, pData, OutputInfo->bmiHeader.biWidth, 1);
+            pData += OutputInfo->bmiHeader.biWidth;
+        }
+    }
+
+    fclose(hFile);
+}
+
+void CDScaler::DumpLine(FILE* hFile, BYTE* pData, int Length, int YOffset)
+{
+    for(int i = 0; i < Length; ++i)
+    {
+        fprintf(hFile, "%02x ", pData[i * YOffset]);
+    }
+    fprintf(hFile, "\n");
 }

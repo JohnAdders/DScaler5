@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.8 2004-11-26 15:03:52 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.9 2004-12-06 18:05:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/11/26 15:03:52  adcockj
+// fixed reconnection issue with old video renderer
+//
 // Revision 1.7  2004/11/25 17:22:10  adcockj
 // Fixed some more connection issues
 //
@@ -117,6 +120,10 @@ HRESULT CDSVideoOutPin::NotifyConnected()
 	else if(Clsid == CLSID_WM10RENDERER)
 	{
         m_ConnectedType = WM10_OUTFILTER;
+	}
+	else if(Clsid == CLSID_CDScaler)
+	{
+        m_ConnectedType = DSCALER_OUTFILTER;
 	}
     else
     {
@@ -545,6 +552,7 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         case GABEST_OUTFILTER:
         case OVERLAY_OUTFILTER:
         case FFDSHOW_OUTFILTER:
+        case DSCALER_OUTFILTER:
             hr = ReconnectOverlay();
             break;
 		case WM10_OUTFILTER:
@@ -1079,13 +1087,20 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     {
         return S_FALSE;
     }
+    int wout = 0, hout = 0;
+    long arxout = 0, aryout = 0;
+    ExtractDim(pmt, wout, hout, arxout, aryout);
     if(m_InsideReconnect)
     {
-        int wout = 0, hout = 0;
-        long arxout = 0, aryout = 0;
-        ExtractDim(pmt, wout, hout, arxout, aryout);
         m_PitchWidth = wout;
         m_PitchHeight = hout;
+    }
+    else
+    {
+        if(abs(wout) != abs(m_Width) || abs(hout) != abs(m_Height))
+        {
+            return S_FALSE;
+        }
     }
     return S_OK;
 }
@@ -1112,4 +1127,57 @@ void CDSVideoOutPin::SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame)
 CDSVideoOutPin::OUT_TYPE CDSVideoOutPin::GetConnectedType()
 {
     return m_ConnectedType;
+}
+
+int CDSVideoOutPin::GetDroppedFrames()
+{
+    return GetDroppedFrames(m_ConnectedPin.GetNonAddRefedInterface());
+}
+
+int CDSVideoOutPin::GetDroppedFrames(IPin* InputPin)
+{
+    int RetVal = 0;
+    PIN_INFO PinInfo;
+    HRESULT hr = InputPin->QueryPinInfo(&PinInfo);
+    if(hr == S_OK)
+    {
+        if(PinInfo.pFilter != NULL)
+        {
+            SI(IQualProp) QualProp = PinInfo.pFilter;
+            if(QualProp)
+            {
+                QualProp->get_FramesDroppedInRenderer(&RetVal);
+            }
+            else
+            {
+                SI(IEnumPins) EnumPins;
+                hr = PinInfo.pFilter->EnumPins(EnumPins.GetReleasedInterfaceReference());
+                if(hr == S_OK)
+                {
+                    SI(IPin) Pin;
+                    hr = EnumPins->Next(1, Pin.GetReleasedInterfaceReference(), NULL);
+                    while(hr == S_OK)
+                    {
+                        PIN_DIRECTION PinDir;
+                        hr = Pin->QueryDirection(&PinDir);
+                        if(hr == S_OK && PinDir == PINDIR_OUTPUT)
+                        {
+                            SI(IPin) ConnectedTo;
+                            hr = Pin->ConnectedTo(ConnectedTo.GetReleasedInterfaceReference());
+                            if(hr == S_OK)
+                            {
+                                RetVal += GetDroppedFrames(ConnectedTo.GetNonAddRefedInterface());
+                            }
+                        }
+                        // need to do the detach otherwise we
+                        // end up releasing a pin twice causing crashes
+                        Pin.Detach();
+                        hr = EnumPins->Next(1, Pin.GetReleasedInterfaceReference(), NULL);
+                    }
+                }
+            }
+            PinInfo.pFilter->Release();
+        }
+    }
+    return RetVal;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.3 2004-11-06 14:07:01 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.4 2004-12-06 18:05:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,6 +51,7 @@ public:
     HRESULT ReconnectOverlay();
     HRESULT ReconnectOther();
     HRESULT ReconnectWM10();
+    int GetDroppedFrames();
 
 
     void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn, bool ProgressiveChroma);
@@ -87,6 +88,7 @@ public:
         VMR7_OUTFILTER,
         VMR9_OUTFILTER,
         WM10_OUTFILTER,
+        DSCALER_OUTFILTER,
     } OUT_TYPE;
 
     OUT_TYPE GetConnectedType();
@@ -110,8 +112,7 @@ private:
     long m_PitchWidth;
     long m_PitchHeight;
     REFERENCE_TIME m_AvgTimePerFrame;
-
-
+    int GetDroppedFrames(IPin* InputPin);
     AM_MEDIA_TYPE m_InternalMT;
 };
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.9 2004-11-01 14:09:55 adcockj Exp $
+// $Id: DScaler.h,v 1.10 2004-12-06 18:05:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -23,8 +23,7 @@
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
-
-DEFINE_GUID(CLSID_CDScaler, 0x0D71870A, 0x7563, 0x11D7, 0xB8, 0x4A, 0x00, 0x02, 0xA5, 0x62, 0x33, 0x77);
+#include "moreuuids.h"
 
 class CDScaler : 
     public CDSBaseFilter,
@@ -90,8 +89,7 @@ public:
 public:
     STDMETHOD(get_NumFields)(DWORD* Count);
     STDMETHOD(GetField)(DWORD Index, IInterlacedField** Field);
-    STDMETHOD(GetStaticMap)(IMediaBuffer** StaticMap);
-    STDMETHOD(GetFrameDiffMap)(IMediaBuffer** DiffMap);
+    STDMETHOD(GetMovementMap)(IMediaBuffer** MovementMap);
     STDMETHOD(PopStack)();
     STDMETHOD(ClearAll)();
 
@@ -145,15 +143,20 @@ private:
     HRESULT UpdateTypes(IMediaObject* pDMO);
     void ResetPullDownIndexRange();
 
-    HRESULT InternalProcessOutput(BOOL HurryUp);
+    HRESULT InternalProcessOutput();
     eHowToProcess WorkOutHowToProcess(REFERENCE_TIME& FrameEndTime);
     HRESULT WeaveOutput(REFERENCE_TIME& FrameEndTime);
     HRESULT DeinterlaceOutput(REFERENCE_TIME& FrameEndTime);
     HRESULT Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer);
-    void ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
+    void WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
     HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
     void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
     HRESULT CreateInternalMediaTypes();
+    HRESULT UpdateMovementMap();
+    void DumpField(IInterlacedField* Field, LPCSTR FileName);
+    void DumpMap(LPCSTR FileName);
+    void DumpOutput(IMediaBuffer* OutBuffer, LPCSTR FileName);
+    void DumpLine(FILE* hFile, BYTE* pData, int Length, int YOffset);
 
 protected:
     class CField: public IInterlacedField
@@ -194,6 +197,25 @@ protected:
 		eDetectionHint m_Hint;
     };
 
+    class CMap: public IMediaBuffer
+    {
+    public:
+		CMap();
+		~CMap();
+	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+	    STDMETHOD(SetLength)(DWORD cbLength);
+		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+		void ReAlloc(DWORD NewLength);
+        void Clear();
+        BYTE* GetMap() {return m_Map;};
+    public:
+        BYTE* m_Map;
+        DWORD m_Length;
+    };
+
 	// leave plenty of room in case
 	// we get odd field numbers
     CField m_IncomingFields[9];
@@ -218,6 +240,7 @@ private:
     DWORD m_NextFieldNumber;
 	REFERENCE_TIME m_LastStartEnd;
     REFERENCE_TIME m_FieldTiming;
+    CMap m_MovementMap;
 };
 
 #define m_VideoInPin m_InputPins[0]

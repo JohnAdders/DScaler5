@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerWeave.cpp,v 1.4 2004-11-01 14:09:55 adcockj Exp $
+// $Id: DScalerWeave.cpp,v 1.5 2004-12-06 18:05:01 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/11/01 14:09:55  adcockj
+// More DScaler filter insipred changes
+//
 // Revision 1.3  2004/03/05 17:21:33  adcockj
 // Better handling of dynamic format changes
 //
@@ -153,6 +156,7 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
                 pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
             }
             pInputDataOlder -= InputInfo->bmiHeader.biWidth;
+            WeavePlanarChroma(pInputDataNewer, pInputDataOlder, pOutputData, InputInfo, OutputInfo);
         }
         else
         {
@@ -167,61 +171,35 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
                 pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
             }
             pInputDataNewer -= InputInfo->bmiHeader.biWidth;
+            WeavePlanarChroma(pInputDataOlder, pInputDataNewer, pOutputData, InputInfo, OutputInfo);
         }
-        ProcessPlanarChroma(pInputDataNewer, pOutputData, InputInfo, OutputInfo);
     }
     return S_OK;
 }
 
-void CDScaler::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
+void CDScaler::WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
 {
-    // copy chroma over
-    // the formats for YV12 and NV12 are different
-    // but the both 
-    if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','V','1','2'))
+	DWORD LineLength;
+	if(InputInfo->rcSource.right > 0)
+	{
+		LineLength = InputInfo->rcSource.right / 2;
+	}
+	else
+	{
+		LineLength = InputInfo->bmiHeader.biWidth / 2;
+	}
+    // copy V then U
+    // there are biWidth / 2 x biHeight/2 of V 
+    // followed by biWidth / 2 x biHeight/2 of U
+    pLowerChroma += InputInfo->bmiHeader.biWidth / 2;
+    for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right / 2;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth / 2;
-		}
-        // copy V then U
-        // there are biWidth / 2 x biHeight/2 of V 
-        // followed by biWidth / 2 x biHeight/2 of U
-        for(int i(0); i < InputInfo->bmiHeader.biHeight; ++i)
-        {
-            memcpy(pOutputData, pInputData, LineLength);
-            pOutputData += OutputInfo->bmiHeader.biWidth / 2;
-            pInputData += InputInfo->bmiHeader.biWidth / 2;
-        }
-    }
-    else if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('N','V','1','2'))
-    {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth;
-		}
-
-		// copy U & V - there are biWidth / 2 x biHeight/2 of UV samples
-        for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)
-        {
-            memcpy(pOutputData, pInputData, LineLength);
-            pOutputData += OutputInfo->bmiHeader.biWidth;
-            pInputData += InputInfo->bmiHeader.biWidth;
-        }
-    }
-    else
-    {
-        ; // very unexpected
+        memcpy(pOutputData, pUpperChroma, LineLength);
+        pOutputData += OutputInfo->bmiHeader.biWidth / 2;
+        memcpy(pOutputData, pLowerChroma, LineLength);
+        pOutputData += OutputInfo->bmiHeader.biWidth / 2;
+        pLowerChroma += InputInfo->bmiHeader.biWidth / 2;
+        pUpperChroma += InputInfo->bmiHeader.biWidth / 2;
     }
 }
 

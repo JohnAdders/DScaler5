@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.7 2004-11-25 17:22:09 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.8 2004-12-06 18:04:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/11/25 17:22:09  adcockj
+// Fixed some more connection issues
+//
 // Revision 1.6  2004/11/18 21:26:23  adcockj
 // fix accedental checkin of conflict
 //
@@ -304,7 +307,6 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555));
-        Result &= (abs(m_VideoOutPin->GetHeight()) == abs(hout)) && (m_VideoOutPin->GetWidth() == wout);
     }
     return Result;
 }
