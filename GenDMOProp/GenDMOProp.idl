@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.7 2004-02-06 12:17:17 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.8 2004-03-15 17:17:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 // Revision 1.6  2003/10/31 17:19:37  adcockj
 // Added support for manual pulldown selection (works with Elecard Filters)
 //
@@ -130,6 +135,19 @@ library GENDMOPROPLib
 		[propget] HRESULT License([out, retval] eFreeLicense* License);
         [propget] HRESULT Authors([out, retval] BSTR* Authors);
 	}
+
+	[
+        object,
+		uuid(85F5007E-3759-4be0-854B-A78B06814DB7),
+		helpstring("ISaveDefaults Interface"),
+		pointer_default(unique)
+	]
+	interface ISaveDefaults : IUnknown
+	{
+        HRESULT SaveDefaultsToRegistry();
+        HRESULT LoadDefaultsFromRegistry();
+	}
+
 
     [
         object,

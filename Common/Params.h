@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.4 2004-02-25 17:14:00 adcockj Exp $
+// $Id: Params.h,v 1.5 2004-03-15 17:17:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -22,6 +22,7 @@
 
 #include <medparam.h>
 #include "ProtectCode.h"
+#include "GenDMOProp.h"
 
 #define BEGIN_PARAM_LIST() private: \
     ParamInfo* _GetParamList(DWORD* pCount = NULL) { \
@@ -44,10 +45,11 @@ class CParams :
     public IMediaParamInfo,
     public IMediaParams,
 	public IPersistStream,
+    public ISaveDefaults,
     public CCanLock
 {
 public:
-    CParams():m_fDirty(false) {};
+    CParams(LPCWSTR RegistryKey):m_fDirty(false), m_RegKey(RegistryKey) {};
 
 IMPLEMENT_UNKNOWN(CParams)
 
@@ -56,6 +58,7 @@ BEGIN_INTERFACE_TABLE(CParams)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IPersistStream)
 	IMPLEMENTS_INTERFACE(IPersist)
+	IMPLEMENTS_INTERFACE(ISaveDefaults)
 END_INTERFACE_TABLE()
 
 protected:
@@ -321,6 +324,79 @@ public:
 	    pcbSize->QuadPart = sizeof(ParamCount) + ParamCount * sizeof(MP_DATA);
 	    return S_OK;
     };
+    // ISaveDefaults Methods
+public:
+    STDMETHOD(SaveDefaultsToRegistry)()
+    {
+        DWORD ParamCount(0);
+        const ParamInfo* Params = _GetParamList(&ParamCount);
+		HKEY MySubKey;
+		if(FAILED(GetRegistryKey(MySubKey)))
+		{
+			return E_UNEXPECTED;
+		}
+         
+        for(DWORD i(0); i < ParamCount; ++i)
+        {
+            if(Params[i].MParamInfo.mpType != MPT_FLOAT)
+            {
+                DWORD dwValue = (DWORD)Params[i].Value;
+                if(RegSetValueExW(MySubKey, Params[i].MParamInfo.szLabel, 0, REG_DWORD, (BYTE*)&dwValue, sizeof(DWORD)) != ERROR_SUCCESS)
+                {
+					RegCloseKey(MySubKey);
+                    return E_UNEXPECTED;
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        RegCloseKey(MySubKey);
+
+        return S_OK;
+    }
+    STDMETHOD(LoadDefaultsFromRegistry)()
+    {
+        DWORD ParamCount(0);
+        const ParamInfo* Params = _GetParamList(&ParamCount);
+		HKEY MySubKey;
+		if(FAILED(GetRegistryKey(MySubKey)))
+		{
+			return E_UNEXPECTED;
+		}
+        
+		for(DWORD i(0); i < ParamCount; ++i)
+        {
+            if(Params[i].MParamInfo.mpType != MPT_FLOAT)
+            {
+                DWORD dwValue = (DWORD)Params[i].MParamInfo.mpdNeutralValue;
+				DWORD RegType;
+				DWORD Size;
+                if(!RegQueryValueExW(MySubKey, Params[i].MParamInfo.szLabel, 0, &RegType, (BYTE*)&dwValue, &Size) != ERROR_SUCCESS)
+                {
+					if(RegType == REG_DWORD)
+					{
+						SetParam(i, (MP_DATA)dwValue);
+					}
+					else
+					{
+						SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
+					}
+				}
+            }
+            else
+            {
+				SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
+            }
+        }
+
+        RegCloseKey(MySubKey);
+
+        return S_OK;
+
+    }
 public:
     void Lock() {CCanLock::Lock();};
     void Unlock() {CCanLock::Unlock();};
@@ -328,10 +404,35 @@ public:
 private:
     virtual ParamInfo* _GetParamList(DWORD* pCount) = 0;
     virtual HRESULT ParamChanged(DWORD dwParamIndex) = 0;
+	HRESULT GetRegistryKey(HKEY& RegKey)
+	{
+        HKEY SoftwareKey;
+	    if(RegOpenKeyExW(HKEY_CURRENT_USER, L"Software", 0, KEY_CREATE_SUB_KEY, &SoftwareKey) != ERROR_SUCCESS)
+        {
+            return E_UNEXPECTED;
+        }
 
+        HKEY DScaler5Key;
+	    if(RegCreateKeyExW(SoftwareKey, L"DScaler5", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &DScaler5Key, NULL) != ERROR_SUCCESS)
+        {
+            RegCloseKey(SoftwareKey);
+            return E_UNEXPECTED;
+        }
+
+	    if(RegCreateKeyExW(DScaler5Key, m_RegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &RegKey, NULL) != ERROR_SUCCESS)
+        {
+	        RegCloseKey(DScaler5Key);
+            RegCloseKey(SoftwareKey);
+            return E_UNEXPECTED;
+        }
+	    RegCloseKey(DScaler5Key);
+        RegCloseKey(SoftwareKey);
+		return S_OK;
+	}
 protected:
 	bool	m_fDirty;
     virtual HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText) {return E_NOTIMPL;};
+    LPCWSTR m_RegKey;
 
 };
 

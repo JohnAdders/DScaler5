@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.6 2004-03-01 15:50:24 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.7 2004-03-15 17:17:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -67,6 +67,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CAudioDecoder, "{D2CA75C2-05A1-4915-88A8-D433F876
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
+    IMPLEMENTS_INTERFACE(ISaveDefaults)
 END_INTERFACE_TABLE()
 
 public:

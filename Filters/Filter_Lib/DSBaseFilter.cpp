@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.4 2004-03-01 13:04:28 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.5 2004-03-15 17:17:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/03/01 13:04:28  adcockj
+// Fixed another locking problem
+//
 // Revision 1.3  2004/02/27 17:08:16  adcockj
 // Improved locking at state changes
 // Better error handling at state changes
@@ -39,7 +42,8 @@
 #include "DSBasePin.h"
 #include "EnumPins.h"
 
-CDSBaseFilter::CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOutputPins)
+CDSBaseFilter::CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOutputPins) :
+    CParams(Name)
 {
     m_State = State_Stopped;
     m_Graph = NULL;
@@ -172,6 +176,8 @@ STDMETHODIMP CDSBaseFilter::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
     LOG(DBGLOG_ALL, ("CDSBaseFilter::JoinFilterGraph\n"));
     if(pGraph != NULL)
     {
+		LoadDefaultsFromRegistry();
+
         // we need the FilterGraph2 interface
         // so that we can use ReconnectEx for dynamic connections
         if(FAILED(pGraph->QueryInterface(IID_IFilterGraph2, (void**)&m_Graph)))

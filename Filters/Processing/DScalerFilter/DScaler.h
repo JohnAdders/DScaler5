@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.5 2004-03-09 20:21:56 adcockj Exp $
+// $Id: DScaler.h,v 1.6 2004-03-15 17:17:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -43,6 +43,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CDScaler, "{0D71870A-7563-11D7-B84A-0002A5623377}
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
+    IMPLEMENTS_INTERFACE(ISaveDefaults)
 END_INTERFACE_TABLE()
 
 public:

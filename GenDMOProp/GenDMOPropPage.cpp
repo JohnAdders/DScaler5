@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.8 2003-07-21 08:44:41 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.9 2004-03-15 17:17:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2003/07/21 08:44:41  adcockj
+// Added HScroll patch from Torbjorn
+//
 // Revision 1.7  2003/05/17 11:29:36  adcockj
 // Fixed crashing
 //
@@ -123,6 +126,7 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     }
     m_MediaParamInfo = *ppUnk;
     m_MediaParams = *ppUnk;
+    m_SaveDefaults = *ppUnk;
 
     if(m_MediaParamInfo != NULL && m_MediaParams != NULL)
     {
@@ -192,12 +196,18 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
     m_Slider.Attach(GetDlgItem(IDC_SLIDER));
     m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
     m_Combo.Attach(GetDlgItem(IDC_COMBO));
+    m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
 
     m_EditBox.ShowWindow(SW_HIDE);
     m_CheckBox.ShowWindow(SW_HIDE);
     m_Slider.ShowWindow(SW_HIDE);
     m_Scrollbar.ShowWindow(SW_HIDE);
     m_Combo.ShowWindow(SW_HIDE);
+
+    if(!m_SaveDefaults)
+    {
+        m_DefaultsBtn.ShowWindow(SW_HIDE);
+    }
 
     // load up the names into the list box
     m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
@@ -477,6 +487,15 @@ LRESULT CGenDMOPropPage::OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCt
     if(!m_bDirty)
     {
         SetDirty(HasAnythingChanged());
+    }
+    return 0;
+}
+
+LRESULT CGenDMOPropPage::OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+{
+    if(m_SaveDefaults)
+    {
+        m_SaveDefaults->SaveDefaultsToRegistry();
     }
     return 0;
 }

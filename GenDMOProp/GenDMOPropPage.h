@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.6 2003-07-21 08:44:41 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.7 2004-03-15 17:17:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -53,6 +53,7 @@ BEGIN_MSG_MAP(CGenDMOPropPage)
     COMMAND_HANDLER(IDC_EDIT, EN_CHANGE, OnEditChange);
     COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
     COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
+    COMMAND_HANDLER(IDC_SAVEDEFAULTS, BN_CLICKED, OnSaveDefaultsClick);
     CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
 END_MSG_MAP()
 // Handler prototypes:
@@ -60,6 +61,7 @@ END_MSG_MAP()
     LRESULT OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnComboChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 	STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 	STDMETHOD(Apply)(void);
@@ -85,12 +87,14 @@ private:
 private:
     CComQIPtr<IMediaParamInfo> m_MediaParamInfo;
     CComQIPtr<IMediaParams> m_MediaParams;
+    CComQIPtr<ISaveDefaults> m_SaveDefaults;
     CWindow m_EditBox;
     CWindow m_ListBox;
     CWindow m_CheckBox;
     CWindow m_Slider;
     CWindow m_Scrollbar;
     CWindow m_Combo;
+    CWindow m_DefaultsBtn;
     MP_DATA* m_Params;
     MP_PARAMINFO* m_ParamInfos;
     WCHAR** m_ParamTexts;
