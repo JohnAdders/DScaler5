@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.11 2004-07-07 14:09:01 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.12 2004-08-02 16:56:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.10  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -411,7 +414,7 @@ STDMETHODIMP CDSInputPin::ReceiveMultiple(IMediaSample **InSamples, long nSample
     for(int i(0); i < nSamples; ++i)
     {
         hr = Receive(InSamples[i]);
-        if(FAILED(hr))
+        if(hr != S_OK)
         {
             return hr;
         }
