@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.1.1.1 2003-04-30 13:01:22 adcockj Exp $
+// $Id: Utils.cpp,v 1.2 2003-05-01 16:21:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
+// Initial Import
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -40,6 +43,10 @@ void InitMediaType(AM_MEDIA_TYPE* TypeToInit)
 
 void ClearMediaType(AM_MEDIA_TYPE* TypeToClear)
 {
+    if(TypeToClear->pUnk != NULL)
+    {
+        TypeToClear->pUnk->AddRef();
+    }
     if(TypeToClear->cbFormat > 0)
     {
         CoTaskMemFree(TypeToClear->pbFormat);
@@ -56,7 +63,19 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     Dest->bTemporalCompression = Source->bTemporalCompression;
     Dest->lSampleSize = Source->lSampleSize;
     Dest->formattype = Source->formattype;
+    // this pUnk is pretty always NULL
+    // but MS might bung something in here
+    // so we had better cope properly with it
+    // just in case
+    if(Dest->pUnk != NULL)
+    {
+        Dest->pUnk->Release();
+    }
     Dest->pUnk = Source->pUnk;
+    if(Dest->pUnk != NULL)
+    {
+        Dest->pUnk->AddRef();
+    }
     Dest->cbFormat = Source->cbFormat;
     if(Source->cbFormat > 0)
     {
