@@ -159,18 +159,6 @@ SOURCE=.\OutputPin.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\ProcessNV12.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\ProcessYUY2.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\ProcessYV12.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -188,19 +176,11 @@ SOURCE=.\DScaler.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\DSSampleField.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\EnumMediaTypes.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\EnumTwoPins.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Field.h
 # End Source File
 # Begin Source File
 
