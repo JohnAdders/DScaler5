@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TSReader.h,v 1.2 2004-10-26 16:35:03 adcockj Exp $
+// $Id: TSReader.h,v 1.3 2004-10-27 09:56:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,11 +123,15 @@ protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText);
 
+// fudge so that VC6 can compile
+public:
+    int m_GotPMTS;
+
+
 private:
 
     SI(IMpeg2Demultiplexer) m_MpegDemux;
     bool m_bNotYetSetPins;
-    int m_GotPMTS;
 
     wchar_t m_FileName[MAX_PATH * 2 + 1];
     CCanLock m_WorkerThreadLock;
