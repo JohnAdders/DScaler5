@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.41 2004-09-10 15:35:57 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.42 2004-09-13 14:28:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.41  2004/09/10 15:35:57  adcockj
+// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
+//
 // Revision 1.40  2004/08/31 16:33:41  adcockj
 // Minor improvements to quality control
 // Preparation for next version
@@ -491,7 +494,7 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
         if(q.Type == Famine)
         {
             SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
-            if(QualityControl && q.Late < 5000000)
+            if(QualityControl)
             {
                 LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
                 return QualityControl->Notify(pSelf, q);
@@ -1282,22 +1285,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         rtStart = m_LastOutputTime;
     }
 
-    if(fRepeatLast)
-    {
-        // if we are being called to refresh the subpicture
-        // and the proposed start time is in the past then
-        // we need to pass an up to date media time
-        // otherwise the renderer may drop the sample
-        // which means the user can't see the new subpicture
-        REFERENCE_TIME CurTime;
-        m_RefClock->GetTime(&CurTime);
-        if(rtStart < CurTime)
-        {
-            //rtStart = CurTime - m_rtStartTime;
-            //rtStop = rtStart + 10000;
-        }
-    }
-    
     if(rtStop <= rtStart)
     {
         rtStop = rtStart + 100;
@@ -1357,7 +1344,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         // nothing else needs these and setting stop times
         // seems to sometimes results in frames being dropped
         // which we really wanted to show
-        if(m_ConnectedToOut == FFDSHOW_OUTFILTER)
+        if(m_ConnectedToOut == FFDSHOW_OUTFILTER && !fRepeatLast)
         {
             Props.tStop = rtStop;
             Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
@@ -1414,7 +1401,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         // nothing else needs these and setting stop times
         // seems to sometimes results in frames being dropped
         // which we really wanted to show
-        if(m_ConnectedToOut == FFDSHOW_OUTFILTER)
+        if(m_ConnectedToOut == FFDSHOW_OUTFILTER && !fRepeatLast)
         {
             pOut->SetTime(&rtStart, &rtStop);
         }
@@ -1524,11 +1511,6 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 {
     HRESULT hr = S_OK;
 
-    if(m_ConnectedToOut == DEFAULT_OUTFILTER && ForceReconnect == TRUE)
-    {
-        return S_OK;
-    }
-
     if((m_OutputWidth != m_CurrentWidth) || 
         (m_OutputHeight != m_CurrentHeight) || 
         (m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
@@ -1562,17 +1544,24 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 
         if(!ForceReconnect)
         {
-            if(m_ConnectedToOut == VMR9_OUTFILTER)
+            if(m_ConnectedToOut == VMR9_OUTFILTER || m_ConnectedToOut == VMR7_OUTFILTER)
             {
                 bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
             }
             else if(m_ConnectedToOut == OVERLAY_OUTFILTER)
             {
-                bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
+				if(m_OutputHeight != m_CurrentHeight)
+				{
+	                bmi->biWidth = m_OutputWidth;
+				}
+				else
+				{
+				    bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
+				}
             }
             else
             {
-                bmi->biWidth = m_OutputWidth;
+                bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
             }
 
             if(bmi->biHeight > 0)
@@ -1585,157 +1574,154 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
             }
 
             bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-        }
         
-        m_InternalMT.bFixedSizeSamples = 1;
-        m_InternalMT.lSampleSize = bmi->biSizeImage;
+			m_InternalMT.bFixedSizeSamples = 1;
+			m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-        m_InsideReconnect = true;
-        m_Pitch = 0;
-        m_Height = 0;
+			m_InsideReconnect = true;
+			m_Pitch = 0;
+			m_Height = 0;
 
 
-        SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
-        if(m_PinConnection)
-        {
-            hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-            if(hr != S_OK)
-            {
-                LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-                return VFW_E_TYPE_NOT_ACCEPTED;
-            }
-        }
-        else
-        {
-            hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
-            if(hr != S_OK)
-            {
-                LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-                return VFW_E_TYPE_NOT_ACCEPTED;
-            }
-        }
+			SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
+			if(m_PinConnection)
+			{
+				hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+				if(hr != S_OK)
+				{
+					LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+					return VFW_E_TYPE_NOT_ACCEPTED;
+				}
+			}
+			else
+			{
+				hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+				if(hr != S_OK)
+				{
+					LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+					return VFW_E_TYPE_NOT_ACCEPTED;
+				}
+			}
 
-        if(m_ConnectedToOut == DEFAULT_OUTFILTER)
-        {
-            if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+			if(m_ConnectedToOut == DEFAULT_OUTFILTER)
+			{
+				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
 
-            SI(IGraphConfig) GraphConfig = m_Graph;
+				SI(IGraphConfig) GraphConfig = m_Graph;
 
-            if(GraphConfig)
-            {
-                hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-                CHECK(hr);
+				if(GraphConfig)
+				{
+					hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+					CHECK(hr);
 
-                if(m_Pitch != 0)
-                {
-                    bmi->biWidth = m_Pitch;
-                    bmi->biHeight = m_Height;
-                    bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-                    m_InternalMT.lSampleSize = bmi->biSizeImage;
+					if(m_Pitch != 0)
+					{
+						bmi->biWidth = m_Pitch;
+						bmi->biHeight = m_Height;
+						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+						m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-                    hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-                    CHECK(hr);
-                }
-                m_NeedToAttachFormat = true; 
-            }
-        }
-        else if(m_ConnectedToOut == VMR9_OUTFILTER)
-        {
-            ALLOCATOR_PROPERTIES AllocatorProps;
-            hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-            CHECK(hr);
+						hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+						CHECK(hr);
+					}
+					m_NeedToAttachFormat = true; 
+				}
+			}
+			else if(m_ConnectedToOut == VMR9_OUTFILTER || m_ConnectedToOut == VMR7_OUTFILTER)
+			{
+				ALLOCATOR_PROPERTIES AllocatorProps;
+				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+				CHECK(hr);
 
-            // if the new type would be greater than the old one then
-            // we need to reconnect otherwise just attach the type to the next sample
-            // for the VMR9 the ReceiveConnection only works when 
-            // you haven't displayed anything but at least 
-            // attaching new formats seems to work properly
-            if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-            {
-                hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-                CHECK(hr);
+				// if the new type would be greater than the old one then
+				// we need to reconnect otherwise just attach the type to the next sample
+				// for the VMR9 the ReceiveConnection only works when 
+				// you haven't displayed anything but at least 
+				// attaching new formats seems to work properly
+				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+				{
+					hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+					CHECK(hr);
 
-                if(m_Pitch != 0)
-                {
-                    bmi->biWidth = m_Pitch;
-                    bmi->biHeight = m_Height;
-                    bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-                    m_InternalMT.lSampleSize = bmi->biSizeImage;
+					if(m_Pitch != 0)
+					{
+						bmi->biWidth = m_Pitch;
+						bmi->biHeight = m_Height;
+						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+						m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-                    hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-                    CHECK(hr);
-                }
-            }
-            m_NeedToAttachFormat = true; 
-        }
-        else if(m_ConnectedToOut == GABEST_OUTFILTER)
-        {
-            if(!ForceReconnect)
-            {   
-                ALLOCATOR_PROPERTIES AllocatorProps;
-                hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-                CHECK(hr);
+						hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+						CHECK(hr);
+					}
+				}
+				m_NeedToAttachFormat = true; 
+			}
+			else if(m_ConnectedToOut == GABEST_OUTFILTER)
+			{
+				ALLOCATOR_PROPERTIES AllocatorProps;
+				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+				CHECK(hr);
 
-                // if the new type would be greater than the old one then
-                // we need to reconnect otherwise just attach the type to the next sample
-                if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-                {
-                    hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-                    CHECK(hr);
-                }
-                m_NeedToAttachFormat = true; 
-            }
-        }
-        // method used for overlay, VMR7 and ffdshow
-        else
-        {
-            LogMediaType(&m_InternalMT, "Reconnect", DBGLOG_FLOW);
+				// if the new type would be greater than the old one then
+				// we need to reconnect otherwise just attach the type to the next sample
+				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+				{
+					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					CHECK(hr);
+				}
+				m_NeedToAttachFormat = true; 
+			}
+			// method used for overlay and ffdshow
+			else
+			{
+				// if the new type would be greater than the old one then
+				// we need to reconnect otherwise just attach the type to the next sample
+				if((m_OutputWidth != m_CurrentWidth) || 
+					(m_OutputHeight != m_CurrentHeight))
+				{
+					hr = m_VideoOutPin->m_ConnectedPin->BeginFlush();
+					CHECK(hr);
+					hr = m_VideoOutPin->m_ConnectedPin->EndFlush();
+					CHECK(hr);
+					hr = m_VideoOutPin->m_Allocator->Decommit();
+					CHECK(hr);
 
-            if(!ForceReconnect)
-            {   
-                ALLOCATOR_PROPERTIES AllocatorProps;
-                hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-                CHECK(hr);
+					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					CHECK(hr);
 
-                // if the new type would be greater than the old one then
-                // we need to reconnect otherwise just attach the type to the next sample
-                if((m_OutputWidth != m_CurrentWidth) || 
-                      (m_OutputHeight != m_CurrentHeight))
-                {
-                    hr = m_VideoOutPin->m_ConnectedPin->BeginFlush();
-                    CHECK(hr);
-                    hr = m_VideoOutPin->m_ConnectedPin->EndFlush();
-                    CHECK(hr);
-                    hr = m_VideoOutPin->m_Allocator->Decommit();
-                    CHECK(hr);
+					hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+					CHECK(hr);
 
-                    hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-                    CHECK(hr);
-
-                    hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-                    CHECK(hr);
-
-                    hr = m_VideoOutPin->m_Allocator->Commit();
-                    CHECK(hr);
-                    
-                    m_NeedToAttachFormat = false; 
-                }
-                else
-                {
-                    m_NeedToAttachFormat = true; 
-                }
-
-            }
-        }
+					hr = m_VideoOutPin->m_Allocator->Commit();
+					CHECK(hr);
+	    
+					if(m_Pitch != 0)
+					{
+						bmi->biWidth = m_Pitch;
+						bmi->biHeight = m_Height;
+						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+						m_InternalMT.lSampleSize = bmi->biSizeImage;
+						m_NeedToAttachFormat = true;
+					}
+					else
+					{
+						m_NeedToAttachFormat = false; 
+					}
+				}
+				else
+				{
+					m_NeedToAttachFormat = true; 
+				}
+			}
+	
+			m_InsideReconnect = false;
+		}
         
-        m_InsideReconnect = false;
-
 
         m_CurrentWidth = m_OutputWidth;
         m_CurrentHeight = m_OutputHeight;
         m_ARCurrentOutX = m_ARMpegX * m_ARAdjustX; 
         m_ARCurrentOutY = m_ARMpegY * m_ARAdjustY; 
-
     }
     else
     {
@@ -1758,11 +1744,6 @@ void CMpegDecoder::ResetMpeg2Decoder()
     {
         pSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->bSequenceHeader;
         cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
-    }
-    else if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEG2_VIDEO)
-    {
-        pSequenceHeader = (BYTE*)((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->dwSequenceHeader;
-        cbSequenceHeader = ((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
     }
 
     if(m_dec != NULL)
@@ -1795,7 +1776,12 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-    ASSERT(w <= pitchIn);
+	if(pitchIn < w)
+	{
+	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+		return;
+	}
+
 
     if(m_DoPanAndScan)
     {
@@ -1857,7 +1843,11 @@ void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-    ASSERT(w <= pitchIn);
+	if(pitchIn < w)
+	{
+	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+		return;
+	}
 
     if(bihOut->biCompression == '2YUY')
     {
@@ -1897,7 +1887,11 @@ void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-    ASSERT(w <= pitchIn);
+	if(pitchIn < w)
+	{
+	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+		return;
+	}
 
     if(bihOut->biCompression == '2YUY')
     {
@@ -1937,11 +1931,6 @@ HRESULT CMpegDecoder::Activate()
     {
         pSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->bSequenceHeader;
         cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
-    }
-    else if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEG2_VIDEO)
-    {
-        pSequenceHeader = (BYTE*)((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->dwSequenceHeader;
-        cbSequenceHeader = ((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
     }
 
     m_dec = mpeg2_init();
@@ -2393,6 +2382,7 @@ void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
     long OriginalHeight = m_OutputHeight;
     m_OutputHeight = m_OutputHeight * XAdjust;
     m_OutputHeight /= YAdjust;
+	m_OutputHeight &= ~1;
     m_ARAdjustX = YAdjust;
     m_ARAdjustY = XAdjust;
     
@@ -2408,6 +2398,7 @@ void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
     long OriginalWidth = m_OutputWidth;
     m_OutputWidth = m_OutputWidth * XAdjust;
     m_OutputWidth /= YAdjust;
+	m_OutputWidth &= ~1;
     m_ARAdjustX = XAdjust;
     m_ARAdjustY = YAdjust;
     

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDetect.cpp,v 1.1 2004-09-10 16:55:46 adcockj Exp $
+// $Id: AudioDetect.cpp,v 1.2 2004-09-13 14:28:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // AudioDetect.dll - DirectShow filter for detecting audio type in PCM streams
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/09/10 16:55:46  adcockj
+// Initial version of spdif input filter
+//
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "AudioDetect.h"
@@ -649,7 +652,7 @@ HRESULT CAudioDetect::Deliver(IMediaSample* pOut)
     return hr;
 }
 
-void ChangeTypeBasedOnSpdifType(WORD SpdifType)
+void CAudioDetect::ChangeTypeBasedOnSpdifType(WORD SpdifType)
 {
     switch(SpdifType)
     {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.9 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.10 2004-09-13 14:28:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.8  2004/05/12 17:01:04  adcockj
 // Hopefully correct treatment of timestamps at last
 //
@@ -74,13 +79,20 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
             return E_UNEXPECTED;
         }
 
-        *(DWORD*)pData = 0xb2010000;
-        memcpy(pData + 4, UserData, UserDataLen);
-        hr = pSample->SetActualDataLength(UserDataLen + 4);
-        CHECK(hr);
 
-        hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
-        CHECK(hr);
+		hr = pSample->SetActualDataLength(UserDataLen + 4);
+		if(SUCCEEDED(hr))
+		{
+			*(DWORD*)pData = 0xb2010000;
+			memcpy(pData + 4, UserData, UserDataLen);
+
+			hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
+			CHECK(hr);
+		}			
+		else
+		{
+            LOG(DBGLOG_FLOW, ("Too much CC data got %d to fit in %d \n", UserDataLen + 4, pSample->GetSize()));
+		}
     }
     // process Active Format Description
     // see http://www.dtg.org.uk/publications/books/afd.pdf
