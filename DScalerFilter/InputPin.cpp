@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.19 2003-07-29 07:01:54 adcockj Exp $
+// $Id: InputPin.cpp,v 1.20 2003-07-30 06:58:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2003/07/29 07:01:54  adcockj
+// Fixed some issues with YV12 and general chroma positioning
+//
 // Revision 1.18  2003/07/25 16:00:55  adcockj
 // Remove 704 stuff
 //
@@ -912,7 +915,7 @@ BOOL CInputPin::IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt)
         return FALSE;
     }
 
-    if(/*pmt->subtype != MEDIASUBTYPE_YUY2 && */
+    if(pmt->subtype != MEDIASUBTYPE_YUY2 && 
        pmt->subtype != MEDIASUBTYPE_YV12 &&
        pmt->subtype != MEDIASUBTYPE_NV12)
     {
