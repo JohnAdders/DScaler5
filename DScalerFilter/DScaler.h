@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.4 2003-05-02 16:22:23 adcockj Exp $
+// $Id: DScaler.h,v 1.5 2003-05-06 16:38:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -34,7 +34,8 @@ class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScal
     public IBaseFilter,
 	public IPersistStream,
     public IMediaParamInfo,
-    public IMediaParams
+    public IMediaParams,
+    public IAmFreeSoftwareLicensed
 {
 public:
 	CDScaler();
@@ -52,6 +53,7 @@ BEGIN_COM_MAP(CDScaler)
 	COM_INTERFACE_ENTRY(IPersistStream)
     COM_INTERFACE_ENTRY(IMediaParamInfo)
     COM_INTERFACE_ENTRY(IMediaParams)
+    COM_INTERFACE_ENTRY(IAmFreeSoftwareLicensed)
 	COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, m_pUnkMarshaler.p)
 END_COM_MAP()
 
@@ -104,6 +106,12 @@ public:
     STDMETHOD(GetNumTimeFormats)(DWORD *pdwNumTimeFormats);
     STDMETHOD(GetSupportedTimeFormat)(DWORD dwFormatIndex,GUID *pguidTimeFormat);        
     STDMETHOD(GetCurrentTimeFormat)( GUID *pguidTimeFormat,MP_TIMEDATA *pTimeData);
+
+// IAmFreeSoftwareLicensed
+public:
+    STDMETHOD(GetName)(BSTR* Name);
+	STDMETHOD(GetLicense)(eFreeLicense* License);
+    STDMETHOD(GetAuthors)(BSTR* Authors);
 
 
 public:

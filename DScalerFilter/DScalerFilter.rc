@@ -98,6 +98,8 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_PROJNAME            "DScalerFilter"
+    IDS_AUTHORS             "Copyright (c) 2003 John Adcock, Torbjörn Jansson"
+    IDS_NAME                "DScaler DirectShow Filter"
 END
 
 #endif    // English (U.S.) resources

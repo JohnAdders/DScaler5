@@ -139,6 +139,15 @@ SOURCE=.\InputPin.cpp
 # Begin Source File
 
 SOURCE=.\OutputPin.cpp
+
+!IF  "$(CFG)" == "DScalerFilter - Win32 Debug"
+
+# SUBTRACT CPP /FA<none>
+
+!ELSEIF  "$(CFG)" == "DScalerFilter - Win32 Release"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

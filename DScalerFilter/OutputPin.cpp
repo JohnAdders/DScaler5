@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.7 2003-05-06 07:00:30 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.8 2003-05-06 16:38:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2003/05/06 07:00:30  adcockj
+// Some cahnges from Torbjorn also some other attempted fixes
+//
 // Revision 1.6  2003/05/02 16:05:23  adcockj
 // Logging with file and line numbers
 //
@@ -51,15 +54,16 @@ COutputPin::COutputPin()
 {
     LOG(DBGLOG_FLOW, ("COutputPin::COutputPin\n"));
     InitMediaType(&m_CurrentMediaType);
-    InitMediaType(&m_DesiredMediaType);
+    InitMediaType(&m_ConnectedMediaType);
     m_FormatChanged = FALSE;
+    m_FormatVersion = 0;
 }
 
 COutputPin::~COutputPin()
 {
     LOG(DBGLOG_FLOW, ("COutputPin::~COutputPin\n"));
     ClearMediaType(&m_CurrentMediaType);
-    ClearMediaType(&m_DesiredMediaType);
+    ClearMediaType(&m_ConnectedMediaType);
 }
 
 
@@ -67,7 +71,6 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_FLOW, ("COutputPin::Connect\n"));
     HRESULT hr;
-    
 
     if(m_InputPin->m_ConnectedPin == NULL)
     {
@@ -76,9 +79,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 
     if(m_ConnectedPin != NULL)
     {
-        hr = m_ConnectedPin->Disconnect();
-        hr = m_Allocator->Decommit();
-        InternalDisconnect();
+        return VFW_E_ALREADY_CONNECTED;
     }
 
     // check that we can pass stuff to this pin
@@ -92,9 +93,8 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     InitMediaType(&ProposedType);
 
     // say which type we really want to send out
-    CreateProposedMediaType(&ProposedType);
+    WorkOutNewMediaType(&m_InputPin->m_InputMediaType, &ProposedType);
 
-    CopyMediaType(&m_DesiredMediaType, &ProposedType);
     // check that any format we've been passed in is OK
     // otherwise just tell the caller that it isn't
     if(pmt != NULL)
@@ -103,7 +103,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
             (pmt->subtype != GUID_NULL && pmt->subtype != ProposedType.subtype) || 
             (pmt->formattype != GUID_NULL && pmt->formattype != ProposedType.formattype))
         {
-            InternalDisconnect();
+            ClearMediaType(&ProposedType);
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
     }
@@ -113,45 +113,10 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     hr = pReceivePin->ReceiveConnection(this, &ProposedType);
     if(hr != S_OK)
     {
-        // OK so they don't want to talk to us with 
-        // our prefered type at the moment so
-        // see if we need to fake RGB output
-        // Which we will do if we're connecting to
-        // the old style video renderer
-        // which has IOverlay but isn't a VMR
-        CComQIPtr<IOverlay> Overlay = pReceivePin;
-        CComQIPtr<IVMRVideoStreamControl> VMR7 = pReceivePin;
-        CComQIPtr<IVMRVideoStreamControl9> VMR9 = pReceivePin;
-        if(Overlay != NULL && (VMR7 == NULL && VMR9 == NULL))
-        {
-            // try and connect
-            const GUID* RGBTypes[] = 
-            {
-                &MEDIASUBTYPE_RGB32,
-                &MEDIASUBTYPE_RGB24,
-                &MEDIASUBTYPE_RGB555,
-                &MEDIASUBTYPE_RGB565,
-                &MEDIASUBTYPE_RGB8,
-            };
-            int Count(0);
-            while(hr != S_OK && Count < sizeof(RGBTypes) / sizeof(GUID))
-            {   
-                CreateRGBMediaType(&ProposedType, *RGBTypes[Count]);
-                hr = pReceivePin->ReceiveConnection(this, &ProposedType);
-                ++Count;
-            }
-        }
-        if(hr != S_OK)
-        {
-            InternalDisconnect();
-            return VFW_E_NO_ACCEPTABLE_TYPES;
-        }
+        ClearMediaType(&ProposedType);
+        return VFW_E_NO_ACCEPTABLE_TYPES;
     }
 
-    CopyMediaType(&m_CurrentMediaType, &ProposedType);
-    LogMediaType(&m_CurrentMediaType, "Output Connected");
-    m_FormatChanged = TRUE;
-    
     // ask the conencted filter for it's allocator
     // if it hasn't got one then use the one from downstream
     // \todo we should probably have our own allocator
@@ -170,27 +135,27 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     hr = m_MemInputPin->GetAllocatorRequirements(&Props);
     if(FAILED(hr))
     {
-        // if the pin doen't wnat to tell up what it wants 
+        // if the pin doen't want to tell up what it wants 
         // then see what the current allocator setup is
         if(hr == E_NOTIMPL)
         {
             hr = m_Allocator->GetProperties(&Props);
             if(FAILED(hr))
             {
-                InternalDisconnect();
+                ClearMediaType(&ProposedType);
                 return VFW_E_NO_TRANSPORT;
             }
         }
         else
         {
-            InternalDisconnect();
+            ClearMediaType(&ProposedType);
             return VFW_E_NO_TRANSPORT;
         }
     }
     
     Props.cBuffers = max(3, Props.cBuffers);
-    Props.cbBuffer = max(max(ProposedType.lSampleSize, m_CurrentMediaType.lSampleSize), (ULONG)Props.cbBuffer);
-    Props.cbAlign = max(16, Props.cbAlign);
+    Props.cbBuffer = max(ProposedType.lSampleSize, (ULONG)Props.cbBuffer);
+    Props.cbAlign = max(1, Props.cbAlign);
 
     hr = m_Allocator->SetProperties(&Props, &PropsAct);
 
@@ -205,9 +170,9 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    if(FAILED(hr))
+    if(FAILED(hr) && FALSE)
     {
-        InternalDisconnect();
+        ClearMediaType(&ProposedType);
         return VFW_E_NO_TRANSPORT;
     }
 
@@ -216,9 +181,17 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     hr = m_MemInputPin->NotifyAllocator(m_Allocator, FALSE);
     if(FAILED(hr))
     {
-        InternalDisconnect();
+        ClearMediaType(&ProposedType);
         return VFW_E_NO_TRANSPORT;
     }
+
+    CopyMediaType(&m_CurrentMediaType, &ProposedType);
+    CopyMediaType(&m_ConnectedMediaType, &ProposedType);
+    ClearMediaType(&ProposedType);
+    LogMediaType(&m_CurrentMediaType, "Output Connected");
+    ++m_FormatVersion;
+    m_FormatChanged = TRUE;
+
 
     // If all is OK the save the Pin interface
     m_ConnectedPin = pReceivePin;
@@ -436,130 +409,35 @@ STDMETHODIMP COutputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)
 void COutputPin::InternalDisconnect()
 {
     ClearMediaType(&m_CurrentMediaType);
+    ClearMediaType(&m_ConnectedMediaType);
     m_FormatChanged = TRUE;
-    ClearMediaType(&m_DesiredMediaType);
+    ++m_FormatVersion;
     m_ConnectedPin.Release();
     m_PinConnection.Release();
     m_MemInputPin.Release();
     m_Allocator.Release();
 }
 
-void COutputPin::CreateProposedMediaType(AM_MEDIA_TYPE* ProposedType)
+ULONG COutputPin::FormatVersion()
 {
-    CopyMediaType(ProposedType, &m_InputPin->m_ImpliedMediaType);
-}
-
-void COutputPin::CreateRGBMediaType(AM_MEDIA_TYPE* ProposedType, const GUID& RGBType)
-{
-    ProposedType->majortype = MEDIATYPE_Video;
-    ProposedType->subtype = RGBType;
-    ProposedType->bFixedSizeSamples = TRUE;
-    ProposedType->bTemporalCompression = 0;
-    ProposedType->formattype = FORMAT_VideoInfo;
-    ProposedType->cbFormat = sizeof(VIDEOINFO);
-    VIDEOINFO* NewFormat = (VIDEOINFO*)CoTaskMemAlloc(ProposedType->cbFormat);
-    if(NewFormat == NULL)
-    {
-        ClearMediaType(ProposedType);
-        return;
-    }
-    VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)ProposedType->pbFormat;
-    ZeroMemory(NewFormat, ProposedType->cbFormat);
-    memcpy(&NewFormat->bmiHeader, &OldFormat->bmiHeader, sizeof(BITMAPINFOHEADER));
-    CoTaskMemFree(ProposedType->pbFormat);
-    ProposedType->pbFormat = (BYTE*)NewFormat;
-    if(RGBType == MEDIASUBTYPE_RGB32)
-    {
-        NewFormat->bmiHeader.biBitCount = 32;
-        NewFormat->bmiHeader.biCompression = BI_RGB;
-        NewFormat->bmiHeader.biXPelsPerMeter = 0;
-        NewFormat->bmiHeader.biYPelsPerMeter = 0;
-        NewFormat->bmiHeader.biSizeImage = NewFormat->bmiHeader.biHeight * NewFormat->bmiHeader.biWidth * 4;
-    }
-    else if(RGBType == MEDIASUBTYPE_RGB24)
-    {
-        NewFormat->bmiHeader.biBitCount = 24;
-        NewFormat->bmiHeader.biCompression = BI_RGB;
-        NewFormat->bmiHeader.biXPelsPerMeter = 0;
-        NewFormat->bmiHeader.biYPelsPerMeter = 0;
-        NewFormat->bmiHeader.biSizeImage = NewFormat->bmiHeader.biHeight * NewFormat->bmiHeader.biWidth * 3;
-    }
-    else if(RGBType == MEDIASUBTYPE_RGB555)
-    {
-        NewFormat->bmiHeader.biBitCount = 16;
-        NewFormat->bmiHeader.biCompression = BI_BITFIELDS;
-        NewFormat->bmiHeader.biXPelsPerMeter = 0;
-        NewFormat->bmiHeader.biYPelsPerMeter = 0;
-        NewFormat->bmiHeader.biSizeImage = NewFormat->bmiHeader.biHeight * NewFormat->bmiHeader.biWidth * 2;
-        NewFormat->TrueColorInfo.dwBitMasks[0] = 0x00007c00;
-        NewFormat->TrueColorInfo.dwBitMasks[1] = 0x000003e0;
-        NewFormat->TrueColorInfo.dwBitMasks[2] = 0x0000001f;
-    }
-    else if(RGBType == MEDIASUBTYPE_RGB565)
-    {
-        NewFormat->bmiHeader.biBitCount = 16;
-        NewFormat->bmiHeader.biCompression = BI_BITFIELDS;
-        NewFormat->bmiHeader.biXPelsPerMeter = 0;
-        NewFormat->bmiHeader.biYPelsPerMeter = 0;
-        NewFormat->bmiHeader.biSizeImage = NewFormat->bmiHeader.biHeight * NewFormat->bmiHeader.biWidth * 2;
-        NewFormat->TrueColorInfo.dwBitMasks[0] = 0x0000f800;
-        NewFormat->TrueColorInfo.dwBitMasks[1] = 0x000007e0;
-        NewFormat->TrueColorInfo.dwBitMasks[2] = 0x0000001f;
-    }
-    else
-    {
-        NewFormat->bmiHeader.biBitCount = 8;
-        NewFormat->bmiHeader.biCompression = iPALETTE_COLORS;
-        NewFormat->bmiHeader.biXPelsPerMeter = 0;
-        NewFormat->bmiHeader.biYPelsPerMeter = 0;
-        PALETTEENTRY CurrentPalette[iPALETTE_COLORS];
-
-        // \todo may be something odd to do for multi monitor
-        // but nobody is actually watch video like this so really who cares
-        HDC hDC = GetDC(NULL);  
-        GetSystemPaletteEntries(hDC, 0, iPALETTE_COLORS, CurrentPalette);
-        ReleaseDC(NULL, hDC);
-        for(int i(0); i < iPALETTE_COLORS;++i)
-        {
-            NewFormat->TrueColorInfo.bmiColors[i].rgbRed = CurrentPalette[i].peRed;
-            NewFormat->TrueColorInfo.bmiColors[i].rgbGreen = CurrentPalette[i].peGreen;
-            NewFormat->TrueColorInfo.bmiColors[i].rgbBlue = CurrentPalette[i].peBlue;
-        }
-    }
-
-    ProposedType->lSampleSize = NewFormat->bmiHeader.biSizeImage;
-}
-
-BOOL COutputPin::HasChanged()
-{
-    return m_FormatChanged;
+    return m_FormatVersion;
 }
 
 void COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
 {   
     if(m_CurrentMediaType.majortype != GUID_NULL)
     {
-        if(m_CurrentMediaType.subtype != m_DesiredMediaType.subtype)
-        {
-            NumTypes = 2;
-            CopyMediaType(Types, &m_DesiredMediaType);
-            ++Types;
-            CopyMediaType(Types, &m_CurrentMediaType);
-        }
-        else
-        {
-            NumTypes = 1;
-            CopyMediaType(Types, &m_CurrentMediaType);
-            ++Types;
-            ClearMediaType(Types);
-        }
+        NumTypes = 1;
+        CopyMediaType(Types, &m_CurrentMediaType);
+        ++Types;
+        ClearMediaType(Types);
     }
     else
     {
         if(m_InputPin->m_ConnectedPin != NULL)
         {
             NumTypes = 1;
-            CopyMediaType(Types, &m_InputPin->m_ImpliedMediaType);
+            WorkOutNewMediaType(&m_InputPin->m_InputMediaType, Types);
             ++Types;
             ClearMediaType(Types);
         }
@@ -695,3 +573,108 @@ STDMETHODIMP COutputPin::GetPreroll(LONGLONG *pllPreroll)
     return MediaSeeking->GetPreroll(pllPreroll);
 }
 
+void COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
+{
+    BITMAPINFOHEADER* BitmapInfo = NULL;
+    NewType->majortype = MEDIATYPE_Video;
+    NewType->subtype = InputType->subtype;
+    NewType->bFixedSizeSamples = TRUE;
+    NewType->bTemporalCompression = FALSE;
+    if(m_ConnectedMediaType.majortype != GUID_NULL)
+    {
+        NewType->lSampleSize = max(768*576*2, m_ConnectedMediaType.lSampleSize);
+    }
+    else
+    {
+        NewType->lSampleSize = 768*576*2;
+    }
+    NewType->formattype = FORMAT_VIDEOINFO2;
+    NewType->cbFormat = sizeof(VIDEOINFOHEADER2);
+    VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
+    if(NewFormat == NULL)
+    {
+        ClearMediaType(NewType);
+        return;
+    }
+    ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
+    NewType->pbFormat = (BYTE*)NewFormat;
+
+    if(InputType->formattype == FORMAT_VIDEOINFO2)
+    {
+        VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+        NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
+        NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+
+        NewFormat->rcSource = OldFormat->rcSource;
+        NewFormat->rcTarget = OldFormat->rcTarget;
+    }
+    else if(InputType->formattype == FORMAT_VideoInfo)
+    {
+        NewType->pbFormat =(BYTE*)NewFormat;
+        VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+
+        NewFormat->dwPictAspectRatioX = 4;
+        NewFormat->dwPictAspectRatioY = 3;
+
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+
+        NewFormat->rcSource = OldFormat->rcSource;
+        NewFormat->rcTarget = OldFormat->rcTarget;
+    }
+    else
+    {
+        ClearMediaType(NewType);
+    }
+    
+    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+    
+    if(NewFormat->rcSource.bottom == 0)
+    {
+        NewFormat->rcSource.bottom = BitmapInfo->biHeight;
+    }
+    if(NewFormat->rcSource.right == 0)
+    {
+        NewFormat->rcSource.right = BitmapInfo->biWidth;
+    }
+    if(NewFormat->rcTarget.bottom == 0)
+    {
+        NewFormat->rcTarget.bottom = BitmapInfo->biHeight;
+    }
+    if(NewFormat->rcTarget.right == 0)
+    {
+        NewFormat->rcTarget.right = BitmapInfo->biWidth;
+    }
+    
+    NewFormat->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    NewFormat->bmiHeader.biWidth = NewType->lSampleSize / 576 /2;
+    if(m_ConnectedMediaType.majortype != GUID_NULL)
+    {
+        VIDEOINFOHEADER2* ConnectedFormat = (VIDEOINFOHEADER2*)m_ConnectedMediaType.pbFormat;
+        NewFormat->bmiHeader.biHeight = ConnectedFormat->bmiHeader.biHeight;
+    }
+    else
+    {
+        NewFormat->bmiHeader.biHeight = 576;
+    }
+    NewFormat->bmiHeader.biPlanes = 1;
+    NewFormat->bmiHeader.biBitCount = 16;
+    NewFormat->bmiHeader.biCompression = BitmapInfo->biCompression;
+    NewFormat->bmiHeader.biSizeImage = NewType->lSampleSize;
+    NewFormat->bmiHeader.biXPelsPerMeter  = BitmapInfo->biXPelsPerMeter;
+    NewFormat->bmiHeader.biYPelsPerMeter = BitmapInfo->biYPelsPerMeter;
+    NewFormat->bmiHeader.biClrUsed = BitmapInfo->biClrUsed;
+    NewFormat->bmiHeader.biClrImportant = BitmapInfo->biClrImportant;
+}
+
+BITMAPINFOHEADER* COutputPin::GetBitmapInfo()
+{
+    VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)m_CurrentMediaType.pbFormat;
+    return &Format->bmiHeader;
+}

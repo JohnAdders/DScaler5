@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.5 2003-05-06 07:00:29 adcockj Exp $
+// $Id: InputPin.cpp,v 1.6 2003-05-06 16:38:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2003/05/06 07:00:29  adcockj
+// Some cahnges from Torbjorn also some other attempted fixes
+//
 // Revision 1.4  2003/05/02 16:05:23  adcockj
 // Logging with file and line numbers
 //
@@ -48,16 +51,13 @@ CInputPin::CInputPin()
     m_bReadOnly = FALSE;
     m_NotifyEvent = NULL;
     InitMediaType(&m_InputMediaType);
-    InitMediaType(&m_ImpliedMediaType);
-    m_FormatChanged = FALSE;
+    m_FormatVersion = 0;
 }
 
 CInputPin::~CInputPin()
 {
     LOG(DBGLOG_FLOW, ("CInputPin::~CInputPin\n"));
     ClearMediaType(&m_InputMediaType);
-    ClearMediaType(&m_ImpliedMediaType);
-    m_FormatChanged = FALSE;
 }
 
 
@@ -82,79 +82,30 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         return VFW_E_TYPE_NOT_ACCEPTED;
     }
 
-    // save old types in case we fail
-    AM_MEDIA_TYPE OldInput;
-    AM_MEDIA_TYPE OldImplied;
-    InitMediaType(&OldInput);
-    InitMediaType(&OldImplied);
-    CopyMediaType(&OldInput, &m_InputMediaType);
-    CopyMediaType(&OldImplied, &m_ImpliedMediaType);
+    // see if we need to check with the output
+    if(m_OutputPin->m_ConnectedPin != NULL)
+    {
+        AM_MEDIA_TYPE TestType;
+        InitMediaType(&TestType);
+        m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        
+        // can the input pin of the filter downstream accept
+        // our version of this format
+        // \todo maybe we need to use DynamicQueryAccept if it's there
+        if(m_OutputPin->m_ConnectedPin->QueryAccept(&TestType) != S_OK)
+        {
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+        CopyMediaType(&m_OutputPin->m_CurrentMediaType, &TestType);
+        m_OutputPin->m_FormatChanged = TRUE;    
+        ++m_OutputPin->m_FormatVersion;
+    }
 
     m_ConnectedPin = pConnector;
     CopyMediaType(&m_InputMediaType, pmt);
-    WorkOutImpliedMediaType();
+    LogMediaType(&m_InputMediaType, "Input Connected");
+    ++m_FormatVersion;
 
-    // see if we need to reconnect our output
-    if(m_OutputPin->m_ConnectedPin != NULL)
-    {
-        if(m_Filter->m_State != State_Stopped && FALSE)
-        {
-            //can the input pin of the filter downstream accept this conenction?
-            //maybe check if we realy need to do a dynamic reconnection,
-            //the mediatypes coud be acceptable allready
-            if(m_OutputPin->m_ConnectedPin->QueryAccept(&m_ImpliedMediaType) != S_OK)
-            {
-                return VFW_E_TYPE_NOT_ACCEPTED;
-            }
-
-            // need to see if we can do a dynamic change on our output
-            // if we are already started
-            CComQIPtr<IPinConnection> PinConnection = m_OutputPin->m_ConnectedPin;
-            if(PinConnection != NULL)
-            {
-                hr = PinConnection->DynamicQueryAccept(&m_ImpliedMediaType);
-                if(hr == S_OK)
-                {
-                    hr = PinConnection->DynamicDisconnect();
-                    if(SUCCEEDED(hr))
-                    {
-                        //m_OutputPin->InternalDisconnect();
-                        TryToReconnectOnFail = TRUE;
-                    }
-                }
-            }
-            else
-            {
-                hr = VFW_E_TYPE_NOT_ACCEPTED;
-            }
-        }
-        if(SUCCEEDED(hr))
-        {
-            // if this fails, we need to reconnect with the old 
-            // which should be OldImplied 
-            hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin, &m_ImpliedMediaType);
-            if(SUCCEEDED(hr))
-            {
-                hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
-            }
-        }
-    }
-
-    if(FAILED(hr))
-    {   
-        // revert back to old connection
-        CopyMediaType(&m_InputMediaType, &OldInput);
-        CopyMediaType(&m_ImpliedMediaType, &OldImplied);
-        if(TryToReconnectOnFail)
-        {
-            m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
-        }
-    }
-    else
-    {
-        LogMediaType(&m_InputMediaType, "Input Connected");
-        m_FormatChanged = TRUE;
-    }
     LOG(DBGLOG_FLOW, ("CInputPin::ReceiveConnection Exit\n"));
     return hr;
 }
@@ -282,7 +233,38 @@ STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     {
         return S_FALSE;
     }
+    BITMAPINFOHEADER* BitmapInfo;
+    if(pmt->formattype == FORMAT_VIDEOINFO2)
+    {
+        VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
+        BitmapInfo = &Format->bmiHeader;
+    }
+    else
+    {
+        VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
+        BitmapInfo = &Format->bmiHeader;
+    }
+
+    // check that the incoming format is SDTV    
+    if(BitmapInfo->biHeight < -576 || BitmapInfo->biHeight > 576)
+    {
+        return S_FALSE;
+    }
+
+    if(BitmapInfo->biWidth > 768)
+    {
+        return S_FALSE;
+    }
     
+    // check that the incoming type is the same as
+    // we're outputting if connected
+    if(m_OutputPin->m_ConnectedPin != NULL)
+    {
+        if(pmt->subtype != m_OutputPin->m_CurrentMediaType.subtype)
+        {
+            return S_FALSE;
+        }
+    }
     return S_OK;
 }
 
@@ -441,8 +423,10 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     {
         CopyMediaType(&m_InputMediaType, InputType);
         LogMediaType(&m_InputMediaType, "Input Format Change");
-        WorkOutImpliedMediaType();
-        m_FormatChanged = TRUE;
+        m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
+        m_OutputPin->m_FormatChanged = TRUE;
+        ++m_OutputPin->m_FormatVersion;
+        ++m_FormatVersion;
         FreeMediaType(InputType);
     }
 
@@ -474,14 +458,11 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     hr = OutSample->GetMediaType(&OutputType);
     if(OutputType != NULL)
     {
-        //testing
-        //aways deny format changes on the output pin
-        //hr=OutSample->SetMediaType(NULL);
-        //hr=m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin,&m_OutputPin->m_CurrentMediaType);
-
-        CopyMediaType(&m_OutputPin->m_CurrentMediaType, OutputType);
+        CopyMediaType(&m_OutputPin->m_ConnectedMediaType, OutputType);
         LogMediaType(OutputType, "Output Format Change");
+        m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
         m_OutputPin->m_FormatChanged = TRUE;
+        ++m_OutputPin->m_FormatVersion;
         FreeMediaType(OutputType);
     }
 
@@ -497,7 +478,19 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     hr = OutSample->GetPointer(&pOutBuffer);
     
     CComQIPtr<IDirectDrawMediaSample> pTest = OutSample;
-    memcpy(pOutBuffer, pInBuffer, Size);
+    BITMAPINFOHEADER* InputBMI = GetBitmapInfo();
+    BITMAPINFOHEADER* OutputBMI = m_OutputPin->GetBitmapInfo();
+
+    ATLASSERT(InputBMI->biWidth <= OutputBMI->biWidth);
+    ATLASSERT(abs(InputBMI->biHeight) <= abs(OutputBMI->biHeight));
+    int Lines = abs(InputBMI->biHeight);
+    
+    for(int i(0); i < Lines; ++i)
+    {
+        memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth * 2);
+        pOutBuffer += OutputBMI->biWidth * 2;
+        pInBuffer += InputBMI->biWidth * 2;
+    }
 
     AM_SAMPLE2_PROPERTIES OutSampleProperties;
     GetSampleProperties(OutSample, &OutSampleProperties);
@@ -507,12 +500,28 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     OutSampleProperties.tStart = SampleProperties.tStart;
     OutSampleProperties.tStop = SampleProperties.tStop;
     OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
+
+    if(m_OutputPin->m_FormatChanged == TRUE)
+    {
+        OutSampleProperties.pMediaType = (AM_MEDIA_TYPE*)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE));
+        if(OutSampleProperties.pMediaType != NULL)
+        {
+            InitMediaType(OutSampleProperties.pMediaType);
+            CopyMediaType(OutSampleProperties.pMediaType, &m_OutputPin->m_CurrentMediaType);
+            m_OutputPin->m_FormatChanged = FALSE;
+        }
+    }
+
     SetSampleProperties(OutSample, &OutSampleProperties);
 
     hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
 
+    if(OutSampleProperties.pMediaType != NULL)
+    {
+        FreeMediaType(OutSampleProperties.pMediaType);
+    }
     OutSample->Release();
-    return S_OK;
+    return hr;
 }
 
 STDMETHODIMP CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSamplesProcessed)
@@ -558,11 +567,14 @@ STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
         {
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
-        // \todo translate the media type in to the one that we'll be outputting
-        AM_MEDIA_TYPE NewType;
-        
-        return m_OutputPin->m_PinConnection->DynamicQueryAccept(&NewType);
 
+        // \todo do some extra checks if we are connected
+
+        AM_MEDIA_TYPE TestType;
+        InitMediaType(&TestType);
+        m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        
+        return m_OutputPin->m_PinConnection->DynamicQueryAccept(&TestType);
     }
     else
     {
@@ -610,15 +622,14 @@ STDMETHODIMP CInputPin::DynamicDisconnect(void)
 void CInputPin::InternalDisconnect()
 {
     ClearMediaType(&m_InputMediaType);
-    ClearMediaType(&m_ImpliedMediaType);
-    m_FormatChanged = TRUE;
     m_ConnectedPin.Release();
     m_Allocator.Release();
+    ++m_FormatVersion;
 }
 
-BOOL CInputPin::HasChanged()
+ULONG CInputPin::FormatVersion()
 {
-    return m_FormatChanged;
+    return m_FormatVersion;
 }
 
 void CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
@@ -639,51 +650,35 @@ void CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
     }
 }
 
-void CInputPin::GuessInterlaceFlags()
+void CInputPin::GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props)
 {
-    VIDEOINFOHEADER2* VideoInfo = (VIDEOINFOHEADER2*)m_ImpliedMediaType.pbFormat;
-    switch(VideoInfo->AvgTimePerFrame)
+    switch((long)(Props->tStop - Props->tStart))
     {
     // corresponds to 25Hz
     case 400000:
         m_VideoSampleFlag = AM_VIDEO_FLAG_FIELD1FIRST;
-        VideoInfo->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
         break;
     // corresponds to 30Hz or 29.97Hz
     case 333333:
     case 333334:
     case 333366:
     case 333367:
-        VideoInfo->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+        m_VideoSampleFlag = 0;
         break;
     // corresponds to 50Hz
     case 200000:
-        VideoInfo->dwInterlaceFlags = AMINTERLACE_DisplayModeWeaveOnly;
+        m_VideoSampleFlag = AM_VIDEO_FLAG_WEAVE;
         break;
     // corresponds to 60Hz or 59.94Hz
     case 166666:
     case 166667:
     case 166683:
     case 166684:
-        VideoInfo->dwInterlaceFlags = AMINTERLACE_DisplayModeWeaveOnly;
+        m_VideoSampleFlag = AMINTERLACE_DisplayModeWeaveOnly;
         break;
     default:
-        VideoInfo->dwInterlaceFlags = AMINTERLACE_DisplayModeWeaveOnly;
+        m_VideoSampleFlag = 0;
         break;
-    }
-    if(VideoInfo->dwInterlaceFlags & AMINTERLACE_IsInterlaced)
-    {
-        switch(VideoInfo->bmiHeader.biHeight)
-        {
-        case 480:
-            m_VideoSampleFlag = 0;
-            break;
-        case 576:
-            m_VideoSampleFlag = AM_VIDEO_FLAG_FIELD1FIRST;
-            break;
-        default:
-            break;
-        }
     }
 }
 
@@ -754,95 +749,16 @@ HRESULT CInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTI
     return hr;
 }
 
-void CInputPin::WorkOutImpliedMediaType()
+BITMAPINFOHEADER* CInputPin::GetBitmapInfo()
 {
-    m_VideoSampleFlag = 0;
-
     if(m_InputMediaType.formattype == FORMAT_VIDEOINFO2)
     {
-        CopyMediaType(&m_ImpliedMediaType, &m_InputMediaType);
-        return;
-        VIDEOINFOHEADER2* VideoInfo = (VIDEOINFOHEADER2*)m_ImpliedMediaType.pbFormat;
-        if(VideoInfo->dwInterlaceFlags & AMINTERLACE_IsInterlaced)
-        {
-            if(VideoInfo->dwInterlaceFlags == (AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeWeaveOnly))
-            {
-                // undo forced weave flags
-                // we need to guess which field is first
-                VideoInfo->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
-                GuessInterlaceFlags();
-                m_VideoSampleMask = 0;
-            }
-            else if(VideoInfo->dwInterlaceFlags == (AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOnly))
-            {
-                // undo forced bob flags
-                // we should be told which field is first in the samples
-                VideoInfo->dwInterlaceFlags &= ~AMINTERLACE_DisplayModeBobOnly;
-                VideoInfo->dwInterlaceFlags |= AMINTERLACE_DisplayModeBobOrWeave;
-                m_VideoSampleMask = AM_VIDEO_FLAG_FIELD1FIRST;
-            }
-            else
-            {
-                // otherwise leave the flags alone
-                m_VideoSampleMask = 0xffffffff;
-            }
-        }
-        else
-        {
-            GuessInterlaceFlags();
-            m_VideoSampleMask = 0;
-        }
-    }
-    else if(m_InputMediaType.formattype == FORMAT_VideoInfo)
-    {
-        m_ImpliedMediaType.majortype = m_InputMediaType.majortype;
-        m_ImpliedMediaType.subtype = m_InputMediaType.subtype;
-        m_ImpliedMediaType.bFixedSizeSamples = m_InputMediaType.bFixedSizeSamples;
-        m_ImpliedMediaType.bTemporalCompression = m_InputMediaType.bTemporalCompression;
-        m_ImpliedMediaType.lSampleSize = m_InputMediaType.lSampleSize;
-        m_ImpliedMediaType.formattype = FORMAT_VIDEOINFO2;
-        m_ImpliedMediaType.cbFormat = sizeof(VIDEOINFOHEADER2);
-        VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
-        ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
-        if(NewFormat == NULL)
-        {
-            ClearMediaType(&m_ImpliedMediaType);
-            return;
-        }
-        m_ImpliedMediaType.pbFormat =(BYTE*)NewFormat;
-        VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)m_InputMediaType.pbFormat;
-
-        NewFormat->rcSource = OldFormat->rcSource;
-        if(NewFormat->rcSource.bottom == 0)
-        {
-            NewFormat->rcSource.bottom = OldFormat->bmiHeader.biHeight;
-        }
-        if(NewFormat->rcSource.right == 0)
-        {
-            NewFormat->rcSource.right = OldFormat->bmiHeader.biWidth;
-        }
-        NewFormat->rcTarget = OldFormat->rcTarget;
-        if(NewFormat->rcTarget.bottom == 0)
-        {
-            NewFormat->rcTarget.bottom = OldFormat->bmiHeader.biHeight;
-        }
-        if(NewFormat->rcTarget.right == 0)
-        {
-            NewFormat->rcTarget.right = OldFormat->bmiHeader.biWidth;
-        }
-        NewFormat->dwBitRate = OldFormat->dwBitRate;
-        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
-        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
-
-        NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
-        NewFormat->dwPictAspectRatioX = OldFormat->bmiHeader.biWidth;
-        NewFormat->dwPictAspectRatioY = OldFormat->bmiHeader.biHeight;
-        memcpy(&NewFormat->bmiHeader, &OldFormat->bmiHeader, sizeof(BITMAPINFOHEADER));
-        GuessInterlaceFlags();
-        m_VideoSampleMask = 0;
+        VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)m_InputMediaType.pbFormat;
+        return &Format->bmiHeader;
     }
     else
     {
-        ClearMediaType(&m_ImpliedMediaType);
+        VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)m_InputMediaType.pbFormat;
+        return &Format->bmiHeader;
     }
 }

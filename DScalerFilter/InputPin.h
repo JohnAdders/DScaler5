@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.1.1.1 2003-04-30 13:01:21 adcockj Exp $
+// $Id: InputPin.h,v 1.2 2003-05-06 16:38:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -81,10 +81,11 @@ public:
     STDMETHOD(DynamicDisconnect)(void);
 
 public:
-    BOOL HasChanged();
+    ULONG FormatVersion();
     void SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
 
 public:
+    BITMAPINFOHEADER* GetBitmapInfo();
     CDScaler* m_Filter;
     COutputPin* m_OutputPin;
     CComPtr<IPin> m_ConnectedPin;
@@ -92,17 +93,14 @@ public:
     BOOL m_Flushing;
     BOOL m_bReadOnly;
     AM_MEDIA_TYPE m_InputMediaType;
-    AM_MEDIA_TYPE m_ImpliedMediaType;
     HANDLE m_NotifyEvent;
-    BOOL m_FormatChanged;
+    ULONG m_FormatVersion;
     DWORD m_VideoSampleFlag;
     DWORD m_VideoSampleMask;
 private:
     void InternalDisconnect();
-    void GuessInterlaceFlags();
+    void GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props);
     void GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
-    void WorkOutImpliedMediaType();
-
 };
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.6 2003-05-02 16:22:22 adcockj Exp $
+// $Id: DScaler.cpp,v 1.7 2003-05-06 16:38:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/02 16:22:22  adcockj
+// Switched to ISpecifyPropertyPagesImpl
+//
 // Revision 1.5  2003/05/02 16:05:22  adcockj
 // Logging with file and line numbers
 //
@@ -461,4 +464,36 @@ STDMETHODIMP CDScaler::GetCurrentTimeFormat( GUID *pguidTimeFormat,MP_TIMEDATA *
 {
     // \todo get working
     return E_NOTIMPL;
+}
+
+STDMETHODIMP CDScaler::GetName(BSTR* Name)
+{
+    if(Name == NULL)
+    {
+        return E_POINTER;
+    }
+    CComBSTR Result;
+    Result.LoadString(IDS_NAME);
+    return Result.CopyTo(Name);
+}
+
+STDMETHODIMP CDScaler::GetLicense(eFreeLicense* License)
+{
+    if(License == NULL)
+    {
+        return E_POINTER;
+    }
+    *License = LGPL;
+    return S_OK;
+}
+
+STDMETHODIMP CDScaler::GetAuthors(BSTR* Authors)
+{
+    if(Authors == NULL)
+    {
+        return E_POINTER;
+    }
+    CComBSTR Result;
+    Result.LoadString(IDS_AUTHORS);
+    return Result.CopyTo(Authors);
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.cpp,v 1.4 2003-05-02 19:15:39 adcockj Exp $
+// $Id: EnumMediaTypes.cpp,v 1.5 2003-05-06 16:38:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/02 19:15:39  adcockj
+// Futher corrections to Next
+//
 // Revision 1.3  2003/05/02 10:52:26  adcockj
 // Fixed memory allocation bug in next
 //
@@ -39,6 +42,7 @@ CEnumMediaTypes::CEnumMediaTypes()
 {
 	m_Count = 0;
     m_NumTypes = 0;
+    m_Version = 0;
     InitMediaType(&m_Types[0]);
     InitMediaType(&m_Types[1]);
 }
@@ -57,8 +61,9 @@ STDMETHODIMP CEnumMediaTypes::Next(ULONG cTypes, AM_MEDIA_TYPE **ppTypes, ULONG 
     {
         *pcFetched = 0;
     }
-    if(m_Update->HasChanged())
+    if(m_Version != m_Update->FormatVersion())
     {
+        m_Version = m_Update->FormatVersion();
         return VFW_E_ENUM_OUT_OF_SYNC;
     }
     while(m_Count < m_NumTypes && cTypes)
@@ -110,6 +115,7 @@ STDMETHODIMP CEnumMediaTypes::Reset(void)
 {
     m_Count = 0;
     m_Update->SetTypes(m_NumTypes, m_Types);
+    m_Version = m_Update->FormatVersion();
     return S_OK;
 }
 
@@ -127,6 +133,7 @@ STDMETHODIMP CEnumMediaTypes::Clone(IEnumMediaTypes **ppEnum)
 
 	NewEnum->m_Count = m_Count;
     NewEnum->m_NumTypes = m_NumTypes;
+    NewEnum->m_Version = m_Version;
     for(ULONG i(0); i < m_NumTypes; ++i)
     {
         CopyMediaType(&NewEnum->m_Types[i], &m_Types[i]);
