@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: InputPin.cpp,v 1.2 2004-03-06 20:51:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 // Revision 1.30  2003/12/09 11:45:57  adcockj
 // Improved implementation of EnumPins
 //
@@ -589,14 +594,6 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         hr = m_Filter->CheckProcessingLine();
         CHECK(hr);
         
-        // if CheckProcessingLine returns S_FALSE
-        // then we need to reset the output format
-        // need to do this before we get first output sample
-        if(hr == S_FALSE)
-        {
-            hr = m_OutputPin->ChangeOutputFormat(&m_InputMediaType);
-            CHECK(hr);
-        }
 
         // if there was a discontinuity then we need to ask for the buffer
         // differently 

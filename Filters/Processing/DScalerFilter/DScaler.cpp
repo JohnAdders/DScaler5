@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.4 2004-03-05 17:21:32 adcockj Exp $
+// $Id: DScaler.cpp,v 1.5 2004-03-06 20:51:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/03/05 17:21:32  adcockj
+// Better handling of dynamic format changes
+//
 // Revision 1.3  2004/03/05 15:56:29  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -379,6 +382,12 @@ HRESULT CDScaler::CheckProcessingLine()
         CHECK(hr);
 		m_RebuildRequired = FALSE;
     }
+    if(m_ChangeTypes)
+    {
+        hr = CreateInternalMediaTypes();
+        CHECK(hr);
+        m_ChangeTypes = FALSE;
+    }
     if(m_TypesChanged == TRUE)
     {
         CProtectCode WhileVarInScope(this);
@@ -386,16 +395,7 @@ HRESULT CDScaler::CheckProcessingLine()
         CHECK(hr);
 		m_TypesChanged = FALSE;
     }
-    
-    if(m_ChangeTypes)
-    {
-        m_ChangeTypes = FALSE;
-        return S_FALSE;
-    }
-    else
-    {
-        return S_OK;
-    }
+    return S_OK;
 }
 
 HRESULT CDScaler::RebuildProcessingLine()
