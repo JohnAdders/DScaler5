@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.5 2003-05-07 16:27:03 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.6 2003-05-16 16:27:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2003/05/07 16:27:03  adcockj
+// fixes for odd behaviour with multiple pages
+//
 // Revision 1.4  2003/05/06 07:01:05  adcockj
 // Fixes for crashing with multiple pages
 //
@@ -326,6 +329,10 @@ void CGenDMOPropPage::SetupEnumCombo()
 
 void CGenDMOPropPage::GetValueFromControls()
 {
+    if(m_ParamInfos == NULL)
+    {
+        return;
+    }
     switch(m_ParamInfos[m_CurrentParam].mpType)
     {
     case MPT_INT:
