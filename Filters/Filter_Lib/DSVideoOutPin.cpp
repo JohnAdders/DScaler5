@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.6 2004-11-18 07:40:57 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.7 2004-11-25 17:22:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/11/18 07:40:57  adcockj
+// a few test bug fixes
+//
 // Revision 1.5  2004/11/06 14:07:01  adcockj
 // Fixes for WM10 and seeking
 //
@@ -103,7 +106,8 @@ HRESULT CDSVideoOutPin::NotifyConnected()
     {
         m_ConnectedType = GABEST_OUTFILTER;
     }
-    else if(Clsid == CLSID_OverlayMixer)
+    else if(Clsid == CLSID_OverlayMixer ||
+         Clsid == CLSID_VideoRenderer)
     {
         OnConnectToOverlay();
         m_ConnectedType = OVERLAY_OUTFILTER;
@@ -940,14 +944,18 @@ HRESULT CDSVideoOutPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME
     // and the video renderer sends up a new format too
     // calling AdjustRenderersMediaType again will merge the two 
     // formats properly and should never call NegotiateAllocator
-    if(hr == S_FALSE && m_NeedToAttachFormat)
+    if(hr == S_FALSE)
     {
         HRESULT hr;
-        if(FAILED(hr = AdjustRenderersMediaType()))
+        if(m_NeedToAttachFormat)
         {
-            LogBadHRESULT(hr, __FILE__, __LINE__);
-            return hr;
+            if(FAILED(hr = AdjustRenderersMediaType()))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+                return hr;
+            }
         }
+
         hr = (*OutSample)->SetDiscontinuity(TRUE);
         CHECK(hr);
     }

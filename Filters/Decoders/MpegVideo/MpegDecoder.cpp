@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.55 2004-11-18 07:40:56 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.56 2004-11-25 17:22:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.55  2004/11/18 07:40:56  adcockj
+// a few test bug fixes
+//
 // Revision 1.54  2004/11/09 17:20:38  adcockj
 // Stutter fix
 //
@@ -664,6 +667,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555));
+        Result &= (abs(m_VideoOutPin->GetHeight()) == abs(hout)) && (m_VideoOutPin->GetWidth() == wout);
     }
     else if(pPin == m_CCOutPin)
     {
@@ -797,7 +801,7 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     if(pPin == m_VideoOutPin)
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
-        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:VIDEOTYPEFLAG_FORCE_YV12;
+        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
     else if(pPin == m_SubpictureInPin)

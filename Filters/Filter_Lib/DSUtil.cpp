@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.2 2004-11-04 16:01:13 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.3 2004-11-25 17:22:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/11/04 16:01:13  adcockj
+// Minor changes in preparation for Divx filter
+//
 // Revision 1.1  2004/10/28 15:52:24  adcockj
 // Moved video output pin code into new class
 //
@@ -117,6 +120,7 @@ const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
 bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
 {
     w = h = arx = ary = 0;
+    RECT* pSourceRect = NULL;
 
     if(pmt->formattype == FORMAT_VideoInfo || pmt->formattype == FORMAT_MPEGVideo)
     {
@@ -125,6 +129,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
         h = vih->bmiHeader.biHeight;
         arx = w * vih->bmiHeader.biYPelsPerMeter;
         ary = h * vih->bmiHeader.biXPelsPerMeter;
+        pSourceRect = &vih->rcSource;
     }
     else if(pmt->formattype == FORMAT_VideoInfo2 || pmt->formattype == FORMAT_MPEG2_VIDEO)
     {
@@ -133,6 +138,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
         h = vih->bmiHeader.biHeight;
         arx = vih->dwPictAspectRatioX;
         ary = vih->dwPictAspectRatioY;
+        pSourceRect = &vih->rcSource;
     }
     else
     {
@@ -186,7 +192,20 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     {
 
     }
-    
+
+    if(pSourceRect != NULL)
+    {
+        if(pSourceRect->right != 0 && pSourceRect->right < w)
+        {
+            w = pSourceRect->right;
+        }
+        if(pSourceRect->bottom != 0 && pSourceRect->bottom < h)
+        {
+            h = pSourceRect->bottom;
+        }
+    }
+
+
     // protect against zero values
     if(arx == 0 || ary == 0)
     {

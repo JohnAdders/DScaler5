@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.22 2004-11-07 09:12:05 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.23 2004-11-25 17:22:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.22  2004/11/07 09:12:05  adcockj
+// fixed connection issue
+//
 // Revision 1.21  2004/11/06 14:07:01  adcockj
 // Fixes for WM10 and seeking
 //
@@ -178,15 +181,22 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         hr = pReceivePin->ReceiveConnection(this, &ProposedType);
         if(SUCCEEDED(hr))
         {
-            break;
+            hr = NegotiateAllocator(pReceivePin, &ProposedType);    
+            if(SUCCEEDED(hr))
+            {
+                break;
+            }
+            else
+            {
+                hr = pReceivePin->Disconnect();
+                CHECK(hr);
+            }
         }
         
         ++TypeNum;
         ClearMediaType(&ProposedType);
     }
     
-    hr = NegotiateAllocator(pReceivePin, &ProposedType);    
-    CHECK(hr);
 
     ClearMediaType(&ProposedType);
 
@@ -561,7 +571,6 @@ HRESULT CDSOutputPin::Deactivate()
 HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
     HRESULT hr = S_OK;
-    bool NeedToCommit = false;
 
     // if we haven't already choosen an allocator
     if(m_Allocator == NULL)
@@ -569,27 +578,72 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         // ask the conencted filter for it's allocator
         // otherwise supply our own
         hr = m_MemInputPin->GetAllocator(m_Allocator.GetReleasedInterfaceReference());
-        if(!m_Allocator)
+        if(m_Allocator)
         {
-            // see what we get but don't return
+            hr = NegotiateBufferSize(pReceivePin, pmt);
             if(FAILED(hr))
             {
                 LogBadHRESULT(hr, __FILE__, __LINE__);
+                m_Allocator.Detach();
+                hr = S_OK;
             }
-            m_Allocator = m_MyMemAlloc;
         }
+
+        if(!m_Allocator)
+        {
+            m_Allocator = m_MyMemAlloc;
+            
+            hr = NegotiateBufferSize(pReceivePin, pmt);
+            if(FAILED(hr))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+		        m_Allocator.Detach();
+                return VFW_E_NO_TRANSPORT;
+            }
+        }
+
+        hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
+        if(FAILED(hr))
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+		    m_Allocator.Detach();
+            return VFW_E_NO_TRANSPORT;
+        }
+
         if(m_Filter->m_State != State_Stopped)
         {
-            NeedToCommit = true;
+            hr = m_Allocator->Commit();
+            CHECK(hr);
         }
+
+        // If all is OK the save the Pin interface
+        m_ConnectedPin = pReceivePin;
+
+        // save the IPinConnection pointer
+        // so that we can propagate dynamic reconnections
+        m_PinConnection = pReceivePin;
     }
     else
     {
         hr = m_Allocator->Decommit();
         CHECK(hr);
 
-        NeedToCommit = true;
+        hr = NegotiateBufferSize(pReceivePin, pmt);
+        if(FAILED(hr))
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+            return VFW_E_NO_TRANSPORT;
+        }
+
+        hr = m_Allocator->Commit();
+        CHECK(hr);
     }
+    return hr;
+}
+
+HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+{
+    HRESULT hr = S_OK;
 
     // lets try and negotiate a sensible set of requirements
     // try to allocate the settings the renderer has asked for
@@ -605,19 +659,15 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         if(hr == E_NOTIMPL)
         {
             hr = m_Allocator->GetProperties(&Props);
-            if(FAILED(hr))
-            {
-                m_Allocator.Detach();
-                return VFW_E_NO_TRANSPORT;
-            }
+            CHECK(hr);
         }
         else
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
-            m_Allocator.Detach();
-            return VFW_E_NO_TRANSPORT;
+            return hr;
         }
     }
+
     hr = SetType(pmt);
     CHECK(hr);
 
@@ -638,6 +688,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         Props.cbBuffer = max(Props.cbBuffer, (long)pmt->lSampleSize);
     }
 
+    ZeroMemory(&PropsAct, sizeof(PropsAct));
     hr = m_Allocator->SetProperties(&Props, &PropsAct);
 
     // \todo see if we need this rubbish
@@ -651,38 +702,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        m_Allocator.Detach();
-        return VFW_E_NO_TRANSPORT;
-    }
-    
-    LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+    LOG(DBGLOG_FLOW, ("Allocator hr = %08x Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", hr, PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
 
-	hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-		m_Allocator.Detach();
-        return VFW_E_NO_TRANSPORT;
-    }
-
-    if(pReceivePin != NULL)
-    {
-        // If all is OK the save the Pin interface
-        m_ConnectedPin = pReceivePin;
-    
-        // save the IPinConnection pointer
-        // so that we can propagate dynamic reconnections
-        m_PinConnection = pReceivePin;
-    }
-
-    if(NeedToCommit)
-    {
-        hr = m_Allocator->Commit();
-        CHECK(hr);
-    }
-
-    return S_OK;
+    return hr;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.6 2004-11-18 21:26:23 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.7 2004-11-25 17:22:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/11/18 21:26:23  adcockj
+// fix accedental checkin of conflict
+//
 // Revision 1.5  2004/11/09 17:21:37  adcockj
 // Seeking fixes
 //
@@ -301,6 +304,7 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555));
+        Result &= (abs(m_VideoOutPin->GetHeight()) == abs(hout)) && (m_VideoOutPin->GetWidth() == wout);
     }
     return Result;
 }
@@ -377,7 +381,7 @@ HRESULT CDivxDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     if(pPin == m_VideoOutPin)
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
-        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:VIDEOTYPEFLAG_FORCE_YV12;
+        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, 0);
     }
     else
