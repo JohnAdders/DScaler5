@@ -27,7 +27,7 @@
 #elif _MSC_VER >= 1300
 #define ATTR_ALIGN(_var, _align) __declspec(align(_align)) _var
 #else
-#define ATTR_ALIGN(var, align) 
+#define ATTR_ALIGN(var, align) var
 
 #endif
 

@@ -101,14 +101,6 @@ SOURCE=..\libmpeg2\idct.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\libmpeg2\idct_sse2.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\libmpeg2\mc_sse2.c
-# End Source File
-# Begin Source File
-
 SOURCE=..\libmpeg2\motion_comp.c
 # End Source File
 # Begin Source File

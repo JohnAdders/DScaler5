@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.21 2004-07-20 16:37:48 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.22 2004-07-20 20:00:27 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2004/07/20 16:37:48  adcockj
+// Fixes for main issues raised in testing of 0.0.1
+//  - Improved parameter handling
+//  - Fixed some overlay issues
+//  - Auto aspect ratio with VMR
+//  - Fixed some overlay stutters
+//  - Fixed some push filter issues
+//  - ffdshow and DirectVobSub connection issues
+//
+// Added
+//  - Hardcode for PAL setting for ffdshow
+//  - Added choice of IDCT for testing
+//
 // Revision 1.20  2004/07/16 15:45:19  adcockj
 // Fixed compilation issues under .NET
 // Improved (hopefully) handling of negative times and preroll
@@ -705,7 +718,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFEREN
 
     rtDur += m_rtOutputStart;
 
-    pOut->SetTime(&m_rtOutputStart, NULL);
+    //pOut->SetTime(&m_rtOutputStart, NULL);
 
 	if(!m_Preroll)
 	{
