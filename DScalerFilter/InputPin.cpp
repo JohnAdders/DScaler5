@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.11 2003-05-08 16:20:25 adcockj Exp $
+// $Id: InputPin.cpp,v 1.12 2003-05-09 07:03:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2003/05/08 16:20:25  adcockj
+// Tidy up
+//
 // Revision 1.10  2003/05/08 15:58:38  adcockj
 // Better error handling, threading and format support
 //
@@ -433,7 +436,8 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     // function with this line
     CProtectCode WhileVarInScope(this);
 
-    LogSample(pSample, "New Input Sample");
+    //LogSample(pSample, "New Input Sample");
+
     // check for media type changes on the input side
     // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* InputType = NULL;
@@ -543,12 +547,9 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
         if(OutSampleProperties.pMediaType != NULL)
         {
             InitMediaType(OutSampleProperties.pMediaType);
-            hr = m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, OutSampleProperties.pMediaType);
-            CHECK(hr);
             hr = CopyMediaType(OutSampleProperties.pMediaType, &m_OutputPin->m_CurrentMediaType);
             CHECK(hr);
-            ++m_OutputPin->m_FormatVersion;
-            m_OutputPin->m_FormatChanged = FALSE;
+            OutSampleProperties.dwSampleFlags |= AM_SAMPLE_TYPECHANGED;
         }
     }
 
@@ -560,8 +561,6 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     CHECK(hr);
 
     hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
-    CHECK(hr);
-
     OutSample->Release();
     return hr;
 }

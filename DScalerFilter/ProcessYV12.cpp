@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProcessYV12.cpp,v 1.1 2003-05-08 15:58:38 adcockj Exp $
+// $Id: ProcessYV12.cpp,v 1.2 2003-05-09 07:03:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -49,7 +52,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         {
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 0;
             }
         }
 
@@ -62,7 +65,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
             pOutBuffer += 704;
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 0;
             }
             pOutBuffer -= 720;
         }
@@ -70,7 +73,6 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         pOutBuffer += OutputBMI->biWidth;
         pInBuffer += InputBMI->biWidth;
     }
-    
     // do V samples
     for(i = 0; i < Lines/2; ++i)
     {
@@ -80,7 +82,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         {
             for(int i(0); i < 4; ++i)
             {
-                *(++pOutBuffer) = 128;
+                *(pOutBuffer++) = 128;
             }
         }
 
@@ -93,7 +95,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
             pOutBuffer += 704/2;
             for(int i(0); i < 4; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 128;
             }
             pOutBuffer -= 720/2;
         }
@@ -111,7 +113,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         {
             for(int i(0); i < 4; ++i)
             {
-                *(++pOutBuffer) = 128;
+                *(pOutBuffer++) = 128;
             }
         }
 
@@ -124,7 +126,7 @@ void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
             pOutBuffer += 704/2;
             for(int i(0); i < 4; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 128;
             }
             pOutBuffer -= 720/2;
         }

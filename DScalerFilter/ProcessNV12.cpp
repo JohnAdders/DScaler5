@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProcessNV12.cpp,v 1.1 2003-05-08 15:58:38 adcockj Exp $
+// $Id: ProcessNV12.cpp,v 1.2 2003-05-09 07:03:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -47,7 +50,7 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         {
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 0;
             }
         }
 
@@ -60,7 +63,7 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
             pOutBuffer += 704;
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 0;
             }
             pOutBuffer -= 720;
         }
@@ -78,7 +81,7 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
         {
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 128;
+                *(pOutBuffer++) = 128;
             }
         }
 
@@ -91,7 +94,7 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
             pOutBuffer += 704;
             for(int i(0); i < 8; ++i)
             {
-                *(++pOutBuffer) = 0;
+                *(pOutBuffer++) = 128;
             }
             pOutBuffer -= 720;
         }

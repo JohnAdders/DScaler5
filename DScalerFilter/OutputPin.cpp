@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.9 2003-05-08 15:58:38 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.10 2003-05-09 07:03:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 // Revision 1.8  2003/05/06 16:38:01  adcockj
 // Changed to fixed size output buffer and changed connection handling
 //
@@ -181,7 +184,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
     
     m_SampleSize = PropsAct.cbBuffer;
 
-    LOG(DBGLOG_ALL, ("Allocator Negotiated %d Buffers %d Size, %d Align\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign));
+    LOG(DBGLOG_ALL, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
 
     hr = m_MemInputPin->NotifyAllocator(m_Allocator, FALSE);
     if(FAILED(hr))
@@ -748,7 +751,7 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
 
     long Stride = Width;
 
-    if(m_Stride >= Width && m_Stride < (Width + 33))
+    if(m_Stride >= Width && m_Stride < (Width + 64))
     {
         Stride = m_Stride;
     }

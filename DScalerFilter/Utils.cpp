@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.6 2003-05-08 15:58:38 adcockj Exp $
+// $Id: Utils.cpp,v 1.7 2003-05-09 07:03:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 // Revision 1.5  2003/05/06 07:00:30  adcockj
 // Some cahnges from Torbjorn also some other attempted fixes
 //
@@ -201,6 +204,8 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
         LOG(DBGLOG_ALL, (" Sub Type {%s}\n", Uuid));
         RpcStringFree(&Uuid);
     }
+    LOG(DBGLOG_ALL, (" Format size %d\n", MediaType->cbFormat));
+
     if(MediaType->formattype == FORMAT_VideoInfo)
     {
         LOG(DBGLOG_ALL, (" FORMAT_VideoInfo\n"));
@@ -251,33 +256,3 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
 
 #endif // NOLOGGING
 
-HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
-{
-    HRESULT hr = S_OK;
-    CComQIPtr<IMediaSample2> Sample2 = Sample;
-    if(Sample2 != NULL)
-    {
-        hr = Sample2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&SampleProperties);
-    }
-    else
-    {
-        if(SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
-        {
-            hr = Sample->SetTime(&SampleProperties->tStart, &SampleProperties->tStop);
-            CHECK(hr);
-        }
-
-        hr = Sample->SetMediaType(SampleProperties->pMediaType);
-        CHECK(hr);
-        
-        hr = Sample->SetDiscontinuity((SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY) > 0);
-        CHECK(hr);
-
-        hr = Sample->SetPreroll((SampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) > 0);
-        CHECK(hr);
-
-        hr = Sample->SetSyncPoint((SampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) > 0);
-        CHECK(hr);
-    }
-    return hr;
-}
