@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.40 2004-10-22 07:34:40 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.41 2004-10-24 16:24:28 laurentg Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.40  2004/10/22 07:34:40  adcockj
+// fix for some connection issues
+//
 // Revision 1.39  2004/10/21 18:52:09  adcockj
 // Sync fixes
 //
@@ -800,7 +803,35 @@ HRESULT CAudioDecoder::Deliver()
     REFERENCE_TIME rtDur = 10000000i64 * m_InternalMT.lSampleSize / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
 	REFERENCE_TIME rtStop = m_rtOutputStart + rtDur;
 
-    m_CurrentOutputSample->SetTime(&m_rtOutputStart, &rtStop);
+	////////////////////////////////////////////////////
+	// Changed by Laurent (to be checked by John)
+	// Constant AUDIO_DELAY_OVER_SPDIF has to be replaced
+	// by a user setting named "Audio delay over S/PDIF"
+	// with at least -400 as minimum value. Default value
+	// has to be decided (not easy to adjust).
+	// And this delay must be checked with MPEG over S/PDIF
+	// as soon as it works again.
+	//
+    AM_MEDIA_TYPE* pMediaType = &m_AudioInPin->m_ConnectedMediaType;
+    BOOL UseSpdif = (GetParamBool(USESPDIF) &&
+                    (IsMediaTypeAC3(pMediaType) || IsMediaTypeDTS(pMediaType))) ||
+                    (GetParamBool(MPEGOVERSPDIF) && IsMediaTypeMP3(pMediaType));
+	REFERENCE_TIME rtStart = m_rtOutputStart;
+    if(UseSpdif)
+    {
+		#define AUDIO_DELAY_OVER_SPDIF	-400
+		rtStart += AUDIO_DELAY_OVER_SPDIF * 10000;
+		rtStop += AUDIO_DELAY_OVER_SPDIF * 10000;
+		// Don't know if this test is necessary ...
+		if (rtStart < 0)
+		{
+			rtStart = 0;
+			rtStop = rtStart + rtDur;
+		}
+	}
+    m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
+	//
+	////////////////////////////////////////////////////
 	m_CurrentOutputSample->SetMediaTime(NULL, NULL);
 
 	if(!m_Preroll)
@@ -1552,6 +1583,8 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
         m_pDataOut += BytesToGo;
         m_BytesLeftInBuffer -= BytesToGo;
+		// Laurent to John : are you sure that m_BytesLeftInBuffer
+		// could not be negative after that ?
 
         BytesToGo = FinalLength - DigitalLength - 8;
     }
@@ -1563,7 +1596,23 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 
     if(BytesToGo > 0)
     {
-        if(BytesToGo > m_BytesLeftInBuffer)
+		////////////////////////////////////////////////////
+		// Added by Laurent (to be checked by John)
+		//
+		if(m_BytesLeftInBuffer == 0)
+		{
+			hr = Deliver();
+			if(hr != S_OK)
+			{
+				return hr;
+			}
+			hr = GetOutputSampleAndPointer();
+			CHECK(hr);
+		}
+		//
+		////////////////////////////////////////////////////
+
+        if (BytesToGo > m_BytesLeftInBuffer)
         {
             ZeroMemory(m_pDataOut, m_BytesLeftInBuffer);
             BytesToGo -= m_BytesLeftInBuffer;
@@ -1579,6 +1628,8 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         ZeroMemory(m_pDataOut, BytesToGo);
         m_pDataOut += BytesToGo;
         m_BytesLeftInBuffer -= BytesToGo;
+		// Laurent to John : are you sure that m_BytesLeftInBuffer
+		// could not be negative after that ?
     }
 
     if(m_BytesLeftInBuffer == 0)
