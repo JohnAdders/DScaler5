@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.13 2004-08-03 08:55:57 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.14 2004-08-04 13:34:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/08/03 08:55:57  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.12  2004/08/02 16:56:57  adcockj
 // Fix for seeking issues with ReceiveMultiple
 //
@@ -208,6 +211,7 @@ STDMETHODIMP CDSInputPin::EndOfStream(void)
 
 STDMETHODIMP CDSInputPin::BeginFlush(void)
 {
+    HRESULT hr = S_OK;
     LOG(DBGLOG_FLOW, ("CDSInputPin::BeginFlush\n"));
 
     CProtectCode WhileVarInScope(m_Filter);
@@ -221,7 +225,7 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
         CDSBasePin* pPin = m_Filter->GetPin(i);
         if(pPin->m_Direction == PINDIR_OUTPUT && pPin->m_ConnectedPin != NULL)
         {
-            HRESULT hr = pPin->m_ConnectedPin->BeginFlush();
+            hr = pPin->m_ConnectedPin->BeginFlush();
             if(hr == E_FAIL)
             {
                 hr = S_OK;
@@ -230,7 +234,13 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
         }
     }
 
-    return S_OK;
+    // wait for processing to finish
+    CProtectCode WhileVarInScope2(this);
+
+    hr = m_Filter->Flush(this);
+    CHECK(hr);
+
+    return hr;
 }
 
 STDMETHODIMP CDSInputPin::EndFlush(void)
@@ -267,10 +277,6 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         }
     }
 
-    hr = m_Filter->Flush(this);
-    CHECK(hr);
-
-    
     m_Flushing = FALSE;
     return hr;
 }
