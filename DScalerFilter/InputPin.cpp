@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.15 2003-05-16 15:18:36 adcockj Exp $
+// $Id: InputPin.cpp,v 1.16 2003-05-17 11:29:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2003/05/16 15:18:36  adcockj
+// Interim check inas we move to supporting DMO plug-ins
+//
 // Revision 1.14  2003/05/10 13:21:31  adcockj
 // Bug fixes
 //
@@ -556,6 +559,12 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         ATLASSERT(InputBMI->biWidth <= OutputBMI->biWidth);
         ATLASSERT(abs(InputBMI->biHeight) <= abs(OutputBMI->biHeight));
         int Lines = abs(InputBMI->biHeight);
+        int LinesAvail = InputBMI->biSizeImage * 8 / InputBMI->biWidth / InputBMI->biBitCount;
+        if(LinesAvail < Lines)
+        {
+            LOG(DBGLOG_FLOW, ("Image Size screw up\n"));
+            Lines = LinesAvail;
+        }
 
         // \todo probably need to change the way what needs to be done
         // is split out. Separate files by type seems like a good idea

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.6 2003-05-16 16:27:45 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.7 2003-05-17 11:29:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/16 16:27:45  adcockj
+// Added a bit of a safety for the property page
+//
 // Revision 1.5  2003/05/07 16:27:03  adcockj
 // fixes for odd behaviour with multiple pages
 //
@@ -208,6 +211,10 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
 
 void CGenDMOPropPage::SetupControls()
 {
+    if(m_NumParams == 0)
+    {   
+        return;
+    }
     m_EditBox.ShowWindow(SW_HIDE);
     m_CheckBox.ShowWindow(SW_HIDE);
     m_Slider.ShowWindow(SW_HIDE);

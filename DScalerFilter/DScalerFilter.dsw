@@ -29,6 +29,12 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name GenDMOProp
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Bob
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
 }}}
 
 ###############################################################################

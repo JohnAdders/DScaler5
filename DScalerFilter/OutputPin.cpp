@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.12 2003-05-10 13:21:31 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.13 2003-05-17 11:29:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2003/05/10 13:21:31  adcockj
+// Bug fixes
+//
 // Revision 1.11  2003/05/09 15:51:05  adcockj
 // Code tidy up
 // Added aspect ratio parameters
@@ -128,6 +131,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
     // subject to some sensible minumums.
     ALLOCATOR_PROPERTIES Props;
     ALLOCATOR_PROPERTIES PropsAct;
+    ZeroMemory(&Props, sizeof(ALLOCATOR_PROPERTIES));
     hr = m_MemInputPin->GetAllocatorRequirements(&Props);
     if(FAILED(hr))
     {
@@ -148,7 +152,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
         }
     }
     
-    Props.cBuffers = max(3, Props.cBuffers);
+    Props.cBuffers = max(1, Props.cBuffers);
     Props.cbBuffer = max(ProposedType->lSampleSize, (ULONG)Props.cbBuffer);
     Props.cbAlign = max(1, Props.cbAlign);
 
@@ -687,6 +691,8 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
     ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
     NewType->pbFormat = (BYTE*)NewFormat;
 
+    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+
     if(InputType->formattype == FORMAT_VIDEOINFO2)
     {
         VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
@@ -696,6 +702,10 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
         NewFormat->dwBitRate = OldFormat->dwBitRate;
         NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
         NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+        if(OldFormat->dwInterlaceFlags & AMINTERLACE_Field1First)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
     }
     else if(InputType->formattype == FORMAT_VideoInfo)
     {
@@ -724,6 +734,11 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
                 NewFormat->dwPictAspectRatioX *= BitmapInfo->biYPelsPerMeter;
                 NewFormat->dwPictAspectRatioY *= BitmapInfo->biXPelsPerMeter;
             }
+        }
+
+        if(BitmapInfo->biHeight == 576)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
         }
 
         NewFormat->dwBitRate = OldFormat->dwBitRate;
@@ -757,8 +772,6 @@ HRESULT COutputPin::WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA
 
     DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
 
-    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
-    
     NewFormat->rcSource.top = 0;
     NewFormat->rcSource.bottom = Height;
     NewFormat->rcSource.left = 0;
