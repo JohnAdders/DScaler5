@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.4 2003-05-02 07:03:14 adcockj Exp $
+// $Id: StdAfx.h,v 1.5 2003-05-07 16:27:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -34,7 +34,7 @@
 
 //#define _ATL_DEBUG_INTERFACES
 //#define ATL_TRACE_LEVEL 2
-//#define _ATL_DEBUG_QI
+#define _ATL_DEBUG_QI
 
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override

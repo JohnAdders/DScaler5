@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.5 2003-05-06 16:38:00 adcockj Exp $
+// $Id: DScaler.h,v 1.6 2003-05-07 16:27:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -26,6 +26,8 @@
 #include "InputPin.h"
 #include "OutputPin.h"
 #include "..\GenDMOProp\GenDMOProp.h"
+
+#define NUM_DSCALERFILTER_PARAMS 4
 
 class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScaler : 
 	public CComObjectRootEx<CComMultiThreadModel>,
@@ -113,7 +115,6 @@ public:
 	STDMETHOD(GetLicense)(eFreeLicense* License);
     STDMETHOD(GetAuthors)(BSTR* Authors);
 
-
 public:
     CInputPin* m_InputPin;
     COutputPin* m_OutputPin;
@@ -122,6 +123,9 @@ public:
     IFilterGraph2* m_Graph;
     WCHAR m_Name[MAX_FILTER_NAME];
     BOOL m_IsDirty;
+private:
+    MP_DATA m_ParamValues[NUM_DSCALERFILTER_PARAMS];
+    static const MP_PARAMINFO m_ParamInfos[NUM_DSCALERFILTER_PARAMS];
 };
 
 #endif

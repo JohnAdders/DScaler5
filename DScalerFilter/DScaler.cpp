@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.7 2003-05-06 16:38:00 adcockj Exp $
+// $Id: DScaler.cpp,v 1.8 2003-05-07 16:27:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2003/05/06 16:38:00  adcockj
+// Changed to fixed size output buffer and changed connection handling
+//
 // Revision 1.6  2003/05/02 16:22:22  adcockj
 // Switched to ISpecifyPropertyPagesImpl
 //
@@ -46,6 +49,16 @@
 #include "InputPin.h"
 #include "OutputPin.h"
 
+// define any parameters used
+const MP_PARAMINFO CDScaler::m_ParamInfos[NUM_DSCALERFILTER_PARAMS] = 
+{
+    { MPT_INT, 0, -10, 20, 0, L"Units1", L"Name2" },
+    { MPT_FLOAT, 0, -10, 20, 0, L"Units2", L"Name2" },
+    { MPT_BOOL, 0, 0, 1, 0, L"Units3", L"Name3" }, 
+    { MPT_ENUM, 0, 0, 3, 0, L"Units4", L"Name4" }, 
+};
+
+
 CDScaler::CDScaler()
 {
 	m_pUnkMarshaler = NULL;
@@ -53,6 +66,10 @@ CDScaler::CDScaler()
     m_Graph = NULL;
     m_IsDirty = FALSE;
     wcscpy(m_Name, L"DScaler Filter");
+    for(int i(0); i < NUM_DSCALERFILTER_PARAMS; ++i)
+    {
+        m_ParamValues[i] = m_ParamInfos[i].mpdNeutralValue;
+    }
 }
 
 HRESULT CDScaler::FinalConstruct()
@@ -246,7 +263,28 @@ STDMETHODIMP CDScaler::Load(IStream __RPC_FAR *pStm)
     {
         return E_POINTER;
     }
-    // \todo load up any settings
+    DWORD NumParams(0);
+
+    HRESULT hr = GetParamCount(&NumParams);
+    if(FAILED(hr)) return hr;
+
+    for(DWORD i(0); i < NumParams; ++i)
+    {
+        MP_DATA ParamValue(0);
+        DWORD BytesRead(0);
+        hr = pStm->Read(&ParamValue, sizeof(MP_DATA), &BytesRead);
+        if(FAILED(hr)) return hr;
+        if(BytesRead == sizeof(MP_DATA))
+        {
+            hr = SetParam(i, ParamValue);
+            if(FAILED(hr)) return hr;
+        }
+        else
+        {
+            return E_UNEXPECTED;
+        }
+    }
+
     return S_OK;
 }
 
@@ -257,7 +295,22 @@ STDMETHODIMP CDScaler::Save(IStream __RPC_FAR *pStm, BOOL fClearDirty)
     {
         return E_POINTER;
     }
-    // \todo save up any settings
+    DWORD NumParams(0);
+
+    HRESULT hr = GetParamCount(&NumParams);
+    if(FAILED(hr)) return hr;
+
+    for(DWORD i(0); i < NumParams; ++i)
+    {
+        MP_DATA ParamValue(0);
+        DWORD BytesWriten(0);
+        hr = GetParam(i, &ParamValue);
+        if(FAILED(hr)) return hr;
+        hr = pStm->Write(&ParamValue, sizeof(MP_DATA), &BytesWriten);
+        if(FAILED(hr)) return hr;
+        if(BytesWriten != sizeof(MP_DATA)) return E_UNEXPECTED;
+    }
+
     if(fClearDirty)
     {
         m_IsDirty = FALSE;
@@ -272,8 +325,12 @@ STDMETHODIMP CDScaler::GetSizeMax(ULARGE_INTEGER __RPC_FAR *pcbSize)
     {
         return E_POINTER;
     }
-    // \todo work out real size
-    pcbSize->QuadPart = 100;
+    DWORD NumParams(0);
+
+    HRESULT hr = GetParamCount(&NumParams);
+    if(FAILED(hr)) return hr;
+
+    pcbSize->QuadPart = sizeof(MP_DATA) * NumParams;
     return S_OK;
 }
 
@@ -283,24 +340,9 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
     {
         return E_POINTER;
     }
-    if(dwParamIndex == 0)
+    if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
     {
-        *pValue = 5;
-        return S_OK;
-    }
-    if(dwParamIndex == 1)
-    {
-        *pValue = 4.5;
-        return S_OK;
-    }
-    if(dwParamIndex == 2)
-    {
-        *pValue = 1;
-        return S_OK;
-    }
-    if(dwParamIndex == 3)
-    {
-        *pValue = 2;
+        *pValue = m_ParamValues[dwParamIndex];
         return S_OK;
     }
     else
@@ -311,9 +353,9 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
 
 STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
 {
-    // \todo get working
-    if(dwParamIndex < 4)
+    if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
     {
+        m_ParamValues[dwParamIndex] = value;
         return S_OK;
     }
     else
@@ -346,7 +388,7 @@ STDMETHODIMP CDScaler::GetParamCount(DWORD *pdwParams)
     {
         return E_POINTER;
     }
-    *pdwParams = 4;
+    *pdwParams = NUM_DSCALERFILTER_PARAMS;
     return S_OK;
 }
 
@@ -356,54 +398,12 @@ STDMETHODIMP CDScaler::GetParamInfo(DWORD dwParamIndex,MP_PARAMINFO *pInfo)
     {
         return E_POINTER;
     }
-    if(dwParamIndex == 0)
-    {
-        pInfo->mpType = MPT_INT;
-        pInfo->mopCaps = 0;
-        pInfo->mpdMinValue = -10;
-        pInfo->mpdMaxValue = 20;
-        pInfo->mpdNeutralValue = 0;
-        wcscpy(pInfo->szUnitText, L"Units1");
-        wcscpy(pInfo->szLabel, L"Name2");
-        return S_OK;
-    }
-    else if(dwParamIndex == 1)
-    {
-        pInfo->mpType = MPT_FLOAT;
-        pInfo->mopCaps = 0;
-        pInfo->mpdMinValue = -10;
-        pInfo->mpdMaxValue = 20;
-        pInfo->mpdNeutralValue = 0;
-        wcscpy(pInfo->szUnitText, L"Units2");
-        wcscpy(pInfo->szLabel, L"Name2");
-        return S_OK;
-    }
-    else if(dwParamIndex == 2)
-    {
-        pInfo->mpType = MPT_BOOL;
-        pInfo->mopCaps = 0;
-        pInfo->mpdMinValue = 0;
-        pInfo->mpdMaxValue = 1;
-        pInfo->mpdNeutralValue = 0;
-        wcscpy(pInfo->szUnitText, L"Units3");
-        wcscpy(pInfo->szLabel, L"Name3");
-        return S_OK;
-    }
-    else if(dwParamIndex == 3)
-    {
-        pInfo->mpType = MPT_ENUM;
-        pInfo->mopCaps = 0;
-        pInfo->mpdMinValue = 0;
-        pInfo->mpdMaxValue = 3;
-        pInfo->mpdNeutralValue = 0;
-        wcscpy(pInfo->szUnitText, L"Units4");
-        wcscpy(pInfo->szLabel, L"Name4");
-        return S_OK;
-    }
-    else
+    if(dwParamIndex >= NUM_DSCALERFILTER_PARAMS)
     {
         return E_INVALIDARG;
     }
+    memcpy(pInfo, &m_ParamInfos[dwParamIndex], sizeof(MP_PARAMINFO));
+    return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
@@ -413,37 +413,29 @@ STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
     {
         return E_POINTER;
     }
-    if(dwParamIndex == 0)
+    if(dwParamIndex >= NUM_DSCALERFILTER_PARAMS)
     {
-        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
-        if(*ppwchText == NULL) return E_OUTOFMEMORY;
-        memcpy(*ppwchText, L"Name1\0Units1\0", 28);
-        return S_OK;
+        return E_INVALIDARG;
     }
-    else if(dwParamIndex == 1)
+    if(m_ParamInfos[dwParamIndex].mpType != MPT_ENUM)
     {
-        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
-        if(*ppwchText == NULL) return E_OUTOFMEMORY;
-        memcpy(*ppwchText, L"Name2\0Units2\0", 28);
-        return S_OK;
-    }
-    else if(dwParamIndex == 2)
-    {
-        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
-        if(*ppwchText == NULL) return E_OUTOFMEMORY;
-        memcpy(*ppwchText, L"Name3\0Units3\0", 28);
-        return S_OK;
-    }
-    else if(dwParamIndex == 3)
-    {
-        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
-        if(*ppwchText == NULL) return E_OUTOFMEMORY;
-        memcpy(*ppwchText, L"Name4\0Units4\0Val1\0Val2\0Val3\0Val4\0", 68);
-        return S_OK;
+            *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+            if(*ppwchText == NULL) return E_OUTOFMEMORY;
+            wcscpy(*ppwchText, m_ParamInfos[dwParamIndex].szLabel);
+            wcscpy(*ppwchText + wcslen(m_ParamInfos[dwParamIndex].szLabel) + 1,
+                    m_ParamInfos[dwParamIndex].szUnitText);
+            *(*ppwchText + wcslen(m_ParamInfos[dwParamIndex].szLabel) + wcslen(m_ParamInfos[dwParamIndex].szUnitText) + 1) = L'\0';
+            return S_OK;
     }
     else
     {
-        return E_INVALIDARG;
+        if(dwParamIndex == 3)
+        {
+            *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+            if(*ppwchText == NULL) return E_OUTOFMEMORY;
+            memcpy(*ppwchText, L"Name4\0Units4\0Val1\0Val2\0Val3\0Val4\0", 68);
+            return S_OK;
+        }
     }
     return S_OK;
 }

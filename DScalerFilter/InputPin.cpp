@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.7 2003-05-07 07:03:56 adcockj Exp $
+// $Id: InputPin.cpp,v 1.8 2003-05-07 16:27:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2003/05/07 07:03:56  adcockj
+// Some bug fixes
+//
 // Revision 1.6  2003/05/06 16:38:00  adcockj
 // Changed to fixed size output buffer and changed connection handling
 //
@@ -670,7 +673,7 @@ void CInputPin::GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props)
     case 166667:
     case 166683:
     case 166684:
-        m_VideoSampleFlag = AMINTERLACE_DisplayModeWeaveOnly;
+        m_VideoSampleFlag = AM_VIDEO_FLAG_WEAVE;
         break;
     default:
         m_VideoSampleFlag = 0;
