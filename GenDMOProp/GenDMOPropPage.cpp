@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.16 2004-10-29 11:39:34 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.17 2004-10-29 11:49:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/10/29 11:39:34  adcockj
+// Added  restore defaults button
+//
 // Revision 1.15  2004/07/30 20:13:20  adcockj
 // Make property page behave sensibly when there are multiple changes
 //
@@ -577,5 +580,21 @@ LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*w
     }
     SetDirty(HasAnythingChanged());
     SetupControls();
+    return 0;
+}
+
+LRESULT CGenDMOPropPage::OnBnClickedLoaddefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+{
+    if(m_SaveDefaults)
+    {
+        m_SaveDefaults->LoadDefaultsFromRegistry();
+        for(DWORD i(0); i < m_NumParams; ++i)
+        {
+            HRESULT hr = m_MediaParams->GetParam(i, &m_Params[i]);
+            if(FAILED(hr)) return hr;
+        }
+        SetDirty(TRUE);
+        SetupControls();
+    }
     return 0;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.8 2004-10-29 11:39:34 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.9 2004-10-29 11:49:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -55,7 +55,8 @@ BEGIN_MSG_MAP(CGenDMOPropPage)
     COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
     COMMAND_HANDLER(IDC_SAVEDEFAULTS, BN_CLICKED, OnSaveDefaultsClick);
     COMMAND_HANDLER(IDC_RESETDEFAULTS, BN_CLICKED, OnBnClickedResetdefaults)
-    CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
+        COMMAND_HANDLER(IDC_LOADDEFAULTS, BN_CLICKED, OnBnClickedLoaddefaults)
+        CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
 END_MSG_MAP()
 // Handler prototypes:
     LRESULT OnListSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
@@ -103,6 +104,7 @@ private:
     DWORD m_CurrentParam;
 public:
     LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    LRESULT OnBnClickedLoaddefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 };
 
 #endif //__GENDMOPROPPAGE_H_

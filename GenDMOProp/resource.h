@@ -28,6 +28,7 @@
 #define IDC_HOMEPAGE                    212
 #define IDC_SAVEDEFAULTS                213
 #define IDC_RESETDEFAULTS               214
+#define IDC_LOADDEFAULTS                215
 
 // Next default values for new objects
 // 
