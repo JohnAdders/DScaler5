@@ -44,6 +44,7 @@
 #include "tables_adpcm.h"
 #include "tables_fir.h"
 #include "tables_vq.h"
+#include "tables_dynrange.h"
 
 /* #define DEBUG */
 
@@ -246,6 +247,15 @@ int dts_frame (dts_state_t * state, uint8_t * buf, int * flags,
     state->front_sum = bitstream_get (state, 1);
     state->surround_sum = bitstream_get (state, 1);
     state->dialog_norm = bitstream_get (state, 4);
+
+    if(state->version == 6)
+    {
+        *level = MUL_L(*level, LEVEL(dialog_norm_adjust[state->dialog_norm + 16]));
+    }
+    else if(state->version == 7)
+    {
+        *level = MUL_L(*level, LEVEL(dialog_norm_adjust[state->dialog_norm]));
+    }
 
     /* FIME: channels mixing levels */
     state->clev = state->slev = 1;

@@ -350,6 +350,21 @@
 			<File
 				RelativePath="..\libdts\tables.h">
 			</File>
+			<File
+				RelativePath="..\libdts\tables_adpcm.h">
+			</File>
+			<File
+				RelativePath="..\libdts\tables_fir.h">
+			</File>
+			<File
+				RelativePath="..\libdts\tables_huffman.h">
+			</File>
+			<File
+				RelativePath="..\libdts\tables_quantization.h">
+			</File>
+			<File
+				RelativePath="..\libdts\tables_vq.h">
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
