@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.13 2004-12-15 13:04:09 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.14 2005-02-17 09:55:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/12/15 13:04:09  adcockj
+// added simple statistics display
+//
 // Revision 1.12  2004/12/13 16:59:57  adcockj
 // flag based film detection
 //
@@ -126,8 +129,6 @@ library GENDMOPROPLib
         WEAVE_WITH_PREV_22,
     } eDetectionHint;
 
-    cpp_quote("#define AM_VIDEO_FLAG_SHOWNOW           0x00008000")
-    
     [
         object,
 		uuid(7317990A-1A7F-4499-938A-1100D8F75E95),
