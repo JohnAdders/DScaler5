@@ -1905,5 +1905,5 @@ col_loop_ISSE16:
 	pop	ebx
 	ret
 
+end
 
-	end

@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: CPUID.asm,v 1.2 2003-10-31 17:19:36 adcockj Exp $
+;// $Id: CPUID.asm,v 1.3 2004-03-08 17:04:01 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.2  2003/10/31 17:19:36  adcockj
+;// Added support for manual pulldown selection (works with Elecard Filters)
+;//
 ;// Revision 1.1  2003/07/28 08:35:52  adcockj
 ;// Added missing files
 ;//
@@ -221,6 +224,15 @@ no_extended_features:
 no_standard_features:
 all_done:
     
+endproc
+
+proc _EndMMX, 0
+    emms
+endproc
+
+proc _EndSSE, 0
+    emms
+    sfence
 endproc
 
 segment .data

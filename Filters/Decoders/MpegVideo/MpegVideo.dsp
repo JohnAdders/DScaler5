@@ -78,7 +78,7 @@ SOURCE="$(InputPath)"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_DLL" /D "_ATL_MIN_CRT" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /Ob1 /I "..\..\Filter_Lib" /I "..\..\..\GenDMOProp" /I "..\..\..\Common" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NOLOGGING" /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\Filter_Lib" /I "..\..\..\GenDMOProp" /I "..\..\..\Common" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "NOLOGGING" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE RSC /l 0x809 /d "NDEBUG"
 # ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -130,6 +130,37 @@ InputName=a_yuv2rgb
 IntDir=.\Release
 InputPath=.\a_yuv2rgb.asm
 InputName=a_yuv2rgb
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\a_yuv2yuy2.asm
+
+!IF  "$(CFG)" == "MpegVideo - Win32 Debug"
+
+# Begin Custom Build
+IntDir=.\Debug
+InputPath=.\a_yuv2yuy2.asm
+InputName=a_yuv2yuy2
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
+
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "MpegVideo - Win32 Release"
+
+# Begin Custom Build
+IntDir=.\Release
+InputPath=.\a_yuv2yuy2.asm
+InputName=a_yuv2yuy2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)

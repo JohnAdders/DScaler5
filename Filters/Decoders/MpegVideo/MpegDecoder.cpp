@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.11 2004-03-02 07:54:57 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.12 2004-03-08 17:04:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/03/02 07:54:57  adcockj
+// Slightly improved discontinity handling
+//
 // Revision 1.10  2004/02/29 19:06:36  adcockj
 // Futher dynamic format change fix
 //
@@ -755,8 +758,6 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 	while(1)
     {
         mpeg2_state_t state = mpeg2_parse(m_dec);
-
-		__asm emms; // this one is missing somewhere in the precompiled mmx obj files
 
         if(mpeg2_info(m_dec)->user_data_len > 0)
         {

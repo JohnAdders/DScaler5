@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.3 2004-02-25 17:14:02 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.4 2004-03-08 17:04:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.2  2004/02/10 13:24:12  adcockj
 // Lots of bug fixes + corrected interlaced YV12 upconversion
 //
@@ -55,6 +59,17 @@
 
 void memcpy_accel(void* dst, const void* src, size_t len);
 
+extern "C"
+{
+	void yuvtoyuy2row_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width);
+    void yuvtoyuy2row_avg_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv);
+    void yuvtoyuy2row_avg_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv);
+    void yuvtoyuy2row_avg2_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv);
+    void yuvtoyuy2row_avg2_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv);
+    void memcpy_accel_SSE(void* dst, const void* src, size_t len);
+    void memcpy_accel_MMX(void* dst, const void* src, size_t len);
+}
+
 bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
 	if(w&1) return(false);
@@ -77,7 +92,7 @@ bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 		memcpy_accel(dstv, srcv, pitch);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -104,7 +119,7 @@ bool BitBltFromI422ToI422(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 		memcpy_accel(dstv, srcv, pitch);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -147,7 +162,7 @@ bool BitBltFromYUY2ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* src, int 
 		memcpy_accel(dst, src, pitch);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -175,50 +190,6 @@ static void yuv444toyuy2row_c(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWO
 }
 
 
-static void __declspec(naked) yuvtoyuy2row_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width)
-{
-	__asm {
-		push	ebp
-		push	edi
-		push	esi
-		push	ebx
-
-		mov		edi, [esp+20] // dst
-		mov		ebp, [esp+24] // srcy
-		mov		ebx, [esp+28] // srcu
-		mov		esi, [esp+32] // srcv
-		mov		ecx, [esp+36] // width
-
-		shr		ecx, 3
-
-yuvtoyuy2row_loop:
-
-		movd		mm0, [ebx]
-		punpcklbw	mm0, [esi]
-
-		movq		mm1, [ebp]
-		movq		mm2, mm1
-		punpcklbw	mm1, mm0
-		punpckhbw	mm2, mm0
-
-		movq		[edi], mm1
-		movq		[edi+8], mm2
-
-		add		ebp, 8
-		add		ebx, 4
-		add		esi, 4
-        add		edi, 16
-
-		loop	yuvtoyuy2row_loop
-
-		pop		ebx
-		pop		esi
-		pop		edi
-		pop		ebp
-		ret
-	};
-}
-
 static void yuvtoyuy2row_avg_c(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv)
 {
 	WORD* dstw = (WORD*)dst;
@@ -238,252 +209,6 @@ static void yuvtoyuy2row_avg2_c(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, D
 		*dstw++ = (((3*srcv[0]+srcv[pitchuv])>>2)<<8)|*srcy++;
 	}
 }
-
-static void __declspec(naked) yuvtoyuy2row_avg_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv)
-{
-	static const __int64 mask = 0x7f7f7f7f7f7f7f7fi64;
-
-	__asm {
-		push	ebp
-		push	edi
-		push	esi
-		push	ebx
-
-		movq	mm7, mask
-
-		mov		edi, [esp+20] // dst
-		mov		ebp, [esp+24] // srcy
-		mov		ebx, [esp+28] // srcu
-		mov		esi, [esp+32] // srcv
-		mov		ecx, [esp+36] // width
-		mov		eax, [esp+40] // pitchuv
-
-		shr		ecx, 3
-
-yuvtoyuy2row_avg_loop:
-
-		movd		mm0, [ebx]
-		punpcklbw	mm0, [esi]
-		movq		mm1, mm0
-
-		movd		mm2, [ebx + eax]
-		punpcklbw	mm2, [esi + eax]
-		movq		mm3, mm2
-
-		// (x+y)>>1 == (x&y)+((x^y)>>1)
-
-		pand		mm0, mm2
-		pxor		mm1, mm3
-		psrlq		mm1, 1
-		pand		mm1, mm7
-		paddb		mm0, mm1
-
-		movq		mm1, [ebp]
-		movq		mm2, mm1
-		punpcklbw	mm1, mm0
-		punpckhbw	mm2, mm0
-
-		movq		[edi], mm1
-		movq		[edi+8], mm2
-
-		add		ebp, 8
-		add		ebx, 4
-		add		esi, 4
-        add		edi, 16
-
-		loop	yuvtoyuy2row_avg_loop
-
-		pop		ebx
-		pop		esi
-		pop		edi
-		pop		ebp
-		ret
-	};
-}
-
-static void __declspec(naked) yuvtoyuy2row_avg_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv)
-{
-	static const __int64 mask = 0x7f7f7f7f7f7f7f7fi64;
-
-	__asm {
-		push	ebp
-		push	edi
-		push	esi
-		push	ebx
-
-		movq	mm7, mask
-
-		mov		edi, [esp+20] // dst
-		mov		ebp, [esp+24] // srcy
-		mov		ebx, [esp+28] // srcu
-		mov		esi, [esp+32] // srcv
-		mov		ecx, [esp+36] // width
-		mov		eax, [esp+40] // pitchuv
-
-		shr		ecx, 3
-
-yuvtoyuy2row_avg_loop:
-
-		movd		mm0, [ebx]
-		punpcklbw	mm0, [esi]
-
-		movd		mm2, [ebx + eax]
-		punpcklbw	mm2, [esi + eax]
-
-		pavgb mm0, mm2
-
-		movq		mm1, [ebp]
-		movq		mm2, mm1
-		punpcklbw	mm1, mm0
-		punpckhbw	mm2, mm0
-
-		movq		[edi], mm1
-		movq		[edi+8], mm2
-
-		add		ebp, 8
-		add		ebx, 4
-		add		esi, 4
-        add		edi, 16
-
-		loop	yuvtoyuy2row_avg_loop
-
-		pop		ebx
-		pop		esi
-		pop		edi
-		pop		ebp
-		ret
-	};
-}
-
-
-static void __declspec(naked) yuvtoyuy2row_avg2_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv)
-{
-	static const __int64 mask = 0x7f7f7f7f7f7f7f7fi64;
-
-	__asm {
-		push	ebp
-		push	edi
-		push	esi
-		push	ebx
-
-		movq	mm7, mask
-
-		mov		edi, [esp+20] // dst
-		mov		ebp, [esp+24] // srcy
-		mov		ebx, [esp+28] // srcu
-		mov		esi, [esp+32] // srcv
-		mov		ecx, [esp+36] // width
-		mov		eax, [esp+40] // pitchuv
-
-		shr		ecx, 3
-
-yuvtoyuy2row_avg2_loop:
-
-		movd		mm0, [ebx]
-		punpcklbw	mm0, [esi]
-		movq		mm1, mm0
-		movq		mm4, mm0
-
-		movd		mm2, [ebx + eax]
-		punpcklbw	mm2, [esi + eax]
-		movq        mm3, mm2
-
-		// average first with second and then with first again
-		pand		mm0, mm2
-		pxor		mm1, mm3
-		psrlq		mm1, 1
-		pand		mm1, mm7
-		paddb		mm0, mm1
-		
-		movq        mm5, mm4
-		movq        mm1, mm0
-
-		pand		mm0, mm4
-		pxor		mm1, mm5
-		psrlq		mm1, 1
-		pand		mm1, mm7
-		paddb		mm0, mm1
-
-		movq		mm1, [ebp]
-		movq		mm2, mm1
-		punpcklbw	mm1, mm0
-		punpckhbw	mm2, mm0
-
-		movq		[edi], mm1
-		movq		[edi+8], mm2
-
-		add		ebp, 8
-		add		ebx, 4
-		add		esi, 4
-        add		edi, 16
-
-		loop	yuvtoyuy2row_avg2_loop
-
-		pop		ebx
-		pop		esi
-		pop		edi
-		pop		ebp
-		ret
-	};
-}
-
-
-static void __declspec(naked) yuvtoyuy2row_avg2_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv)
-{
-	static const __int64 mask = 0x7f7f7f7f7f7f7f7fi64;
-
-	__asm {
-		push	ebp
-		push	edi
-		push	esi
-		push	ebx
-
-		movq	mm7, mask
-
-		mov		edi, [esp+20] // dst
-		mov		ebp, [esp+24] // srcy
-		mov		ebx, [esp+28] // srcu
-		mov		esi, [esp+32] // srcv
-		mov		ecx, [esp+36] // width
-		mov		eax, [esp+40] // pitchuv
-
-		shr		ecx, 3
-
-yuvtoyuy2row_avg2_loop_SSEMMX:
-
-		movd		mm0, [ebx]
-		punpcklbw	mm0, [esi]
-		movq		mm1, mm0
-
-		movd		mm2, [ebx + eax]
-		punpcklbw	mm2, [esi + eax]
-
-		pavgb       mm0, mm2
-		pavgb       mm0, mm1
-
-		movq		mm1, [ebp]
-		movq		mm2, mm1
-		punpcklbw	mm1, mm0
-		punpckhbw	mm2, mm0
-
-		movq		[edi], mm1
-		movq		[edi+8], mm2
-
-		add		ebp, 8
-		add		ebx, 4
-		add		esi, 4
-        add		edi, 16
-
-		loop	yuvtoyuy2row_avg2_loop_SSEMMX
-
-		pop		ebx
-		pop		esi
-		pop		edi
-		pop		ebp
-		ret
-	};
-}
-
 
 bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
@@ -525,7 +250,7 @@ bool BitBltFromI420ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 	yuvtoyuy2row(dst + dstpitch, srcy + srcpitch, srcu, srcv, w);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -613,7 +338,7 @@ bool BitBltFromI420ToYUY2_Int(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy,
 	yuvtoyuy2row(dst + dstpitch, srcy + srcpitch, srcu + srcpitch/2, srcv + srcpitch/2, w);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -651,7 +376,7 @@ bool BitBltFromI422ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 	while((--h) > 0);
 
 	if(CpuFeatureFlags & FEATURE_MMX)
-		__asm emms
+		EndMMX();
 
 	return(true);
 }
@@ -683,90 +408,12 @@ void memcpy_accel(void* dst, const void* src, size_t len)
 	if((CpuFeatureFlags & FEATURE_SSE) && len >= 128 
 		&& !((DWORD)src&15) && !((DWORD)dst&15))
 	{
-		__asm
-		{
-			mov     esi, dword ptr [src]
-			mov     edi, dword ptr [dst]
-			mov     ecx, len
-			shr     ecx, 7
-	memcpy_accel_sse_loop:
-			prefetchnta	[esi]
-			movaps		xmm0, [esi]
-			movaps		xmm1, [esi+16*1]
-			movaps		xmm2, [esi+16*2]
-			movaps		xmm3, [esi+16*3]
-			movaps		xmm4, [esi+16*4]
-			movaps		xmm5, [esi+16*5]
-			movaps		xmm6, [esi+16*6]
-			movaps		xmm7, [esi+16*7]
-			movntps		[edi], xmm0
-			movntps		[edi+16*1], xmm1
-			movntps		[edi+16*2], xmm2
-			movntps		[edi+16*3], xmm3
-			movntps		[edi+16*4], xmm4
-			movntps		[edi+16*5], xmm5
-			movntps		[edi+16*6], xmm6
-			movntps		[edi+16*7], xmm7
-			add			esi, 128
-			add			edi, 128
-			loop	memcpy_accel_sse_loop
-			mov     ecx, len
-			and     ecx, 127
-			cmp     ecx, 0
-			je		memcpy_accel_sse_end
-	memcpy_accel_sse_loop2:
-			mov		dl, byte ptr[esi] 
-			mov		byte ptr[edi], dl
-			inc		esi
-			inc		edi
-			dec		ecx
-			jne		memcpy_accel_sse_loop2
-	memcpy_accel_sse_end:
-			sfence
-		}
+        memcpy_accel_SSE(dst, src, len);
 	}
 	else if((CpuFeatureFlags & FEATURE_MMX) && len >= 64
 		&& !((DWORD)src&7) && !((DWORD)dst&7))
 	{
-		__asm 
-		{
-			mov     esi, dword ptr [src]
-			mov     edi, dword ptr [dst]
-			mov     ecx, len
-			shr     ecx, 6
-	memcpy_accel_mmx_loop:
-			movq    mm0, qword ptr [esi]
-			movq    mm1, qword ptr [esi+8*1]
-			movq    mm2, qword ptr [esi+8*2]
-			movq    mm3, qword ptr [esi+8*3]
-			movq    mm4, qword ptr [esi+8*4]
-			movq    mm5, qword ptr [esi+8*5]
-			movq    mm6, qword ptr [esi+8*6]
-			movq    mm7, qword ptr [esi+8*7]
-			movq    qword ptr [edi], mm0
-			movq    qword ptr [edi+8*1], mm1
-			movq    qword ptr [edi+8*2], mm2
-			movq    qword ptr [edi+8*3], mm3
-			movq    qword ptr [edi+8*4], mm4
-			movq    qword ptr [edi+8*5], mm5
-			movq    qword ptr [edi+8*6], mm6
-			movq    qword ptr [edi+8*7], mm7
-			add     esi, 64
-			add     edi, 64
-			loop	memcpy_accel_mmx_loop
-			mov     ecx, len
-			and     ecx, 63
-			cmp     ecx, 0
-			je		memcpy_accel_mmx_end
-	memcpy_accel_mmx_loop2:
-			mov		dl, byte ptr [esi] 
-			mov		byte ptr [edi], dl
-			inc		esi
-			inc		edi
-			dec		ecx
-			jne		memcpy_accel_mmx_loop2
-	memcpy_accel_mmx_end:
-		}
+        memcpy_accel_MMX(dst, src, len);
 	}
 	else
 	{
