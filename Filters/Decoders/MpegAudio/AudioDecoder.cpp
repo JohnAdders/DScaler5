@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.32 2004-07-31 18:52:09 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.33 2004-08-03 08:55:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.32  2004/07/31 18:52:09  adcockj
+// Test seeking fix
+//
 // Revision 1.31  2004/07/30 08:13:53  adcockj
 // Fix for spdif delay
 //
@@ -563,12 +566,22 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
     if(len <= 0) return S_OK;
 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY || 
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY)
+    {
+        LOG(DBGLOG_FLOW, ("Got Time Discontinuity\n"));
+        SendOutLastSamples(m_AudioInPin);
+    }
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY ||
         pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY)
     {
+        LOG(DBGLOG_FLOW, ("Got Discontinuity\n"));
         m_IsDiscontinuity = true;
+        m_BytesLeftInBuffer = 0;
+        m_CurrentOutputSample.Detach();
         m_buff.resize(0);
-        //m_rtOutputStart = 0;
+        m_pDataOut = NULL;
+        m_rtNextFrameStart = _I64_MIN;
+        m_BufferSizeAtFrameStart = 0;
     }
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID && m_rtNextFrameStart == _I64_MIN)
@@ -975,7 +988,6 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     m_rtNextFrameStart = _I64_MIN;
     m_BufferSizeAtFrameStart = 0;
     // hmmm,thought this was required but it screws up seeking
-    //m_rtOutputStart = 0;
 
     if(m_ConnectedAsSpdif && m_ProcessingType == PROCESS_AC3)
     {
@@ -994,7 +1006,11 @@ HRESULT CAudioDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME 
     if(pPin == m_AudioInPin)
     {
         LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
+        m_BytesLeftInBuffer = 0;
+        m_CurrentOutputSample.Detach();
         m_buff.resize(0);
+        m_pDataOut = NULL;
+        m_BufferSizeAtFrameStart = 0;
         m_rtOutputStart = 0;
         return S_OK;
     }
@@ -1007,7 +1023,7 @@ HRESULT CAudioDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME 
 HRESULT CAudioDecoder::SendOutLastSamples(CDSBasePin* pPin)
 {
     HRESULT hr = S_OK;
-    if(m_BytesLeftInBuffer > 0)
+    if(pPin == m_AudioInPin && m_BytesLeftInBuffer > 0)
     {
         memset(m_pDataOut, 0, m_BytesLeftInBuffer);
         hr = Deliver();
@@ -1373,7 +1389,10 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     if(m_BytesLeftInBuffer == 0)
     {
         hr = Deliver();
-        CHECK(hr);
+        if(hr != S_OK)
+        {
+            return hr;
+        }
         hr = GetOutputSampleAndPointer();
         CHECK(hr);
     }
@@ -1398,7 +1417,10 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     if(m_BytesLeftInBuffer == 0)
     {
         hr = Deliver();
-        CHECK(hr);
+        if(hr != S_OK)
+        {
+            return hr;
+        }
         hr = GetOutputSampleAndPointer();
         CHECK(hr);
     }
@@ -1414,7 +1436,10 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
             _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
             pData += m_BytesLeftInBuffer;
             BytesToGo -= m_BytesLeftInBuffer;
-            hr = Deliver();
+            if(hr != S_OK)
+            {
+                return hr;
+            }
             CHECK(hr);
             hr = GetOutputSampleAndPointer();
             CHECK(hr);
@@ -1437,7 +1462,10 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         {
             ZeroMemory(m_pDataOut, m_BytesLeftInBuffer);
             BytesToGo -= m_BytesLeftInBuffer;
-            hr = Deliver();
+            if(hr != S_OK)
+            {
+                return hr;
+            }
             CHECK(hr);
             hr = GetOutputSampleAndPointer();
             CHECK(hr);
@@ -1449,7 +1477,10 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 
     if(m_BytesLeftInBuffer == 0)
     {
-        hr = Deliver();
+        if(hr != S_OK)
+        {
+            return hr;
+        }
         CHECK(hr);
     }
 
@@ -1466,22 +1497,11 @@ HRESULT CAudioDecoder::UpdateStartTime()
         {
             OutputStart -= 10000000i64 * (m_InternalMT.lSampleSize - m_BytesLeftInBuffer) / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
         }
-        if(!GetParamBool(JITTERREMOVER) || abs((long)(OutputStart - m_rtOutputStart)) > 10000 || m_IsDiscontinuity)
+        if(OutputStart < m_rtOutputStart)
         {
-            if(abs((long)(OutputStart - m_rtOutputStart )) > 0)
-            {
-                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", OutputStart , m_rtOutputStart));
-            }
-            if(m_rtOutputStart < OutputStart)
-            {
-                m_rtOutputStart = OutputStart;
-            }
-            else
-            {
-                m_rtOutputStart = OutputStart;
-                m_IsDiscontinuity = TRUE;
-            }
+            LOG(DBGLOG_FLOW, ("Going backwards %I64d - %I64d\n", OutputStart, m_rtOutputStart));
         }
+        m_rtOutputStart = OutputStart;
    }
     
     m_rtNextFrameStart = _I64_MIN;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.16 2004-07-29 10:26:54 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.17 2004-08-03 08:55:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/07/29 10:26:54  adcockj
+// Fixes for audio issues reported by Laurent
+//
 // Revision 1.15  2004/07/28 13:59:30  adcockj
 // spdif fixes
 //
@@ -244,7 +247,10 @@ HRESULT CAudioDecoder::ProcessMPA()
                 if(m_BytesLeftInBuffer == 0)
                 {
                     hr = Deliver();
-                    CHECK(hr);
+                    if(hr != S_OK)
+                    {
+                        return hr;
+                    }
                 }
             }
         }

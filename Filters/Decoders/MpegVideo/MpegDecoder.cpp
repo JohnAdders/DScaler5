@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.37 2004-07-29 13:44:59 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.38 2004-08-03 08:55:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.37  2004/07/29 13:44:59  adcockj
+// More fixes for Laurent's issues
+//
 // Revision 1.36  2004/07/29 08:31:07  adcockj
 // Fixed issue with 100% CPU with MPC and overlay
 //
@@ -1147,7 +1150,10 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
         case STATE_END:
         case STATE_INVALID_END:
             hr = ProcessPictureDisplay((state == STATE_END) && (m_PicturesSinceSequence == 0));
-            CHECK(hr);
+            if(hr != S_OK)
+            {
+                return hr;
+            }
             break;
         case STATE_GOP:
         case STATE_SEQUENCE_REPEATED:
@@ -1234,6 +1240,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // and that Stop is always greater than start
     if(rtStart < m_LastOutputTime)
     {
+        LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime));
         rtStart = m_LastOutputTime;
     }
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.12 2004-07-28 13:59:30 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.13 2004-08-03 08:55:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/07/28 13:59:30  adcockj
+// spdif fixes
+//
 // Revision 1.11  2004/07/27 16:53:21  adcockj
 // Some spdif fixes
 //
@@ -326,7 +329,10 @@ HRESULT CAudioDecoder::ProcessDTS()
                                 if(m_BytesLeftInBuffer == 0)
                                 {
                                     hr = Deliver();
-                                    CHECK(hr);
+                                    if(hr != S_OK)
+                                    {
+                                        return hr;
+                                    }
                                 }
                             }
                         }
@@ -335,10 +341,6 @@ HRESULT CAudioDecoder::ProcessDTS()
                 p += size;
                 m_BufferSizeAtFrameStart -= size;
             }
-
-            memmove(base, p, end - p);
-            end = base + (end - p);
-            p = base;
 
             if(!fEnoughData)
                 break;
@@ -349,6 +351,10 @@ HRESULT CAudioDecoder::ProcessDTS()
         }
     }
 
+    if(end - p > 0)
+    {
+        memmove(base, p, end - p);
+    }
     m_buff.resize(end - p);
 
     return hr;

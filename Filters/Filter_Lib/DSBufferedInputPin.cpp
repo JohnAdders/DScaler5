@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.cpp,v 1.3 2004-07-07 14:09:01 adcockj Exp $
+// $Id: DSBufferedInputPin.cpp,v 1.4 2004-08-03 08:55:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.2  2004/05/25 16:59:30  adcockj
 // fixed issues with new buffered pin
 //
@@ -365,7 +368,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSample(IMediaSample* InSample)
 STDMETHODIMP CDSBufferedInputPin::ReceiveCanBlock(void)
 {
     LOG(DBGLOG_ALL, ("CDSBufferedInputPin::ReceiveCanBlock\n"));
-    return S_OK;
+    return S_FALSE;
 }
 
 HRESULT CDSBufferedInputPin::Activate()

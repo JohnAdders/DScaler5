@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.11 2004-07-28 16:32:34 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.12 2004-08-03 08:55:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/07/28 16:32:34  adcockj
+// Fixes Blight's problems from the forum
+//
 // Revision 1.10  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -214,6 +217,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 {
     BYTE* pDataIn = pSampleProperties->pbBuffer;
     long len = pSampleProperties->lActual;
+    HRESULT hr = S_OK;
 
     if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
     {
@@ -299,12 +303,12 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
             if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart))
             {
                 LOG(DBGLOG_ALL,("Refresh Image\n"));
-                Deliver(true);
+                hr = Deliver(true);
             }
         }
     }
 
-    return S_OK;
+    return hr;
 }
 
 bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2)

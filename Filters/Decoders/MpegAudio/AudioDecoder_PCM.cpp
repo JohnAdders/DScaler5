@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.9 2004-07-29 08:31:31 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.10 2004-08-03 08:55:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/29 08:31:31  adcockj
+// Fix for LPCM
+//
 // Revision 1.8  2004/07/28 13:59:30  adcockj
 // spdif fixes
 //
@@ -235,7 +238,10 @@ HRESULT CAudioDecoder::ProcessLPCM()
         if(m_BytesLeftInBuffer == 0)
         {
             hr = Deliver();
-            CHECK(hr);
+            if(hr != S_OK)
+            {
+                return hr;
+            }
         }
     }
 

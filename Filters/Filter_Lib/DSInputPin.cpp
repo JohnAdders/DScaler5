@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.12 2004-08-02 16:56:57 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.13 2004-08-03 08:55:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/08/02 16:56:57  adcockj
+// Fix for seeking issues with ReceiveMultiple
+//
 // Revision 1.11  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -337,6 +340,7 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     }
     if(m_Flushing == TRUE)
     {
+        LOG(DBGLOG_FLOW, ("CDSInputPin::Receive flushing\n"));
         return S_FALSE;
     }
     if(m_Filter->m_State == State_Stopped)
