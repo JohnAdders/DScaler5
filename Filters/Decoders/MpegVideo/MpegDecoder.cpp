@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.2 2004-02-06 16:41:41 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.3 2004-02-09 07:57:33 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/06 16:41:41  adcockj
+// Added frame smoothing and forced subs parameters
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -773,6 +776,18 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 		case STATE_SLICE:
 		case STATE_END:
 		case STATE_INVALID_END:
+			if(mpeg2_info(m_dec)->user_data_len > 4)
+			{
+				if(mpeg2_info(m_dec)->user_data_len >=6)
+				{
+					LOG(DBGLOG_ALL, ("User Data Pic %08x %2x %2x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data[4], mpeg2_info(m_dec)->user_data[5], mpeg2_info(m_dec)->user_data_len));
+				}
+				else
+				{
+					LOG(DBGLOG_ALL, ("User Data Pic %08x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len));
+				}
+
+			}
 			{
 				const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
 				const mpeg2_picture_t* picture_2nd = mpeg2_info(m_dec)->display_picture_2nd;
@@ -840,8 +855,9 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 						m_ProgressiveChroma = false;
 					}
 
-					// start - end
-					if(picture->tag != 0 || picture->tag2 != 0)
+                    // we should get updates about the timings only on I frames
+                    // sometimes we getthem more frequently
+					if((picture->tag != 0 || picture->tag2 != 0) && ((m_fb.flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I))
 					{
 						LARGE_INTEGER temp;
 						temp.HighPart = picture->tag;
@@ -853,6 +869,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 					{
 						m_fb.rtStart = m_fb.rtStop;
 					}
+					// start - end
     				m_fb.rtStop = m_fb.rtStart + m_AvgTimePerFrame * picture->nb_fields / (picture_2nd ? 1 : 2);
 
 					switch(m_ChromaType)
@@ -964,8 +981,12 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	IMediaSample* pOut;
 	BYTE* pDataOut = NULL;
-	if(FAILED(hr = m_VideoOutPin->GetOutputSample(&pOut, false))
-	|| FAILED(hr = pOut->GetPointer(&pDataOut)))
+    
+    hr = m_VideoOutPin->GetOutputSample(&pOut, false);
+    if(hr != S_OK)
+        return hr;
+
+    if(FAILED(hr = pOut->GetPointer(&pDataOut)))
 		return hr;
 	
 	m_LastOutputTime = rtStop;
