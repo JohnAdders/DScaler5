@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.4 2004-04-06 16:46:11 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.5 2004-04-08 19:02:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/04/06 16:46:11  adcockj
+// DVD Test Annex Compatability fixes
+//
 // Revision 1.3  2004/03/25 18:01:30  adcockj
 // Fixed issues with downmixing
 //
@@ -198,6 +201,11 @@ HRESULT CAudioDecoder::ProcessAC3()
 					pDataOut[2] = 0x0001;
 					pDataOut[3] = size*8;
 					_swab((char*)p, (char*)&pDataOut[4], size);
+
+                    if((len - size - 8) > 0)
+                    {
+                        ZeroMemory(pDataOut + size/2 + 4, len - size - 8);
+                    }
 
                     // each frame contains 6 * 256 samples
 					REFERENCE_TIME rtDur = 10000000i64 * 6 * 256 / sample_rate;
