@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.3 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/10 13:24:12  adcockj
+// Lots of bug fixes + corrected interlaced YV12 upconversion
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -158,6 +161,19 @@ static void yuvtoyuy2row_c(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD 
 		*dstw++ = (*srcv++<<8)|*srcy++;
 	}
 }
+
+static void yuv444toyuy2row_c(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width)
+{
+	WORD* dstw = (WORD*)dst;
+	for(; width > 1; width -= 2)
+	{
+		*dstw++ = (*srcu++<<8)|*srcy++;
+		*dstw++ = (*srcv++<<8)|*srcy++;
+        srcu++;
+        srcv++;
+	}
+}
+
 
 static void __declspec(naked) yuvtoyuy2row_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width)
 {
@@ -639,6 +655,28 @@ bool BitBltFromI422ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 
 	return(true);
 }
+
+bool BitBltFromI444ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+{
+	if(w<=0 || h<=0 || (w&1) || (h&1))
+		return(false);
+
+	if(srcpitch == 0) srcpitch = w;
+
+	do
+	{
+		yuv444toyuy2row_c(dst, srcy, srcu, srcv, w);
+
+		dst += dstpitch;
+		srcy += srcpitch;
+		srcu += srcpitch;
+		srcv += srcpitch;
+	}
+	while((--h) > 0);
+
+	return(true);
+}
+
 
 void memcpy_accel(void* dst, const void* src, size_t len)
 {

@@ -178,8 +178,8 @@ void mpeg2_tag_picture (mpeg2dec_t * mpeg2dec, uint32_t tag, uint32_t tag2);
 
 void mpeg2_init_fbuf (mpeg2_decoder_t * decoder, uint8_t * current_fbuf[3],
 		      uint8_t * forward_fbuf[3], uint8_t * backward_fbuf[3]);
-void mpeg2_slice (mpeg2_decoder_t * const decoder, const int code,
-		  const uint8_t * const buffer);
+void mpeg2_slice (mpeg2_decoder_t * decoder, int code,
+		  uint8_t * buffer);
 
 typedef enum {
     MPEG2_ALLOC_MPEG2DEC = 0,

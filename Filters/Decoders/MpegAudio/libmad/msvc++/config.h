@@ -74,7 +74,7 @@
 /* #undef NDEBUG */
 
 /* Define to optimize for accuracy over speed. */
-/* #undef OPT_ACCURACY */
+#define OPT_ACCURACY
 
 /* Define to optimize for speed over accuracy. */
 /* #undef OPT_SPEED */

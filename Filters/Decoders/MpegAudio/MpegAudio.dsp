@@ -115,6 +115,22 @@ SOURCE=.\AudioDecoder.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\AudioDecoder_A52.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AudioDecoder_DTS.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AudioDecoder_MAD.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\AudioDecoder_PCM.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MpegAudio.cpp
 # End Source File
 # Begin Source File

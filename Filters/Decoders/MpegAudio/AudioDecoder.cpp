@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.3 2004-02-17 16:39:59 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.4 2004-02-25 17:14:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/17 16:39:59  adcockj
+// Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
+//
 // Revision 1.2  2004/02/16 17:25:00  adcockj
 // Fix build errors, locking problems and DVD compatability
 //
@@ -58,63 +61,6 @@
 #include "CPUID.h"
 
 extern HINSTANCE g_hInstance;
-
-static struct scmap_t
-{
-	WORD nChannels;
-	BYTE ch[6];
-	DWORD dwChannelMask;
-}
-s_scmap_ac3[2*11] =
-{
-	{2, {0, 1,-1,-1,-1,-1}, 0},	// A52_CHANNEL
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_MONO
-	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_STEREO
-	{3, {0, 2, 1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER}, // A52_3F
-	{3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER}, // A52_2F1R
-	{4, {0, 2, 1, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER}, // A52_3F1R
-	{4, {0, 1, 2, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_2F2R
-	{5, {0, 2, 1, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_3F2R
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL1
-	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL2
-	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_DOLBY
-
-	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY},	// A52_CHANNEL|A52_LFE
-	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_MONO|A52_LFE
-	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_STEREO|A52_LFE
-	{4, {1, 3, 2, 0,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_3F|A52_LFE
-	{4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // A52_2F1R|A52_LFE
-	{5, {1, 3, 2, 0, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // A52_3F1R|A52_LFE
-	{5, {1, 2, 0, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_2F2R|A52_LFE
-	{6, {1, 3, 2, 0, 4, 5}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_3F2R|A52_LFE
-	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_CHANNEL1|A52_LFE
-	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_CHANNEL2|A52_LFE
-	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_DOLBY|A52_LFE
-},
-s_scmap_dts[2*10] = 
-{ 
-           {1, {0,-1,-1,-1,-1,-1}, 0}, // DTS_MONO 
-           {2, {0, 1,-1,-1,-1,-1}, 0},     // DTS_CHANNEL 
-           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO 
-           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO_SUMDIFF 
-           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO_TOTAL 
-           {3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER}, // DTS_3F 
-           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER}, // DTS_2F1R 
-           {4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER}, // DTS_3F1R 
-           {4, {0, 1, 2, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_2F2R 
-           {5, {1, 2, 0, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R 
-    
-           {2, {0, 1,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // DTS_MONO|DTS_LFE 
-           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY},  // DTS_CHANNEL|DTS_LFE 
-           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO|DTS_LFE 
-           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO_SUMDIFF|DTS_LFE 
-           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO_TOTAL|DTS_LFE 
-           {4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // DTS_3F|DTS_LFE 
-           {4, {0, 1, 3, 2,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // DTS_2F1R|DTS_LFE 
-           {5, {1, 2, 0, 4, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // DTS_3F1R|DTS_LFE 
-           {5, {0, 1, 4, 2, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_2F2R|DTS_LFE 
-           {6, {1, 2, 0, 5, 3, 4}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R|DTS_LFE 
- };
 
 
 CAudioDecoder::CAudioDecoder() :
@@ -143,7 +89,9 @@ CAudioDecoder::CAudioDecoder() :
     m_rtOutputStart = 0;
     m_sample_max = 0.1;
     m_NeedToAttachFormat = false;
-
+    m_OutputSampleType = OUTSAMPLE_16BIT;
+    m_SampleSize = 2;
+    
     ZeroMemory(&m_InternalMT, sizeof(AM_MEDIA_TYPE));
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
 }
@@ -392,7 +340,8 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
 	if(len <= 0) return S_OK;
 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY || 
+        pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY)
 	{
         m_fDiscontinuity = true;
 		m_buff.resize(0);
@@ -400,13 +349,18 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 		m_rtOutputStart = 0;
 	}
 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID && m_rtNextFrameStart == _I64_MIN)
     {
 		m_rtNextFrameStart = pSampleProperties->tStart;
 	}
     else
     {
         m_rtNextFrameStart = _I64_MIN;
+    }
+
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    {
+        //LOG(DBGLOG_FLOW, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
     }
 
 	int tmp = m_buff.size();
@@ -426,415 +380,9 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 	return hr;
 }
 
-HRESULT CAudioDecoder::ProcessLPCM()
-{
-	WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
-    CreateInternalPCMMediaType(wfein->nSamplesPerSec, wfein->nChannels, 0, wfein->wBitsPerSample);
 
-    DWORD len = m_buff.size() & ~(wfein->nChannels*wfein->wBitsPerSample/8-1);
-
-    SI(IMediaSample) pOut;
-    BYTE* pDataOut = NULL;
-
-    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
-    CHECK(hr);
-
-    memcpy(pDataOut, &m_buff[0], len);
-
-    if(len < m_buff.size())
-    {
-    	memmove(&m_buff[0], &m_buff[len], m_buff.size() - len);
-	    m_buff.resize(m_buff.size() - len);
-    }
-    else
-    {
-        m_buff.resize(0);
-    }
-
-    REFERENCE_TIME rtDur = 10000000i64*len / (wfein->nSamplesPerSec * wfein->nBlockAlign);
-
-    return Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-}
-
-HRESULT CAudioDecoder::ProcessAC3()
-{
-	BYTE* p = &m_buff[0];
-	BYTE* base = p;
-	BYTE* end = p + m_buff.size();
-
-	while(end - p >= 7)
-	{
-		int size = 0, sample_rate, bit_rate;
-
-        int flags(0);
-
-		if((size = a52_syncinfo(p, &flags, &sample_rate, &bit_rate)) > 0)
-		{
-			LOG(DBGLOG_FLOW, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
-
-			bool fEnoughData = p + size <= end;
-
-			if(fEnoughData)
-			{
-				if(GetParamBool(USESPDIF))
-				{
-                    CreateInternalSPDIFMediaType(sample_rate, 16);
-                    
-                    DWORD len = 0x1800; 
-
-                    SI(IMediaSample) pOut;
-                    WORD* pDataOut = NULL;
-
-                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                    CHECK(hr);
-
-					pDataOut[0] = 0xf872;
-					pDataOut[1] = 0x4e1f;
-					pDataOut[2] = 0x0001;
-					pDataOut[3] = size*8;
-					_swab((char*)p, (char*)&pDataOut[4], size);
-
-					REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 320000 * 100ns
-
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-					if(S_OK != hr)
-						return hr;
-				}
-				else
-				{
-                    switch(GetParamEnum(SPEAKERCONFIG))
-                    {
-                    case SPCFG_STEREO:
-                        flags = A52_STEREO;
-                        break;
-                    case SPCFG_DOLBY:
-                        flags = A52_DOLBY;
-                        break;
-                    case SPCFG_2F2R:
-                        flags = A52_2F2R;
-                        break;
-                    case SPCFG_3F2R:
-                        flags = A52_3F2R;
-                        break;
-                    }
-				    
-                    flags += GetParamBool(DECODE_LFE)?A52_LFE:0;
-                    flags += A52_ADJUST_LEVEL;
-
-					sample_t level = 1, gain = 1, bias = 0;
-					level *= gain;
-
-					if(a52_frame(m_a52_state, p, &flags, &level, bias) == 0)
-					{
-						if(!GetParamBool(DYNAMICRANGECONTROL))
-							a52_dynrng(m_a52_state, NULL, NULL);
-
-						int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
-                        scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
-
-                        CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
-
-                        SI(IMediaSample) pOut;
-                        float* pDataOut = NULL;
-                        DWORD len = 6*256*scmap.nChannels*sizeof(float); 
-
-                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                        CHECK(hr);
-                    
-
-						int i = 0;
-
-						for(; i < 6 && a52_block(m_a52_state) == 0; i++)
-						{
-							sample_t* samples = a52_samples(m_a52_state);
-
-							for(int j = 0; j < 256; j++, samples++)
-							{
-								for(int ch = 0; ch < scmap.nChannels; ch++)
-								{
-									ASSERT(scmap.ch[ch] != -1);
-									*pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
-								}
-							}
-						}
-
-						if(i == 6)
-						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (sizeof(float) * sample_rate * scmap.nChannels); // should be 320000 * 100ns
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-						    if(S_OK != hr)
-							    return hr;
-    					}
-    				}
-				}
-
-				p += size;
-			}
-
-			memmove(base, p, end - p);
-			end = base + (end - p);
-			p = base;
-
-			if(!fEnoughData)
-				break;
-		}
-		else
-		{
-			p++;
-		}
-	}
-
-	m_buff.resize(end - p);
-
-	return S_OK;
-}
-
-HRESULT CAudioDecoder::ProcessDTS()
-{
-	BYTE* p = &m_buff[0];
-	BYTE* base = p;
-	BYTE* end = p + m_buff.size();
-
-	while(end - p >= 14)
-	{
-       int size = 0, flags, sample_rate, bit_rate, frame_length; 
-
-		if((size = dts_syncinfo(m_dts_state, p, &flags, &sample_rate, &bit_rate, &frame_length)) > 0) 
-		{
-			LOG(DBGLOG_FLOW, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
-    
-			bool fEnoughData = p + size <= end;
-
-			if(fEnoughData)
-			{
-				if(GetParamBool(USESPDIF))
-				{
-                    CreateInternalSPDIFMediaType(sample_rate, 16);
-                
-                    DWORD len = 0x800; 
-
-                    SI(IMediaSample) pOut;
-                    WORD* pDataOut = NULL;
-
-                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                    CHECK(hr);
-
-				    pDataOut[0] = 0xf872;
-				    pDataOut[1] = 0x4e1f;
-				    pDataOut[2] = 0x000b;
-				    pDataOut[3] = size*8;
-				    _swab((char*)p, (char*)&pDataOut[4], size);
-
-				    REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 106667 * 100 ns
-
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-				    if(S_OK != hr)
-					    return hr;
-                }
-                else
-                {
-                    switch(GetParamEnum(SPEAKERCONFIG))
-                    {
-                    case SPCFG_STEREO:
-                        flags = DTS_STEREO;
-                        break;
-                    case SPCFG_DOLBY:
-                        flags = DTS_STEREO;
-                        break;
-                    case SPCFG_2F2R:
-                        flags = DTS_2F2R;
-                        break;
-                    case SPCFG_3F2R:
-                        flags = DTS_3F2R;
-                        break;
-                    }
-				    
-                    flags += GetParamBool(DECODE_LFE)?DTS_LFE:0;
-                    flags += DTS_ADJUST_LEVEL;
-
-					sample_t level = 1, gain = 1, bias = 0;
-					level *= gain;
-
-					if(dts_frame(m_dts_state, p, &flags, &level, bias) == 0)
-					{
-						if(!GetParamBool(DYNAMICRANGECONTROL))
-							dts_dynrng(m_dts_state, NULL, NULL);
-
-                        int scmapidx = min(flags&DTS_CHANNEL_MASK, countof(s_scmap_dts)/2); 
-                        scmap_t& scmap = s_scmap_dts[scmapidx + ((flags&DTS_LFE)?(countof(s_scmap_dts)/2):0)]; 
-    
-                        int blocks = dts_blocks_num(m_dts_state); 
-
-                        CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
-
-                        SI(IMediaSample) pOut;
-                        float* pDataOut = NULL;
-                        DWORD len = blocks*256*scmap.nChannels*sizeof(float);
-
-                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                        CHECK(hr);
-                    
-
-						int i = 0;
-
-						for(; i < blocks && dts_block(m_dts_state) == 0; i++)
-						{
-							sample_t* samples = dts_samples(m_dts_state);
-
-							for(int j = 0; j < 256; j++, samples++)
-							{
-								for(int ch = 0; ch < scmap.nChannels; ch++)
-								{
-									ASSERT(scmap.ch[ch] != -1);
-									*pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
-								}
-							}
-						}
-
-						if(i == blocks)
-						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (sizeof(float) * sample_rate * scmap.nChannels); // should be 320000 * 100ns
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-						    if(S_OK != hr)
-							    return hr;
-    					}
-    				}
-                }
-				p += size;
-			}
-
-			memmove(base, p, end - p);
-			end = base + (end - p);
-			p = base;
-
-			if(!fEnoughData)
-				break;
-		}
-		else
-		{
-			p++;
-		}
-	}
-
-	m_buff.resize(end - p);
-
-	return S_OK;
-}
-
-static inline int scaleto24(mad_fixed_t sample)
-{
-  /* round */
-  sample += (1L << (MAD_F_FRACBITS - 24));
-
-  /* clip */
-  if (sample >= MAD_F_ONE)
-    sample = MAD_F_ONE - 1;
-  else if (sample < -MAD_F_ONE)
-    sample = -MAD_F_ONE;
-
-  /* quantize */
-  return sample >> (MAD_F_FRACBITS + 1 - 24);
-}
-
-static inline int scaleto16(mad_fixed_t sample)
-{
-  /* round */
-  sample += (1L << (MAD_F_FRACBITS - 16));
-
-  /* clip */
-  if (sample >= MAD_F_ONE)
-    sample = MAD_F_ONE - 1;
-  else if (sample < -MAD_F_ONE)
-    sample = -MAD_F_ONE;
-
-  /* quantize */
-  return sample >> (MAD_F_FRACBITS + 1 - 16);
-}
-
-HRESULT CAudioDecoder::ProcessMPA()
-{
-	mad_stream_buffer(&m_stream, &m_buff[0], m_buff.size());
-
-	while(1)
-	{
-		if(mad_frame_decode(&m_frame, &m_stream) == -1)
-		{
-			if(m_stream.error == MAD_ERROR_BUFLEN)
-			{
-				memmove(&m_buff[0], m_stream.this_frame, m_stream.bufend - m_stream.this_frame);
-				m_buff.resize(m_stream.bufend - m_stream.this_frame);
-				break;
-			}
-
-			LOG(DBGLOG_FLOW, ("*m_stream.error == %d\n", m_stream.error));
-
-			if(!MAD_RECOVERABLE(m_stream.error))
-				return E_FAIL;
-            
-            continue;
-		}
-
-		mad_synth_frame(&m_synth, &m_frame);
-
-        // check that the incomming format is reasonable
-        // sometimes we get told we have a lower format than we
-        // actually get
-		WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
-		if(wfein->nChannels > m_synth.pcm.channels || wfein->nSamplesPerSec > m_synth.pcm.samplerate)
-			continue;
-
-		const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
-		const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
-
-        CreateInternalPCMMediaType(m_synth.pcm.samplerate, m_synth.pcm.channels, 0, 16);
-        
-        DWORD len = m_synth.pcm.length*m_synth.pcm.channels*2;
-
-        HRESULT hrReconnect = ReconnectOutput(len);
-	    if(FAILED(hrReconnect))
-		    return hrReconnect;
-
-	    SI(IMediaSample) pOut;
-	    BYTE* pDataOut = NULL;
-
-        HRESULT hr = m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false);
-        if(FAILED(hr) || !pOut)
-            return E_FAIL;
-
-        hr = pOut->GetPointer(&pDataOut);
-        CHECK(hr);
-        
-    	hr = pOut->SetActualDataLength(len);
-        CHECK(hr);
-
-		for(unsigned short i = 0; i < m_synth.pcm.length; i++)
-		{
-            int outvalue = scaleto16(*left_ch++);
-			*pDataOut++ = (BYTE)(outvalue);
-			*pDataOut++ = (BYTE)(outvalue>>8);
-			//*pDataOut++ = (BYTE)(outvalue>>16);
-			if(m_synth.pcm.channels == 2)
-            {
-                outvalue = scaleto16(*right_ch++);
-			    *pDataOut++ = (BYTE)(outvalue);
-			    *pDataOut++ = (BYTE)(outvalue>>8);
-			    //*pDataOut++ = (BYTE)(outvalue>>16);
-            }
-		}
-    
-    	REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_synth.pcm.channels*2);
-
-        hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-		if(S_OK != hr)
-			return hr;
-	}
-
-	return S_OK;
-}
-
-
-void CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBitsPerSample)
+HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBitsPerSample)
 {
 	m_InternalMT.majortype = MEDIATYPE_Audio;
    	m_InternalMT.subtype = MEDIASUBTYPE_PCM;
@@ -851,10 +399,20 @@ void CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBit
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
     m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+
+    HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+    if(hr == S_OK)
+    {
+        return hr;
+    }
+    else
+    {
+        return E_UNEXPECTED;
+    }
 }
 
 
-void CAudioDecoder::CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD wBitsPerSample)
+HRESULT CAudioDecoder::CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD wBitsPerSample)
 {
 	m_InternalMT.majortype = MEDIATYPE_Audio;
    	m_InternalMT.subtype = MEDIASUBTYPE_PCM;
@@ -882,9 +440,34 @@ void CAudioDecoder::CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChann
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
     m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+
+    HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+
+    switch(wBitsPerSample)
+    {
+    case 16:
+        m_OutputSampleType = OUTSAMPLE_16BIT;
+        m_SampleSize = 2;
+        if(hr == S_OK) return hr;
+        return E_UNEXPECTED;
+        break;
+    case 24:
+        m_OutputSampleType = OUTSAMPLE_24BIT;
+        m_SampleSize = 3;
+        if(hr == S_OK) return hr;
+        return CreateInternalPCMMediaType(nSamplesPerSec, nChannels, dwChannelMask, 16);
+        break;
+    case 32:
+        m_OutputSampleType = OUTSAMPLE_32BIT;
+        m_SampleSize = 4;
+        if(hr == S_OK) return hr;
+        return CreateInternalPCMMediaType(nSamplesPerSec, nChannels, dwChannelMask, 24);
+        break;
+    }
+    return E_UNEXPECTED;
 }
 
-void CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask)
+HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask)
 {
 	m_InternalMT.majortype = MEDIATYPE_Audio;
    	m_InternalMT.subtype = MEDIASUBTYPE_IEEE_FLOAT;
@@ -904,6 +487,16 @@ void CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChan
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE);
     m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+    HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+    if(hr == S_OK)
+    {
+        m_OutputSampleType = OUTSAMPLE_FLOAT;
+        m_SampleSize = sizeof(float);
+        return hr;
+    }
+    
+    return CreateInternalPCMMediaType(nSamplesPerSec, nChannels, dwChannelMask, 32);
+
 }
 
 HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
@@ -912,7 +505,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 
     if(m_rtNextFrameStart != _I64_MIN)
     {
-        if(abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 20000)
+        if(!GetParamBool(JITTERREMOVER) || abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 20000)
         {
             m_rtOutputStart = m_rtNextFrameStart;
         }
@@ -964,6 +557,7 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
 
 	if(!AreMediaTypesIdentical(&m_InternalMT, m_AudioOutPin->GetMediaType()) || Len > (DWORD)props.cbBuffer)
 	{
+
         if(Len > (DWORD)props.cbBuffer) 
         { 
 		    props.cBuffers = 4;
@@ -1002,7 +596,15 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 	    WAVEFORMATEX* wfe = (WAVEFORMATEX*)CoTaskMemAlloc(pmt->cbFormat);
 	    memset(wfe, 0, sizeof(WAVEFORMATEX));
 	    wfe->cbSize = 0;
-	    wfe->wFormatTag = WAVE_FORMAT_PCM;
+        if(GetParamBool(USESPDIF))
+        {
+	        wfe->wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+        }
+        else
+        {
+	        wfe->wFormatTag = WAVE_FORMAT_PCM;
+
+        }
 	    wfe->nChannels = 2;
 	    wfe->wBitsPerSample = 16;
 	    wfe->nSamplesPerSec = 48000;
@@ -1020,26 +622,29 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 
 HRESULT CAudioDecoder::Activate()
 {
-	m_a52_state = a52_init(MM_ACCEL_DJBFFT);
+	m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
 
-    m_dts_state = dts_init(0);
+    m_dts_state = libdts::dts_init(0);
 
-	mad_stream_init(&m_stream);
-	mad_frame_init(&m_frame);
-	mad_synth_init(&m_synth);
+	libmad::mad_stream_init(&m_stream);
+	libmad::mad_frame_init(&m_frame);
+	libmad::mad_synth_init(&m_synth);
 	mad_stream_options(&m_stream, 0);
+
+    m_rtNextFrameStart = _I64_MIN;
+
 	return S_OK;
 }
 
 HRESULT CAudioDecoder::Deactivate()
 {
-	a52_free(m_a52_state);
+	liba52::a52_free(m_a52_state);
 
-    dts_free(m_dts_state);
+    libdts::dts_free(m_dts_state);
 
 	mad_synth_finish(&m_synth);
-	mad_frame_finish(&m_frame);
-	mad_stream_finish(&m_stream);
+	libmad::mad_frame_finish(&m_frame);
+	libmad::mad_stream_finish(&m_stream);
 
     m_fDiscontinuity = false; 
 
@@ -1110,7 +715,7 @@ HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppD
     *ppDataOut = NULL;
 
     hr = m_AudioOutPin->GetOutputSample(pOut, false);
-    if(FAILED(hr || *pOut == NULL))
+    if(FAILED(hr) || *pOut == NULL)
         return E_FAIL;
 
     hr = (*pOut)->GetPointer(ppDataOut);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.4 2004-02-17 16:51:34 adcockj Exp $
+// $Id: Utils.cpp,v 1.5 2004-02-25 17:14:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/17 16:51:34  adcockj
+// Added countof define
+//
 // Revision 1.3  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -133,9 +136,8 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     Dest->lSampleSize = Source->lSampleSize;
     Dest->formattype = Source->formattype;
     // this pUnk is pretty always NULL
-    // but MS might bung something in here
-    // so we had better cope properly with it
-    // just in case
+    // but sometimes it isn't and doing the correct
+    // thing causes crashes 
     if(Dest->pUnk != NULL)
     {
         //Dest->pUnk->Release();

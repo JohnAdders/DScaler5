@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.3 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.4 2004-02-25 17:14:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.2  2004/02/10 13:24:12  adcockj
 // Lots of bug fixes + corrected interlaced YV12 upconversion
 //
@@ -468,7 +472,7 @@ HRESULT CDSInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPER
         SampleProperties->cbBuffer = Sample->GetSize();
         if(Sample->IsDiscontinuity())
         {
-            SampleProperties->dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
+            SampleProperties->dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
         }
         if(Sample->IsPreroll())
         {

@@ -129,6 +129,18 @@ SOURCE=.\motion_comp_mmx.obj
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
+SOURCE=..\include\attributes.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\inttypes.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\include\mpeg2.h
 # End Source File
 # Begin Source File

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.3 2004-02-17 16:39:59 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.4 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -24,16 +24,30 @@
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
 
-#include "libmad\msvc++\mad.h"
-#include "a52dec\vc++\inttypes.h"
-
-extern "C" 
+namespace libmad
 {
-#include "a52dec\include\a52.h"
-#include "a52dec\include\mm_accel.h"
-#include "dtsdec\include\dts.h"
+    #include "libmad\msvc++\mad.h"
 }
 
+
+namespace liba52
+{
+    #include "a52dec\vc++\inttypes.h"
+    extern "C" 
+    {
+        #include "a52dec\include\a52.h"
+    }
+    #include "a52dec\include\mm_accel.h"
+}
+
+namespace libdts
+{
+    #include "dtsdec\vc++\inttypes.h"
+    extern "C" 
+    {
+        #include "dtsdec\include\dts.h"
+    }
+}
 
 DEFINE_GUID(CLSID_CAudioDecoder, 0xd2ca75c2, 0x5a1, 0x4915, 0x88, 0xa8, 0xd4, 0x33, 0xf8, 0x76, 0xd1, 0x86);
 
@@ -64,6 +78,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Normalize")
     DEFINE_PARAM_BOOL(0, L"Decode LFE Channel")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF")
+    DEFINE_PARAM_BOOL(0, L"Jitter Remover")
 END_PARAM_LIST()
 
     enum eSpeakerConfig
@@ -81,7 +96,9 @@ END_PARAM_LIST()
         NORMALIZE,
         DECODE_LFE,
         USESPDIF,
+        JITTERREMOVER,
     };
+
 
 public:
     // IBaseFilter
@@ -114,12 +131,12 @@ protected:
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
 
 protected:
-	a52_state_t* m_a52_state;
-    dts_state_t* m_dts_state;
+	liba52::a52_state_t* m_a52_state;
+    libdts::dts_state_t* m_dts_state;
 
-	struct mad_stream m_stream;
-	struct mad_frame m_frame;
-	struct mad_synth m_synth;
+	struct libmad::mad_stream m_stream;
+	struct libmad::mad_frame m_frame;
+	struct libmad::mad_synth m_synth;
 
 	std::vector<BYTE> m_buff;
 	REFERENCE_TIME m_rtNextFrameStart;
@@ -137,15 +154,26 @@ protected:
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
 
-    void CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD BitsPerSample);
-    void CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);
-    void CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
+    HRESULT CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD BitsPerSample);
+    HRESULT CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);
+    HRESULT CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
     HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
 
 private:
+    enum eOutputSampleType
+    {
+        OUTSAMPLE_FLOAT,
+        OUTSAMPLE_32BIT,
+        OUTSAMPLE_24BIT,
+        OUTSAMPLE_16BIT,
+    };
+
     AM_MEDIA_TYPE m_InternalMT;
 	WAVEFORMATEXTENSIBLE m_InternalWFE;
     bool m_NeedToAttachFormat;
+    eOutputSampleType m_OutputSampleType;
+    int m_SampleSize;
+
 };
 
 #define m_AudioInPin m_InputPins[0]

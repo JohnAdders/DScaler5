@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.5 2004-02-16 17:25:02 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.6 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -31,6 +31,8 @@ extern "C"
 }
 
 
+#define NUM_BUFFERS 4
+
 DEFINE_GUID(CLSID_CMpegDecoder, 0xf8904f1f, 0x371, 0x4471, 0x88, 0x66, 0x90, 0xe6, 0x28, 0x1a, 0xbd, 0xb6);
 
 class CMpegDecoder : 
@@ -61,13 +63,15 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Display Forced Subtitles")
     DEFINE_PARAM_BOOL(1, L"3:2 playback smoothing")
     DEFINE_PARAM_ENUM(DIBob, DIAuto, L"Deinterlace Mode")
+    DEFINE_PARAM_INT(0, 50, 0, L"ms", L"Video Delay")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
     {
         DISPLAYFORCEDSUBS,
         FRAMESMOOTH32,
-        DEINTMODE
+        DEINTMODE,
+        VIDEODELAY
     };
 
 public:
@@ -113,6 +117,9 @@ private:
 	bool m_ProgressiveChroma;
 	bool m_Discont;
 	CCanLock m_DeliverLock;
+    int m_InternalWidth;
+    int m_InternalHeight;
+    int m_InternalPitch;
 	
     typedef enum 
 	{
@@ -122,45 +129,32 @@ private:
 	} eChromaType;
 	eChromaType m_ChromaType;
 
-	struct framebuf 
-	{
-		int w, h, pitch;
-		BYTE* buf[6];
-		void* actualbuf[6];
-		REFERENCE_TIME rtStart, rtStop;
-		DWORD flags;
-		unsigned int nb_fields;
-        framebuf()
-		{
-			w = h = pitch = 0;
-			memset(&buf, 0, sizeof(buf));
-			memset(&actualbuf, 0, sizeof(actualbuf));
-			rtStart = rtStop = 0;
-			flags = 0;
-			nb_fields = 0;
-		}
-        ~framebuf() {free();}
-		void alloc(int w, int h, int pitch)
-		{
-            free();
-			this->w = w; this->h = h; this->pitch = pitch;
-			actualbuf[0] = malloc(pitch*h + 16);
-			// the most we have to cope with is 4:2:2
-			// for the time being 4:4:4 will have chroma decimated
-			actualbuf[1] = malloc(pitch*h/2 + 16);
-			actualbuf[2] = malloc(pitch*h/2 + 16);
-			actualbuf[3] = malloc(pitch*h + 16);
-			actualbuf[4] = malloc(pitch*h/4 + 16);
-			actualbuf[5] = malloc(pitch*h/4 + 16);
-
-			// align all the buffer
-			for(int i(0); i < 6; ++i)
-			{
-				buf[i] = (BYTE*)(((DWORD)(actualbuf[i]) + 15) & ~15);
-			}
-		}
-		void free() {for(int i = 0; i < 6; i++) {::free(actualbuf[i]); buf[i] = NULL; actualbuf[i] = NULL;}}
-	} m_fb;
+    class CFrameBuffer
+    {
+    public:
+        CFrameBuffer();
+        ~CFrameBuffer();
+        HRESULT AllocMem(int YSize, int UVSize);
+        void FreeMem();
+        void Clear();
+		BYTE* m_Buf[3];
+		REFERENCE_TIME m_rtStart;
+        REFERENCE_TIME m_rtStop;
+		DWORD m_Flags;
+		unsigned int m_NumFields;
+		int m_CurrentSize;
+        CFrameBuffer& operator=(CFrameBuffer& RHS);
+        void AddRef() {m_UseCount++;};
+        void Release() {m_UseCount--;};
+        bool NotInUse() {return (m_UseCount <= 0);};
+    private:
+        void* m_ActualBuf;
+		int m_AllocatedSize;
+        int m_UseCount;
+    };
+    CFrameBuffer m_Buffers[NUM_BUFFERS];
+    CFrameBuffer* m_CurrentPicture;
+    CFrameBuffer m_SubPicBuffer;
 
 	int m_win, m_hin, m_arxin, m_aryin;
 	int m_wout, m_hout, m_arxout, m_aryout;
@@ -175,6 +169,7 @@ private:
 
 	void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 	void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
+	void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
@@ -182,6 +177,12 @@ private:
     HRESULT ReconnectOutput(int w, int h);
     void ResetMpeg2Decoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
+    HRESULT ProcessNewSequence();
+    HRESULT ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties);
+    HRESULT ProcessPictureDisplay();
+    HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
+
+    CFrameBuffer* GetNextBuffer();
 
 
 private:

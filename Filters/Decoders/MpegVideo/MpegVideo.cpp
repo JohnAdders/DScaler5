@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.3 2004-02-17 16:51:33 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.4 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
 // This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
+// modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
 // 
@@ -14,13 +14,16 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
 // 
-// You should have received a copy of the GNU Lesser General Public
+// You should have received a copy of the GNU General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/17 16:51:33  adcockj
+// Added countof define
+//
 // Revision 1.2  2004/02/10 13:24:12  adcockj
 // Lots of bug fixes + corrected interlaced YV12 upconversion
 //

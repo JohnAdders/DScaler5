@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.6 2004-02-16 17:25:01 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.7 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/02/16 17:25:01  adcockj
+// Fix build errors, locking problems and DVD compatability
+//
 // Revision 1.5  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -144,6 +147,11 @@ CMpegDecoder::CMpegDecoder() :
 	m_ratechange.StartTime = -1;
     m_CorrectTS = false;
     m_dec = NULL;
+
+    m_InternalWidth = 0;
+    m_InternalHeight = 0;
+    m_InternalPitch = 0;
+    m_CurrentPicture = NULL;
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -224,6 +232,9 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
         // don't care when this changes
         break;
     case DEINTMODE:
+        // don't care when this changes
+        break;
+    case VIDEODELAY:
         // don't care when this changes
         break;
     }
@@ -474,7 +485,6 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
     if(pPin == m_VideoInPin)
     {
 	    LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
-	    m_fb.rtStop = 0;
 	    m_LastOutputTime = 0;
         m_rate.Rate = (LONG)(10000 / dRate);
 	    m_rate.StartTime = 0;
@@ -525,24 +535,26 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 	    // this will make sure we won't connect to the old renderer in dvd mode
 	    // that renderer can't switch the format dynamically
 	    if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 2*sizeof(fmts)/sizeof(fmts[0])) return VFW_S_NO_MORE_ITEMS;
+	    if(TypeNum >= 3*sizeof(fmts)/sizeof(fmts[0])) return VFW_S_NO_MORE_ITEMS;
 
+
+        int FormatNum = TypeNum/3;
 	    const AM_MEDIA_TYPE* mt = m_VideoInPin->GetMediaType();
 
 	    pmt->majortype = MEDIATYPE_Video;
-	    pmt->subtype = *fmts[TypeNum/2].subtype;
+	    pmt->subtype = *fmts[FormatNum].subtype;
 
 	    BITMAPINFOHEADER bihOut;
 	    memset(&bihOut, 0, sizeof(bihOut));
 	    bihOut.biSize = sizeof(bihOut);
 	    bihOut.biWidth = m_win;
 	    bihOut.biHeight = m_hin;
-	    bihOut.biPlanes = fmts[TypeNum/2].biPlanes;
-	    bihOut.biBitCount = fmts[TypeNum/2].biBitCount;
-	    bihOut.biCompression = fmts[TypeNum/2].biCompression;
+	    bihOut.biPlanes = fmts[FormatNum].biPlanes;
+	    bihOut.biBitCount = fmts[FormatNum].biBitCount;
+	    bihOut.biCompression = fmts[FormatNum].biCompression;
 	    bihOut.biSizeImage = m_win*m_hin*bihOut.biBitCount>>3;
 
-	    if(TypeNum&1)
+	    if(TypeNum%3 == 2)
 	    {
 		    pmt->formattype = FORMAT_VideoInfo;
 		    VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
@@ -564,7 +576,10 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 		    vih->bmiHeader = bihOut;
 		    vih->dwPictAspectRatioX = m_arxin;
 		    vih->dwPictAspectRatioY = m_aryin;
-		    vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
+            if(TypeNum%3 == 0)
+            {
+    		    vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
+            }
 	        vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
 	        vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
 	        vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
@@ -572,7 +587,6 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
             pmt->cbFormat = sizeof(VIDEOINFOHEADER2);	    
 	    }
 
-        
 	    CorrectMediaType(pmt);
         return S_OK;
     }
@@ -631,7 +645,6 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
     {
 		m_win = m_hin = m_arxin = m_aryin = 0;
 		ExtractDim(pMediaType, m_win, m_hin, m_arxin, m_aryin);
-		
         ResetMpeg2Decoder();
     }
     else if(pPin == m_VideoOutPin)
@@ -725,258 +738,51 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
 		__asm emms; // this one is missing somewhere in the precompiled mmx obj files
 
+        if(mpeg2_info(m_dec)->user_data_len > 0)
+        {
+            hr = ProcessUserData(state, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
+            CHECK(hr);
+        }
+
 		switch(state)
 		{
 		case STATE_BUFFER:
 			return S_OK;
 			break;
-		case STATE_INVALID:
-			LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
-			break;
-		case STATE_GOP:
-			LOG(DBGLOG_FLOW, ("STATE_GOP\n"));
-			if(mpeg2_info(m_dec)->user_data_len > 4 && *(DWORD*)mpeg2_info(m_dec)->user_data == 0xf8014343
-				&& m_CCOutPin->IsConnected())
-			{
-				IMediaSample* pSample;
-				m_CCOutPin->GetOutputSample(&pSample, false);
-				BYTE* pData = NULL;
-				pSample->GetPointer(&pData);
-				*(DWORD*)pData = 0xb2010000;
-				memcpy(pData + 4, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
-				pSample->SetActualDataLength(mpeg2_info(m_dec)->user_data_len + 4);
-				m_CCOutPin->SendSample(pSample);
-				pSample->Release();
-			}
-			else if(mpeg2_info(m_dec)->user_data_len > 4)
-			{
-				if(mpeg2_info(m_dec)->user_data_len >=6)
-				{
-					LOG(DBGLOG_FLOW, ("User Data GOP %08x %1xd %1xd\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data[4], mpeg2_info(m_dec)->user_data[5]));
-				}
-				else
-				{
-					LOG(DBGLOG_FLOW, ("User Data GOP %08x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len));
-				}
-			}
-			break;
+ 		case STATE_INVALID:
+            // this state seems to happen quite a lot in DVD
+            // streams but ignoring it doesn't seem to do amything bad
+            // although the docs for the decoder says that things should 
+            // be screwed up
+ 			LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
+ 			break;
 		case STATE_SEQUENCE:
-			m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
-			if(m_AvgTimePerFrame == 0) m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
-			if(mpeg2_info(m_dec)->sequence->chroma_width <= mpeg2_info(m_dec)->sequence->width / 2)
-			{
-				if(mpeg2_info(m_dec)->sequence->chroma_height <= mpeg2_info(m_dec)->sequence->height / 2)
-				{
-					m_ChromaType = CHROMA_420;
-					LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 420\n"));
-				}
-				else
-				{
-					m_ChromaType = CHROMA_422;
-					LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 422\n"));
-				}
-			}
-			else
-			{
-				m_ChromaType = CHROMA_444;
-				LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 444\n"));
-			}
-			if(mpeg2_info(m_dec)->user_data_len > 4)
-			{
-				LOG(DBGLOG_FLOW, ("User Data Seq %08x\n", *(DWORD*)mpeg2_info(m_dec)->user_data));
-			}
+            hr = ProcessNewSequence();
+            CHECK(hr);
 			break;
 		case STATE_PICTURE:
-			if(m_rate.Rate < 10000 / 4)
-			{
-				if((mpeg2_info(m_dec)->current_picture->flags&PIC_MASK_CODING_TYPE) != PIC_FLAG_CODING_TYPE_I)
-				{
-					//LOG(DBGLOG_FLOW, ("Skip frame"));
-					//mpeg2_skip(m_dec,0);
-					//m_Discont = true;
-				}
-			}
-			else
-			{
-				if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
-				{
-					LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
-					mpeg2_skip(m_dec,0);
-				}
-			}
-			if(mpeg2_info(m_dec)->user_data_len > 4)
-			{
-				if(mpeg2_info(m_dec)->user_data_len >=6)
-				{
-					LOG(DBGLOG_ALL, ("User Data Pic %08x %2x %2x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data[4], mpeg2_info(m_dec)->user_data[5], mpeg2_info(m_dec)->user_data_len));
-				}
-				else
-				{
-					LOG(DBGLOG_ALL, ("User Data Pic %08x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len));
-				}
-
-			}
+            hr = ProcessPictureStart(pSampleProperties);
+            CHECK(hr);
 			break;
 		case STATE_SLICE:
 		case STATE_END:
 		case STATE_INVALID_END:
-			if(mpeg2_info(m_dec)->user_data_len > 4)
-			{
-				if(mpeg2_info(m_dec)->user_data_len >=6)
-				{
-					LOG(DBGLOG_ALL, ("User Data Pic %08x %2x %2x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data[4], mpeg2_info(m_dec)->user_data[5], mpeg2_info(m_dec)->user_data_len));
-				}
-				else
-				{
-					LOG(DBGLOG_ALL, ("User Data Pic %08x %d\n", *(DWORD*)mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len));
-				}
-
-			}
-			{
-				const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
-				const mpeg2_picture_t* picture_2nd = mpeg2_info(m_dec)->display_picture_2nd;
-				const mpeg2_fbuf_t* fbuf = mpeg2_info(m_dec)->display_fbuf;
-
-				if(picture && fbuf && !(picture->flags & PIC_FLAG_SKIP))
-				{
-					// flags
-
-					if(!(mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-						&& (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME))
-					{
-						if(!m_fFilm
-							&& (picture->nb_fields == 3)
-							&& !(m_fb.nb_fields == 3))
-						{
-							LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
-							m_fFilm = true;
-						}
-						else if(m_fFilm
-							&& !(picture->nb_fields == 3)
-							&& !(m_fb.nb_fields == 3))
-						{
-							LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
-							m_fFilm = false;
-						}
-					}
-					else
-					{
-						if(m_fFilm)
-						{
-							if(!(m_fb.nb_fields == 3) || 
-								!(m_fb.flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
-								(picture->nb_fields > 2))
-							{
-								LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", m_fb.nb_fields, m_fb.flags, picture->nb_fields));
-								m_fFilm = false;
-							}
-						}
-					}
-
-					m_fb.flags = picture->flags;
-					m_fb.nb_fields = picture->nb_fields;
-
-					// frame buffer
-
-					int w = mpeg2_info(m_dec)->sequence->picture_width;
-					int h = mpeg2_info(m_dec)->sequence->picture_height;
-					int pitch = mpeg2_info(m_dec)->sequence->width;
-
-					if(m_fb.w != w || m_fb.h != h || m_fb.pitch != pitch)
-						m_fb.alloc(w, h, pitch);
-
-					    if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-					    {
-						    m_ProgressiveChroma = true;
-					    }
-					    else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
-					    {
-						    m_ProgressiveChroma = true;
-					    }
-					    else
-					    {
-						    m_ProgressiveChroma = false;
-					}
-
-
-					// deinterlace
-                    switch(GetParamEnum(DEINTMODE))
-                    {
-                    case DIAuto:
-						if(m_ProgressiveChroma)
-						{
-							m_NextFrameDeint = DIWeave;
-						}
-						else
-						{
-						    m_NextFrameDeint = DIBob;
-					    }
-                        break;
-                    case DIWeave:
-						m_NextFrameDeint = DIWeave;
-                        break;
-                    case DIBob:
-                    default:
-						m_NextFrameDeint = DIBob;
-                        break;
-                    }
-
-                    // we should get updates about the timings only on I frames
-                    // sometimes we getthem more frequently
-					if((picture->tag != 0 || picture->tag2 != 0) && ((m_fb.flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I))
-					{
-						LARGE_INTEGER temp;
-						temp.HighPart = picture->tag;
-						temp.LowPart = picture->tag2;
-
-						m_fb.rtStart = temp.QuadPart;
-					}
-					else
-					{
-						m_fb.rtStart = m_fb.rtStop;
-					}
-					// start - end
-    				m_fb.rtStop = m_fb.rtStart + m_AvgTimePerFrame * picture->nb_fields / (picture_2nd ? 1 : 2);
-
-					switch(m_ChromaType)
-					{
-					default:
-					case CHROMA_420:
-						BitBltFromI420ToI420(w, h, 
-							m_fb.buf[0], m_fb.buf[1], m_fb.buf[2], pitch, 
-							fbuf->buf[0], fbuf->buf[1], fbuf->buf[2], pitch);
-						break;
-					case CHROMA_422:
-						BitBltFromI422ToI422(w, h, 
-							m_fb.buf[0], m_fb.buf[1], m_fb.buf[2], pitch, 
-							fbuf->buf[0], fbuf->buf[1], fbuf->buf[2], pitch);
-						break;
-					case CHROMA_444:
-						BitBltFromI444ToI422(w, h, 
-							m_fb.buf[0], m_fb.buf[1], m_fb.buf[2], pitch, 
-							fbuf->buf[0], fbuf->buf[1], fbuf->buf[2], pitch);
-						break;
-					}
-
-					if(FAILED(hr = Deliver(false)))
-						return hr;
-				}
-			}
+            hr = ProcessPictureDisplay();
+            CHECK(hr);
 			break;
 		default:
 		    break;
 		}
     }
 
-	return S_OK;
+    // should never get here
+	return E_UNEXPECTED;
 }
 
 HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 {
-	CProtectCode WhileVarInScope(&m_DeliverLock);
-
-	if((m_fb.flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
-		m_fWaitForKeyFrame = false;
+    if(m_CurrentPicture == NULL)
+        return S_OK;
 
 	// sometimes we get given a repeat frame request
 	// when we're not really ready
@@ -984,31 +790,25 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
     //LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [prsq %d prfr %d tff %d rff %d nb_fields %d ref %d] (%dx%d/%dx%d)\n", 
 	LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
-		m_fb.rtStart, m_fb.rtStop,
-		frametype[m_fb.flags&PIC_MASK_CODING_TYPE],
-		m_fb.nb_fields,
-		!!(m_fb.flags&PIC_FLAG_PROGRESSIVE_FRAME),
-		!!(m_fb.flags&PIC_FLAG_TOP_FIELD_FIRST),
-		!!(m_fb.nb_fields == 3),
-		m_fb.w, m_fb.h, m_fb.pitch,
-		!!(m_fb.rtStop < 0 || m_fWaitForKeyFrame),
-		!!(HasSubpicsToRender(m_fb.rtStart))));
-
-	if((m_fb.rtStart < 0) || m_fWaitForKeyFrame)
-	{
-		LOG(DBGLOG_FLOW, ("Preroll Skipped\n"));
-		return S_OK;
-	}
+		m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
+		frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
+		m_CurrentPicture->m_NumFields,
+		!!(m_CurrentPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME),
+		!!(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST),
+		!!(m_CurrentPicture->m_NumFields == 3),
+		m_InternalWidth, m_InternalHeight, m_InternalPitch,
+		!!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
+		!!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
 
 	{
 		// cope with a change in rate		
-		if(m_rate.Rate != m_ratechange.Rate && m_fb.rtStart >= m_ratechange.StartTime)
+		if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
 		{
 			m_rate.Rate = m_ratechange.Rate;
 			// looks like we need to do this ourselves
 			// as the time past originally seems like a best guess only
-			m_rate.StartTime = m_fb.rtStart;
-			m_LastOutputTime = m_fb.rtStart;
+			m_rate.StartTime = m_CurrentPicture->m_rtStart;
+			m_LastOutputTime = m_CurrentPicture->m_rtStart;
 			m_Discont = true;
 			LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
 		}
@@ -1023,12 +823,16 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // a frame so that 3:2 becomes 2.5:2.5
     // the way we always use the previous stop time as the start time for the next 
     // frame will mean that we only have to worry about adjusting the 3 field parts.
-    if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_fb.nb_fields == 3)
+    if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_CurrentPicture->m_NumFields == 3)
     {
-    	rtStop = m_rate.StartTime + (m_fb.rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
+    	rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
+    }
+    else
+    {
+    	rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
     }
 
-	rtStop = m_rate.StartTime + (m_fb.rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+    rtStop += GetParamInt(VIDEODELAY) * 10000;
 
 	if(rtStop <= rtStart)
 	{
@@ -1037,7 +841,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	HRESULT hr;
 
-	if(FAILED(hr = ReconnectOutput(m_fb.w, m_fb.h)))
+	if(FAILED(hr = ReconnectOutput(m_InternalWidth, m_InternalHeight)))
 		return hr;
 
 	SI(IMediaSample) pOut;
@@ -1052,7 +856,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	
 	m_LastOutputTime = rtStop;
 
-	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_fb.rtStart, m_fb.rtStop, rtStart, rtStop));
+	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
 
 	SI(IMediaSample2) pOut2 = pOut;
     if(pOut2)
@@ -1077,13 +881,13 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
-        if(m_fb.nb_fields == 3)
-            if(m_fb.flags&PIC_FLAG_TOP_FIELD_FIRST)
+        if(m_CurrentPicture->m_NumFields == 3)
+            if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD;
             else
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_REPEAT_FIELD;
         else
-            if(m_fb.flags&PIC_FLAG_TOP_FIELD_FIRST)
+            if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
             else
                 Props.dwTypeSpecificFlags = 0;
@@ -1113,30 +917,34 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// reset discontinuity flag
 	m_Discont = false;
 
-	BYTE** buf = &m_fb.buf[0];
-
-	if(HasSubpicsToRender(m_fb.rtStart) && m_ChromaType == CHROMA_420)
-	{
-		BitBltFromI420ToI420(m_fb.w, m_fb.h, 
-			m_fb.buf[3], m_fb.buf[4], m_fb.buf[5], m_fb.pitch, 
-			m_fb.buf[0], m_fb.buf[1], m_fb.buf[2], m_fb.pitch);
-
-		buf = &m_fb.buf[3];
-
-		RenderSubpics(m_fb.rtStart, buf, m_fb.pitch, m_fb.h);
-	}
-	else
-	{
-		ClearOldSubpics(m_fb.rtStart);
-	}
+	BYTE** buf = &m_CurrentPicture->m_Buf[0];
 
 	if(m_ChromaType == CHROMA_420)
 	{
-		Copy420(pDataOut, buf, m_fb.w, m_fb.h, m_fb.pitch);
+	    if(HasSubpicsToRender(m_CurrentPicture->m_rtStart))
+	    {
+            // take a copy of the current picture
+            // as we need to keep the decoder's copy clean
+            // so that it can be used in predictions
+            m_SubPicBuffer = *m_CurrentPicture;
+		    
+		    buf = &m_SubPicBuffer.m_Buf[0];
+
+		    RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_InternalHeight);
+	    }
+	    else
+	    {
+		    ClearOldSubpics(m_CurrentPicture->m_rtStart);
+	    }
+		Copy420(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
+	}
+	else if(m_ChromaType == CHROMA_422)
+	{
+		Copy422(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
 	}
 	else
 	{
-		Copy422(pDataOut, buf, m_fb.w, m_fb.h, m_fb.pitch);
+		Copy444(pDataOut, buf, m_InternalWidth, m_InternalHeight, m_InternalPitch);
 	}
 
 	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
@@ -1149,8 +957,9 @@ void CMpegDecoder::FlushMPEG()
 	CProtectCode WhileVarInScope(m_VideoInPin);
     	
     m_fWaitForKeyFrame = true;
+    m_fFilm = false;
 	m_Discont = true;
-	mpeg2_reset(m_dec, 0);
+	ResetMpeg2Decoder();
 }
 
 HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
@@ -1198,25 +1007,23 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		bmi->biSizeImage = m_win*m_hin*bmi->biBitCount>>3;
         
         hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&mt);
+        if(hr != S_OK)
+        {
+    		LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
 
 		if(FAILED(hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &mt)))
+        {
+            ClearMediaType(&mt);
 			return hr;
+        }
 
-        SI(IMediaSample) pOut; 
-        if(SUCCEEDED(m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false))) 
-        { 
-            AM_MEDIA_TYPE* pmt; 
-            if(SUCCEEDED(pOut->GetMediaType(&pmt)) && pmt) 
-            { 
-                m_VideoOutPin->SetType(pmt); 
-                FreeMediaType(pmt); 
-            } 
-            else // stupid overlay mixer won't let us know the new pitch... 
-            { 
-                long size = pOut->GetSize(); 
-                bmi->biWidth = size / bmi->biHeight * 8 / bmi->biBitCount; 
-            } 
-        } 
+        if(FAILED(hr = m_VideoOutPin->NegotiateAllocator(NULL, &mt)))
+        {
+            ClearMediaType(&mt);
+			return hr;
+        }
 
         m_wout = m_win; 
         m_hout = m_hin; 
@@ -1230,6 +1037,7 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 
 		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_win, m_hin), 0);
         }
+        ClearMediaType(&mt);
         
         return S_OK;
 	}
@@ -1260,16 +1068,18 @@ void CMpegDecoder::ResetMpeg2Decoder()
     	mpeg2_reset(m_dec, 1);
         if(cbSequenceHeader > 0)
         {
-    	mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
+    	    mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
         }
     }
 
+	if(m_CurrentPicture != NULL)
+	{
+        m_CurrentPicture->Release();
+        m_CurrentPicture = NULL;
+	}
 
 	m_fWaitForKeyFrame = true;
-
 	m_fFilm = false;
-	m_fb.flags = 0;
-	m_fb.nb_fields = 0;
 }
 
 void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
@@ -1362,6 +1172,40 @@ void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 	}
 }
 
+void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
+{
+	BITMAPINFOHEADER bihOut;
+	ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+
+	BYTE* pIn = ppIn[0];
+	BYTE* pInU = ppIn[1];
+	BYTE* pInV = ppIn[2];
+
+	w = (w+7)&~7;
+	ASSERT(w <= pitchIn);
+
+	if(bihOut.biCompression == '2YUY')
+	{
+		BitBltFromI444ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+	}
+	else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+	{
+		int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+
+		if(bihOut.biHeight > 0)
+		{
+			pOut += pitchOut*(h-1);
+			pitchOut = -pitchOut;
+		}
+
+        // \todo Since 4:4:4 isn't really all that common I haven't bothered
+        // implementing the RGB conversion
+		for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
+			memset(pOut, 0, pitchOut);
+	}
+}
+
+
 HRESULT CMpegDecoder::Activate()
 {
     if(m_dec != NULL)
@@ -1373,6 +1217,13 @@ HRESULT CMpegDecoder::Activate()
     {
         return E_UNEXPECTED;
     }
+
+    m_CurrentPicture = NULL;
+
+    m_fWaitForKeyFrame = true;
+	m_Discont = true;
+    m_fFilm = false;
+
     return S_OK;
 }
 
@@ -1388,4 +1239,252 @@ HRESULT CMpegDecoder::Deactivate()
         m_dec = NULL;
     }
     return S_OK;
+}
+
+HRESULT CMpegDecoder::ProcessNewSequence()
+{
+    int ChromaSizeDivider;
+
+	m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
+	if(m_AvgTimePerFrame == 0) m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
+	if(mpeg2_info(m_dec)->sequence->chroma_width <= mpeg2_info(m_dec)->sequence->width / 2)
+	{
+		if(mpeg2_info(m_dec)->sequence->chroma_height <= mpeg2_info(m_dec)->sequence->height / 2)
+		{
+			m_ChromaType = CHROMA_420;
+			LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 420\n"));
+            ChromaSizeDivider = 4;
+		}
+		else
+		{
+			m_ChromaType = CHROMA_422;
+			LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 422\n"));
+            ChromaSizeDivider = 2;
+		}
+	}
+	else
+	{
+		m_ChromaType = CHROMA_444;
+		LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 444\n"));
+        ChromaSizeDivider = 1;
+	}
+
+	// frame buffer
+	m_InternalWidth = mpeg2_info(m_dec)->sequence->picture_width;
+	m_InternalHeight = mpeg2_info(m_dec)->sequence->picture_height;
+	m_InternalPitch = mpeg2_info(m_dec)->sequence->width;
+
+    mpeg2_custom_fbuf(m_dec, 1);
+
+    for(int i(0); i < NUM_BUFFERS; ++i)
+    {
+        m_Buffers[i].AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+    }
+
+    m_SubPicBuffer.AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+
+    m_CurrentPicture = NULL;
+
+    m_Buffers[0].AddRef();
+    m_Buffers[1].AddRef();
+	mpeg2_set_buf(m_dec, m_Buffers[0].m_Buf, &m_Buffers[0]);
+	mpeg2_set_buf(m_dec, m_Buffers[1].m_Buf, &m_Buffers[1]);
+
+	m_fWaitForKeyFrame = true;
+	m_fFilm = false;
+
+    return S_OK;
+}
+
+CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
+{
+    for(int i(0); i < NUM_BUFFERS; ++i)
+    {
+        if(m_Buffers[i].NotInUse())
+        {
+            m_Buffers[i].AddRef();
+            return &m_Buffers[i];
+        }
+    }
+    return NULL;
+}
+
+HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties)
+{
+    // skip preroll pictures
+	if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
+	{
+		LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
+		mpeg2_skip(m_dec,0);
+		m_Discont = true;
+	}
+
+    // set up the memory want to receive the buffers into
+    CFrameBuffer* Buffer = GetNextBuffer();
+    if(Buffer == NULL)
+    {
+        return E_UNEXPECTED;
+    }
+
+	mpeg2_set_buf(m_dec, Buffer->m_Buf, Buffer);
+
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::ProcessPictureDisplay()
+{
+	CProtectCode WhileVarInScope(&m_DeliverLock);
+
+    HRESULT hr = S_OK;
+
+	const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
+	const mpeg2_picture_t* picture_2nd = mpeg2_info(m_dec)->display_picture_2nd;
+	const mpeg2_fbuf_t* fbuf = mpeg2_info(m_dec)->display_fbuf;
+
+	if(picture && fbuf && !(picture->flags & PIC_FLAG_SKIP))
+	{
+	    if((picture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
+        {
+		    m_fWaitForKeyFrame = false;
+        }
+
+        CFrameBuffer* LastPicture = m_CurrentPicture;
+        if(LastPicture != NULL)
+        {
+		    // flags
+		    if(!(mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+			    && (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME))
+		    {
+			    if(!m_fFilm
+				    && (picture->nb_fields == 3)
+				    && !(LastPicture->m_NumFields == 3))
+			    {
+				    LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
+				    m_fFilm = true;
+			    }
+			    else if(m_fFilm
+				    && !(picture->nb_fields == 3)
+				    && !(LastPicture->m_NumFields == 3))
+			    {
+				    LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
+				    m_fFilm = false;
+			    }
+		    }
+		    else
+		    {
+			    if(m_fFilm)
+			    {
+				    if(!(LastPicture->m_NumFields == 3) || 
+					    !(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
+					    (picture->nb_fields > 2))
+				    {
+					    LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", LastPicture->m_NumFields, LastPicture->m_Flags, picture->nb_fields));
+					    m_fFilm = false;
+				    }
+			    }
+		    }
+        }
+
+        m_CurrentPicture = (CFrameBuffer*)fbuf->id;
+        m_CurrentPicture->AddRef();
+        m_CurrentPicture->m_Flags = picture->flags;
+
+		m_CurrentPicture->m_NumFields = picture->nb_fields;
+        if(picture_2nd != NULL)
+        {
+		    m_CurrentPicture->m_NumFields += picture_2nd->nb_fields;
+        }
+
+		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+		{
+			m_ProgressiveChroma = true;
+		}
+		else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
+		{
+			m_ProgressiveChroma = true;
+		}
+		else
+		{
+			m_ProgressiveChroma = false;
+		}
+
+
+		// deinterlace
+        switch(GetParamEnum(DEINTMODE))
+        {
+        case DIAuto:
+			if(m_ProgressiveChroma)
+			{
+				m_NextFrameDeint = DIWeave;
+			}
+			else
+			{
+				m_NextFrameDeint = DIBob;
+			}
+            break;
+        case DIWeave:
+			m_NextFrameDeint = DIWeave;
+            break;
+        case DIBob:
+        default:
+			m_NextFrameDeint = DIBob;
+            break;
+        }
+
+        // we should get updates about the timings only on I frames
+        // sometimes we get them more frequently
+        // \todo check the I frame thing
+		if((picture->tag != 0 || picture->tag2 != 0) && ((m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I))
+		{
+			LARGE_INTEGER temp;
+			temp.HighPart = picture->tag;
+			temp.LowPart = picture->tag2;
+
+			m_CurrentPicture->m_rtStart = temp.QuadPart;
+		}
+		else
+		{
+            if((picture->tag != 0 || picture->tag2 != 0))
+            {
+			    LARGE_INTEGER temp;
+			    temp.HighPart = picture->tag;
+			    temp.LowPart = picture->tag2;
+                LOG(DBGLOG_FLOW, ("Ignored non I frame time - %010I64d\n", temp.QuadPart));
+            }
+            if(LastPicture != NULL)
+            {
+			    m_CurrentPicture->m_rtStart = LastPicture->m_rtStop;
+            }
+            else
+            {
+			    m_CurrentPicture->m_rtStart = 0;
+            }
+		}
+		// start - end
+    	m_CurrentPicture->m_rtStop = m_CurrentPicture->m_rtStart + m_AvgTimePerFrame * m_CurrentPicture->m_NumFields / 2;
+
+        if(m_CurrentPicture->m_rtStart >= 0 && !m_fWaitForKeyFrame)
+	    {
+    		hr = Deliver(false);
+        }
+        else
+        {
+		    LOG(DBGLOG_FLOW, ("Preroll Skipped\n"));
+            //m_CurrentPicture->Release();
+            //m_CurrentPicture = NULL;
+        }
+
+        if(LastPicture != NULL)
+        {
+            LastPicture->Release();
+        }
+	}
+
+	if (mpeg2_info(m_dec)->discard_fbuf)
+    {
+        CFrameBuffer* m_Discard = (CFrameBuffer*)mpeg2_info(m_dec)->discard_fbuf->id;
+        m_Discard->Release();
+    }
+
+    return hr;
 }

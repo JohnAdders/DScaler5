@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.3 2004-02-16 17:25:02 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.4 2004-02-25 17:14:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/16 17:25:02  adcockj
+// Fix build errors, locking problems and DVD compatability
+//
 // Revision 1.2  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -112,104 +115,11 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         ClearMediaType(&ProposedType);
     }
     
-    // if we get here we're connected
-    if(m_Allocator == NULL)
-    {
-        // ask the conencted filter for it's allocator
-        // otherwise supply our own
-        hr = m_MemInputPin->GetAllocator(m_Allocator.GetReleasedInterfaceReference());
-        if(!m_Allocator)
-        {
-            // see what we get but don't return
-            if(FAILED(hr))
-            {
-                LogBadHRESULT(hr, __FILE__, __LINE__);
-            }
-            m_Allocator = m_MyMemAlloc;
-        }
-    }
-
-    // lets try and negotiate a sensible set of requirements
-    // try to allocate the settings the renderer has asked for
-    // subject to some sensible minumums.
-    ALLOCATOR_PROPERTIES Props;
-    ALLOCATOR_PROPERTIES PropsAct;
-    ZeroMemory(&Props, sizeof(ALLOCATOR_PROPERTIES));
-    hr = m_MemInputPin->GetAllocatorRequirements(&Props);
-    if(FAILED(hr))
-    {
-        // if the pin doen't want to tell up what it wants 
-        // then see what the current allocator setup is
-        if(hr == E_NOTIMPL)
-        {
-            hr = m_Allocator->GetProperties(&Props);
-            if(FAILED(hr))
-            {
-                return VFW_E_NO_TRANSPORT;
-            }
-        }
-        else
-        {
-            LogBadHRESULT(hr, __FILE__, __LINE__);
-            return VFW_E_NO_TRANSPORT;
-        }
-    }
-
-    hr = SetType(&ProposedType);
-
-    ClearMediaType(&ProposedType);
-    if(FAILED(hr))
-    {
-        return hr;
-    }
-
-    ALLOCATOR_PROPERTIES PropsWeWant;
-    ZeroMemory(&PropsWeWant, sizeof(PropsWeWant));
-
-    hr = m_Filter->GetAllocatorRequirements(&PropsWeWant, this);
+    hr = NegotiateAllocator(pReceivePin, &ProposedType);    
     CHECK(hr);
 
-    Props.cbAlign = max(Props.cbAlign, PropsWeWant.cbAlign);
-    Props.cbBuffer = max(Props.cbBuffer, PropsWeWant.cbBuffer);
-    Props.cbPrefix = max(Props.cbPrefix, PropsWeWant.cbPrefix);
-    Props.cBuffers = max(Props.cBuffers, PropsWeWant.cBuffers);
-    
-    hr = m_Allocator->SetProperties(&Props, &PropsAct);
-
-    // \todo see if we need this rubbish
-    // the old video renderer seems to set things up with
-    // an alignment of 16 
-    // that it's own allocator doesn't in fact support so
-    // we loop down until we find an alignment it does like
-    while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
-    {
-        Props.cbAlign /= 2;
-        hr = m_Allocator->SetProperties(&Props, &PropsAct);
-    }
-
-    if(FAILED(hr) && FALSE)
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return VFW_E_NO_TRANSPORT;
-    }
-    
-    LOG(DBGLOG_ALL, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
-
-    hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return VFW_E_NO_TRANSPORT;
-    }
-
-    // If all is OK the save the Pin interface
-    m_ConnectedPin = pReceivePin;
-    
-    // save the IPinConnection pointer
-    // so that we can propagate dynamic reconnections
-    m_PinConnection = pReceivePin;
-
-    return S_OK;
+    ClearMediaType(&ProposedType);
+    return hr;
 }
 
 HRESULT CDSOutputPin::SendSample(IMediaSample* OutSample)
@@ -306,11 +216,14 @@ void CDSOutputPin::InternalDisconnect()
 }
 
 // we just pass all seeking calls downsteam
-
+// if they accept but then we fall back to asking the filter
+// for support
 #define GETMEDIASEEKING \
     CDSBasePin* pPin = m_Filter->GetPin(0); \
-    if(pPin->m_Direction != PINDIR_INPUT || pPin->m_ConnectedPin == NULL) return E_NOTIMPL; \
-    SI(IMediaSeeking) MediaSeeking = pPin->m_ConnectedPin; \
+    SI(IMediaSeeking) MediaSeeking; \
+    if(pPin->m_Direction == PINDIR_INPUT) \
+        MediaSeeking = pPin->m_ConnectedPin; \
+    if(!MediaSeeking) MediaSeeking = (IBaseFilter*)m_Filter; \
     if(!MediaSeeking) return E_NOTIMPL;
 
 STDMETHODIMP CDSOutputPin::GetCapabilities(DWORD *pCapabilities)
@@ -449,7 +362,9 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, bool PrevFrameSk
 
 	if(hr == S_OK && pMediaType != NULL)
 	{
-		hr = SetType(pMediaType);
+	    LOG(DBGLOG_ALL, ("Got new media type from renderer\n"));
+
+		hr = NegotiateAllocator(NULL, pMediaType);
 		CHECK(hr);
 
         FreeMediaType(pMediaType);
@@ -463,7 +378,23 @@ HRESULT CDSOutputPin::Activate()
     if(m_Allocator != NULL)
     {
         hr = m_Allocator->Commit();
-        CHECK(hr);
+		if(hr == E_OUTOFMEMORY)
+		{
+		    LOG(DBGLOG_FLOW, ("Out of memory - will try and reduce buffer count\n"));
+
+			ALLOCATOR_PROPERTIES Properties;
+			ZeroMemory(&Properties, sizeof(ALLOCATOR_PROPERTIES));
+			m_Allocator->GetProperties(&Properties);
+			while(hr == E_OUTOFMEMORY && Properties.cBuffers > 1)
+			{
+				Properties.cBuffers--;
+				ALLOCATOR_PROPERTIES ActualProperties;
+				hr = m_Allocator->SetProperties(&Properties, &ActualProperties);
+				CHECK(hr)
+
+				hr = m_Allocator->Commit();
+			}
+		}
     }
     return hr;
 }
@@ -477,4 +408,118 @@ HRESULT CDSOutputPin::Deactivate()
         CHECK(hr);
     }
     return hr;
+}
+
+HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+{
+    HRESULT hr = S_OK;
+	bool NeedToCommit = false;
+
+	// if we haven't already choosen an allocator
+    if(m_Allocator == NULL)
+    {
+        // ask the conencted filter for it's allocator
+        // otherwise supply our own
+        hr = m_MemInputPin->GetAllocator(m_Allocator.GetReleasedInterfaceReference());
+        if(!m_Allocator)
+        {
+            // see what we get but don't return
+            if(FAILED(hr))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+            }
+            m_Allocator = m_MyMemAlloc;
+        }
+    }
+	else
+	{
+        hr = m_Allocator->Decommit();
+        CHECK(hr);
+		NeedToCommit = true;
+	}
+
+    // lets try and negotiate a sensible set of requirements
+    // try to allocate the settings the renderer has asked for
+    // subject to some sensible minumums.
+    ALLOCATOR_PROPERTIES Props;
+    ALLOCATOR_PROPERTIES PropsAct;
+    ZeroMemory(&Props, sizeof(ALLOCATOR_PROPERTIES));
+    hr = m_MemInputPin->GetAllocatorRequirements(&Props);
+    if(FAILED(hr))
+    {
+        // if the pin doen't want to tell up what it wants 
+        // then see what the current allocator setup is
+        if(hr == E_NOTIMPL)
+        {
+            hr = m_Allocator->GetProperties(&Props);
+            if(FAILED(hr))
+            {
+                return VFW_E_NO_TRANSPORT;
+            }
+        }
+        else
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+            return VFW_E_NO_TRANSPORT;
+        }
+    }
+    hr = SetType(pmt);
+    CHECK(hr);
+
+    ALLOCATOR_PROPERTIES PropsWeWant;
+    ZeroMemory(&PropsWeWant, sizeof(PropsWeWant));
+
+    hr = m_Filter->GetAllocatorRequirements(&PropsWeWant, this);
+    CHECK(hr);
+
+    Props.cbAlign = max(Props.cbAlign, PropsWeWant.cbAlign);
+    Props.cbBuffer = max(Props.cbBuffer, PropsWeWant.cbBuffer);
+    Props.cbPrefix = max(Props.cbPrefix, PropsWeWant.cbPrefix);
+    Props.cBuffers = max(Props.cBuffers, PropsWeWant.cBuffers);
+    
+    hr = m_Allocator->SetProperties(&Props, &PropsAct);
+
+    // \todo see if we need this rubbish
+    // the old video renderer seems to set things up with
+    // an alignment of 16 
+    // that it's own allocator doesn't in fact support so
+    // we loop down until we find an alignment it does like
+    while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
+    {
+        Props.cbAlign /= 2;
+        hr = m_Allocator->SetProperties(&Props, &PropsAct);
+    }
+
+    if(FAILED(hr) && FALSE)
+    {
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+        return VFW_E_NO_TRANSPORT;
+    }
+    
+    LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+
+    hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
+    if(FAILED(hr))
+    {
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+        return VFW_E_NO_TRANSPORT;
+    }
+
+    if(pReceivePin != NULL)
+    {
+        // If all is OK the save the Pin interface
+        m_ConnectedPin = pReceivePin;
+    
+        // save the IPinConnection pointer
+        // so that we can propagate dynamic reconnections
+        m_PinConnection = pReceivePin;
+    }
+
+	if(NeedToCommit)
+	{
+        hr = m_Allocator->Commit();
+        CHECK(hr);
+	}
+
+    return S_OK;
 }

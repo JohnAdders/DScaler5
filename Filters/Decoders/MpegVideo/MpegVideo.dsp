@@ -176,6 +176,10 @@ SOURCE=.\DSUtil.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\FrameBuffer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\MediaTypes.cpp
 # End Source File
 # Begin Source File
@@ -189,6 +193,10 @@ SOURCE=.\MpegDecoder_Rate.cpp
 # Begin Source File
 
 SOURCE=.\MpegDecoder_SubPic.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MpegDecoder_UserData.cpp
 # End Source File
 # Begin Source File
 

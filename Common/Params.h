@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.3 2004-02-17 16:51:33 adcockj Exp $
+// $Id: Params.h,v 1.4 2004-02-25 17:14:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -94,17 +94,55 @@ public:
     {
         DWORD ParamCount(0);
         ParamInfo* Params = _GetParamList(&ParamCount);
-        if(dwParamIndex < ParamCount)
+        if(dwParamIndex != DWORD_ALLPARAMS)
         {
-            CProtectCode WhileVarInScope(this);
-            Params[dwParamIndex].Value = value;
-            m_fDirty = TRUE;
-            ParamChanged(dwParamIndex);
-            return S_OK;
+            // normal case: change a single parameter
+            if(dwParamIndex < ParamCount)
+            {
+                CProtectCode WhileVarInScope(this);
+                if(value < Params[dwParamIndex].MParamInfo.mpdMinValue)
+                {
+                    return E_INVALIDARG;
+                }
+                else if(value > Params[dwParamIndex].MParamInfo.mpdMaxValue)
+                {
+                    return E_INVALIDARG;
+                }
+                else
+                {
+                    Params[dwParamIndex].Value = value;
+                }
+                m_fDirty = TRUE;
+                ParamChanged(dwParamIndex);
+                return S_OK;
+            }
+            else
+            {
+                return E_INVALIDARG;
+            }
         }
         else
         {
-            return E_INVALIDARG;
+            // special case: change all parameters
+            for(DWORD i(0); i < ParamCount; ++i)
+            {
+                CProtectCode WhileVarInScope(this);
+                if(value < Params[i].MParamInfo.mpdMinValue)
+                {
+                    return E_INVALIDARG;
+                }
+                else if(value > Params[i].MParamInfo.mpdMaxValue)
+                {
+                    return E_INVALIDARG;
+                }
+                else
+                {
+                    Params[i].Value = value;
+                    m_fDirty = TRUE;
+                    ParamChanged(i);
+                }
+            }
+            return S_OK;
         }
     }
     STDMETHOD(AddEnvelope)(DWORD dwParamIndex,DWORD cPoints,MP_ENVELOPE_SEGMENT *ppEnvelope)

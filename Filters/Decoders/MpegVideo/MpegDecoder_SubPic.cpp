@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.4 2004-02-16 17:25:02 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.5 2004-02-25 17:14:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/16 17:25:02  adcockj
+// Fix build errors, locking problems and DVD compatability
+//
 // Revision 1.3  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -146,6 +149,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 	if(fRefresh)
 	{
 		LOG(DBGLOG_FLOW,("Refresh Image\n"));
+    	CProtectCode WhileVarInScope(&m_DeliverLock);
 		Deliver(true);
 	}
 
@@ -284,6 +288,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	if(m_sps.size() > 0)
 	{
 		LOG(DBGLOG_FLOW,("Refresh Image\n"));
+    	CProtectCode WhileVarInScope(&m_DeliverLock);
 		Deliver(true);
 	}
 

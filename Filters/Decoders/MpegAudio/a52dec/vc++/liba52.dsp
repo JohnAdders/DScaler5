@@ -121,6 +121,14 @@ SOURCE=..\liba52\bitstream.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\config.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\inttypes.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\liba52\tables.h
 # End Source File
 # End Group
