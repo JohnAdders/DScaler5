@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.6 2004-07-07 14:09:01 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.7 2004-07-16 16:03:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.5  2004/04/29 16:16:46  adcockj
 // Yet more reconnection fixes
 //
@@ -278,4 +281,27 @@ HRESULT CDSBasePin::GetConnectedFilterCLSID(CLSID* pClsid)
     }
 
     return hr;
+}
+
+IBaseFilter* CDSBasePin::GetConnectedFilter()
+{
+    PIN_INFO PinInfo;
+    BOOL RetVal = TRUE;
+
+    if(!m_ConnectedPin)
+    {
+        return NULL;
+    }
+
+    HRESULT hr = m_ConnectedPin->QueryPinInfo(&PinInfo);
+    if(SUCCEEDED(hr))
+    {
+        if(PinInfo.pFilter != NULL)
+        {
+            PinInfo.pFilter->Release();
+			return PinInfo.pFilter;
+        }
+    }
+
+    return NULL;
 }

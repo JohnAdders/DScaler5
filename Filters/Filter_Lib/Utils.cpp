@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.6 2004-04-29 16:16:46 adcockj Exp $
+// $Id: Utils.cpp,v 1.7 2004-07-16 16:03:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/04/29 16:16:46  adcockj
+// Yet more reconnection fixes
+//
 // Revision 1.5  2004/02/25 17:14:03  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -88,11 +91,11 @@ void InitMediaType(AM_MEDIA_TYPE* TypeToInit)
 
 void ClearMediaType(AM_MEDIA_TYPE* TypeToClear)
 {
-    if(TypeToClear->pUnk != NULL)
+    if(TypeToClear->pUnk != NULL && !IsBadWritePtr(TypeToClear->pUnk, 4))
     {
         TypeToClear->pUnk->Release();
     }
-    if(TypeToClear->cbFormat > 0)
+    if(TypeToClear->cbFormat > 0 && !IsBadWritePtr(TypeToClear->pbFormat, 4))
     {
         CoTaskMemFree(TypeToClear->pbFormat);
     }
