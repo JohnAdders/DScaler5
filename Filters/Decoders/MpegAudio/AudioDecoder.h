@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.1 2004-02-13 12:22:17 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.2 2004-02-16 17:25:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -112,7 +112,8 @@ protected:
 	struct mad_synth m_synth;
 
 	std::vector<BYTE> m_buff;
-	REFERENCE_TIME m_rtStart;
+	REFERENCE_TIME m_rtNextFrameStart;
+	REFERENCE_TIME m_rtOutputStart;
     bool m_fDiscontinuity;
 
 	double m_sample_max;
@@ -121,13 +122,20 @@ protected:
 	HRESULT ProcessAC3();
 	HRESULT ProcessDTS();
 	HRESULT ProcessMPA();
-    HRESULT Deliver(BYTE* pBuff, DWORD len, WAVEFORMATEX* wfein);
-    HRESULT Deliver(BYTE* pBuff, DWORD len, DWORD nSamplesPerSec, REFERENCE_TIME rtDur);
-    HRESULT Deliver(float* pBuff, DWORD len, DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
-    HRESULT ReconnectOutput(int nSamples, AM_MEDIA_TYPE& mt);
+    HRESULT Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur);
+    HRESULT ReconnectOutput(DWORD Len);
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
 
+    void CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD BitsPerSample);
+    void CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);
+    void CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
+    HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
+
+private:
+    AM_MEDIA_TYPE m_InternalMT;
+	WAVEFORMATEXTENSIBLE m_InternalWFE;
+    bool m_NeedToAttachFormat;
 };
 
 #define m_AudioInPin m_InputPins[0]

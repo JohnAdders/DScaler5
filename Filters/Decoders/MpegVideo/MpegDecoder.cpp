@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.5 2004-02-12 17:06:45 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.6 2004-02-16 17:25:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.4  2004/02/10 13:24:12  adcockj
 // Lots of bug fixes + corrected interlaced YV12 upconversion
 //
@@ -116,7 +120,7 @@ CMpegDecoder::CMpegDecoder() :
 	InitMediaType(&MT);
 	MT.majortype = MEDIATYPE_AUXLine21Data;
 	MT.subtype = MEDIASUBTYPE_Line21_GOPPacket;
-	MT.formattype = FORMAT_None;
+	MT.formattype = GUID_NULL;
     
     m_CCOutPin->SetType(&MT);
     
@@ -131,7 +135,7 @@ CMpegDecoder::CMpegDecoder() :
 	m_LastOutputTime = 0;
 
 	m_ProgressiveChroma = false;
-	m_di = DIAuto;
+    m_NextFrameDeint = DIBob;
 	m_dec = NULL;
 	m_ChromaType = CHROMA_420;
 	m_Discont = true;
@@ -217,6 +221,9 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
         // don't care when this changes
         break;
     case FRAMESMOOTH32:
+        // don't care when this changes
+        break;
+    case DEINTMODE:
         // don't care when this changes
         break;
     }
@@ -399,7 +406,8 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
 				    pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
-                    pmt->subtype == MEDIASUBTYPE_RGB565);
+                    pmt->subtype == MEDIASUBTYPE_RGB565 ||
+                    pmt->subtype == MEDIASUBTYPE_RGB555);
     }
     else if(pPin == m_CCOutPin)
     {
@@ -424,6 +432,29 @@ HRESULT CMpegDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
         return E_UNEXPECTED;
     }
 }
+
+HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
+{
+    if(dwParamIndex == DEINTMODE)
+    {
+        return GetEnumTextDeintMode(ppwchText);
+    }
+    else
+    {
+        return E_NOTIMPL;
+    }
+}
+
+
+HRESULT CMpegDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
+{
+    wchar_t DeintText[] = L"Deinterlace Mode\0" L"None\0" L"Automatic\0" L"Force Weave\0" L"Force Bob\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    return S_OK;
+}
+
 
 HRESULT CMpegDecoder::Flush(CDSBasePin* pPin)
 {
@@ -545,20 +576,48 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 	    CorrectMediaType(pmt);
         return S_OK;
     }
+    else if(pPin == m_SubpictureInPin)
+    {
+        if(TypeNum == 0)
+        {
+            pmt->majortype = MEDIATYPE_DVD_ENCRYPTED_PACK;
+            pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
+            pmt->formattype = GUID_NULL;
+            return S_OK;
+		}
+		else if(TypeNum == 1)
+		{
+            pmt->majortype = MEDIATYPE_MPEG2_PACK;
+            pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
+            pmt->formattype = GUID_NULL;
+            return S_OK;
+		}
+		else if(TypeNum == 2)
+		{
+            pmt->majortype = MEDIASUBTYPE_DVD_SUBPICTURE;
+            pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
+            pmt->formattype = GUID_NULL;
+            return S_OK;
+		}
+        else
+        {
+            return VFW_S_NO_MORE_ITEMS;
+        }
+
+    }
     else if(pPin == m_CCOutPin)
     {
         if(TypeNum == 0)
         {
             pmt->majortype = MEDIATYPE_AUXLine21Data;
             pmt->subtype = MEDIASUBTYPE_Line21_GOPPacket;
-            pmt->formattype = FORMAT_None;
+            pmt->formattype = GUID_NULL;
             return S_OK;
         }
         else
         {
             return VFW_S_NO_MORE_ITEMS;
         }
-
     }
     else
     {
@@ -592,7 +651,6 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
-    // \todo use pSampleProperties properly
 	HRESULT hr;
 
     if(pSampleProperties->dwStreamId != AM_STREAM_MEDIA)
@@ -647,27 +705,18 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 	if(len <= 0) 
         return S_OK;
 
-	if(InSample->IsDiscontinuity() == S_OK)
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
 	{
 		m_Discont = true;
 	}
 
-	REFERENCE_TIME rtStart = _I64_MIN, rtStop = _I64_MIN;
-	hr = InSample->GetTime(&rtStart, &rtStop);
-	if(FAILED(hr))
-	{
-		rtStart = rtStop = _I64_MIN;
-	}
-	// we sometimes get passed rubbish times
-	// before we have a keframe
-	// ignore these
-	else
-	{
-		LOG(DBGLOG_ALL, ("GetTime %010I64d %010I64d\n", rtStart, rtStop));
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    {
+		LOG(DBGLOG_ALL, ("GetTime %010I64d %010I64d\n", pSampleProperties->tStart, pSampleProperties->tStop));
 		LARGE_INTEGER temp;
-		temp.QuadPart = rtStart;
+		temp.QuadPart = pSampleProperties->tStart;
 		mpeg2_tag_picture(m_dec, temp.HighPart, temp.LowPart);
-	}
+    }
 
 	mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
 	while(1)
@@ -749,7 +798,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 			}
 			else
 			{
-				if(InSample->IsPreroll() == S_OK)
+				if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
 				{
 					LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
 					mpeg2_skip(m_dec,0);
@@ -836,19 +885,41 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 					if(m_fb.w != w || m_fb.h != h || m_fb.pitch != pitch)
 						m_fb.alloc(w, h, pitch);
 
+					    if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+					    {
+						    m_ProgressiveChroma = true;
+					    }
+					    else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
+					    {
+						    m_ProgressiveChroma = true;
+					    }
+					    else
+					    {
+						    m_ProgressiveChroma = false;
+					}
+
+
 					// deinterlace
-					if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-					{
-						m_ProgressiveChroma = true;
-					}
-					else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME || m_di == DIWeave)
-					{
-						m_ProgressiveChroma = true;
-					}
-					else
-					{
-						m_ProgressiveChroma = false;
-					}
+                    switch(GetParamEnum(DEINTMODE))
+                    {
+                    case DIAuto:
+						if(m_ProgressiveChroma)
+						{
+							m_NextFrameDeint = DIWeave;
+						}
+						else
+						{
+						    m_NextFrameDeint = DIBob;
+					    }
+                        break;
+                    case DIWeave:
+						m_NextFrameDeint = DIWeave;
+                        break;
+                    case DIBob:
+                    default:
+						m_NextFrameDeint = DIBob;
+                        break;
+                    }
 
                     // we should get updates about the timings only on I frames
                     // sometimes we getthem more frequently
@@ -909,11 +980,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	// sometimes we get given a repeat frame request
 	// when we're not really ready
-	if(fRepeatLast && ((mpeg2_info(m_dec)->sequence == NULL) || (mpeg2_info(m_dec)->display_picture == NULL)))
-	{
-		LOG(DBGLOG_FLOW, ("Can't reshow picture\n"));
-		return S_OK;
-	}
 
 	TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
     //LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [prsq %d prfr %d tff %d rff %d nb_fields %d ref %d] (%dx%d/%dx%d)\n", 
@@ -1011,21 +1077,20 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
-		const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
-        if(picture->nb_fields == 3)
-            if(picture->flags&PIC_FLAG_TOP_FIELD_FIRST)
+        if(m_fb.nb_fields == 3)
+            if(m_fb.flags&PIC_FLAG_TOP_FIELD_FIRST)
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD;
             else
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_REPEAT_FIELD;
         else
-            if(picture->flags&PIC_FLAG_TOP_FIELD_FIRST)
+            if(m_fb.flags&PIC_FLAG_TOP_FIELD_FIRST)
                 Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
             else
                 Props.dwTypeSpecificFlags = 0;
 
 
         // tell the next filter that this is film
-        if(m_fFilm || m_di == DIWeave || mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+        if(m_NextFrameDeint == DIWeave)
             Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
 
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
@@ -1227,7 +1292,7 @@ void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 		}
 		else
 		{
-			if(m_di == DIWeave || m_fFilm)
+			if(m_NextFrameDeint == DIWeave)
 			{
 				BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
 			}

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.3 2004-02-16 17:25:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -306,10 +310,7 @@ void CDSOutputPin::InternalDisconnect()
 #define GETMEDIASEEKING \
     CDSBasePin* pPin = m_Filter->GetPin(0); \
     if(pPin->m_Direction != PINDIR_INPUT || pPin->m_ConnectedPin == NULL) return E_NOTIMPL; \
-    PIN_INFO PinInfo; \
-    if(FAILED(pPin->m_ConnectedPin->QueryPinInfo(&PinInfo))) return E_NOTIMPL; \
-    SI(IMediaSeeking) MediaSeeking = PinInfo.pFilter; \
-    PinInfo.pFilter->Release(); \
+    SI(IMediaSeeking) MediaSeeking = pPin->m_ConnectedPin; \
     if(!MediaSeeking) return E_NOTIMPL;
 
 STDMETHODIMP CDSOutputPin::GetCapabilities(DWORD *pCapabilities)

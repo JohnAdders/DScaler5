@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: minimad.c,v 1.1 2004-02-13 12:22:20 adcockj Exp $
+ * $Id: minimad.c,v 1.2 2004-02-16 17:25:01 adcockj Exp $
  */
 
 # include <stdio.h>
@@ -174,9 +174,9 @@ enum mad_flow error(void *data,
 {
   struct buffer *buffer = data;
 
-  fprintf(stderr, "decoding error 0x%04x (%s) at byte offset %u\n",
-	  stream->error, mad_stream_errorstr(stream),
-	  stream->this_frame - buffer->start);
+  //fprintf(stderr, "decoding error 0x%04x (%s) at byte offset %u\n",
+  // stream->error, mad_stream_errorstr(stream),
+  // stream->this_frame - buffer->start);
 
   /* return MAD_FLOW_BREAK here to stop decoding (and propagate an error) */
 

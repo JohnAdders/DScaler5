@@ -1,6 +1,10 @@
 #ifndef PRE_C
 #define PRE_C
 
+#if _MSC_VER > 1000
+#pragma warning(disable: 4305 4244 4101)
+#endif
+
 #include "fftc4.h"
 #include "fftr4.h"
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.1 2004-02-13 12:22:17 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.2 2004-02-16 17:25:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/13 12:22:17  adcockj
+// Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -49,7 +52,6 @@
 #include "DSOutputPin.h"
 #include "MediaBufferWrapper.h"
 #include "MoreUuids.h"
-#include <mmreg.h>
 #include "CPUID.h"
 
 extern HINSTANCE g_hInstance;
@@ -231,8 +233,13 @@ CAudioDecoder::CAudioDecoder() :
     m_AudioOutPin->SetupObject(this, L"Audio Out");
 
     m_fDiscontinuity = true;
-    m_rtStart = 0;
+    m_rtNextFrameStart = _I64_MIN;
+    m_rtOutputStart = 0;
     m_sample_max = 0.1;
+    m_NeedToAttachFormat = false;
+
+    ZeroMemory(&m_InternalMT, sizeof(AM_MEDIA_TYPE));
+    ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -338,7 +345,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     }
     else if(pPin == m_AudioOutPin)
     {
-	    pProperties->cBuffers = 4;
+	    pProperties->cBuffers = 8;
 	    pProperties->cbBuffer = 0x1800;
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
@@ -478,25 +485,22 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
 	if(len <= 0) return S_OK;
 
-	REFERENCE_TIME rtStart = _I64_MIN, rtStop = _I64_MIN;
-	hr = InSample->GetTime(&rtStart, &rtStop);
-
-
-	if(InSample->IsDiscontinuity() == S_OK)
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
 	{
         m_fDiscontinuity = true;
 		m_buff.resize(0);
         m_sample_max = 0.1f;
-		ASSERT(SUCCEEDED(hr)); // what to do if not?
-		if(FAILED(hr)) return S_OK; // lets wait then...
-		m_rtStart = rtStart;
+		m_rtOutputStart = 0;
 	}
 
-	if(SUCCEEDED(hr) && abs(m_rtStart - rtStart) > 1000000) // +-100ms jitter is allowed for now
-	{
-		m_buff.resize(0);
-		m_rtStart = rtStart;
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    {
+		m_rtNextFrameStart = pSampleProperties->tStart;
 	}
+    else
+    {
+        m_rtNextFrameStart = _I64_MIN;
+    }
 
 	int tmp = m_buff.size();
 	m_buff.resize(m_buff.size() + len);
@@ -519,12 +523,18 @@ HRESULT CAudioDecoder::ProcessLPCM()
 {
 	WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
-	BYTE* pDataIn = &m_buff[0];
-	
-    int len = m_buff.size() & ~(wfein->nChannels*wfein->wBitsPerSample/8-1);
+    CreateInternalPCMMediaType(wfein->nSamplesPerSec, wfein->nChannels, 0, wfein->wBitsPerSample);
 
-	HRESULT hr = Deliver(&m_buff[0], len, wfein);
-    
+    DWORD len = m_buff.size() & ~(wfein->nChannels*wfein->wBitsPerSample/8-1);
+
+    SI(IMediaSample) pOut;
+    BYTE* pDataOut = NULL;
+
+    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
+    CHECK(hr);
+
+    memcpy(pDataOut, &m_buff[0], len);
+
     if(len < m_buff.size())
     {
     	memmove(&m_buff[0], &m_buff[len], m_buff.size() - len);
@@ -534,7 +544,10 @@ HRESULT CAudioDecoder::ProcessLPCM()
     {
         m_buff.resize(0);
     }
-    return hr;
+
+    REFERENCE_TIME rtDur = 10000000i64*len / (wfein->nSamplesPerSec * wfein->nBlockAlign);
+
+    return Deliver(pOut.GetNonAddRefedInterface(), rtDur);
 }
 
 HRESULT CAudioDecoder::ProcessAC3()
@@ -548,18 +561,6 @@ HRESULT CAudioDecoder::ProcessAC3()
 		int size = 0, sample_rate, bit_rate;
 
         int flags(0);
-        if(CpuFeatureFlags & FEATURE_MMXEXT)
-        {
-            flags |= MM_ACCEL_X86_MMXEXT;
-        }
-        if(CpuFeatureFlags & FEATURE_3DNOW)
-        {
-            flags |= MM_ACCEL_X86_3DNOW;
-        }
-        if(CpuFeatureFlags & FEATURE_MMX)
-        {
-            flags |= MM_ACCEL_X86_MMX;
-        }
 
 		if((size = a52_syncinfo(p, &flags, &sample_rate, &bit_rate)) > 0)
 		{
@@ -573,9 +574,16 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 				if(GetParamBool(USESPDIF))
 				{
-					BYTE pBuff[0x1800];
+                    CreateInternalSPDIFMediaType(sample_rate, 16);
+                    
+                    DWORD len = 0x1800; 
 
-					WORD* pDataOut = (WORD*)pBuff;
+                    SI(IMediaSample) pOut;
+                    WORD* pDataOut = NULL;
+
+                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                    CHECK(hr);
+
 					pDataOut[0] = 0xf872;
 					pDataOut[1] = 0x4e1f;
 					pDataOut[2] = 0x0001;
@@ -584,8 +592,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 					REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 320000 * 100ns
 
-					HRESULT hr;
-					if(S_OK != (hr = Deliver(pBuff, 0x1800, sample_rate, rtDur)))
+                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+					if(S_OK != hr)
 						return hr;
 				}
 				else
@@ -604,9 +612,15 @@ HRESULT CAudioDecoder::ProcessAC3()
 						int scmapidx = min(flags&A52_CHANNEL_MASK, sizeof(s_scmap)/sizeof(s_scmap[0])/2);
                         scmap_t& scmap = s_scmap[scmapidx + ((flags&A52_LFE)?(sizeof(s_scmap)/sizeof(s_scmap[0])/2):0)];
 
-                        // allocate enough space for 6 channels
-						float pBuff[6*256*6];
-                        float* p = pBuff;
+                        CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
+
+                        SI(IMediaSample) pOut;
+                        float* pDataOut = NULL;
+                        DWORD len = 6*256*scmap.nChannels*sizeof(float); 
+
+                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                        CHECK(hr);
+                    
 
 						int i = 0;
 
@@ -619,18 +633,19 @@ HRESULT CAudioDecoder::ProcessAC3()
 								for(int ch = 0; ch < scmap.nChannels; ch++)
 								{
 									ASSERT(scmap.ch[ch] != -1);
-									*p++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
+									*pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
 								}
 							}
 						}
 
 						if(i == 6)
 						{
-							HRESULT hr;
-							if(S_OK != (hr = Deliver(pBuff, 6*256*scmap.nChannels, sample_rate, scmap.nChannels, scmap.dwChannelMask)))
-								return hr;
-						}
+					        REFERENCE_TIME rtDur = 10000000i64 * len / (sizeof(float) * sample_rate * scmap.nChannels); // should be 320000 * 100ns
+                        hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+						if(S_OK != hr)
+							return hr;
 					}
+				}
 				}
 
 				p += size;
@@ -712,9 +727,17 @@ HRESULT CAudioDecoder::ProcessDTS()
 
 			if(fEnoughData)
 			{
-				BYTE pBuff[0x800];
+                CreateInternalSPDIFMediaType(sample_rate, 16);
+                
+                DWORD len = 0x800; 
 
-				WORD* pDataOut = (WORD*)pBuff;
+                SI(IMediaSample) pOut;
+                WORD* pDataOut = NULL;
+
+                HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                CHECK(hr);
+
+
 				pDataOut[0] = 0xf872;
 				pDataOut[1] = 0x4e1f;
 				pDataOut[2] = 0x000b;
@@ -723,8 +746,8 @@ HRESULT CAudioDecoder::ProcessDTS()
 
 				REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 106667 * 100 ns
 
-				HRESULT hr;
-				if(S_OK != (hr = Deliver(pBuff, 0x800, sample_rate, rtDur)))
+                hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+				if(S_OK != hr)
 					return hr;
 
 				p += size;
@@ -797,19 +820,42 @@ HRESULT CAudioDecoder::ProcessMPA()
 
 			if(!MAD_RECOVERABLE(m_stream.error))
 				return E_FAIL;
+            
+            continue;
 		}
 
 		mad_synth_frame(&m_synth, &m_frame);
 
+        // check that the incomming format is reasonable
+        // sometimes we get told we have a lower format than we
+        // actually get
 		WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
-		if(/*wfein->nChannels != m_synth.pcm.channels ||*/ wfein->nSamplesPerSec != m_synth.pcm.samplerate)
+		if(wfein->nChannels > m_synth.pcm.channels || wfein->nSamplesPerSec > m_synth.pcm.samplerate)
 			continue;
 
 		const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
 		const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
 
-		BYTE* pBuff = new BYTE[m_synth.pcm.length*m_synth.pcm.channels*2];
-        BYTE* pDataOut = pBuff;
+        CreateInternalPCMMediaType(m_synth.pcm.samplerate, m_synth.pcm.channels, 0, 16);
+        
+        DWORD len = m_synth.pcm.length*m_synth.pcm.channels*2;
+
+        HRESULT hrReconnect = ReconnectOutput(len);
+	    if(FAILED(hrReconnect))
+		    return hrReconnect;
+
+	    SI(IMediaSample) pOut;
+	    BYTE* pDataOut = NULL;
+
+        HRESULT hr = m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false);
+        if(FAILED(hr) || !pOut)
+            return E_FAIL;
+
+        hr = pOut->GetPointer(&pDataOut);
+        CHECK(hr);
+        
+    	hr = pOut->SetActualDataLength(len);
+        CHECK(hr);
 
 		for(unsigned short i = 0; i < m_synth.pcm.length; i++)
 		{
@@ -825,18 +871,10 @@ HRESULT CAudioDecoder::ProcessMPA()
 			    //*pDataOut++ = (BYTE)(outvalue>>16);
             }
 		}
+    
+    	REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_synth.pcm.channels*2);
 
-        WAVEFORMATEX wfe;
-        wfe.wBitsPerSample = 16;
-        wfe.nChannels = m_synth.pcm.channels;
-        wfe.nSamplesPerSec = m_synth.pcm.samplerate;
-	    wfe.nBlockAlign = wfe.nChannels * wfe.wBitsPerSample / 8;
-	    wfe.nAvgBytesPerSec = wfe.nSamplesPerSec * wfe.nBlockAlign;
-
-		HRESULT hr = Deliver(pBuff, m_synth.pcm.length*m_synth.pcm.channels*2, &wfe);
-
-        delete [] pBuff;
-
+        hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
 		if(S_OK != hr)
 			return hr;
 	}
@@ -844,258 +882,121 @@ HRESULT CAudioDecoder::ProcessMPA()
 	return S_OK;
 }
 
-HRESULT CAudioDecoder::Deliver(float* pBuff, DWORD len, DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask)
+
+void CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD wBitsPerSample)
 {
-	HRESULT hr;
+	m_InternalMT.majortype = MEDIATYPE_Audio;
+   	m_InternalMT.subtype = MEDIASUBTYPE_PCM;
+	m_InternalMT.formattype = FORMAT_WaveFormatEx;
 
-	AM_MEDIA_TYPE mt;
+	m_InternalWFE.Format.nSamplesPerSec = nSamplesPerSec;
+	m_InternalWFE.Format.nChannels = 2;
+	m_InternalWFE.Format.wBitsPerSample = wBitsPerSample;
+	m_InternalWFE.Format.nBlockAlign = 2 * wBitsPerSample / 8;
+	m_InternalWFE.Format.nAvgBytesPerSec = nSamplesPerSec * m_InternalWFE.Format.nBlockAlign;
 
-	mt.majortype = MEDIATYPE_Audio;
-	mt.subtype = MEDIASUBTYPE_IEEE_FLOAT;
-	mt.formattype = FORMAT_WaveFormatEx;
+    m_InternalWFE.Format.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
+	m_InternalWFE.Format.cbSize = 0;
 
-	WAVEFORMATEXTENSIBLE wfex;
-	memset(&wfex, 0, sizeof(wfex));
-	wfex.Format.nChannels = nChannels;
-	wfex.Format.nSamplesPerSec = nSamplesPerSec;
-    wfex.Format.wBitsPerSample = 32;
-	wfex.Format.nBlockAlign = wfex.Format.nChannels*wfex.Format.wBitsPerSample/8;
-	wfex.Format.nAvgBytesPerSec = wfex.Format.nSamplesPerSec*wfex.Format.nBlockAlign;
-
-	wfex.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-	wfex.Format.cbSize = sizeof(wfex) - sizeof(wfex.Format);
-	wfex.dwChannelMask = dwChannelMask;
-	wfex.Samples.wValidBitsPerSample = wfex.Format.wBitsPerSample;
-	wfex.SubFormat = mt.subtype;
-
-    mt.cbFormat = sizeof(wfex) + wfex.Format.cbSize;
-    mt.pbFormat = (BYTE*)&wfex; 
-
-	int nSamples = len/wfex.Format.nChannels;
-
-	if(FAILED(hr = ReconnectOutput(nSamples, mt)))
-		return hr;
-
-	SI(IMediaSample) pOut;
-	BYTE* pDataOut = NULL;
-
-    // need to preserve hr
-    if(FAILED(m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false)) || !pOut)
-        return E_FAIL;
-
-    if(FAILED(pOut->GetPointer(&pDataOut)))
-		return E_FAIL;
-
-	REFERENCE_TIME rtDur = 10000000i64*nSamples/wfex.Format.nSamplesPerSec;
-	REFERENCE_TIME rtStart = m_rtStart, rtStop = m_rtStart + rtDur;
-	m_rtStart += rtDur;
-    LOG(DBGLOG_FLOW, ("CMpaDecFilter: %I64d - %I64d\n", rtStart/10000, rtStop/10000));
-	if(rtStart < 200000 /* < 0, FIXME: 0 makes strange noises */)
-		return S_OK;
-
-	if(hr == S_OK)
-	{
-		m_AudioOutPin->SetType(&mt);
-		pOut->SetMediaType(&mt);
-	}
-
-	pOut->SetTime(&rtStart, &rtStop);
-	pOut->SetMediaTime(NULL, NULL);
-
-	pOut->SetPreroll(FALSE);
-    pOut->SetDiscontinuity(m_fDiscontinuity); 
-    m_fDiscontinuity = false;
-	pOut->SetSyncPoint(TRUE);
-
-	pOut->SetActualDataLength(len * wfex.Format.wBitsPerSample/8);
-
-	float* pDataIn = pBuff;
-
-    // TODO: move this into the audio switcher 
-    float sample_mul = 1; 
-    BOOL bNorm = GetParamBool(NORMALIZE);
-    if(bNorm) 
-    { 
-        for(int i = 0; i < len; i++) 
-        { 
-            float f = *pDataIn++; 
-            if(f < 0) f = -f; 
-            if(m_sample_max < f) m_sample_max = f; 
-        } 
-        sample_mul = 1.0f / m_sample_max; 
-        pDataIn = pBuff; 
-    } 
-
-	for(int i = 0; i < len; i++)
-	{
-		float f = *pDataIn++;
-
-		ASSERT(f >= -1 && f <= 1);
-
-        // TODO: move this into the audio switcher 
-        if(bNorm) 
-            f *= sample_mul; 
-
-        if(f < -1) f = -1; 
-        else if(f > 1) f = 1; 
-
-		*(float*)pDataOut = f;
-		pDataOut += sizeof(float);
-		break;
-	}
-
-	hr = m_AudioOutPin->SendSample(pOut.GetNonAddRefedInterface());
-    return hr;
+    m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
 }
 
-HRESULT CAudioDecoder::Deliver(BYTE* pBuff, DWORD len, DWORD nSamplesPerSec, REFERENCE_TIME rtDur)
+
+void CAudioDecoder::CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD wBitsPerSample)
 {
-	HRESULT hr;
+	m_InternalMT.majortype = MEDIATYPE_Audio;
+   	m_InternalMT.subtype = MEDIASUBTYPE_PCM;
+	m_InternalMT.formattype = FORMAT_WaveFormatEx;
 
-	AM_MEDIA_TYPE mt;
+	m_InternalWFE.Format.nSamplesPerSec = nSamplesPerSec;
+	m_InternalWFE.Format.nChannels = nChannels;
+	m_InternalWFE.Format.wBitsPerSample = wBitsPerSample;
+	m_InternalWFE.Format.nBlockAlign = nChannels * wBitsPerSample / 8;
+	m_InternalWFE.Format.nAvgBytesPerSec = nSamplesPerSec * m_InternalWFE.Format.nBlockAlign;
 
-	mt.majortype = MEDIATYPE_Audio;
-	mt.subtype = MEDIASUBTYPE_PCM;
-	mt.formattype = FORMAT_WaveFormatEx;
-
-	WAVEFORMATEX wfe;
-	memset(&wfe, 0, sizeof(wfe));
-	wfe.wFormatTag = WAVE_FORMAT_DOLBY_AC3_SPDIF;
-	wfe.nSamplesPerSec = nSamplesPerSec;
-	wfe.nChannels = 2;
-	wfe.wBitsPerSample = 16;
-	wfe.nBlockAlign = wfe.nChannels * wfe.wBitsPerSample / 8;
-	wfe.nAvgBytesPerSec = wfe.nSamplesPerSec * wfe.nBlockAlign;
-	wfe.cbSize = 0;
-
-    mt.cbFormat = sizeof(wfe) + wfe.cbSize;
-    mt.pbFormat = (BYTE*)&wfe; 
-
-	if(FAILED(hr = ReconnectOutput(len / wfe.nBlockAlign, mt)))
-		return hr;
-
-	SI(IMediaSample) pOut;
-	BYTE* pDataOut = NULL;
-
-    // need to preserve hr
-    if(FAILED(m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false)) || !pOut)
-        return E_FAIL;
-
-    if(FAILED(pOut->GetPointer(&pDataOut)))
-		return E_FAIL;
-
-	REFERENCE_TIME rtStart = m_rtStart, rtStop = m_rtStart + rtDur;
-	m_rtStart += rtDur;
-    
-    //TRACE(_T("CMpaDecFilter: %I64d - %I64d\n"), rtStart/10000, rtStop/10000);
-	if(rtStart < 0)
-		return S_OK;
-
-	if(hr == S_OK)
-	{
-		m_AudioOutPin->SetType(&mt);
-		pOut->SetMediaType(&mt);
-	}
-
-	pOut->SetTime(&rtStart, &rtStop);
-	pOut->SetMediaTime(NULL, NULL);
-
-	pOut->SetPreroll(FALSE);
-	pOut->SetDiscontinuity(m_fDiscontinuity); 
-    m_fDiscontinuity = false;
-	pOut->SetSyncPoint(TRUE);
-
-	pOut->SetActualDataLength(len);
-	memcpy(pDataOut, pBuff, len);
-
-	hr = m_AudioOutPin->SendSample(pOut.GetNonAddRefedInterface());
-    return hr;
-}
-
-HRESULT CAudioDecoder::Deliver(BYTE* pBuff, DWORD len, WAVEFORMATEX* wfein)
-{
-	HRESULT hr;
-
-	AM_MEDIA_TYPE mt;
-    ZeroMemory(&mt, sizeof(AM_MEDIA_TYPE));
-	mt.majortype = MEDIATYPE_Audio;
-    if(wfein->wBitsPerSample == 32)
+    if(wBitsPerSample > 16 || nChannels > 2)
     {
-        mt.subtype = MEDIASUBTYPE_IEEE_FLOAT;
+		m_InternalWFE.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+		m_InternalWFE.Format.cbSize = sizeof(m_InternalWFE) - sizeof(m_InternalWFE.Format);
+		m_InternalWFE.SubFormat = m_InternalMT.subtype;
+        m_InternalWFE.dwChannelMask = dwChannelMask;
+        m_InternalWFE.Samples.wValidBitsPerSample = wBitsPerSample;
     }
     else
     {
-    	mt.subtype = MEDIASUBTYPE_PCM;
+    	m_InternalWFE.Format.wFormatTag = (WORD)m_InternalMT.subtype.Data1;
+	    m_InternalWFE.Format.cbSize = 0;
     }
-	mt.formattype = FORMAT_WaveFormatEx;
 
-    WAVEFORMATEXTENSIBLE wfex;
-	memset(&wfex, 0, sizeof(wfex));
+    m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+}
 
-	wfex.Format.nSamplesPerSec = wfein->nSamplesPerSec;
-	wfex.Format.nChannels = wfein->nChannels;
-	wfex.Format.wBitsPerSample = wfein->wBitsPerSample;
-	wfex.Format.nBlockAlign = wfein->nChannels * wfein->wBitsPerSample / 8;
-	wfex.Format.nAvgBytesPerSec = wfein->nSamplesPerSec * wfein->nBlockAlign;
+void CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask)
+{
+	m_InternalMT.majortype = MEDIATYPE_Audio;
+   	m_InternalMT.subtype = MEDIASUBTYPE_IEEE_FLOAT;
+	m_InternalMT.formattype = FORMAT_WaveFormatEx;
 
-    if(wfein->wBitsPerSample > 16 || wfein->nChannels > 2)
+	m_InternalWFE.Format.nSamplesPerSec = nSamplesPerSec;
+	m_InternalWFE.Format.nChannels = nChannels;
+	m_InternalWFE.Format.wBitsPerSample = 32;
+	m_InternalWFE.Format.nBlockAlign = nChannels * 4;
+	m_InternalWFE.Format.nAvgBytesPerSec = nSamplesPerSec * m_InternalWFE.Format.nBlockAlign;
+
+	m_InternalWFE.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+	m_InternalWFE.Format.cbSize = sizeof(m_InternalWFE) - sizeof(m_InternalWFE.Format);
+	m_InternalWFE.SubFormat = m_InternalMT.subtype;
+    m_InternalWFE.dwChannelMask = dwChannelMask;
+    m_InternalWFE.Samples.wValidBitsPerSample = 32;
+
+    m_InternalMT.cbFormat = sizeof(m_InternalWFE);
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+}
+
+HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
+{
+	HRESULT hr = S_OK;
+
+    if(m_rtNextFrameStart != _I64_MIN)
     {
-		wfex.Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
-		wfex.Format.cbSize = sizeof(wfex) - sizeof(wfex.Format);
-		wfex.SubFormat = mt.subtype;
+        if(abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 20000)
+        {
+            m_rtOutputStart = m_rtNextFrameStart;
+        }
     }
-    else
-    {
-    	wfex.Format.wFormatTag = (WORD)mt.subtype.Data1;
-	    wfex.Format.cbSize = 0;
-    }
-
-    mt.cbFormat = sizeof(wfex) + wfex.Format.cbSize;
-    mt.pbFormat = (BYTE*)&wfex; 
-
-	if(FAILED(hr = ReconnectOutput(len / wfex.Format.nBlockAlign, mt)))
-		return hr;
-
-	SI(IMediaSample) pOut;
-	BYTE* pDataOut = NULL;
-
-    // need to preserve hr
-    if(FAILED(m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false)) || !pOut)
-        return E_FAIL;
-
-    if(FAILED(pOut->GetPointer(&pDataOut)))
-		return E_FAIL;
-
-	REFERENCE_TIME rtDur = 10000000i64*len/wfex.Format.nSamplesPerSec/wfex.Format.nBlockAlign;
-	REFERENCE_TIME rtStart = m_rtStart, rtStop = m_rtStart + rtDur;
-	m_rtStart += rtDur;
     
-    //TRACE(_T("CMpaDecFilter: %I64d - %I64d\n"), rtStart/10000, rtStop/10000);
-	if(rtStart < 0)
-		return S_OK;
+    m_rtNextFrameStart = _I64_MIN;
 
-	if(hr == S_OK)
+    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
+
+	if(m_NeedToAttachFormat)
 	{
-		m_AudioOutPin->SetType(&mt);
-		pOut->SetMediaType(&mt);
+		m_AudioOutPin->SetType(&m_InternalMT);
+		pOut->SetMediaType(&m_InternalMT);
 	}
 
-	pOut->SetTime(&rtStart, &rtStop);
+	pOut->SetTime(&m_rtOutputStart, NULL);
 	pOut->SetMediaTime(NULL, NULL);
 
 	pOut->SetPreroll(FALSE);
-	pOut->SetDiscontinuity(m_fDiscontinuity); 
-    m_fDiscontinuity = false;
 	pOut->SetSyncPoint(TRUE);
 
-	pOut->SetActualDataLength(len);
-	memcpy(pDataOut, pBuff, len);
+	if(m_rtOutputStart >= 0)
+    {
+	    pOut->SetDiscontinuity(m_fDiscontinuity); 
+        m_fDiscontinuity = false;
 
-	hr = m_AudioOutPin->SendSample(pOut.GetNonAddRefedInterface());
+    	hr = m_AudioOutPin->SendSample(pOut);
+    }
+
+    m_rtOutputStart += rtDur;
     return hr;
 }
 
-HRESULT CAudioDecoder::ReconnectOutput(int nSamples, AM_MEDIA_TYPE& mt)
+
+HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
 {
 	HRESULT hr;
 
@@ -1109,15 +1010,13 @@ HRESULT CAudioDecoder::ReconnectOutput(int nSamples, AM_MEDIA_TYPE& mt)
 	if(FAILED(hr = pAllocator->GetProperties(&props)))
 		return hr;
 
-	WAVEFORMATEX* wfe = (WAVEFORMATEX*)mt.pbFormat;
-	long cbBuffer = nSamples * wfe->nBlockAlign;
 
-	if(!AreMediaTypesIdentical(&mt,m_AudioOutPin->GetMediaType()) || cbBuffer > props.cbBuffer)
+	if(!AreMediaTypesIdentical(&m_InternalMT, m_AudioOutPin->GetMediaType()) || Len > (DWORD)props.cbBuffer)
 	{
-        if(cbBuffer > props.cbBuffer) 
+        if(Len > (DWORD)props.cbBuffer) 
         { 
 		    props.cBuffers = 4;
-		    props.cbBuffer = cbBuffer * 3 / 2;
+		    props.cbBuffer = Len * 3 / 2;
 
 		    if(FAILED(hr = m_AudioOutPin->m_ConnectedPin->BeginFlush())
 		    || FAILED(hr = m_AudioOutPin->m_ConnectedPin->EndFlush())
@@ -1126,11 +1025,13 @@ HRESULT CAudioDecoder::ReconnectOutput(int nSamples, AM_MEDIA_TYPE& mt)
 		    || FAILED(hr = pAllocator->Commit()))
 			    return hr;
         }
-
-		return S_OK;
+        m_NeedToAttachFormat = true;
 	}
-
-	return S_FALSE;
+    else
+    {
+        m_NeedToAttachFormat = false;
+    }
+    return S_OK;
 }
 
 HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
@@ -1168,7 +1069,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 
 HRESULT CAudioDecoder::Activate()
 {
-	m_a52_state = a52_init(0);
+	m_a52_state = a52_init(MM_ACCEL_DJBFFT);
 
 	mad_stream_init(&m_stream);
 	mad_frame_init(&m_frame);
@@ -1258,4 +1159,26 @@ HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
     }
     pNext[0] = '\0';
     return S_OK;
+}
+
+
+HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len)
+{
+    HRESULT hr = ReconnectOutput(Len);
+    if(FAILED(hr))
+        return hr;
+
+    *ppDataOut = NULL;
+
+    hr = m_AudioOutPin->GetOutputSample(pOut, false);
+    if(FAILED(hr || *pOut == NULL))
+        return E_FAIL;
+
+    hr = (*pOut)->GetPointer(ppDataOut);
+    CHECK(hr);
+
+    hr = (*pOut)->SetActualDataLength(Len);
+    CHECK(hr);
+    
+    return hr;
 }

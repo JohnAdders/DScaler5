@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: layer3.c,v 1.1 2004-02-13 12:22:20 adcockj Exp $
+ * $Id: layer3.c,v 1.2 2004-02-16 17:25:01 adcockj Exp $
  */
 
 # ifdef HAVE_CONFIG_H
@@ -907,8 +907,8 @@ mad_fixed_t III_requantize(unsigned int value, signed int exp)
     if (exp >= 5) {
       /* overflow */
 # if defined(DEBUG)
-      fprintf(stderr, "requantize overflow (%f * 2^%d)\n",
-	      mad_f_todouble(requantized), exp);
+      //fprintf(stderr, "requantize overflow (%f * 2^%d)\n",
+	  //    mad_f_todouble(requantized), exp);
 # endif
       requantized = MAD_F_MAX;
     }
@@ -1239,7 +1239,7 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 
     if (cachesz + bits_left < 0) {
 # if 0 && defined(DEBUG)
-      fprintf(stderr, "huffman count1 overrun (%d bits)\n",
+      //fprintf(stderr, "huffman count1 overrun (%d bits)\n",
 	      -(cachesz + bits_left));
 # endif
 
@@ -1254,9 +1254,9 @@ enum mad_error III_huffdecode(struct mad_bitptr *ptr, mad_fixed_t xr[576],
 
 # if 0 && defined(DEBUG)
   if (bits_left < 0)
-    fprintf(stderr, "read %d bits too many\n", -bits_left);
+    //fprintf(stderr, "read %d bits too many\n", -bits_left);
   else if (cachesz + bits_left > 0)
-    fprintf(stderr, "%d stuffing bits\n", cachesz + bits_left);
+    //fprintf(stderr, "%d stuffing bits\n", cachesz + bits_left);
 # endif
 
   /* rzero */

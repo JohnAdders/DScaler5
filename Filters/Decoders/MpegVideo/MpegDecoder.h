@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.4 2004-02-12 17:06:45 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.5 2004-02-16 17:25:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -60,12 +60,14 @@ public:
 BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Display Forced Subtitles")
     DEFINE_PARAM_BOOL(1, L"3:2 playback smoothing")
+    DEFINE_PARAM_ENUM(DIBob, DIAuto, L"Deinterlace Mode")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
     {
         DISPLAYFORCEDSUBS,
         FRAMESMOOTH32,
+        DEINTMODE
     };
 
 public:
@@ -100,6 +102,7 @@ public:
 
 protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
+    HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
 
 private:
 	mpeg2dec_t* m_dec;
@@ -168,7 +171,7 @@ private:
 		DIWeave,
 		DIBob,
 	} eDeintType;
-	eDeintType m_di;
+	eDeintType m_NextFrameDeint;
 
 	void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 	void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
@@ -178,6 +181,7 @@ private:
     void FlushMPEG();
     HRESULT ReconnectOutput(int w, int h);
     void ResetMpeg2Decoder();
+    HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
 
 
 private:

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.3 2004-02-12 17:06:45 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.4 2004-02-16 17:25:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.2  2004/02/06 16:41:42  adcockj
 // Added frame smoothing and forced subs parameters
 //
@@ -141,7 +145,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 
 	if(fRefresh)
 	{
-		LOG(DBGLOG_FLOW,("Refresh Image\n"))
+		LOG(DBGLOG_FLOW,("Refresh Image\n"));
 		Deliver(true);
 	}
 
@@ -177,6 +181,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	HRESULT hr;
 
 	LOG(DBGLOG_FLOW,("Decode SubPic\n"));
+
 
 	BYTE* pDataIn = pSampleProperties->pbBuffer;
 
@@ -222,6 +227,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	
 	if(FAILED(hr))
 	{
+		CProtectCode WhileVarInScope(&m_SubPictureLock);
 		if(m_sps.size() > 0)
 		{
 			sp_t* sp = m_sps.back();
@@ -231,6 +237,8 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	}
 	else
 	{
+		CProtectCode WhileVarInScope(&m_SubPictureLock);
+
 		std::list<sp_t*>::iterator it = m_sps.end();
 		while(it != m_sps.begin())
 		{
@@ -270,6 +278,13 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 			LOG(DBGLOG_FLOW,("Stack: %I64d - %I64d %d %d\n", sp->rtStart, sp->rtStop, sp->fForced, sp->sphli));
 			DecodeSubpic(sp, sphli, offset[0], offset[1]);
 		}
+
+	}
+
+	if(m_sps.size() > 0)
+	{
+		LOG(DBGLOG_FLOW,("Refresh Image\n"));
+		Deliver(true);
 	}
 
 	return S_OK;

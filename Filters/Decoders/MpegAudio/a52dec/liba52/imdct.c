@@ -30,6 +30,7 @@
 #include <stdio.h>
 #ifdef LIBA52_DJBFFT
 #include "fftc4.h"
+#include "fftc8.h"
 #endif
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795029
@@ -419,13 +420,18 @@ void a52_imdct_init (uint32_t mm_accel)
 
 #ifdef LIBA52_DJBFFT
     if (mm_accel & MM_ACCEL_DJBFFT) {
-	fprintf (stderr, "Using djbfft for IMDCT transform\n");
+	//fprintf (stderr, "Using djbfft for IMDCT transform\n");
+#ifndef LIBA52_DOUBLE
 	ifft128 = (void (*) (complex_t *)) fftc4_un128;
 	ifft64 = (void (*) (complex_t *)) fftc4_un64;
+#else
+	ifft128 = (void (*) (complex_t *)) fftc8_un128;
+	ifft64 = (void (*) (complex_t *)) fftc8_un64;
+#endif
     } else
 #endif
     {
-	fprintf (stderr, "No accelerated IMDCT transform found\n");
+	//fprintf (stderr, "No accelerated IMDCT transform found\n");
 	ifft128 = ifft128_c;
 	ifft64 = ifft64_c;
     }

@@ -33,6 +33,7 @@ extern void fftc4_un2048(complex4 *);
 extern void fftc4_un4096(complex4 *);
 extern void fftc4_un8192(complex4 *);
 
+extern void fftc4_mul(complex4 *,complex4 *, register unsigned int);
 extern void fftc4_mul2(complex4 *,complex4 *);
 extern void fftc4_mul4(complex4 *,complex4 *);
 extern void fftc4_mul8(complex4 *,complex4 *);
