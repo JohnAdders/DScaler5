@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.6 2004-02-29 13:47:47 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.7 2004-03-11 16:51:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/02/29 13:47:47  adcockj
+// Format change fixes
+// Minor library updates
+//
 // Revision 1.5  2004/02/27 17:04:38  adcockj
 // Added support for fixed point libraries
 // Added dither to 16 conversions
@@ -339,6 +343,28 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 			len -= 8; pDataIn += 8;
 			len -= *pDataIn+1; pDataIn += *pDataIn+1;
 			len -= 7; pDataIn += 7;
+
+            // LPCM packets seem to sometimes have variable 
+            // padding on the end
+            // just need to strip this off
+            // see http://members.freemail.absa.co.za/ginggs/dvd/mpeg2_lpcm.txt
+            // for a description of the format of the packets
+			if(pDataIn[len - 1] == 0xFF)
+			{
+				int PadCount = 1;
+				while(pDataIn[len - 1 - PadCount] == 0xFF)
+				{
+					++PadCount;
+				}
+				if(PadCount == ((pDataIn[len - 1 - PadCount - 1] << 8) + pDataIn[len - 1 - PadCount]) &&
+					pDataIn[len - 1 - PadCount - 2] == 0xbe &&
+					pDataIn[len - 1 - PadCount - 3] == 0x01 && 
+					pDataIn[len - 1 - PadCount - 4] == 0x00 && 
+					pDataIn[len - 1 - PadCount - 5] == 0x00)
+				{
+					len -= PadCount + 6;
+				}
+			}
 		}
 		else if(subtype == MEDIASUBTYPE_DOLBY_AC3 || subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3
 			|| subtype == MEDIASUBTYPE_DTS || subtype == MEDIASUBTYPE_WAVE_DTS)
