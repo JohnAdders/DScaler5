@@ -1,36 +1,29 @@
 Microsoft Visual Studio Solution File, Format Version 8.00
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib.vcproj", "{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcproj", "{AB9F7727-3934-4FDA-B998-24012EA27D28}"
 	ProjectSection(ProjectDependencies) = postProject
-		{834F7447-938B-4230-890A-2CCAE695DB78} = {834F7447-938B-4230-890A-2CCAE695DB78}
+		{B215D073-1246-432F-A047-B98D47434C82} = {B215D073-1246-432F-A047-B98D47434C82}
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB} = {68876F9C-E66B-40CE-A590-58FDCE7B8CCB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp.vcproj", "{834F7447-938B-4230-890A-2CCAE695DB78}"
-	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcproj", "{03D9F999-CEDA-47B8-8B27-CA4821F9D960}"
-	ProjectSection(ProjectDependencies) = postProject
-		{40F89392-9461-452B-819A-133D35F45068} = {40F89392-9461-452B-819A-133D35F45068}
-		{C5E554C0-18F9-4471-B670-81938D292C44} = {C5E554C0-18F9-4471-B670-81938D292C44}
-		{200F90F7-4E25-4118-A926-87E9EEECD53E} = {200F90F7-4E25-4118-A926-87E9EEECD53E}
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE} = {0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}
-		{834F7447-938B-4230-890A-2CCAE695DB78} = {834F7447-938B-4230-890A-2CCAE695DB78}
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0} = {ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "djbfft", "djbfft\djbfft.vcproj", "{C5E554C0-18F9-4471-B670-81938D292C44}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\a52dec\vc++\liba52.vcproj", "{B215D073-1246-432F-A047-B98D47434C82}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "a52dec\vc++\liba52.vcproj", "{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\dtsdec\vc++\libdts.vcproj", "{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "dtsdec\vc++\libdts.vcproj", "{40F89392-9461-452B-819A-133D35F45068}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\libmad\msvc++\libmad.vcproj", "{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "libmad\msvc++\libmad.vcproj", "{200F90F7-4E25-4118-A926-87E9EEECD53E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Filter_Lib\Filter_Lib.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\..\DScaler5Build004\DScaler5\GenDMOProp\GenDMOProp.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -42,62 +35,54 @@ Global
 		Release Fixed Point = Release Fixed Point
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug.ActiveCfg = Debug|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug.Build.0 = Debug|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug Fixed Point.ActiveCfg = Debug|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug Fixed Point.Build.0 = Debug|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release.ActiveCfg = Release|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release.Build.0 = Release|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release Fixed Point.ActiveCfg = Release|Win32
-		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release Fixed Point.Build.0 = Release|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug.ActiveCfg = Debug|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug.Build.0 = Debug|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug Fixed Point.ActiveCfg = Debug|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug Fixed Point.Build.0 = Debug|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Release.ActiveCfg = Release|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Release.Build.0 = Release|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Release Fixed Point.ActiveCfg = Release|Win32
-		{834F7447-938B-4230-890A-2CCAE695DB78}.Release Fixed Point.Build.0 = Release|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug.ActiveCfg = Debug|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug.Build.0 = Debug|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release.ActiveCfg = Release|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release.Build.0 = Release|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
-		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug.ActiveCfg = Debug|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug.Build.0 = Debug|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug Fixed Point.ActiveCfg = Debug|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug Fixed Point.Build.0 = Debug|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Release.ActiveCfg = Release|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Release.Build.0 = Release|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Release Fixed Point.ActiveCfg = Release|Win32
-		{C5E554C0-18F9-4471-B670-81938D292C44}.Release Fixed Point.Build.0 = Release|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug.ActiveCfg = Debug|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug.Build.0 = Debug|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release.ActiveCfg = Release|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release.Build.0 = Release|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
-		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Debug.ActiveCfg = Debug|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Debug.Build.0 = Debug|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Release.ActiveCfg = Release|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Release.Build.0 = Release|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
-		{40F89392-9461-452B-819A-133D35F45068}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug.ActiveCfg = Debug|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug.Build.0 = Debug|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug Fixed Point.ActiveCfg = Debug|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug Fixed Point.Build.0 = Debug|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release.ActiveCfg = Release|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release.Build.0 = Release|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release Fixed Point.ActiveCfg = Release|Win32
-		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release Fixed Point.Build.0 = Release|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Debug.ActiveCfg = Debug|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Debug.Build.0 = Debug|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Release.ActiveCfg = Release|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Release.Build.0 = Release|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{AB9F7727-3934-4FDA-B998-24012EA27D28}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Debug.ActiveCfg = Debug|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Debug.Build.0 = Debug|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Release.ActiveCfg = Release|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Release.Build.0 = Release|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{B215D073-1246-432F-A047-B98D47434C82}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Debug.ActiveCfg = Debug|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Debug.Build.0 = Debug|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Release.ActiveCfg = Release|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Release.Build.0 = Release|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Debug.ActiveCfg = Debug|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Debug.Build.0 = Debug|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Debug Fixed Point.Build.0 = Debug|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Release.ActiveCfg = Release|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Release.Build.0 = Release|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Release Fixed Point.ActiveCfg = Release|Win32
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257}.Release Fixed Point.Build.0 = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug.ActiveCfg = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug.Build.0 = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug Fixed Point.Build.0 = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release.ActiveCfg = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release.Build.0 = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release Fixed Point.ActiveCfg = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release Fixed Point.Build.0 = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug.ActiveCfg = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug.Build.0 = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug Fixed Point.Build.0 = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release.ActiveCfg = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release.Build.0 = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release Fixed Point.ActiveCfg = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release Fixed Point.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

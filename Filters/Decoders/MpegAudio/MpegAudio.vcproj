@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="MpegAudio"
+	ProjectGUID="{AB9F7727-3934-4FDA-B998-24012EA27D28}"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
