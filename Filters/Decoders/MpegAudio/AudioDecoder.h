@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.25 2005-02-03 13:36:49 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.26 2005-03-08 13:22:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -82,6 +82,11 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(0, L"Use SPDIF for AC3 & DTS")
     DEFINE_PARAM_BOOL(0, L"MPEG Audio over SPDIF")
     DEFINE_PARAM_INT(-600, 600, 0, L"ms", L"SPDIF Audio Time Offset")
+#if defined(LIBDTS_FIXED)
+    DEFINE_PARAM_ENUM(CONNECT_32, CONNECT_32, L"Preferred Connection Type")
+#else
+    DEFINE_PARAM_ENUM(CONNECT_IEEE, CONNECT_IEEE, L"Preferred Connection Type")
+#endif
 END_PARAM_LIST()
 
 public:
@@ -95,6 +100,14 @@ public:
         SPCFG_3F2R1S,
     };
 
+    enum eConnectType
+    {
+        CONNECT_16,
+        CONNECT_24,
+        CONNECT_32,
+        CONNECT_IEEE,
+    };
+
     enum eMpegAudioParams
     {
         SPEAKERCONFIG,
@@ -102,6 +115,7 @@ public:
         USESPDIF,
         MPEGOVERSPDIF,
         AUDIOTIMEOFFSET,
+        CONNECTTYPE,
     };
 
     enum eOutputSampleType
@@ -179,6 +193,7 @@ protected:
     HRESULT Deliver(bool IsSpdif);
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
+    HRESULT GetEnumTextConnectType(WCHAR **ppwchText);
 
     HRESULT CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD BitsPerSample);
     HRESULT CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);

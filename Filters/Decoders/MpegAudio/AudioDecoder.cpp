@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.49 2005-02-17 09:28:09 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.50 2005-03-08 13:22:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.49  2005/02/17 09:28:09  adcockj
+// Added extra type to work aroung bug in MPC with dvr-ms files
+//
 // Revision 1.48  2005/02/08 15:32:34  adcockj
 // Added CSS handling
 //
@@ -348,6 +351,7 @@ HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
     case SPEAKERCONFIG:
     case USESPDIF:
     case MPEGOVERSPDIF:
+    case CONNECTTYPE:
         if(m_AudioOutPin->m_ConnectedPin)
         {
             return S_FALSE;
@@ -947,12 +951,8 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             // so after this -1 will be used to indeicate that we 
             // want floating point
             // then 0 = 32 bit 1 = 24bit and 2 = 16 bit
-            #if defined(LIBDTS_FIXED)
-            if(TypeNum > 2) return VFW_S_NO_MORE_ITEMS;
-            #else
-            if(TypeNum > 3) return VFW_S_NO_MORE_ITEMS;
-            TypeNum--;
-            #endif
+            if(TypeNum > GetParamEnum(CONNECTTYPE)) return VFW_S_NO_MORE_ITEMS;
+            TypeNum += 2 - GetParamEnum(CONNECTTYPE);
         }
 
         pmt->majortype = MEDIATYPE_Audio;
@@ -1477,6 +1477,10 @@ HRESULT CAudioDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
     {
         return GetEnumTextSpeakerConfig(ppwchText);
     }
+    else if(dwParamIndex == CONNECTTYPE)
+    {
+        return GetEnumTextConnectType(ppwchText);
+    }
     else
     {
         return E_NOTIMPL;
@@ -1493,6 +1497,14 @@ HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
     return S_OK;
 }
 
+HRESULT CAudioDecoder::GetEnumTextConnectType(WCHAR **ppwchText)
+{
+    wchar_t TypeText[] = L"Preferred Connection Type\0" L"None\0" L"16 bit PCM\0" L"24 bit PCM\0" L"32 bit PCM\0"  L"32 bit IEEE float\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(TypeText));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, TypeText, sizeof(TypeText));
+    return S_OK;
+}
 
 HRESULT CAudioDecoder::GetOutputSampleAndPointer()
 {
