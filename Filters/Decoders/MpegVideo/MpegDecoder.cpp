@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.51 2004-11-01 14:09:38 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.52 2004-11-05 16:58:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.51  2004/11/01 14:09:38  adcockj
+// More DScaler filter insipred changes
+//
 // Revision 1.50  2004/10/31 14:19:49  adcockj
 // fixed issues with avgtimeperframe
 //
@@ -1160,7 +1163,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
     // ensure that times always go up
     // and that Stop is always greater than start
-    if(rtStart < m_LastOutputTime)
+    if(rtStart < m_LastOutputTime && m_LastOutputTime != 0)
     {
         LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime));
         rtStart = m_LastOutputTime;
