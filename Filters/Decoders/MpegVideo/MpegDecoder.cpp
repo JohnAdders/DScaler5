@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.9 2004-02-29 13:47:48 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.10 2004-02-29 19:06:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/02/29 13:47:48  adcockj
+// Format change fixes
+// Minor library updates
+//
 // Revision 1.8  2004/02/27 17:07:01  adcockj
 // Fixes for improved handling of two way dynamic format changes
 // Support for library fixes
@@ -746,8 +750,8 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
 	mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
 	while(1)
-	{
-		mpeg2_state_t state = mpeg2_parse(m_dec);
+    {
+        mpeg2_state_t state = mpeg2_parse(m_dec);
 
 		__asm emms; // this one is missing somewhere in the precompiled mmx obj files
 
@@ -872,12 +876,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return hr;
 	}
-
-
-
-
-
-
 
 	// cope with dynamic format changes from the renderer
 	// we care about this we think we need to change the format too
@@ -1093,6 +1091,14 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 	    ALLOCATOR_PROPERTIES AllocatorProps;
 	    hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
         CHECK(hr);
+
+        // if the height changes or if the width increses
+        // call reconnect to inform the renderer of the change
+        if(m_win > m_wout || m_hin != m_hout)
+        {
+            hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+            CHECK(hr);
+        }
 
         if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
         {
@@ -1322,6 +1328,7 @@ HRESULT CMpegDecoder::Deactivate()
 
 HRESULT CMpegDecoder::ProcessNewSequence()
 {
+    HRESULT hr = S_OK;
     int ChromaSizeDivider;
 
 	m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
@@ -1357,10 +1364,12 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
     for(int i(0); i < NUM_BUFFERS; ++i)
     {
-        m_Buffers[i].AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+        hr = m_Buffers[i].AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+        CHECK(hr);
     }
 
-    m_SubPicBuffer.AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+    hr = m_SubPicBuffer.AllocMem(m_InternalHeight * m_InternalPitch, m_InternalHeight * m_InternalPitch / ChromaSizeDivider);
+    CHECK(hr);
 
     m_CurrentPicture = NULL;
 
