@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.4 2003-05-02 16:05:23 adcockj Exp $
+// $Id: InputPin.cpp,v 1.5 2003-05-06 07:00:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/02 16:05:23  adcockj
+// Logging with file and line numbers
+//
 // Revision 1.3  2003/05/02 07:03:13  adcockj
 // Some minor changes most not really improvements
 //
@@ -96,6 +99,14 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     {
         if(m_Filter->m_State != State_Stopped && FALSE)
         {
+            //can the input pin of the filter downstream accept this conenction?
+            //maybe check if we realy need to do a dynamic reconnection,
+            //the mediatypes coud be acceptable allready
+            if(m_OutputPin->m_ConnectedPin->QueryAccept(&m_ImpliedMediaType) != S_OK)
+            {
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+
             // need to see if we can do a dynamic change on our output
             // if we are already started
             CComQIPtr<IPinConnection> PinConnection = m_OutputPin->m_ConnectedPin;
@@ -119,8 +130,13 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         }
         if(SUCCEEDED(hr))
         {
-            hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin, NULL);
-            hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
+            // if this fails, we need to reconnect with the old 
+            // which should be OldImplied 
+            hr = m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin, &m_ImpliedMediaType);
+            if(SUCCEEDED(hr))
+            {
+                hr = m_Filter->m_Graph->ReconnectEx(m_OutputPin, &m_ImpliedMediaType);
+            }
         }
     }
 
@@ -418,12 +434,16 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* InputType = NULL;
     hr = pSample->GetMediaType(&InputType);
+
+    //if the input and output pins are using the same allocator, there is 
+    //no way to tell if this is from the output or input pin ( i think )
     if(InputType != NULL)
     {
         CopyMediaType(&m_InputMediaType, InputType);
         LogMediaType(&m_InputMediaType, "Input Format Change");
         WorkOutImpliedMediaType();
         m_FormatChanged = TRUE;
+        FreeMediaType(InputType);
     }
 
     AM_SAMPLE2_PROPERTIES SampleProperties;
@@ -454,9 +474,15 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     hr = OutSample->GetMediaType(&OutputType);
     if(OutputType != NULL)
     {
+        //testing
+        //aways deny format changes on the output pin
+        //hr=OutSample->SetMediaType(NULL);
+        //hr=m_OutputPin->m_ConnectedPin->ReceiveConnection(m_OutputPin,&m_OutputPin->m_CurrentMediaType);
+
         CopyMediaType(&m_OutputPin->m_CurrentMediaType, OutputType);
         LogMediaType(OutputType, "Output Format Change");
         m_OutputPin->m_FormatChanged = TRUE;
+        FreeMediaType(OutputType);
     }
 
     BYTE* pInBuffer = NULL;
@@ -473,14 +499,19 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     CComQIPtr<IDirectDrawMediaSample> pTest = OutSample;
     memcpy(pOutBuffer, pInBuffer, Size);
 
-    SampleProperties.dwSampleFlags &= m_VideoSampleMask;
-    SampleProperties.dwSampleFlags |= m_VideoSampleFlag;
-    SetSampleProperties(OutSample, &SampleProperties);
+    AM_SAMPLE2_PROPERTIES OutSampleProperties;
+    GetSampleProperties(OutSample, &OutSampleProperties);
+    
+    OutSampleProperties.dwSampleFlags &= m_VideoSampleMask;
+    OutSampleProperties.dwSampleFlags |= m_VideoSampleFlag;
+    OutSampleProperties.tStart = SampleProperties.tStart;
+    OutSampleProperties.tStop = SampleProperties.tStop;
+    OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
+    SetSampleProperties(OutSample, &OutSampleProperties);
 
     hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
 
     OutSample->Release();
-
     return S_OK;
 }
 
@@ -640,6 +671,20 @@ void CInputPin::GuessInterlaceFlags()
         VideoInfo->dwInterlaceFlags = AMINTERLACE_DisplayModeWeaveOnly;
         break;
     }
+    if(VideoInfo->dwInterlaceFlags & AMINTERLACE_IsInterlaced)
+    {
+        switch(VideoInfo->bmiHeader.biHeight)
+        {
+        case 480:
+            m_VideoSampleFlag = 0;
+            break;
+        case 576:
+            m_VideoSampleFlag = AM_VIDEO_FLAG_FIELD1FIRST;
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void CInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
@@ -716,6 +761,7 @@ void CInputPin::WorkOutImpliedMediaType()
     if(m_InputMediaType.formattype == FORMAT_VIDEOINFO2)
     {
         CopyMediaType(&m_ImpliedMediaType, &m_InputMediaType);
+        return;
         VIDEOINFOHEADER2* VideoInfo = (VIDEOINFOHEADER2*)m_ImpliedMediaType.pbFormat;
         if(VideoInfo->dwInterlaceFlags & AMINTERLACE_IsInterlaced)
         {

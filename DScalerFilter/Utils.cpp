@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.4 2003-05-02 16:05:23 adcockj Exp $
+// $Id: Utils.cpp,v 1.5 2003-05-06 07:00:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/02 16:05:23  adcockj
+// Logging with file and line numbers
+//
 // Revision 1.3  2003/05/02 07:03:14  adcockj
 // Some minor changes most not really improvements
 //
@@ -58,6 +61,19 @@ void ClearMediaType(AM_MEDIA_TYPE* TypeToClear)
         CoTaskMemFree(TypeToClear->pbFormat);
     }
     ZeroMemory(TypeToClear, sizeof(AM_MEDIA_TYPE));
+}
+
+void FreeMediaType(AM_MEDIA_TYPE* TypeToFree)
+{
+    if(TypeToFree->pUnk != NULL)
+    {
+        TypeToFree->pUnk->Release();
+    }
+    if(TypeToFree->cbFormat > 0)
+    {
+        CoTaskMemFree(TypeToFree->pbFormat);
+    }
+    CoTaskMemFree(TypeToFree);
 }
 
 HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
@@ -132,6 +148,8 @@ void LogSample(IMediaSample* Sample, LPCSTR Desc)
         LOG(DBGLOG_ALL, (" dwTypeSpecificFlags %08x\n", SampleProperties.dwTypeSpecificFlags));
         LOG(DBGLOG_ALL, (" dwSampleFlags %08x\n", SampleProperties.dwSampleFlags));
         LOG(DBGLOG_ALL, (" lActual %d\n", SampleProperties.lActual));
+        LOG(DBGLOG_ALL, (" Start %d\n", (long)SampleProperties.tStart));
+        LOG(DBGLOG_ALL, (" Stop %d\n", (long)SampleProperties.tStop));
         LOG(DBGLOG_ALL, (" length %d\n", (long)(SampleProperties.tStop - SampleProperties.tStart)));
         LOG(DBGLOG_ALL, (" dwStreamId %08x\n", SampleProperties.dwStreamId));
         LOG(DBGLOG_ALL, (" cbBuffer %d\n", SampleProperties.cbBuffer));

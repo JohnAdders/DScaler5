@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.6 2003-05-02 16:05:23 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.7 2003-05-06 07:00:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/02 16:05:23  adcockj
+// Logging with file and line numbers
+//
 // Revision 1.5  2003/05/02 10:51:49  adcockj
 // Improved Allocator negotiation and added stub for Block
 //
@@ -110,7 +113,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     hr = pReceivePin->ReceiveConnection(this, &ProposedType);
     if(hr != S_OK)
     {
-        // OK so they don't want to us with 
+        // OK so they don't want to talk to us with 
         // our prefered type at the moment so
         // see if we need to fake RGB output
         // Which we will do if we're connecting to
@@ -187,7 +190,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     
     Props.cBuffers = max(3, Props.cBuffers);
     Props.cbBuffer = max(max(ProposedType.lSampleSize, m_CurrentMediaType.lSampleSize), (ULONG)Props.cbBuffer);
-    Props.cbAlign = max(1, Props.cbAlign);
+    Props.cbAlign = max(16, Props.cbAlign);
 
     hr = m_Allocator->SetProperties(&Props, &PropsAct);
 
@@ -196,11 +199,11 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     // an alignment of 16 
     // that it's own allocator doesn't in fact support so
     // we loop down until we find an alignment it does like
-    //while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
-    //{
-    //    Props.cbAlign /= 2;
-    //    hr = m_Allocator->SetProperties(&Props, &PropsAct);
-    //}
+    while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
+    {
+        Props.cbAlign /= 2;
+        hr = m_Allocator->SetProperties(&Props, &PropsAct);
+    }
 
     if(FAILED(hr))
     {
