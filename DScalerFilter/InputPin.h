@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.6 2003-05-20 16:50:59 adcockj Exp $
+// $Id: InputPin.h,v 1.7 2003-08-21 16:17:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -22,6 +22,7 @@
 #pragma once 
 
 #include "EnumMediaTypes.h"
+#include "InputMemAlloc.h"
 
 class CDScaler;
 class COutputPin;
@@ -103,6 +104,8 @@ public:
     BOOL m_Block;
     HANDLE m_BlockEvent;
     ALLOCATOR_PROPERTIES m_AllocatorProperties;
+	DWORD m_dwFlags;
+	CComPtr<IMemAllocator> m_MyMemAlloc;
 private:
     void InternalDisconnect();
     void GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props);
@@ -111,6 +114,7 @@ private:
     BOOL IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt);
     void CheckForBlocking();
     HRESULT InternalReceive(IMediaSample *InSample);
+    HRESULT InternalProcessOutput();
     HRESULT CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
     HRESULT UpdateMediaTypeInFilters();
 };

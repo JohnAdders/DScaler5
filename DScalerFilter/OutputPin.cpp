@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.16 2003-07-25 16:00:55 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.17 2003-08-21 16:17:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2003/07/25 16:00:55  adcockj
+// Remove 704 stuff
+//
 // Revision 1.15  2003/05/20 16:50:59  adcockj
 // Interim checkin, preparation for DMO processing path
 //
@@ -699,7 +702,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
     NewType->pbFormat = (BYTE*)NewFormat;
 
-    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+    NewFormat->dwInterlaceFlags = 0;
 
     if(InputType->formattype == FORMAT_VIDEOINFO2)
     {
@@ -707,13 +710,9 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
         BitmapInfo = &OldFormat->bmiHeader;
         NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
         NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
-        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitRate = OldFormat->dwBitRate * 2;
         NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
-        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
-        if(OldFormat->dwInterlaceFlags & AMINTERLACE_Field1First)
-        {
-            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
-        }
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame / 2;
     }
     else if(InputType->formattype == FORMAT_VideoInfo)
     {
@@ -751,14 +750,9 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
             }
         }
 
-        if(BitmapInfo->biHeight == 576)
-        {
-            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
-        }
-
-        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitRate = OldFormat->dwBitRate * 2;
         NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
-        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame / 2;
     }
     else
     {

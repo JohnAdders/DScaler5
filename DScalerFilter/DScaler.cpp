@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.11 2003-05-20 16:50:58 adcockj Exp $
+// $Id: DScaler.cpp,v 1.12 2003-08-21 16:17:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2003/05/20 16:50:58  adcockj
+// Interim checkin, preparation for DMO processing path
+//
 // Revision 1.10  2003/05/09 15:51:04  adcockj
 // Code tidy up
 // Added aspect ratio parameters
@@ -202,7 +205,7 @@ STDMETHODIMP CDScaler::Stop(void)
 
     CProtectCode WhileVarInScope(this);
 
-    // make sure no more Receive come through
+	// make sure no more Receives come through
     HRESULT hr = m_InputPin->FinishProcessing();
     CHECK(hr);
 
@@ -212,6 +215,9 @@ STDMETHODIMP CDScaler::Stop(void)
         CHECK(hr);
     }
     m_State = State_Stopped;
+
+	LOG(DBGLOG_FLOW, ("CDScaler::End Stop\n"));
+
     return S_OK;
 }
 
@@ -238,6 +244,15 @@ STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
     LOG(DBGLOG_FLOW, ("CDScaler::Run\n"));
 
     CProtectCode WhileVarInScope(this);
+
+	if(m_OutputPin->m_Allocator != NULL)
+    {
+        if(m_State == State_Stopped)
+        {
+            HRESULT hr = m_OutputPin->m_Allocator->Commit();
+            CHECK(hr);
+        }
+    }
 
     m_State = State_Running;
     return S_OK;
@@ -632,6 +647,7 @@ void CDScaler::UnloadDMOs()
 {
     // release our hold on all the Deinterlacing DMO's
     EmptyList(m_Deinterlacers); 
+    m_CurrentDeinterlacingMethod = NULL;
     // release our hold on all the Filter DMO's
     EmptyList(m_Filters); 
 }
@@ -661,12 +677,14 @@ HRESULT CDScaler::CheckProcessingLine()
         CProtectCode WhileVarInScope(this);
         hr = RebuildProcessingLine();
         CHECK(hr);
+		m_RebuildRequired = FALSE;
     }
     if(m_TypesChanged == TRUE)
     {
         CProtectCode WhileVarInScope(this);
         hr = UpdateTypes();
         CHECK(hr);
+		m_TypesChanged = FALSE;
     }
     return hr;
 }
@@ -681,6 +699,15 @@ HRESULT CDScaler::RebuildProcessingLine()
 HRESULT CDScaler::UpdateTypes()
 {
     HRESULT hr = S_OK;
-    // \todo stop inform DMO's of correct types
+	hr = m_CurrentDeinterlacingMethod->Flush();
+	CHECK(hr);
+	hr = m_CurrentDeinterlacingMethod->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	CHECK(hr);
+	hr = m_CurrentDeinterlacingMethod->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	CHECK(hr);
+	hr = m_CurrentDeinterlacingMethod->SetInputType(0, &m_InputPin->m_InternalMediaType, 0);
+	CHECK(hr);
+	hr = m_CurrentDeinterlacingMethod->SetOutputType(0, &m_OutputPin->m_CurrentMediaType, 0);
+	CHECK(hr);
     return hr;
 }

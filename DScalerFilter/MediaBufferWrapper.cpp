@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProcessYV12.cpp,v 1.3 2003-07-25 16:00:55 adcockj Exp $
+// $Id: MediaBufferWrapper.cpp,v 1.1 2003-08-21 16:17:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,55 +21,41 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
-// Revision 1.2  2003/05/09 07:03:26  adcockj
-// Bug fixes for new format code
-//
-// Revision 1.1  2003/05/08 15:58:38  adcockj
-// Better error handling, threading and format support
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "Process.h"
+#include "MediaBufferWrapper.h"
 
-///////////////////////////////////////////////////////////////////////////////
-// Process the YV12 samples
-// 4:2:0 samples go:
-//  Y0 Y1 Y2 Y3
-//  ...
-//  V0 V2
-//  ...
-//  U0 U2
-//  ...
-///////////////////////////////////////////////////////////////////////////////
-void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* OutputBMI, BYTE* pInBuffer, BYTE* pOutBuffer)
+CMediaBufferWrapper::CMediaBufferWrapper()
 {
-    int i;
-
-    // process Y samples
-    for(i = 0; i < Lines; ++i)
-    {
-        memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth);
-
-        pOutBuffer += OutputBMI->biWidth;
-        pInBuffer += InputBMI->biWidth;
-    }
-    // do V samples
-    for(i = 0; i < Lines/2; ++i)
-    {
-        memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth/2);
-
-        pOutBuffer += OutputBMI->biWidth / 2;
-        pInBuffer += InputBMI->biWidth / 2;
-    }
-    
-    // do U samples
-    for(i = 0; i < Lines/2; ++i)
-    {
-        memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth/2);
-
-        pOutBuffer += OutputBMI->biWidth / 2;
-        pInBuffer += InputBMI->biWidth / 2;
-    }
 }
 
+CMediaBufferWrapper::~CMediaBufferWrapper()
+{
+}
+
+STDMETHODIMP CMediaBufferWrapper::GetBufferAndLength(BYTE** ppBuffer, DWORD* pcbLength)
+{
+	*pcbLength = m_pSample->GetActualDataLength();
+	return m_pSample->GetPointer(ppBuffer);
+}
+
+STDMETHODIMP CMediaBufferWrapper::GetMaxLength(DWORD* pcbMaxLength)
+{
+	*pcbMaxLength = m_pSample->GetSize();
+	return S_OK;
+}
+
+STDMETHODIMP CMediaBufferWrapper::SetLength(DWORD cbLength)
+{
+	return m_pSample->SetActualDataLength(cbLength);;
+}
+
+
+IMediaBuffer* CMediaBufferWrapper::CreateBuffer(IMediaSample* Sample)
+{
+	CComObject<CMediaBufferWrapper>* NewBuffer = new CComObject<CMediaBufferWrapper>;
+	NewBuffer->m_pSample = Sample;
+    NewBuffer->AddRef();
+    return (IMediaBuffer*)NewBuffer;
+}

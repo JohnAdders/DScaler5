@@ -134,7 +134,15 @@ SOURCE=.\EnumTwoPins.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\InputMemAlloc.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\InputPin.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\MediaBufferWrapper.cpp
 # End Source File
 # Begin Source File
 
@@ -196,7 +204,15 @@ SOURCE=.\Field.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\InputMemAlloc.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\InputPin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MediaBufferWrapper.h
 # End Source File
 # Begin Source File
 
