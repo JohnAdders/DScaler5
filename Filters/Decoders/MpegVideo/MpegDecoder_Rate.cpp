@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.6 2004-07-21 15:05:25 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.7 2005-02-03 13:40:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -37,6 +37,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/21 15:05:25  adcockj
+// Fixed some issues with ff & rew
+//
 // Revision 1.5  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -84,6 +87,26 @@ HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
             LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
         }
         break;
+	case AM_RATE_UseRateVersion:
+		{
+			if(*(WORD*)pPropertyData == 0x0101)
+			{
+		        LOG(DBGLOG_FLOW, ("Rate Change 1.1\n"));
+				m_CorrectTS = true;
+				// todo get 1.1 working properly
+				return E_UNEXPECTED;
+			}
+			else if(*(WORD*)pPropertyData == 0x0100)
+			{
+	            LOG(DBGLOG_FLOW, ("Rate Change 1.0\n"));
+				m_CorrectTS = true;
+			}
+			else
+			{
+		        return E_UNEXPECTED;
+			}
+		}
+		break;
     default:
         return E_PROP_ID_UNSUPPORTED;
     }
@@ -97,16 +120,19 @@ HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
     {
     case AM_RATE_MaxFullDataRate:
         {
+            LOG(DBGLOG_FLOW, ("MaxFullDataRate\n"));
             AM_MaxFullDataRate* p = (AM_MaxFullDataRate*)pPropertyData;
             // this is not what is says you're supposed to return in the documentation
             // but doing that seems to screw things up
             // Docs say 10000 / MAX_SPEED
             *p = 10000 * MAX_SPEED;
+			*p = 2500;
             *pcbReturned = sizeof(AM_MaxFullDataRate);
         }
         break;
     case AM_RATE_QueryFullFrameRate:
         {
+            LOG(DBGLOG_FLOW, ("QueryFullFrameRate\n"));
             AM_QueryRate* p = (AM_QueryRate*)pPropertyData;
             // this is not what is says you're supposed to return in the documentation
             // but doing that seems to screw things up
@@ -114,6 +140,13 @@ HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
             p->lMaxForwardFullFrame = 10000 * MAX_SPEED;
             p->lMaxReverseFullFrame = 0;
             *pcbReturned = sizeof(AM_QueryRate);
+        }
+        break;
+	case AM_RATE_QueryLastRateSegPTS:
+		{
+            LOG(DBGLOG_FLOW, ("QueryLastRateSegPTS\n"));
+			REFERENCE_TIME* LastPTS = (REFERENCE_TIME*)pPropertyData;
+            *pcbReturned = sizeof(REFERENCE_TIME);
         }
         break;
     default:
@@ -137,6 +170,12 @@ HRESULT CMpegDecoder::SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport)
         break;
     case AM_RATE_CorrectTS:
         *pTypeSupport = KSPROPERTY_SUPPORT_SET;
+        break;
+	case AM_RATE_UseRateVersion:
+        *pTypeSupport = KSPROPERTY_SUPPORT_SET;
+        break;
+	case AM_RATE_QueryLastRateSegPTS:
+        *pTypeSupport = KSPROPERTY_SUPPORT_GET;
         break;
     }
     return S_OK;

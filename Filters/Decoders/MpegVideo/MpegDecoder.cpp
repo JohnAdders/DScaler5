@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.64 2005-01-21 13:54:45 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.65 2005-02-03 13:40:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.64  2005/01/21 13:54:45  adcockj
+// Reset some test changes and added soem clock monitoring code
+//
 // Revision 1.63  2005/01/04 17:53:43  adcockj
 // added option to force dscalewr filter to be loaded2
 //
@@ -271,7 +274,7 @@
 
 extern HINSTANCE g_hInstance;
 
-const long CMpegDecoder::MAX_SPEED = 2;
+const long CMpegDecoder::MAX_SPEED = 4;
 
 CMpegDecoder::CMpegDecoder() :
     CDSBaseFilter(L"MpegVideo Filter", 2, 2)
@@ -508,7 +511,7 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
     }
     else if(guidPropSet == AM_KSPROPSETID_TSRateChange && pPin == m_VideoInPin)
     {
-        return SupportPropSetSubPic(dwPropID, pTypeSupport);
+        return SupportPropSetRate(dwPropID, pTypeSupport);
     }
     return E_NOTIMPL;
 }
@@ -519,7 +522,7 @@ HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     {
         return SetPropSetSubPic(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
-    else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    else if(guidPropSet == AM_KSPROPSETID_TSRateChange && pPin == m_VideoInPin)
     {
         return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
@@ -537,7 +540,7 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     {
         return GetPropSetSubPic(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
-    else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    else if(guidPropSet == AM_KSPROPSETID_TSRateChange && pPin == m_VideoInPin)
     {
         return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
@@ -802,7 +805,7 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
         m_LastOutputTime = 0;
         m_rate.Rate = (LONG)(10000 / dRate);
         m_rate.StartTime = 0;
-        m_IsDiscontinuity = true;
+		m_IsDiscontinuity = true;
         return S_OK;
     }
     else if(pPin == m_SubpictureInPin)
@@ -1166,7 +1169,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // when we're not really ready
 
     TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
         frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
         m_CurrentPicture->m_NumFields,
@@ -1177,18 +1180,15 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         !!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
         !!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
 
+    // cope with a change in rate       
+    if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
     {
-        // cope with a change in rate       
-        if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
-        {
-            m_rate.Rate = m_ratechange.Rate;
-            // looks like we need to do this ourselves
-            // as the time past originally seems like a best guess only
-            m_rate.StartTime = m_CurrentPicture->m_rtStart;
-            m_LastOutputTime = m_CurrentPicture->m_rtStart;
-            m_IsDiscontinuity = true;
-            LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
-        }
+        m_rate.Rate = m_ratechange.Rate;
+        // looks like we need to do this ourselves
+        // as the time past originally seems like a best guess only
+        m_rate.StartTime = m_CurrentPicture->m_rtStart;
+        m_IsDiscontinuity = true;
+        LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
     }
 
 
@@ -1211,13 +1211,11 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // a frame so that 3:2 becomes 2.5:2.5
     // the way we always use the previous stop time as the start time for the next 
     // frame will mean that we only have to worry about adjusting the 3 field parts.
+    rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+
     if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_CurrentPicture->m_NumFields == 3)
     {
-        rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
-    }
-    else
-    {
-        rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+        rtStop -= m_AvgTimePerFrame / 2 * abs(m_rate.Rate) / 10000;
     }
 
     rtStop += GetParamInt(VIDEODELAY) * 10000;
@@ -1258,7 +1256,9 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         return hr;
     }
 
-    REFERENCE_TIME Now = 0;
+// blocked out code for monitoring current graph clock.
+#ifdef _NOT_DEFINED_
+	REFERENCE_TIME Now = 0;
     static REFERENCE_TIME Last = 0;
     LARGE_INTEGER Freq;
     LARGE_INTEGER Now2;
@@ -1268,9 +1268,10 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
     m_RefClock->GetTime(&Now);
 
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, (Now2.QuadPart - Last2.QuadPart) * 10000000/ Freq.QuadPart, Now - m_rtStartTime, Now - Last));
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, rtStart, Now - m_rtStartTime, rtStop));
     Last = Now;
     Last2 = Now2;
+#endif
 
     SI(IMediaSample2) pOut2 = pOut;
     if(pOut2)
@@ -1436,7 +1437,8 @@ void CMpegDecoder::FlushMPEG()
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
     m_IsDiscontinuity = true;
-    m_ratechange.StartTime = 0;
+    m_rate.Rate = 10000;
+    m_rate.StartTime = 0;
     ResetMpeg2Decoder();
 }
 
@@ -1457,8 +1459,9 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
     if(m_dec != NULL)
     {
-		mpeg2_close(m_dec);
-        m_dec = mpeg2_init();
+		mpeg2_reset(m_dec, 0);
+		//mpeg2_close(m_dec);
+        //m_dec = mpeg2_init();
         if(cbSequenceHeader > 0)
         {
             mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
