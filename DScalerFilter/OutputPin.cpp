@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.22 2003-10-31 17:19:37 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.23 2003-12-09 11:45:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.22  2003/10/31 17:19:37  adcockj
+// Added support for manual pulldown selection (works with Elecard Filters)
+//
 // Revision 1.21  2003/09/30 16:59:26  adcockj
 // Improved handling of small format changes
 //
@@ -589,33 +592,38 @@ ULONG COutputPin::FormatVersion()
     return m_FormatVersion;
 }
 
-HRESULT COutputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
+HRESULT COutputPin::GetType(ULONG TypeNum, AM_MEDIA_TYPE* Type)
 {   
     HRESULT hr = S_OK;
     if(m_CurrentMediaType.majortype != GUID_NULL)
     {
-        NumTypes = 1;
-        hr = CopyMediaType(Types, &m_CurrentMediaType);
-        CHECK(hr);
-        ++Types;
-        ClearMediaType(Types);
+        if(TypeNum == 0)
+        {
+            hr = CopyMediaType(Type, &m_CurrentMediaType);
+            CHECK(hr);
+        }
+        else
+        {
+            hr = S_FALSE;
+        }
     }
     else
     {
         if(m_InputPin->m_ConnectedPin != NULL)
         {
-            NumTypes = 1;
-            hr = CreateOutputMediaType(&m_InputPin->m_InputMediaType, Types);
-            CHECK(hr);
-            ++Types;
-            ClearMediaType(Types);
+            if(TypeNum == 0)
+            {
+                hr = CreateOutputMediaType(&m_InputPin->m_InputMediaType, Type);
+                CHECK(hr);
+            }
+            else
+            {
+                hr = S_FALSE;
+            }
         }
         else
         {
-            NumTypes = 0;
-            ClearMediaType(Types);
-            ++Types;
-            ClearMediaType(Types);
+            hr = S_FALSE;
         }
     }
     return hr;

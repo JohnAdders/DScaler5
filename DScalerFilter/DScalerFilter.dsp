@@ -130,7 +130,7 @@ SOURCE=.\EnumMediaTypes.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\EnumTwoPins.cpp
+SOURCE=.\EnumPins.cpp
 # End Source File
 # Begin Source File
 
@@ -188,7 +188,7 @@ SOURCE=.\EnumMediaTypes.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\EnumTwoPins.h
+SOURCE=.\EnumPins.h
 # End Source File
 # Begin Source File
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.h,v 1.4 2003-05-19 07:02:24 adcockj Exp $
+// $Id: EnumMediaTypes.h,v 1.5 2003-12-09 11:45:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -26,7 +26,7 @@ class IUpdateMediaTypes : public IUnknown
 {
 public:
     virtual ULONG FormatVersion() = 0;
-    virtual HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types) = 0;
+    virtual HRESULT GetType(ULONG TypeNum, AM_MEDIA_TYPE* Type) = 0;
 };
 
 
@@ -52,8 +52,6 @@ public:
     HRESULT SetUpdate(IUpdateMediaTypes* Update);
 protected:
     CComPtr<IUpdateMediaTypes> m_Update;
-    AM_MEDIA_TYPE m_Types[2];
-    ULONG m_NumTypes;
-    ULONG m_Count;
+    LONG m_Count;
     ULONG m_Version;
 };

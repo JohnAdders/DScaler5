@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.11 2003-10-31 17:19:37 adcockj Exp $
+// $Id: DScaler.h,v 1.12 2003-12-09 11:45:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -25,6 +25,9 @@
 #include "resource.h"       // main symbols
 #include "InputPin.h"
 #include "OutputPin.h"
+#include "EnumPins.h"
+
+
 
 class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScaler : 
 	public CComObjectRootEx<CComMultiThreadModel>,
@@ -34,7 +37,8 @@ class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScal
 	public IPersistStream,
     public IMediaParamInfo,
     public IMediaParams,
-    public IAmFreeSoftwareLicensed
+    public IAmFreeSoftwareLicensed,
+    public IHavePins
 {
 public:
 	CDScaler();
@@ -122,6 +126,9 @@ public:
     STDMETHOD(get_Name)(BSTR* Name);
 	STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
+
+public:
+    HRESULT GetPin(ULONG PinNum, IPin** pPin);
 
 public:
     float GetParamFloat(eDScalerFilterParams ParamId);

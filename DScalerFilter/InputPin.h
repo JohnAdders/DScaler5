@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.13 2003-11-13 21:39:50 adcockj Exp $
+// $Id: InputPin.h,v 1.14 2003-12-09 11:45:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -92,7 +92,7 @@ public:
 
 public:
     ULONG FormatVersion();
-    HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
+    HRESULT GetType(ULONG TypeNum, AM_MEDIA_TYPE* Type);
     HRESULT FinishProcessing();
     HRESULT SetInputType(const AM_MEDIA_TYPE *pmt);
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.cpp,v 1.6 2003-05-08 15:58:38 adcockj Exp $
+// $Id: EnumMediaTypes.cpp,v 1.7 2003-12-09 11:45:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/08 15:58:38  adcockj
+// Better error handling, threading and format support
+//
 // Revision 1.5  2003/05/06 16:38:00  adcockj
 // Changed to fixed size output buffer and changed connection handling
 //
@@ -44,17 +47,12 @@
 CEnumMediaTypes::CEnumMediaTypes()
 {
 	m_Count = 0;
-    m_NumTypes = 0;
     m_Version = 0;
-    InitMediaType(&m_Types[0]);
-    InitMediaType(&m_Types[1]);
 }
 
 CEnumMediaTypes::~CEnumMediaTypes()
 {
 	m_Count = 0;
-    ClearMediaType(&m_Types[0]);
-    ClearMediaType(&m_Types[1]);
 }
 
 
@@ -69,7 +67,7 @@ STDMETHODIMP CEnumMediaTypes::Next(ULONG cTypes, AM_MEDIA_TYPE **ppTypes, ULONG 
         m_Version = m_Update->FormatVersion();
         return VFW_E_ENUM_OUT_OF_SYNC;
     }
-    while(m_Count < m_NumTypes && cTypes)
+    while(m_Count != -1 && cTypes)
     {
         // it's our job to allocate the MediaType Structures
         *ppTypes = (AM_MEDIA_TYPE *)CoTaskMemAlloc(sizeof(AM_MEDIA_TYPE));
@@ -78,15 +76,23 @@ STDMETHODIMP CEnumMediaTypes::Next(ULONG cTypes, AM_MEDIA_TYPE **ppTypes, ULONG 
             return E_OUTOFMEMORY;
         }
         InitMediaType(*ppTypes);
-        HRESULT hr = CopyMediaType(*ppTypes, &m_Types[m_Count]);
+        HRESULT hr = m_Update->GetType(m_Count, *ppTypes);
+
         CHECK(hr);
-        if(pcFetched != NULL)
+        if(hr == S_FALSE)
         {
-            ++(*pcFetched);
+            m_Count = -1;
         }
-        ++ppTypes;
-        ++m_Count;
-        --cTypes;
+        else
+        {
+            if(pcFetched != NULL)
+            {
+                ++(*pcFetched);
+            }
+            ++ppTypes;
+            ++m_Count;
+            --cTypes;
+        }
     }
     if(cTypes == 0)
     {
@@ -114,8 +120,6 @@ STDMETHODIMP CEnumMediaTypes::Skip(ULONG cTypes)
 STDMETHODIMP CEnumMediaTypes::Reset(void)
 {
     m_Count = 0;
-    HRESULT hr = m_Update->SetTypes(m_NumTypes, m_Types);
-    CHECK(hr);
     m_Version = m_Update->FormatVersion();
     return S_OK;
 }
@@ -133,13 +137,7 @@ STDMETHODIMP CEnumMediaTypes::Clone(IEnumMediaTypes **ppEnum)
     }
 
 	NewEnum->m_Count = m_Count;
-    NewEnum->m_NumTypes = m_NumTypes;
     NewEnum->m_Version = m_Version;
-    for(ULONG i(0); i < m_NumTypes; ++i)
-    {
-        HRESULT hr = CopyMediaType(&NewEnum->m_Types[i], &m_Types[i]);
-        CHECK(hr);
-    }
     
     NewEnum->AddRef();
     *ppEnum = NewEnum;

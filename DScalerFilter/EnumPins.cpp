@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumTwoPins.cpp,v 1.2 2003-05-08 15:58:38 adcockj Exp $
+// $Id: EnumPins.cpp,v 1.1 2003-12-09 11:45:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,36 +21,40 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
-// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
-// Initial Import
-//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "EnumTwoPins.h"
+#include "EnumPins.h"
 
-CEnumTwoPins::CEnumTwoPins()
+CEnumPins::CEnumPins()
 {
 	m_Count = 0;
 }
 
-STDMETHODIMP CEnumTwoPins::Next(ULONG cPins,IPin **ppPins, ULONG *pcFetched)
+STDMETHODIMP CEnumPins::Next(ULONG cPins,IPin **ppPins, ULONG *pcFetched)
 {
     if(pcFetched != NULL)
     {
         *pcFetched = 0;
     }
-    while(m_Count < 2 && cPins)
+    while(m_Count != -1 && cPins)
     {
-        HRESULT hr = m_Pins[m_Count].CopyTo(ppPins);
+        HRESULT hr = m_Filter->GetPin(m_Count, ppPins);
         CHECK(hr);
-        if(pcFetched != NULL)
+        if(hr == S_FALSE)
         {
-            ++(*pcFetched);
+            m_Count = -1;
         }
-        ++ppPins;
-        ++m_Count;
-        --cPins;
+        else
+        {
+            if(pcFetched != NULL)
+            {
+                ++(*pcFetched);
+            }
+            ++ppPins;
+            ++m_Count;
+            --cPins;
+        }
     }
     if(cPins == 0)
     {
@@ -62,7 +66,7 @@ STDMETHODIMP CEnumTwoPins::Next(ULONG cPins,IPin **ppPins, ULONG *pcFetched)
     }
 }
 
-STDMETHODIMP CEnumTwoPins::Skip(ULONG cPins)
+STDMETHODIMP CEnumPins::Skip(ULONG cPins)
 {
     m_Count += cPins;
     if(m_Count < 2)
@@ -75,28 +79,25 @@ STDMETHODIMP CEnumTwoPins::Skip(ULONG cPins)
     }
 }
 
-STDMETHODIMP CEnumTwoPins::Reset(void)
+STDMETHODIMP CEnumPins::Reset(void)
 {
     m_Count = 0;
     return S_OK;
 }
 
-STDMETHODIMP CEnumTwoPins::Clone(IEnumPins **ppEnum)
+STDMETHODIMP CEnumPins::Clone(IEnumPins **ppEnum)
 {
     if(ppEnum == NULL)
     {
         return E_POINTER;
     }
-    CComObject<CEnumTwoPins>* NewEnum = new CComObject<CEnumTwoPins>;
+    CComObject<CEnumPins>* NewEnum = new CComObject<CEnumPins>;
     if(NewEnum == NULL)
     {
         return E_OUTOFMEMORY;
     }
 
 	NewEnum->m_Count = m_Count;
-    NewEnum->m_Pins[0] = m_Pins[0];
-    NewEnum->m_Pins[1] = m_Pins[1];
-
 
     NewEnum->AddRef();
     *ppEnum = NewEnum;
@@ -104,8 +105,8 @@ STDMETHODIMP CEnumTwoPins::Clone(IEnumPins **ppEnum)
     return S_OK;
 }
 
-void CEnumTwoPins::SetPins(IPin* Pin1, IPin* Pin2)
+HRESULT CEnumPins::SetFilter(IHavePins* Filter)
 {
-    m_Pins[0] = Pin1;
-    m_Pins[1] = Pin2;
+    m_Filter = Filter;
+    return S_OK;
 }

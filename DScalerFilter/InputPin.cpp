@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.29 2003-11-13 21:39:50 adcockj Exp $
+// $Id: InputPin.cpp,v 1.30 2003-12-09 11:45:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.29  2003/11/13 21:39:50  adcockj
+// fix for diag to work properly
+//
 // Revision 1.28  2003/11/13 17:27:44  adcockj
 // Minor improvements
 //
@@ -905,23 +908,24 @@ ULONG CInputPin::FormatVersion()
     return m_FormatVersion;
 }
 
-HRESULT CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
+HRESULT CInputPin::GetType(ULONG TypeNum, AM_MEDIA_TYPE* Type)
 {   
     HRESULT hr = S_OK;
     if(m_ConnectedPin != NULL)
     {
-        NumTypes = 1;
-        hr = CopyMediaType(Types, &m_InputMediaType);
-        CHECK(hr);
-        ++Types;
-        ClearMediaType(Types);
+        if(TypeNum == 0)
+        {
+            hr = CopyMediaType(Type, &m_InputMediaType);
+            CHECK(hr);
+        }
+        else
+        {
+            hr = S_FALSE;
+        }
     }
     else
     {
-        NumTypes = 0;
-        ClearMediaType(Types);
-        ++Types;
-        ClearMediaType(Types);
+        hr = S_FALSE;
     }
     return hr;
 }

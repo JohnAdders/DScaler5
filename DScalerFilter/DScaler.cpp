@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.14 2003-10-31 17:19:37 adcockj Exp $
+// $Id: DScaler.cpp,v 1.15 2003-12-09 11:45:51 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2003/10/31 17:19:37  adcockj
+// Added support for manual pulldown selection (works with Elecard Filters)
+//
 // Revision 1.13  2003/09/19 16:12:14  adcockj
 // Further improvements
 //
@@ -64,7 +67,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DScaler.h"
-#include "EnumTwoPins.h"
+#include "EnumPins.h"
 #include "InputPin.h"
 #include "OutputPin.h"
 
@@ -129,18 +132,39 @@ STDMETHODIMP CDScaler::EnumPins(IEnumPins **ppEnum)
     {
         return E_POINTER;
     }
-    CComObject<CEnumTwoPins>* NewEnum = new CComObject<CEnumTwoPins>;
+    CComObject<CEnumPins>* NewEnum = new CComObject<CEnumPins>;
     if(NewEnum == NULL)
     {
         return E_OUTOFMEMORY;
     }
 
-    NewEnum->SetPins(m_InputPin, m_OutputPin);
+    NewEnum->SetFilter(this);
     NewEnum->AddRef();
     *ppEnum = NewEnum;
     
     return S_OK;
 }
+
+HRESULT CDScaler::GetPin(ULONG PinNum, IPin** pPin)
+{
+    if(PinNum == 0)
+    {
+        *pPin = m_InputPin;
+        (*pPin)->AddRef();
+        return S_OK;
+    }
+    else if(PinNum == 1)
+    {
+        *pPin = m_OutputPin;
+        (*pPin)->AddRef();
+        return S_OK;
+    }
+    else
+    {
+        return S_FALSE;
+    }
+}
+
 
 STDMETHODIMP CDScaler::FindPin(LPCWSTR Id, IPin **ppPin)
 {
