@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.19 2004-07-16 15:58:01 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.20 2004-07-20 16:37:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -67,6 +67,8 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_INT(0, 200, 0, L"ms", L"Video Delay")
     DEFINE_PARAM_BOOL(0, L"Use accurate aspect ratios")
     DEFINE_PARAM_ENUM(DVBLETTERBOX, DVB169, L"DVB Aspect Preferences")
+    DEFINE_PARAM_BOOL(0, L"Hardcode for PAL with ffdshow")
+    DEFINE_PARAM_ENUM(ACCELERATED_IDCT, ACCELERATED_IDCT, L"IDCT to Use")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
@@ -76,7 +78,9 @@ END_PARAM_LIST()
         DEINTMODE,
         VIDEODELAY,
         DOACCURATEASPECT,
-        DVBASPECTPREFS
+        DVBASPECTPREFS,
+		HARDCODEFORPAL,
+		IDCT,
     };
 
 public:
@@ -177,7 +181,6 @@ private:
         DEFAULT_OUTFILTER,
         FFDSHOW_OUTFILTER,
         GABEST_OUTFILTER,
-        VR_OUTFILTER,
         VMR7_OUTFILTER,
         VMR9_OUTFILTER
     } m_ConnectedToOut;
@@ -214,6 +217,13 @@ private:
         DVBLETTERBOX
     } eDVBAspectPrefs;
 
+    typedef enum
+    {
+        REFERENCE_IDCT,
+        MMX_IDCT,
+        ACCELERATED_IDCT,
+    } eIDCT;
+
     void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
     void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
     void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
@@ -224,6 +234,7 @@ private:
     HRESULT ReconnectOutput(bool ForceReconnect);
     void ResetMpeg2Decoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
+    HRESULT GetEnumTextIDCTToUse(WCHAR **ppwchText);
     HRESULT ProcessNewSequence();
     HRESULT ProcessModifiedSequence();
     HRESULT ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties);
@@ -299,6 +310,7 @@ private:
     void PillarBox(long YAdjust, long XAdjust);
 	void OnConnectToVMR7();
 	void OnConnectToVMR9();
+	void OnConnectToOverlay();
 };
 
 #define m_VideoInPin m_InputPins[0]

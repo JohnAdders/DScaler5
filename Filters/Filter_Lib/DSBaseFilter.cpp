@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.8 2004-07-07 14:09:01 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.9 2004-07-20 16:37:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.7  2004/05/25 16:59:30  adcockj
 // fixed issues with new buffered pin
 //
@@ -371,4 +374,49 @@ void CDSBaseFilter::UnlockAllPins()
         {
             m_OutputPins[i]->Unlock();
         }
+}
+
+bool CDSBaseFilter::IsClockUpstream()
+{
+    return IsClockUpstreamFromFilter(this);
+}
+
+bool CDSBaseFilter::IsClockUpstreamFromFilter(IBaseFilter* Filter)
+{
+    SI(IEnumPins) EnumPins;
+    HRESULT hr = Filter->EnumPins(EnumPins.GetReleasedInterfaceReference());
+    if(hr == S_OK)
+    {
+        SI(IPin) Pin;
+        hr = EnumPins->Next(1, Pin.GetReleasedInterfaceReference(), NULL);
+        while(hr == S_OK)
+        {
+            PIN_DIRECTION PinDir;
+            hr = Pin->QueryDirection(&PinDir);
+            if(hr == S_OK && PinDir == PINDIR_INPUT)
+            {
+                SI(IPin) ConnectedTo;
+                hr = Pin->ConnectedTo(ConnectedTo.GetReleasedInterfaceReference());
+                if(hr == S_OK)
+                {
+                    PIN_INFO PinInfo;
+                    hr = ConnectedTo->QueryPinInfo(&PinInfo);
+                    if(hr == S_OK)
+                    {
+                        SI(IReferenceClock) RefClock = PinInfo.pFilter;
+                        if(RefClock == m_RefClock)
+                        {
+                            return true;
+                        }
+                        else
+                        {
+                            return IsClockUpstreamFromFilter(PinInfo.pFilter);
+                        }
+                    }
+                }
+            }
+            hr = EnumPins->Next(1, Pin.GetReleasedInterfaceReference(), NULL);
+        }
+    }
+    return false;
 }

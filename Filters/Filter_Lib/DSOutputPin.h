@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.10 2004-07-01 20:07:00 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.11 2004-07-20 16:37:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,29 +31,29 @@ class CDSBaseFilter;
 /////////////////////////////////////////////////////////////////////////////
 // CInputPin
 class CDSOutputPin : 
-	public CDSBasePin,
+    public CDSBasePin,
     public IPinFlowControl,
     public IMediaSeeking,
     public IQualityControl,
-	public IAMPushSource
+    public IAMPushSource
 {
 public:
 
 IMPLEMENT_UNKNOWN(CDSOutputPin)
 
 BEGIN_INTERFACE_TABLE(CDSOutputPin)
-	IMPLEMENTS_INTERFACE(IPin)
+    IMPLEMENTS_INTERFACE(IPin)
     IMPLEMENTS_INTERFACE(IPinFlowControl)
     IMPLEMENTS_INTERFACE(IQualityControl)
-	IMPLEMENTS_INTERFACE(IMediaSeeking)
-	IMPLEMENTS_INTERFACE(IKsPropertySet)
-	IMPLEMENTS_INTERFACE(IAMPushSource)
-	IMPLEMENTS_INTERFACE(IAMLatency)
+    IMPLEMENTS_INTERFACE(IMediaSeeking)
+    IMPLEMENTS_INTERFACE(IKsPropertySet)
+    IMPLEMENTS_INTERFACE(IAMPushSource)
+    IMPLEMENTS_INTERFACE(IAMLatency)
 END_INTERFACE_TABLE()
 
 public:
-	CDSOutputPin();
-	~CDSOutputPin();
+    CDSOutputPin();
+    ~CDSOutputPin();
 
 // IPin
 public:

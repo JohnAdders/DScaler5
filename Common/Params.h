@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.7 2004-07-01 16:12:47 adcockj Exp $
+// $Id: Params.h,v 1.8 2004-07-20 16:37:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@
 class CParams : 
     public IMediaParamInfo,
     public IMediaParams,
-	public IPersistStream,
+    public IPersistStream,
     public ISaveDefaults,
     public CCanLock
 {
@@ -57,8 +57,8 @@ BEGIN_INTERFACE_TABLE(CParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IPersistStream)
-	IMPLEMENTS_INTERFACE(IPersist)
-	IMPLEMENTS_INTERFACE(ISaveDefaults)
+    IMPLEMENTS_INTERFACE(IPersist)
+    IMPLEMENTS_INTERFACE(ISaveDefaults)
 END_INTERFACE_TABLE()
 
 protected:
@@ -96,7 +96,7 @@ public:
     STDMETHOD(SetParam)(DWORD dwParamIndex,MP_DATA value)
     {
         DWORD ParamCount(0);
-		HRESULT hr = S_OK;
+        HRESULT hr = S_OK;
         ParamInfo* Params = _GetParamList(&ParamCount);
         if(dwParamIndex != DWORD_ALLPARAMS)
         {
@@ -104,7 +104,7 @@ public:
             if(dwParamIndex < ParamCount)
             {
                 CProtectCode WhileVarInScope(this);
-				MP_DATA OldValue = Params[dwParamIndex].Value;
+                MP_DATA OldValue = Params[dwParamIndex].Value;
                 if(value < Params[dwParamIndex].MParamInfo.mpdMinValue)
                 {
                     Params[dwParamIndex].Value = Params[dwParamIndex].MParamInfo.mpdMinValue;
@@ -121,10 +121,10 @@ public:
                 }
                 m_fDirty = TRUE;
                 hr = ParamChanged(dwParamIndex);
-				if(FAILED(hr))
-				{
-					Params[dwParamIndex].Value = OldValue;
-				}
+                if(FAILED(hr))
+                {
+                    Params[dwParamIndex].Value = OldValue;
+                }
                 return hr;
             }
             else
@@ -138,11 +138,11 @@ public:
             for(DWORD i(0); i < ParamCount; ++i)
             {
                 CProtectCode WhileVarInScope(this);
-				HRESULT hr2 = SetParam(i, value);
-				if(FAILED(hr2))
-				{
-					hr = hr2;
-				}
+                HRESULT hr2 = SetParam(i, value);
+                if(FAILED(hr2) || (SUCCEEDED(hr) && hr2 > 0))
+                {
+                    hr = hr2;
+                }
 
             }
             return hr;
@@ -233,28 +233,28 @@ public:
         // \todo get working if required
         return E_NOTIMPL;
     }
-	
+    
     // IPersistStream Methods
-	STDMETHOD(IsDirty)()
+    STDMETHOD(IsDirty)()
     {
-	    return m_fDirty ? S_OK : S_FALSE;
+        return m_fDirty ? S_OK : S_FALSE;
     };
-	STDMETHOD(Load)(IStream* pStm)
+    STDMETHOD(Load)(IStream* pStm)
     {
-	    ULONG ulSizeRead = 0;
-	    HRESULT hr = S_OK;
+        ULONG ulSizeRead = 0;
+        HRESULT hr = S_OK;
 
-	    if (NULL == pStm)
-	    {
-		    return E_POINTER;
-	    }
+        if (NULL == pStm)
+        {
+            return E_POINTER;
+        }
 
-	    DWORD NumParams;
-	    hr = pStm->Read((void *)&NumParams, sizeof(NumParams), &ulSizeRead);
-	    if (hr != S_OK || ulSizeRead < sizeof(NumParams))
-	    {
-		    return E_FAIL;
-	    }
+        DWORD NumParams;
+        hr = pStm->Read((void *)&NumParams, sizeof(NumParams), &ulSizeRead);
+        if (hr != S_OK || ulSizeRead < sizeof(NumParams))
+        {
+            return E_FAIL;
+        }
 
         DWORD ParamCount(0);
         _GetParamList(&ParamCount);
@@ -262,67 +262,67 @@ public:
         for(DWORD i(0); i < NumParams && i < ParamCount; ++i)
         {
             MP_DATA Param;
-	        hr = pStm->Read((void *)&Param, sizeof(Param), &ulSizeRead);
-	        if (hr != S_OK || ulSizeRead < sizeof(Param))
-	        {
-		        return E_FAIL;
-	        }
+            hr = pStm->Read((void *)&Param, sizeof(Param), &ulSizeRead);
+            if (hr != S_OK || ulSizeRead < sizeof(Param))
+            {
+                return E_FAIL;
+            }
             SetParam(i, Param);
         }
 
-	    m_fDirty = FALSE;
+        m_fDirty = FALSE;
 
-	    return hr;
+        return hr;
     };
 
-	STDMETHOD(Save)(IStream* pStm, BOOL fClearDirty)
+    STDMETHOD(Save)(IStream* pStm, BOOL fClearDirty)
     {
-	    HRESULT hr = S_OK;
-	    ULONG ulSizeWritten = 0;
+        HRESULT hr = S_OK;
+        ULONG ulSizeWritten = 0;
 
-	    if (NULL == pStm)
-	    {
-		    return E_POINTER;
-	    }
+        if (NULL == pStm)
+        {
+            return E_POINTER;
+        }
 
         DWORD ParamCount(0);
          _GetParamList(&ParamCount);
 
-	    hr = pStm->Write((void *)&ParamCount, sizeof(ParamCount), &ulSizeWritten);
-	    if (hr != S_OK || ulSizeWritten < sizeof(ParamCount))
-	    {
-		    return E_FAIL;
-	    }
+        hr = pStm->Write((void *)&ParamCount, sizeof(ParamCount), &ulSizeWritten);
+        if (hr != S_OK || ulSizeWritten < sizeof(ParamCount))
+        {
+            return E_FAIL;
+        }
 
         for(DWORD i(0); i < ParamCount; ++i)
         {
             MP_DATA Param;
             GetParam(i, &Param);
-	        hr = pStm->Write((void *)&Param, sizeof(Param), &ulSizeWritten);
-	        if (hr != S_OK || ulSizeWritten < sizeof(Param))
-	        {
-		        return E_FAIL;
-	        }
+            hr = pStm->Write((void *)&Param, sizeof(Param), &ulSizeWritten);
+            if (hr != S_OK || ulSizeWritten < sizeof(Param))
+            {
+                return E_FAIL;
+            }
         }
 
-	    if (fClearDirty)
-	    {
-		    m_fDirty = FALSE;
-	    }
+        if (fClearDirty)
+        {
+            m_fDirty = FALSE;
+        }
 
-	    return S_OK;
+        return S_OK;
     };
 
-	STDMETHOD(GetSizeMax)(ULARGE_INTEGER* pcbSize)
+    STDMETHOD(GetSizeMax)(ULARGE_INTEGER* pcbSize)
     {
-	    if ( NULL == pcbSize )
-		    return E_POINTER;
+        if ( NULL == pcbSize )
+            return E_POINTER;
 
         DWORD ParamCount(0);
         _GetParamList(&ParamCount);
 
-	    pcbSize->QuadPart = sizeof(ParamCount) + ParamCount * sizeof(MP_DATA);
-	    return S_OK;
+        pcbSize->QuadPart = sizeof(ParamCount) + ParamCount * sizeof(MP_DATA);
+        return S_OK;
     };
     // ISaveDefaults Methods
 public:
@@ -330,11 +330,11 @@ public:
     {
         DWORD ParamCount(0);
         const ParamInfo* Params = _GetParamList(&ParamCount);
-		HKEY MySubKey;
-		if(FAILED(GetRegistryKey(MySubKey)))
-		{
-			return E_UNEXPECTED;
-		}
+        HKEY MySubKey;
+        if(FAILED(GetRegistryKey(MySubKey)))
+        {
+            return E_UNEXPECTED;
+        }
          
         for(DWORD i(0); i < ParamCount; ++i)
         {
@@ -343,7 +343,7 @@ public:
                 DWORD dwValue = (DWORD)Params[i].Value;
                 if(RegSetValueExW(MySubKey, Params[i].MParamInfo.szLabel, 0, REG_DWORD, (BYTE*)&dwValue, sizeof(DWORD)) != ERROR_SUCCESS)
                 {
-					RegCloseKey(MySubKey);
+                    RegCloseKey(MySubKey);
                     return E_UNEXPECTED;
                 }
             }
@@ -357,38 +357,71 @@ public:
 
         return S_OK;
     }
+
+    STDMETHOD(SaveDefaultToRegistry)(DWORD ParamIndex)
+    {
+        DWORD ParamCount(0);
+        const ParamInfo* Params = _GetParamList(&ParamCount);
+        HKEY MySubKey;
+        if(FAILED(GetRegistryKey(MySubKey)))
+        {
+            return E_UNEXPECTED;
+        }
+         
+        if(ParamIndex < ParamCount)
+        {
+            if(Params[ParamIndex].MParamInfo.mpType != MPT_FLOAT)
+            {
+                DWORD dwValue = (DWORD)Params[ParamIndex].Value;
+                if(RegSetValueExW(MySubKey, Params[ParamIndex].MParamInfo.szLabel, 0, REG_DWORD, (BYTE*)&dwValue, sizeof(DWORD)) != ERROR_SUCCESS)
+                {
+                    RegCloseKey(MySubKey);
+                    return E_UNEXPECTED;
+                }
+            }
+            else
+            {
+
+            }
+        }
+
+        RegCloseKey(MySubKey);
+
+        return S_OK;
+    }
+
     STDMETHOD(LoadDefaultsFromRegistry)()
     {
         DWORD ParamCount(0);
         const ParamInfo* Params = _GetParamList(&ParamCount);
-		HKEY MySubKey;
-		if(FAILED(GetRegistryKey(MySubKey)))
-		{
-			return E_UNEXPECTED;
-		}
+        HKEY MySubKey;
+        if(FAILED(GetRegistryKey(MySubKey)))
+        {
+            return E_UNEXPECTED;
+        }
         
-		for(DWORD i(0); i < ParamCount; ++i)
+        for(DWORD i(0); i < ParamCount; ++i)
         {
             if(Params[i].MParamInfo.mpType != MPT_FLOAT)
             {
                 DWORD dwValue = (DWORD)Params[i].MParamInfo.mpdNeutralValue;
-				DWORD RegType;
-				DWORD Size;
+                DWORD RegType;
+                DWORD Size;
                 if(!RegQueryValueExW(MySubKey, Params[i].MParamInfo.szLabel, 0, &RegType, (BYTE*)&dwValue, &Size) != ERROR_SUCCESS)
                 {
-					if(RegType == REG_DWORD)
-					{
-						SetParam(i, (MP_DATA)dwValue);
-					}
-					else
-					{
-						SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
-					}
-				}
+                    if(RegType == REG_DWORD)
+                    {
+                        SetParam(i, (MP_DATA)dwValue);
+                    }
+                    else
+                    {
+                        SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
+                    }
+                }
             }
             else
             {
-				SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
+                SetParam(i, Params[i].MParamInfo.mpdNeutralValue);
             }
         }
 
@@ -404,33 +437,33 @@ public:
 private:
     virtual ParamInfo* _GetParamList(DWORD* pCount) = 0;
     virtual HRESULT ParamChanged(DWORD dwParamIndex) = 0;
-	HRESULT GetRegistryKey(HKEY& RegKey)
-	{
+    HRESULT GetRegistryKey(HKEY& RegKey)
+    {
         HKEY SoftwareKey;
-	    if(RegOpenKeyExW(HKEY_CURRENT_USER, L"Software", 0, KEY_CREATE_SUB_KEY, &SoftwareKey) != ERROR_SUCCESS)
+        if(RegOpenKeyExW(HKEY_CURRENT_USER, L"Software", 0, KEY_CREATE_SUB_KEY, &SoftwareKey) != ERROR_SUCCESS)
         {
             return E_UNEXPECTED;
         }
 
         HKEY DScaler5Key;
-	    if(RegCreateKeyExW(SoftwareKey, L"DScaler5", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &DScaler5Key, NULL) != ERROR_SUCCESS)
+        if(RegCreateKeyExW(SoftwareKey, L"DScaler5", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &DScaler5Key, NULL) != ERROR_SUCCESS)
         {
             RegCloseKey(SoftwareKey);
             return E_UNEXPECTED;
         }
 
-	    if(RegCreateKeyExW(DScaler5Key, m_RegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &RegKey, NULL) != ERROR_SUCCESS)
+        if(RegCreateKeyExW(DScaler5Key, m_RegKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &RegKey, NULL) != ERROR_SUCCESS)
         {
-	        RegCloseKey(DScaler5Key);
+            RegCloseKey(DScaler5Key);
             RegCloseKey(SoftwareKey);
             return E_UNEXPECTED;
         }
-	    RegCloseKey(DScaler5Key);
+        RegCloseKey(DScaler5Key);
         RegCloseKey(SoftwareKey);
-		return S_OK;
-	}
+        return S_OK;
+    }
 protected:
-	bool	m_fDirty;
+    bool    m_fDirty;
     virtual HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText) {return E_NOTIMPL;};
     LPCWSTR m_RegKey;
 

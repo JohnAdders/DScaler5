@@ -152,6 +152,15 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 		</Configuration>
 	</Configurations>
 	<References>
+		<ProjectReference
+			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+			Name="Filter_Lib"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+			Name="GenDMOProp"/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{D61929A4-D585-4652-89D0-8A732BEBFD1E}"
+			Name="libmpeg2"/>
 	</References>
 	<Files>
 		<Filter
@@ -164,7 +173,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -172,7 +182,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 			</File>
@@ -183,7 +194,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -191,7 +203,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 			</File>
@@ -202,7 +215,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -210,7 +224,8 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="Performing registration"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\..\Common\DScaler.mac&quot; $(InputPath)
+"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 			</File>

@@ -60,6 +60,7 @@ void mpeg2_free (void * buf)
 
     if (buf)
 	free (*(((void **)buf) - 1));
+
 }
 
 void mpeg2_malloc_hooks (void * malloc (unsigned, mpeg2_alloc_t),

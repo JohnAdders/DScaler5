@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.12 2004-07-01 21:16:55 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.13 2004-07-20 16:37:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/07/01 21:16:55  adcockj
+// Another load of fixes to recent changes
+//
 // Revision 1.11  2004/07/01 16:12:48  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -121,11 +124,14 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
         if(CurrentValue != m_Params[i])
         {
             hr = m_MediaParams->SetParam(i, m_Params[i]);
-            if(FAILED(hr))
-			{
-				MessageBox("Can't save data, maybe the filter doesn't suport change while connwcted", "Error", MB_OK); 
-				return hr;
-			}
+            if(hr == S_FALSE)
+            {
+                MessageBox("Can't change this property while filter is connected, you will need to restart the program for the change to take effect.", "Warning", MB_OK); 
+                // since we tell the user that it will be set next time
+                // we had better save it so that it actually is set next time
+                hr = m_SaveDefaults->SaveDefaultToRegistry(i);
+                return hr;
+            }
         }
     }
     m_bDirty = FALSE;
@@ -208,63 +214,65 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
     {
         return hr;
     }
-
-    // Initialize the dialog
-    m_ListBox.Attach(GetDlgItem(IDC_PARAMETERLIST));
-    m_EditBox.Attach(GetDlgItem(IDC_EDIT));
-    m_CheckBox.Attach(GetDlgItem(IDC_CHECK));
-    m_Slider.Attach(GetDlgItem(IDC_SLIDER));
-    m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
-    m_Combo.Attach(GetDlgItem(IDC_COMBO));
-    m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
-
-    m_EditBox.ShowWindow(SW_HIDE);
-    m_CheckBox.ShowWindow(SW_HIDE);
-    m_Slider.ShowWindow(SW_HIDE);
-    m_Scrollbar.ShowWindow(SW_HIDE);
-    m_Combo.ShowWindow(SW_HIDE);
-
-    if(!m_SaveDefaults)
+    if(::IsWindow(m_hWnd))
     {
-        m_DefaultsBtn.ShowWindow(SW_HIDE);
-    }
+        // Initialize the dialog
+        m_ListBox.Attach(GetDlgItem(IDC_PARAMETERLIST));
+        m_EditBox.Attach(GetDlgItem(IDC_EDIT));
+        m_CheckBox.Attach(GetDlgItem(IDC_CHECK));
+        m_Slider.Attach(GetDlgItem(IDC_SLIDER));
+        m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
+        m_Combo.Attach(GetDlgItem(IDC_COMBO));
+        m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
 
-    // load up the names into the list box
-    m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
-    m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT,0,0);
+        m_EditBox.ShowWindow(SW_HIDE);
+        m_CheckBox.ShowWindow(SW_HIDE);
+        m_Slider.ShowWindow(SW_HIDE);
+        m_Scrollbar.ShowWindow(SW_HIDE);
+        m_Combo.ShowWindow(SW_HIDE);
 
-    int MaxWidth=0;
-    for(DWORD i(0); i < m_NumParams; ++i)
-    {
-        SendMessageW(m_ListBox.m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
-
-        // get the size of the text and adjust the horizontal scrollbar if nessesary
-        SIZE size;
-        GetTextSize(m_ParamTexts[i], size);
-        if(size.cx > MaxWidth)
+        if(!m_SaveDefaults)
         {
-            MaxWidth = size.cx;
-            m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT, MaxWidth + 4, 0);
+            m_DefaultsBtn.ShowWindow(SW_HIDE);
         }
+
+        // load up the names into the list box
+        m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
+        m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT,0,0);
+
+        int MaxWidth=0;
+        for(DWORD i(0); i < m_NumParams; ++i)
+        {
+            SendMessageW(m_ListBox.m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
+
+            // get the size of the text and adjust the horizontal scrollbar if nessesary
+            SIZE size;
+            GetTextSize(m_ParamTexts[i], size);
+            if(size.cx > MaxWidth)
+            {
+                MaxWidth = size.cx;
+                m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT, MaxWidth + 4, 0);
+            }
+        }
+        m_CurrentParam = 0;
+        
+        SetupControls();
     }
-    m_CurrentParam = 0;
-    
-    SetupControls();
 
     return hr;
 }
 
 void CGenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
 {
-	HDC hDC = m_ListBox.GetDC();
-	HFONT hListBoxFont = m_ListBox.GetFont();
+    HDC hDC = m_ListBox.GetDC();
+    HFONT hListBoxFont = m_ListBox.GetFont();
     if(hListBoxFont != NULL)
     {
         HFONT hOldFont = (HFONT)SelectObject(hDC,(HGDIOBJ)hListBoxFont);
         GetTextExtentPoint32W(hDC, wcItem, wcslen(wcItem), &size);
         SelectObject(hDC,hOldFont);
     }
-	ReleaseDC(hDC);
+    ReleaseDC(hDC);
 }
 
 
@@ -515,8 +523,8 @@ LRESULT CGenDMOPropPage::OnSaveDefaultsClick(WORD wNotifyCode, WORD wID, HWND hW
 {
     if(m_SaveDefaults)
     {
-		// save the current values before setting them as default
-		Apply();
+        // save the current values before setting them as default
+        Apply();
         m_SaveDefaults->SaveDefaultsToRegistry();
     }
     return 0;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.20 2004-07-16 15:45:19 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.21 2004-07-20 16:37:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2004/07/16 15:45:19  adcockj
+// Fixed compilation issues under .NET
+// Improved (hopefully) handling of negative times and preroll
+// Changed name of filter
+//
 // Revision 1.19  2004/07/11 15:07:04  adcockj
 // Better connection logic with spdif
 //
@@ -237,7 +242,7 @@ HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
     case MPEGOVERSPDIF:
         if(m_AudioOutPin->m_ConnectedPin)
         {
-            return VFW_E_ALREADY_CONNECTED;
+            return S_FALSE;
         }
     default:
         break;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.31 2004-07-16 15:58:01 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.32 2004-07-20 16:37:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.31  2004/07/16 15:58:01  adcockj
+// Fixed compilation issues under .NET
+// Changed name of filter
+// Some performance improvements to libmpeg2
+//
 // Revision 1.30  2004/07/11 14:36:00  adcockj
 // Improved performance under debug
 //
@@ -258,8 +263,6 @@ CMpegDecoder::CMpegDecoder() :
     m_NeedToAttachFormat = false;
 
     ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
-
-    //mpeg2_accel(31);
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -331,6 +334,7 @@ STDMETHODIMP CMpegDecoder::get_Authors(BSTR* Authors)
 
 HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
 {
+    HRESULT hr = S_OK;
     switch(dwParamIndex)
     {
     case DISPLAYFORCEDSUBS:
@@ -358,8 +362,29 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
             CorrectOutputSize();
         }
         break;
+    case IDCT:
+        switch(GetParamEnum(IDCT))
+        {
+        case REFERENCE_IDCT:
+            if(mpeg2_accel(0) != 0)
+            {
+                hr = S_FALSE;
+            }
+            break;
+        case MMX_IDCT:
+            if(mpeg2_accel(MPEG2_ACCEL_X86_MMX) != MPEG2_ACCEL_X86_MMX)
+            {
+                hr = S_FALSE;
+            }
+        default:
+            if(mpeg2_accel(MPEG2_ACCEL_DETECT) <= MPEG2_ACCEL_X86_MMX)
+            {
+                hr = S_FALSE;
+            }
+        }
+        break;
     }
-    return S_OK;
+    return hr;
 }
 
 
@@ -587,6 +612,10 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
     {
         return GetEnumTextDVBAspectPrefs(ppwchText);
     }
+    else if(dwParamIndex == IDCT)
+    {
+        return GetEnumTextIDCTToUse(ppwchText);
+    }
     else
     {
         return E_NOTIMPL;
@@ -597,6 +626,15 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
 HRESULT CMpegDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
 {
     wchar_t DeintText[] = L"Deinterlace Mode\0" L"None\0" L"Automatic\0" L"Force Weave\0" L"Force Bob\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, DeintText, sizeof(DeintText));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextIDCTToUse(WCHAR **ppwchText)
+{
+    wchar_t DeintText[] = L"IDCT To Use\0" L"None\0" L"Reference\0" L"MMX Only\0" L"Accelerated\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, DeintText, sizeof(DeintText));
@@ -655,29 +693,6 @@ HRESULT CMpegDecoder::SendOutLastSamples(CDSBasePin* pPin)
 void CMpegDecoder::CorrectSourceTarget(RECT& rcSource, RECT& rcTarget)
 {
     SetRect(&rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
-    if(m_ConnectedToIn == DVD_INFILTER && m_ConnectedToOut != DEFAULT_OUTFILTER)
-    {
-        if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
-        {
-            SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
-        }
-        else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-        {
-            SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
-        }
-        else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-        {
-            SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
-        }
-        else
-        {
-            SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
-        }
-    }
-    else
-    {
-        SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
-    }
     SetRect(&rcTarget, 0, 0, 0, 0);
 }
 
@@ -912,13 +927,13 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
         if(Clsid == CLSID_VideoMixingRenderer9)
         {
             m_ConnectedToOut = VMR9_OUTFILTER;
-			OnConnectToVMR9();
+            OnConnectToVMR9();
         }
         else if(Clsid == CLSID_VideoMixingRenderer ||
                 Clsid == CLSID_VideoRendererDefault)
         {
             m_ConnectedToOut = VMR7_OUTFILTER;
-			OnConnectToVMR7();
+            OnConnectToVMR7();
         }
         else if(Clsid == CLSID_FFDShow ||
                 Clsid == CLSID_FFDShowRaw)
@@ -929,6 +944,11 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
             Clsid == CLSID_DirectVobSubFilter2)
         {
             m_ConnectedToOut = GABEST_OUTFILTER;
+        }
+        else if(Clsid == CLSID_OverlayMixer)
+        {
+            OnConnectToOverlay();
+            m_ConnectedToOut = DEFAULT_OUTFILTER;
         }
         else
         {
@@ -1200,8 +1220,8 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         m_RefClock->GetTime(&CurTime);
         if(rtStart < CurTime)
         {
-            rtStart = CurTime - m_rtStartTime;
-            rtStop = rtStart + 10000;
+            //rtStart = CurTime - m_rtStartTime;
+            //rtStop = rtStart + 10000;
         }
     }
     
@@ -1259,7 +1279,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             return hr;
         }
         Props.tStart = rtStart;
-        Props.tStop = rtStop;
+        //Props.tStop = rtStop;
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
         {
@@ -1274,7 +1294,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
         }
         Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
-        Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
+        //Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
         if(m_CurrentPicture->m_NumFields == 3)
@@ -1301,8 +1321,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     }
     else
     {
-        pOut->SetTime(&rtStart, &rtStop);
-        pOut->SetMediaTime(NULL, NULL);
+        pOut->SetTime(&rtStart, NULL);
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
             pOut->SetDiscontinuity(TRUE);
@@ -1369,7 +1388,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     {
         if(hr == E_FAIL)
         {
-            // sometime happens with overlay
+            // sometimes happens with overlay
             // supress the error and  set
             // discontinuity flag so that the
             // overlay will do a mini reset
@@ -1520,6 +1539,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 
                     if(m_Pitch != 0)
                     {
+
                         bmi->biWidth = m_Pitch;
                         bmi->biHeight = m_Height;
                         bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
@@ -1602,7 +1622,8 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
                     hr = m_VideoOutPin->m_Allocator->Commit();
                     CHECK(hr);
                 }
-            }
+                
+            }   
             m_NeedToAttachFormat = true; 
         }
         
@@ -2036,7 +2057,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
 
     if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-        LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
+        LOG(DBGLOG_ALL, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
         LARGE_INTEGER temp;
         temp.QuadPart = pSampleProperties->tStart;
         CurrentPicture->tag = temp.HighPart;
@@ -2260,6 +2281,10 @@ void CMpegDecoder::CorrectOutputSize()
     {
         m_OutputHeight = 1080;
     }
+    else if(GetParamBool(HARDCODEFORPAL) && m_MpegHeight < 576)
+    {
+        m_OutputHeight = 576;
+    }
     else
     {
         m_OutputHeight = m_MpegHeight;
@@ -2471,18 +2496,31 @@ void CMpegDecoder::CorrectOutputSize()
 
 void CMpegDecoder::OnConnectToVMR7()
 {
-	SI(IVMRAspectRatioControl) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
-	if(AspectRatioControl)
-	{
-		AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
-	}
+    SI(IVMRAspectRatioControl) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+    if(AspectRatioControl)
+    {
+        AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+    }
 }
 
 void CMpegDecoder::OnConnectToVMR9()
 {
-	SI(IVMRAspectRatioControl9) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
-	if(AspectRatioControl)
-	{
-		AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
-	}
+    SI(IVMRAspectRatioControl9) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+    if(AspectRatioControl)
+    {
+        AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+    }
+}
+
+void CMpegDecoder::OnConnectToOverlay()
+{
+    // there seems to be a bug in the letterbox mode of the
+    // overlay renderer which means that our format changes
+    // don't work properly - this requires that we assume
+    // the player does the right thing with the aspect ratios
+    SI(IMixerPinConfig) MixerPinConfig = m_VideoOutPin->m_ConnectedPin;
+    if(MixerPinConfig)
+    {
+        HRESULT hr = MixerPinConfig->SetAspectRatioMode(AM_ARMODE_STRETCHED);
+    }
 }

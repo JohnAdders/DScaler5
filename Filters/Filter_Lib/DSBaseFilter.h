@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.h,v 1.5 2004-04-20 16:30:28 adcockj Exp $
+// $Id: DSBaseFilter.h,v 1.6 2004-07-20 16:37:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,11 +28,11 @@
 class CDSBaseFilter : 
     public ISpecifyPropertyPages,
     public IBaseFilter,
-	public CParams,
+    public CParams,
     public IHavePins
 {
 public:
-	CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOutputPins);
+    CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOutputPins);
     virtual ~CDSBaseFilter();
 
 public:
@@ -62,7 +62,7 @@ public:
     long GetNumPins() {return m_NumInputPins + m_NumOutputPins;};
     CDSBasePin* GetPin(int PinIndex);
     virtual HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin) = 0;
-	virtual HRESULT NotifyConnected(CDSBasePin* pPin) = 0;
+    virtual HRESULT NotifyConnected(CDSBasePin* pPin) = 0;
     virtual HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin) = 0;
     /// return VFW_S_NO_MORE_ITEMS when you have no more types you can generate, TypeNum = 0 is the first
     virtual HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum) = 0;
@@ -78,6 +78,7 @@ public:
     virtual HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin) = 0;
     virtual HRESULT Activate() = 0;
     virtual HRESULT Deactivate() = 0;
+    bool IsClockUpstream();
 
 public:
     SI(IReferenceClock) m_RefClock;
@@ -91,9 +92,11 @@ protected:
     int m_NumInputPins;
     int m_NumOutputPins;
     bool m_IsDiscontinuity;
-	void LockAllPins();
-	void UnlockAllPins();
-	REFERENCE_TIME m_rtStartTime;
+    void LockAllPins();
+    void UnlockAllPins();
+    REFERENCE_TIME m_rtStartTime;
+    bool IsClockUpstreamFromFilter(IBaseFilter* Filter);
+
 };
 
 

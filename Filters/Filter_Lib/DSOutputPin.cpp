@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.14 2004-07-07 14:09:01 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.15 2004-07-20 16:37:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.13  2004/07/01 16:12:47  adcockj
 // First attempt at better handling of audio when the output is connected to a
 // filter that can't cope with dynamic changes.
@@ -276,7 +279,14 @@ STDMETHODIMP CDSOutputPin::GetPushSourceFlags(ULONG *pFlags)
     GETPUSHSOURCE
     if(PushSource)
     {
-        *pFlags = 0;
+        if(m_Filter->IsClockUpstream())
+        {
+            *pFlags = 0;
+        }
+        else
+        {
+            *pFlags = AM_PUSHSOURCECAPS_NOT_LIVE;
+        }
     }
     else
     {
