@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.13 2004-07-20 16:37:57 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.14 2004-07-24 21:45:51 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/07/20 16:37:57  adcockj
+// Fixes for main issues raised in testing of 0.0.1
+//  - Improved parameter handling
+//  - Fixed some overlay issues
+//  - Auto aspect ratio with VMR
+//  - Fixed some overlay stutters
+//  - Fixed some push filter issues
+//  - ffdshow and DirectVobSub connection issues
+//
+// Added
+//  - Hardcode for PAL setting for ffdshow
+//  - Added choice of IDCT for testing
+//
 // Revision 1.12  2004/07/01 21:16:55  adcockj
 // Another load of fixes to recent changes
 //
@@ -103,6 +116,7 @@ STDMETHODIMP CGenDMOPropPage::Deactivate()
     m_Slider.Detach();
     m_Scrollbar.Detach();
     m_Combo.Detach();
+    m_DefaultsBtn.Detach();
 
     return IPropertyPageImpl<CGenDMOPropPage>::Deactivate();
 }
