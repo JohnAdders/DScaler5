@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.3 2004-03-05 15:56:30 adcockj Exp $
+// $Id: DScaler.h,v 1.4 2004-03-05 17:21:33 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -142,7 +142,7 @@ private:
     void ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
     HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
     void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
-    HRESULT CreateInternalMediaType();
+    HRESULT CreateInternalMediaTypes();
 
 protected:
     class CField: public IInterlacedField
@@ -187,6 +187,7 @@ protected:
 	// we get odd field numbers
     CField m_IncomingFields[9];
     DWORD m_FieldsInBuffer;
+    bool m_NeedToAttachFormat;
 
 
 protected:
@@ -200,7 +201,8 @@ private:
     BOOL m_TypesChanged;
     BOOL m_ChangeTypes;
     BOOL m_RebuildRequired;
-    AM_MEDIA_TYPE m_InternalMediaType;
+    AM_MEDIA_TYPE m_InternalMTInput;
+    AM_MEDIA_TYPE m_InternalMTOutput;
     DWORD m_DetectedPulldownIndex;
     eDeinterlaceType m_DetectedPulldownType;
     DWORD m_NextFieldNumber;

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerWeave.cpp,v 1.2 2004-03-05 15:56:30 adcockj Exp $
+// $Id: DScalerWeave.cpp,v 1.3 2004-03-05 17:21:33 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/03/05 15:56:30  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -39,8 +42,8 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
     ASSERT(NumFields > 1);
 #endif
 
-    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMediaType.pbFormat);
-    VIDEOINFOHEADER2* OutputInfo = (VIDEOINFOHEADER2*)(m_VideoOutPin->GetMediaType()->pbFormat);
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+    VIDEOINFOHEADER2* OutputInfo = (VIDEOINFOHEADER2*)(m_InternalMTOutput.pbFormat);
 
     SI(IInterlacedField) pNewerBuffer;
     SI(IInterlacedField) pOlderBuffer;
