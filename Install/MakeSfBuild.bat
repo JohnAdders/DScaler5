@@ -9,14 +9,14 @@ cd DScaler5Build%1
 cvs -z3 -d:ext:%2@cvs.sf.net:/cvsroot/deinterlace co DScaler5
 cd DScaler5
 7z a -tzip ..\DScaler5%1src.zip *.* -r
-call c:\PROGRA~1\MICROS~2\VC98\bin\vcvars32.bat
-cd Help
-"c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler5.hhp
-cd ..\Filters\Decoders\MpegAudio
-msdev MpegAudio.dsw /MAKE "All"
+call "%VS71COMNTOOLS%vsvars32.bat"
+cd Filters\Decoders\MpegAudio
+devenv MpegAudio.sln /build "Release"
 cd ..\MpegVideo
-msdev MpegVideo.dsw /MAKE "All"
-cd ..\..\..\Install
+devenv MpegVideo.sln /build "Release"
+cd ..\..\..\Help
+"c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler5.hhp
+cd ..\Install
 "c:\Program Files\Inno Setup 2\Compil32.exe" /cc DScaler5.iss
 copy Output\Setup.exe ..\..\DScaler5%1.exe
 cd ..\..
