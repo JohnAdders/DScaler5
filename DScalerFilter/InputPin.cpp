@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.6 2003-05-06 16:38:00 adcockj Exp $
+// $Id: InputPin.cpp,v 1.7 2003-05-07 07:03:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2003/05/06 16:38:00  adcockj
+// Changed to fixed size output buffer and changed connection handling
+//
 // Revision 1.5  2003/05/06 07:00:29  adcockj
 // Some cahnges from Torbjorn also some other attempted fixes
 //
@@ -462,21 +465,9 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
         LogMediaType(OutputType, "Output Format Change");
         m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
         m_OutputPin->m_FormatChanged = TRUE;
-        ++m_OutputPin->m_FormatVersion;
         FreeMediaType(OutputType);
     }
 
-    BYTE* pInBuffer = NULL;
-    BYTE* pOutBuffer = NULL;
-    DWORD Size = pSample->GetSize();
-    DWORD Size2 = OutSample->GetSize();
-    if(Size2 < Size)
-    {
-        Size = Size2;
-    }
-    hr = pSample->GetPointer(&pInBuffer);
-    hr = OutSample->GetPointer(&pOutBuffer);
-    
     CComQIPtr<IDirectDrawMediaSample> pTest = OutSample;
     BITMAPINFOHEADER* InputBMI = GetBitmapInfo();
     BITMAPINFOHEADER* OutputBMI = m_OutputPin->GetBitmapInfo();
@@ -485,18 +476,21 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     ATLASSERT(abs(InputBMI->biHeight) <= abs(OutputBMI->biHeight));
     int Lines = abs(InputBMI->biHeight);
     
+    AM_SAMPLE2_PROPERTIES OutSampleProperties;
+    GetSampleProperties(OutSample, &OutSampleProperties);
+
+    BYTE* pInBuffer = SampleProperties.pbBuffer;
+    BYTE* pOutBuffer = OutSampleProperties.pbBuffer;
+    
     for(int i(0); i < Lines; ++i)
     {
         memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth * 2);
         pOutBuffer += OutputBMI->biWidth * 2;
         pInBuffer += InputBMI->biWidth * 2;
     }
-
-    AM_SAMPLE2_PROPERTIES OutSampleProperties;
-    GetSampleProperties(OutSample, &OutSampleProperties);
     
-    OutSampleProperties.dwSampleFlags &= m_VideoSampleMask;
-    OutSampleProperties.dwSampleFlags |= m_VideoSampleFlag;
+    OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
+    OutSampleProperties.dwTypeSpecificFlags = 0;
     OutSampleProperties.tStart = SampleProperties.tStart;
     OutSampleProperties.tStop = SampleProperties.tStop;
     OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
@@ -507,12 +501,14 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
         if(OutSampleProperties.pMediaType != NULL)
         {
             InitMediaType(OutSampleProperties.pMediaType);
+            m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, OutSampleProperties.pMediaType);
             CopyMediaType(OutSampleProperties.pMediaType, &m_OutputPin->m_CurrentMediaType);
+            ++m_OutputPin->m_FormatVersion;
             m_OutputPin->m_FormatChanged = FALSE;
         }
     }
 
-    SetSampleProperties(OutSample, &OutSampleProperties);
+    hr = SetSampleProperties(OutSample, &OutSampleProperties);
 
     hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
 
