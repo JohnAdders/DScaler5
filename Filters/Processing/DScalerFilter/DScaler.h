@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DScaler.h,v 1.3 2004-03-05 15:56:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -138,9 +138,11 @@ private:
     eHowToProcess WorkOutHowToProcess(REFERENCE_TIME& FrameEndTime);
     HRESULT WeaveOutput(REFERENCE_TIME& FrameEndTime);
     HRESULT DeinterlaceOutput(REFERENCE_TIME& FrameEndTime);
-    HRESULT GetOutputSample(IMediaSample** OutSample);
     HRESULT Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer);
     void ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
+    HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
+    HRESULT CreateInternalMediaType();
 
 protected:
     class CField: public IInterlacedField
@@ -152,6 +154,7 @@ protected:
 	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
 	    STDMETHOD(SetLength)(DWORD cbLength);
         STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
+		STDMETHOD(get_Hint)(eDetectionHint *HintValue);
 		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
 		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
 		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
@@ -161,6 +164,7 @@ protected:
             m_EndTime = 0;
             m_FieldNumber = 0;
 			m_Sample.Detach();
+			m_Hint = HINT_NONE;
 		};
 		const CField& operator=(const CField& RHS)
 		{
@@ -168,6 +172,7 @@ protected:
 			m_Sample = RHS.m_Sample;
             m_EndTime = RHS.m_EndTime;
             m_FieldNumber = RHS.m_FieldNumber;
+			m_Hint = RHS.m_Hint;
 			return *this;
 		}
     public:
@@ -175,9 +180,12 @@ protected:
         SI(IMediaSample) m_Sample;
         REFERENCE_TIME m_EndTime;
         DWORD m_FieldNumber;
+		eDetectionHint m_Hint;
     };
 
-    CField m_IncomingFields[6];
+	// leave plenty of room in case
+	// we get odd field numbers
+    CField m_IncomingFields[9];
     DWORD m_FieldsInBuffer;
 
 
@@ -199,3 +207,6 @@ private:
 	REFERENCE_TIME m_LastStartEnd;
     REFERENCE_TIME m_FieldTiming;
 };
+
+#define m_VideoInPin m_InputPins[0]
+#define m_VideoOutPin m_OutputPins[0]

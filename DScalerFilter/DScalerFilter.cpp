@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.6 2004-02-17 16:51:33 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.7 2004-03-05 15:56:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/02/17 16:51:33  adcockj
+// Added countof define
+//
 // Revision 1.5  2003/10/31 17:19:37  adcockj
 // Added support for manual pulldown selection (works with Elecard Filters)
 //
@@ -41,6 +44,7 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "DScaler.h"
+#include "Utils.h"
 
 #include <initguid.h>
 #include <uuids.h>

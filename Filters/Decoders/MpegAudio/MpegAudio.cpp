@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.2 2004-02-17 16:39:59 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.3 2004-03-05 15:56:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/17 16:39:59  adcockj
+// Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
+//
 // Revision 1.1  2004/02/13 12:22:17  adcockj
 // Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
 //
@@ -121,8 +124,7 @@ STDAPI DllRegisterServer(void)
     
   
     HRESULT hr = RegisterFilter(CLSID_CAudioDecoder, L"Audio Decoder", &RegInfo);
-   
-
+    CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 

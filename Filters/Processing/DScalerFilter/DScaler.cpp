@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DScaler.cpp,v 1.3 2004-03-05 15:56:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -94,24 +98,25 @@ CDScaler::CDScaler() :
     m_DetectedPulldownType = FULLRATEVIDEO;
 	m_LastStartEnd = 0;
     m_FieldTiming = 0;
+	m_FieldsInBuffer = 0;
 
     LOG(DBGLOG_FLOW, ("CDScaler::CreatePins\n"));
     
-    m_InputPins[0] = new CDSInputPin;
-    if(m_InputPins[0] == NULL)
+    m_VideoInPin = new CDSInputPin;
+    if(m_VideoInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
     }
-    m_InputPins[0]->AddRef();
-    m_InputPins[0]->SetupObject(this, L"Input");
+    m_VideoInPin->AddRef();
+    m_VideoInPin->SetupObject(this, L"Input");
     
-    m_OutputPins[0] = new CDSOutputPin;
-    if(m_OutputPins[0] == NULL)
+    m_VideoOutPin = new CDSOutputPin;
+    if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
     }
-    m_OutputPins[0]->AddRef();
-    m_OutputPins[0]->SetupObject(this, L"Output");
+    m_VideoOutPin->AddRef();
+    m_VideoOutPin->SetupObject(this, L"Output");
 
     HRESULT hr = LoadDMOs();
     if(FAILED(hr))
@@ -123,10 +128,9 @@ CDScaler::CDScaler() :
 CDScaler::~CDScaler()
 {
     LOG(DBGLOG_FLOW, ("CDScaler::~CDScaler\n"));
-    FreeMediaType(&m_InternalMediaType);
+    ClearMediaType(&m_InternalMediaType);
     UnloadDMOs();
 }
-
 
 STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
 {
@@ -419,9 +423,7 @@ HRESULT CDScaler::UpdateTypes()
 	CHECK(hr);
 	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetInputType(0, &m_InternalMediaType, 0);
 	CHECK(hr);
-    AM_MEDIA_TYPE OutputType;
-    InitMediaType(&OutputType);
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetOutputType(0, m_OutputPins[0]->GetMediaType(), 0);
+	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetOutputType(0, m_VideoOutPin->GetMediaType(), 0);
 	CHECK(hr);
     return hr;
 }
@@ -496,15 +498,18 @@ STDMETHODIMP CDScaler::ClearAll()
 
 HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBasePin* pPin)
 {
-    if(pPin == m_InputPins[0])
+    if(pPin == m_VideoInPin)
     {
         pProps->cBuffers = 3;
+        pProps->cbAlign = 1;
         return S_OK;
     }
-    else if(pPin == m_OutputPins[0])
+    else if(pPin == m_VideoOutPin)
     {
         // make sure we have enough room for largest SD signal
+		pProps->cBuffers = 3;
         pProps->cbBuffer = 768 * 2 * 576;
+        pProps->cbAlign = 1;
         return S_OK;
     }
     else
@@ -516,11 +521,11 @@ HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBase
 
 HRESULT CDScaler::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
-    if(pPin == m_OutputPins[0])
+    if(pPin == m_VideoOutPin)
     {
 	    if(q.Type == Famine)
 	    {
-		    SI(IQualityControl) QualityControl = m_InputPins[0]->m_ConnectedPin;
+		    SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
 		    if(QualityControl)
 		    {
                 LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
@@ -534,7 +539,7 @@ HRESULT CDScaler::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 	    }
 	    if(q.Type == Flood)
 	    {
-			SI(IQualityControl) QualityControl = m_InputPins[0]->m_ConnectedPin;
+			SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
 			if(QualityControl)
 			{
                 LOG(DBGLOG_ALL, ("Coped With Flood - %d\n", q.Late));
@@ -612,23 +617,19 @@ HRESULT CDScaler::InternalProcessOutput(BOOL HurryUp)
 HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 {
 	HRESULT hr = S_OK;
-    IMediaSample* OutSample = NULL;
+    SI(IMediaSample) OutSample;
 
-    hr = GetOutputSample(&OutSample);
-    if(OutSample == NULL)
-    {
-        return S_FALSE;
-    }
+    hr = m_VideoOutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
 
 
-	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+	SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
 
 	DWORD Status(0);
 
-    hr = Weave((IInterlacedBufferStack*)this, OutBuffer);
+    hr = Weave((IInterlacedBufferStack*)this, OutBuffer.GetNonAddRefedInterface());
 
-	if(hr == S_OK && !m_InputPins[0]->IsFlushing())
+	if(hr == S_OK && !m_VideoInPin->IsFlushing())
 	{
         // just in case things go a bit funny
         if(m_LastStartEnd >= FrameEndTime)
@@ -638,10 +639,10 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
         
-        //LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
+        LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
 		
         // finally send the processed sample on it's way
-		hr = m_OutputPins[0]->m_MemInputPin->Receive(OutSample);
+		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
 	}
 	// if we are at the start then we might need to send 
 	// a couple of frames in before getting a response
@@ -650,9 +651,6 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 		LOG(DBGLOG_FLOW, ("Skipped\n"));
 		hr = S_OK;
 	}
-
-	OutBuffer->Release();
-	OutSample->Release();
 
     m_LastStartEnd = FrameEndTime;
 
@@ -663,29 +661,25 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 {
 	HRESULT hr = S_OK;
-    IMediaSample* OutSample = NULL;
+    SI(IMediaSample) OutSample;
 
-    hr = GetOutputSample(&OutSample);
-    if(OutSample == NULL)
-    {
-        return S_FALSE;
-    }
+    hr = m_VideoOutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
 
 
-	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+	SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
 
 	DWORD Status(0);
 
-    hr = m_CurrentDeinterlacingMethod->Process((IInterlacedBufferStack*)this, OutBuffer);
+    hr = m_CurrentDeinterlacingMethod->Process((IInterlacedBufferStack*)this, OutBuffer.GetNonAddRefedInterface());
 
-	if(hr == S_OK && m_InputPins[0]->IsFlushing() == FALSE)
+	if(hr == S_OK && m_VideoInPin->IsFlushing() == FALSE)
 	{
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
 		
         // finally send the processed sample on it's way
-		hr = m_OutputPins[0]->m_MemInputPin->Receive(OutSample);
+		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
 	}
 	// if we are at the start then we might need to send 
 	// a couple of frames in before getting a response
@@ -694,9 +688,6 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 		LOG(DBGLOG_FLOW, ("Skipped\n"));
 		hr = S_OK;
 	}
-
-	OutBuffer->Release();
-	OutSample->Release();
 
     m_LastStartEnd = FrameEndTime;
 
@@ -731,7 +722,7 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
             Index = GetParamInt(CDScaler::PULLDOWNINDEX);
         }
 
-        switch(GetParamEnum(CDScaler::PULLDOWNMODE))
+        switch(CurrentType)
         {
         case PULLDOWN_32:
             switch((FrameNum + Index) % 5)
@@ -781,3 +772,374 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
     return HowToProcess;
 }
 
+
+HRESULT CDScaler::Activate()
+{
+    return S_OK;
+}
+
+HRESULT CDScaler::Deactivate()
+{
+	ClearAll();
+    return S_OK;
+}
+
+
+bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin)
+{
+    bool result = false;
+
+    if(pPin == m_VideoInPin || pPin == m_VideoOutPin)
+    {
+        result = !!(pmt->majortype == MEDIATYPE_Video);
+
+        result &= (pmt->formattype == FORMAT_VIDEOINFO2 || 
+                pmt->formattype == FORMAT_VideoInfo);
+
+        result &= (pmt->subtype == MEDIASUBTYPE_YUY2 || 
+               pmt->subtype == MEDIASUBTYPE_YV12 ||
+               pmt->subtype == MEDIASUBTYPE_NV12);
+    
+		if(result)
+		{
+
+        BITMAPINFOHEADER* BitmapInfo;
+        if(pmt->formattype == FORMAT_VIDEOINFO2)
+        {
+            VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
+            BitmapInfo = &Format->bmiHeader;
+        }
+        else
+        {
+            VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
+            BitmapInfo = &Format->bmiHeader;
+        }
+
+        // check that the incoming format is SDTV    
+        result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
+
+        result &= (BitmapInfo->biWidth < 768);
+    }
+    }
+    return result;
+}
+
+HRESULT CDScaler::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin)
+{
+    if(pPin == m_VideoInPin)
+    {
+        ClearAll();
+        CreateInternalMediaType();
+		m_RebuildRequired = TRUE;
+    }
+    else if(pPin == m_VideoOutPin)
+    {
+		m_RebuildRequired = TRUE;
+    }
+    return S_OK;
+}
+
+HRESULT CDScaler::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
+{
+    if(pPin == m_VideoOutPin)
+    {
+        if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
+
+        if(TypeNum < 0) return E_INVALIDARG;
+	    if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
+
+	    const AM_MEDIA_TYPE* mt = m_VideoInPin->GetMediaType();
+
+        BITMAPINFOHEADER* BitmapInfo = NULL;
+        pmt->majortype = MEDIATYPE_Video;
+        pmt->subtype = mt->subtype;
+        pmt->bFixedSizeSamples = TRUE;
+        pmt->bTemporalCompression = FALSE;
+        pmt->formattype = FORMAT_VIDEOINFO2;
+        pmt->cbFormat = sizeof(VIDEOINFOHEADER2);
+        VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
+        if(NewFormat == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+        ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
+        pmt->pbFormat = (BYTE*)NewFormat;
+
+        NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+
+        if(mt->formattype == FORMAT_VIDEOINFO2)
+        {
+            VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)mt->pbFormat;
+            BitmapInfo = &OldFormat->bmiHeader;
+            NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
+            NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
+            NewFormat->dwBitRate = OldFormat->dwBitRate * 2;
+            NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+            NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame * 2;
+            NewFormat->dwInterlaceFlags = 0;
+
+        }
+        else if(mt->formattype == FORMAT_VideoInfo)
+        {
+            pmt->pbFormat =(BYTE*)NewFormat;
+            VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)mt->pbFormat;
+            BitmapInfo = &OldFormat->bmiHeader;
+
+            // if the input format is a known TV style one then
+            // it should be assumed to be 4:3
+            if((BitmapInfo->biWidth == 704)  &&
+               (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+            {
+                // adjustment to make 704 video the same shape as 720
+                NewFormat->dwPictAspectRatioX = 4 * 44;
+                NewFormat->dwPictAspectRatioY = 3 * 45;
+            }
+            else if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+                (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+            {
+                NewFormat->dwPictAspectRatioX = 4;
+                NewFormat->dwPictAspectRatioY = 3;
+            }
+            else
+            {
+                // first guess is square pixels
+                NewFormat->dwPictAspectRatioX = BitmapInfo->biWidth;
+                NewFormat->dwPictAspectRatioY = BitmapInfo->biHeight;
+
+                // the update the aspect ratio with the pels per meter info if both
+                // are present, this was the old way of handling aspect ratio
+                if(BitmapInfo->biXPelsPerMeter > 0 && BitmapInfo->biYPelsPerMeter > 0)
+                {
+                    NewFormat->dwPictAspectRatioX *= BitmapInfo->biYPelsPerMeter;
+                    NewFormat->dwPictAspectRatioY *= BitmapInfo->biXPelsPerMeter;
+                }
+            }
+
+            if(BitmapInfo->biHeight == 576)
+            {
+                NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+            }
+
+            NewFormat->dwBitRate = OldFormat->dwBitRate;
+            NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+            NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+        }
+
+        if(GetParamBool(INPUTISANAMORPHIC) != 0)
+        {
+            NewFormat->dwPictAspectRatioX *= 4;
+            NewFormat->dwPictAspectRatioY *= 3;
+        }
+
+	    memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
+	    
+        pmt->lSampleSize = BitmapInfo->biSizeImage;
+        return S_OK;
+    }
+    else
+    {
+        return VFW_S_NO_MORE_ITEMS;
+    }
+
+}
+
+HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin)
+{
+    if(pPin != m_VideoInPin)
+    {
+        return E_UNEXPECTED;
+    }
+
+    // reconfigure the filters if the input format has changed
+    HRESULT hr = CheckProcessingLine();
+    CHECK(hr);
+    
+    // if there was a discontinuity then we need to ask for the buffer
+    // differently 
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+	{
+		m_IsDiscontinuity = true;
+	}
+
+    hr = PushSample(InSample, pSampleProperties);
+    CHECK(hr);
+
+	hr = InternalProcessOutput(FALSE);
+
+	if(FAILED(hr) || hr == S_FALSE)
+	{
+		hr = ClearAll();
+		CHECK(hr);
+
+		m_IsDiscontinuity = true;
+
+		return S_FALSE;
+	}
+
+    return hr;
+}
+
+HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_REPEAT_FIELD)
+    {
+        ShiftUpSamples(3, InputSample);
+        if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
+        {
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            m_IncomingFields[1].m_IsTopLine = FALSE;
+            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            m_IncomingFields[2].m_IsTopLine = TRUE;
+            m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        }
+        else
+        {
+            m_IncomingFields[0].m_IsTopLine = FALSE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            m_IncomingFields[1].m_IsTopLine = TRUE;
+            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            m_IncomingFields[2].m_IsTopLine = FALSE;
+            m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        }
+    }
+    else
+    {
+        ShiftUpSamples(2, InputSample);
+        if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
+        {
+            m_IncomingFields[0].m_IsTopLine = FALSE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            m_IncomingFields[1].m_IsTopLine = TRUE;
+            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        }
+        else
+        {
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            m_IncomingFields[1].m_IsTopLine = FALSE;
+            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        }
+    }
+    return S_OK;
+}
+
+void CDScaler::ShiftUpSamples(int NumberToShift, IMediaSample* InputSample)
+{
+    if(m_FieldsInBuffer > 0)
+    {
+        for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
+		{
+			m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
+		}
+    }
+    m_FieldsInBuffer += NumberToShift;
+    while(NumberToShift--)
+    {
+        m_IncomingFields[NumberToShift].Clear();
+        m_IncomingFields[NumberToShift].m_Sample = InputSample;
+        m_IncomingFields[NumberToShift].m_FieldNumber = m_NextFieldNumber++;
+    }
+}
+
+HRESULT CDScaler::CreateInternalMediaType()
+{
+    const AM_MEDIA_TYPE* InputType = m_VideoInPin->GetMediaType();
+    BITMAPINFOHEADER* BitmapInfo = NULL;
+    m_InternalMediaType.majortype = MEDIATYPE_Video;
+    m_InternalMediaType.subtype = InputType->subtype;
+    m_InternalMediaType.bFixedSizeSamples = TRUE;
+    m_InternalMediaType.bTemporalCompression = FALSE;
+    m_InternalMediaType.formattype = FORMAT_VIDEOINFO2;
+    m_InternalMediaType.cbFormat = sizeof(VIDEOINFOHEADER2);
+    VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
+    if(NewFormat == NULL)
+    {
+        ClearMediaType(&m_InternalMediaType);
+        return E_OUTOFMEMORY;
+    }
+    ZeroMemory(NewFormat, sizeof(VIDEOINFOHEADER2));
+    m_InternalMediaType.pbFormat = (BYTE*)NewFormat;
+
+    NewFormat->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_FieldPatBothRegular | AMINTERLACE_DisplayModeBobOrWeave;
+
+    if(InputType->formattype == FORMAT_VIDEOINFO2)
+    {
+        VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+        NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
+        NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+        if(OldFormat->dwInterlaceFlags & AMINTERLACE_Field1First)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+		else if(OldFormat->dwInterlaceFlags & AMINTERLACE_DisplayModeWeaveOnly && BitmapInfo->biHeight == 576)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+
+    }
+    else if(InputType->formattype == FORMAT_VideoInfo)
+    {
+        m_InternalMediaType.pbFormat =(BYTE*)NewFormat;
+        VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)InputType->pbFormat;
+        BitmapInfo = &OldFormat->bmiHeader;
+
+        // if the input format is a known TV style one then
+        // it should be assumed to be 4:3
+        if((BitmapInfo->biWidth == 704)  &&
+           (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+        {
+            // adjustment to make 704 video the same shape as 720
+            NewFormat->dwPictAspectRatioX = 4 * 44;
+            NewFormat->dwPictAspectRatioY = 3 * 45;
+        }
+        else if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+            (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+        {
+            NewFormat->dwPictAspectRatioX = 4;
+            NewFormat->dwPictAspectRatioY = 3;
+        }
+        else
+        {
+            // first guess is square pixels
+            NewFormat->dwPictAspectRatioX = BitmapInfo->biWidth;
+            NewFormat->dwPictAspectRatioY = BitmapInfo->biHeight;
+
+            // the update the aspect ratio with the pels per meter info if both
+            // are present, this was the old way of handling aspect ratio
+            if(BitmapInfo->biXPelsPerMeter > 0 && BitmapInfo->biYPelsPerMeter > 0)
+            {
+                NewFormat->dwPictAspectRatioX *= BitmapInfo->biYPelsPerMeter;
+                NewFormat->dwPictAspectRatioY *= BitmapInfo->biXPelsPerMeter;
+            }
+        }
+
+        if(BitmapInfo->biHeight == 576)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+
+        NewFormat->dwBitRate = OldFormat->dwBitRate;
+        NewFormat->dwBitErrorRate = OldFormat->dwBitErrorRate;
+        NewFormat->AvgTimePerFrame = OldFormat->AvgTimePerFrame;
+    }
+    else
+    {
+        ClearMediaType(&m_InternalMediaType);
+    }
+
+    if(GetParamBool(INPUTISANAMORPHIC) != 0)
+    {
+        NewFormat->dwPictAspectRatioX *= 4;
+        NewFormat->dwPictAspectRatioY *= 3;
+    }
+
+	memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
+	
+    m_InternalMediaType.lSampleSize = BitmapInfo->biSizeImage;
+    return S_OK;
+}

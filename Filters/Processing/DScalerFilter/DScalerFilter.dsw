@@ -129,24 +129,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "MpegVideo"=..\..\Decoders\MpegVideo\MpegVideo.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name Filter_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libmpeg2
-    End Project Dependency
-}}}
-
-###############################################################################
-
 Project: "Video_Gamma"=..\..\..\DMO\Video\Video_Gamma\Video_Gamma.dsp - Package Owner=<4>
 
 Package=<5>
@@ -161,18 +143,6 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name GenDMOProp
     End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "libmpeg2"="..\..\Decoders\MpegVideo\mpeg2dec\vc++\libmpeg2.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
 }}}
 
 ###############################################################################

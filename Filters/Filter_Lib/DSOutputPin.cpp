@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.6 2004-02-29 13:47:49 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.7 2004-03-05 15:56:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/02/29 13:47:49  adcockj
+// Format change fixes
+// Minor library updates
+//
 // Revision 1.5  2004/02/27 17:08:16  adcockj
 // Improved locking at state changes
 // Better error handling at state changes
@@ -377,7 +381,7 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 	{
 	    LOG(DBGLOG_ALL, ("Got new media type from renderer\n"));
 
-		hr = NegotiateAllocator(NULL, pMediaType);
+		hr = SetType(pMediaType);
 		CHECK(hr);
 
         FreeMediaType(pMediaType);

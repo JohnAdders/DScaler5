@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.2 2004-02-17 16:51:34 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.3 2004-03-05 15:56:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/17 16:51:34  adcockj
+// Added countof define
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -95,8 +98,6 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
-    SI(IFilterMapper2) FilterMapper;
-
 	REGPINTYPES Types[] = {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,
 							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12, 
 							&MEDIATYPE_Video, &MEDIASUBTYPE_NV12 };
@@ -107,24 +108,14 @@ STDAPI DllRegisterServer(void)
     REGFILTER2 RegInfo;
    
     RegInfo.dwVersion = 2;
-    RegInfo.dwMerit = MERIT_PREFERRED + 5;
+    RegInfo.dwMerit = MERIT_DO_NOT_USE;
     RegInfo.cPins2 = 2;
     RegInfo.rgPins2 = Pins;
-    
-    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
-        return hr;
-    }
-    hr = FilterMapper->RegisterFilter(CLSID_CDScaler, L"DScaler Filter", NULL, NULL, NULL, &RegInfo);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to Register Filter %08x\n", hr));
-        return hr;
-    }
 
-    return hr;
+    HRESULT hr = RegisterFilter(CLSID_CDScaler, L"DScaler Filter", &RegInfo);
+    CHECK(hr);
+
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,21 +123,9 @@ STDAPI DllRegisterServer(void)
 
 STDAPI DllUnregisterServer(void)
 {
-    SI(IFilterMapper2) FilterMapper;
-    HRESULT hr = FilterMapper.CreateInstance(CLSID_FilterMapper, CLSCTX_INPROC_SERVER);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to create Filter Mapper %08x\n", hr));
-        return hr;
-    }
-    hr = FilterMapper->UnregisterFilter(NULL, NULL, CLSID_CDScaler);
-    if(FAILED(hr))
-    {
-        LOG(DBGLOG_ERROR, ("Failed to Unregister Filter %08x\n", hr));
-        return hr;
-    }
-
-    return hr;
+    HRESULT hr = UnregisterFilter(CLSID_CDScaler);
+    CHECK(hr);
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
 

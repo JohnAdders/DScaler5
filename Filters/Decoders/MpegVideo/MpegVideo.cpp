@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.4 2004-02-25 17:14:02 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.5 2004-03-05 15:56:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.3  2004/02/17 16:51:33  adcockj
 // Added countof define
 //
@@ -113,8 +117,7 @@ STDAPI DllRegisterServer(void)
     
   
     HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"Mpeg2 Video Decoder", &RegInfo);
-   
-
+    CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
