@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.5 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.6 2004-07-21 15:05:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -37,6 +37,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.4  2004/05/25 16:59:29  adcockj
 // fixed issues with new buffered pin
 //
@@ -93,14 +98,20 @@ HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
     case AM_RATE_MaxFullDataRate:
         {
             AM_MaxFullDataRate* p = (AM_MaxFullDataRate*)pPropertyData;
-            *p = 10000 / 4;
+            // this is not what is says you're supposed to return in the documentation
+            // but doing that seems to screw things up
+            // Docs say 10000 / MAX_SPEED
+            *p = 10000 * MAX_SPEED;
             *pcbReturned = sizeof(AM_MaxFullDataRate);
         }
         break;
     case AM_RATE_QueryFullFrameRate:
         {
             AM_QueryRate* p = (AM_QueryRate*)pPropertyData;
-            p->lMaxForwardFullFrame = 10000 / 4;
+            // this is not what is says you're supposed to return in the documentation
+            // but doing that seems to screw things up
+            // Docs say 10000 / MAX_SPEED
+            p->lMaxForwardFullFrame = 10000 * MAX_SPEED;
             p->lMaxReverseFullFrame = 0;
             *pcbReturned = sizeof(AM_QueryRate);
         }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.32 2004-07-20 16:37:48 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.33 2004-07-21 15:05:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.32  2004/07/20 16:37:48  adcockj
+// Fixes for main issues raised in testing of 0.0.1
+//  - Improved parameter handling
+//  - Fixed some overlay issues
+//  - Auto aspect ratio with VMR
+//  - Fixed some overlay stutters
+//  - Fixed some push filter issues
+//  - ffdshow and DirectVobSub connection issues
+//
+// Added
+//  - Hardcode for PAL setting for ffdshow
+//  - Added choice of IDCT for testing
+//
 // Revision 1.31  2004/07/16 15:58:01  adcockj
 // Fixed compilation issues under .NET
 // Changed name of filter
@@ -2042,18 +2055,22 @@ CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
 
 HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
-    // skip preroll pictures
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
-    {
-        LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
-        mpeg2_skip(m_dec,0);
-        m_IsDiscontinuity = true;
-    }
-
-    // naughty but the mpeg2_tag_picture function doesn't let us only tag I frames
+    // Removing const cast is naughty but the mpeg2_tag_picture 
+    // function doesn't let us only tag I frames
     // which is what we need in the bda case when we get 
     // loads of timestamps
     mpeg2_picture_t* CurrentPicture = (mpeg2_picture_t*)mpeg2_info(m_dec)->current_picture;
+
+    // skip preroll pictures as well as non I frames during ff or rew
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL || (m_rate.Rate < (10000 / MAX_SPEED) && (CurrentPicture->flags&PIC_MASK_CODING_TYPE) != PIC_FLAG_CODING_TYPE_I))
+    {
+        LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
+        // the mpeg2_skip function doesn't seem to do what we need so just
+        // flip the flag on the picture so that we don't display the non I frames
+        //mpeg2_skip(m_dec,0);
+        m_IsDiscontinuity = true;
+        CurrentPicture->flags |= PIC_FLAG_SKIP;
+    }
 
     if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
