@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: LicensePropPage.h,v 1.1 2003-05-01 12:34:41 adcockj Exp $
+// $Id: LicensePropPage.h,v 1.2 2003-05-06 16:36:27 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -57,6 +57,7 @@ END_MSG_MAP()
 
 	STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
+    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 
 private:
     CComQIPtr<IAmFreeSoftwareLicensed> m_License;
