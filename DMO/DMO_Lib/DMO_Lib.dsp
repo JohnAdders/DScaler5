@@ -105,6 +105,10 @@ SOURCE=.\CInPlaceDMO.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\CVideoDMO.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DMO_Lib.cpp
 # End Source File
 # Begin Source File
@@ -139,6 +143,10 @@ SOURCE=.\CDMO.h
 # Begin Source File
 
 SOURCE=.\CInPlaceDMO.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\CVideoDMO.h
 # End Source File
 # Begin Source File
 
