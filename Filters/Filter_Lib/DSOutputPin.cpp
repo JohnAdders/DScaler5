@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -451,10 +456,10 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, bool PrevFrameSk
     return hr;
 }
 
-HRESULT CDSOutputPin::HandleRun()
+HRESULT CDSOutputPin::Activate()
 {
     HRESULT hr = S_OK;
-    if(m_Allocator != NULL && m_Filter->m_State == State_Stopped)
+    if(m_Allocator != NULL)
     {
         hr = m_Allocator->Commit();
         CHECK(hr);
@@ -462,23 +467,12 @@ HRESULT CDSOutputPin::HandleRun()
     return hr;
 }
 
-HRESULT CDSOutputPin::HandleStop()
+HRESULT CDSOutputPin::Deactivate()
 {
     HRESULT hr = S_OK;
     if(m_Allocator != NULL)
     {
         hr = m_Allocator->Decommit();
-        CHECK(hr);
-    }
-    return hr;
-}
-
-HRESULT CDSOutputPin::HandlePause()
-{
-    HRESULT hr = S_OK;
-    if(m_Allocator != NULL && m_Filter->m_State == State_Stopped)
-    {
-        hr = m_Allocator->Commit();
         CHECK(hr);
     }
     return hr;

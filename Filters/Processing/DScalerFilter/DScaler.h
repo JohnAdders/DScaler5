@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DScaler.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -53,9 +53,9 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_INT(1, 50, 1, L"None", L"Aspect Ratio Adjustment X")
     DEFINE_PARAM_INT(1, 50, 1, L"None", L"Aspect Ratio Adjustment Y")
     DEFINE_PARAM_BOOL(0, L"Is Input Anamorphic")
-    DEFINE_PARAM_ENUM(0, 0, L"Deinterlace Mode", GetEnumTextDeinterlaceMode)
+    DEFINE_PARAM_ENUM(0, 0, L"Deinterlace Mode")
     DEFINE_PARAM_BOOL(0, L"Manual Pulldown Mode")
-    DEFINE_PARAM_ENUM(FULLRATEVIDEO, PULLDOWN_32, L"Pulldown Mode", GetEnumTextPuldownMode)
+    DEFINE_PARAM_ENUM(FULLRATEVIDEO, PULLDOWN_32, L"Pulldown Mode")
     DEFINE_PARAM_INT(0, 4, 0, L"None", L"Pulldown Mode Index")
 END_PARAM_LIST()
 
@@ -93,16 +93,18 @@ public:
 public:
     HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin);
     HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin);
-    HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin);
+    HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum);
     bool IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin);
     HRESULT SendOutLastSamples(CDSBasePin* pPin);
-    HRESULT FinishProcessing(CDSBasePin* pPin);
+    HRESULT Flush(CDSBasePin* pPin);
     HRESULT NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate, CDSBasePin* pPin);
     HRESULT Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin);
     HRESULT GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBasePin* pPin);
     HRESULT Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, CDSBasePin* pPin);
     HRESULT Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin);
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
+    HRESULT Activate();
+    HRESULT Deactivate();
     
     void SetTypesChangedFlag();
     HRESULT CheckProcessingLine();
@@ -182,6 +184,7 @@ protected:
 protected:
 
     HRESULT ParamChanged(DWORD dwParamIndex);
+    HRESULT GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText);
     HRESULT GetEnumTextDeinterlaceMode(WCHAR **ppwchText);
     HRESULT GetEnumTextPuldownMode(WCHAR **ppwchText);
 

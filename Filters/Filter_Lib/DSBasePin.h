@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSBasePin.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,8 @@ public:
     STDMETHOD(QuerySupported)(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport);
 
     // Required virtual functions
-    virtual HRESULT HandleStop() = 0;
+    virtual HRESULT Activate() = 0;
+    virtual HRESULT Deactivate() = 0;
     HRESULT SetType(const AM_MEDIA_TYPE* pmt);
     bool IsConnected() {return m_ConnectedPin?true:false;};
     const AM_MEDIA_TYPE* GetMediaType() {return &m_ConnectedMediaType;};

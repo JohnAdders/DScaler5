@@ -78,7 +78,8 @@ SOURCE="$(InputPath)"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_DLL" /D "_ATL_MIN_CRT" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /GX /Od /I "..\..\Filter_Lib" /I "..\..\..\GenDMOProp" /I "..\..\..\Common" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_DLL" /FAs /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MT /W3 /GX /Od /I "..\..\Filter_Lib" /I "..\..\..\GenDMOProp" /I "..\..\..\Common" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_DLL" /FR /Yu"stdafx.h" /FD /c
+# SUBTRACT CPP /FA<none>
 # ADD BASE RSC /l 0x809 /d "NDEBUG"
 # ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -259,6 +260,14 @@ SOURCE=.\StdAfx.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
+# End Group
+# Begin Group "Docs"
+
+# PROP Default_Filter "*.txt"
+# Begin Source File
+
+SOURCE=.\Todo.txt
+# End Source File
 # End Group
 # End Target
 # End Project

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,9 +62,8 @@ public:
     STDMETHOD(NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
     STDMETHOD(Disconnect)(void);
 
-    HRESULT HandleRun();
-    HRESULT HandleStop();
-    HRESULT HandlePause();
+    HRESULT Activate();
+    HRESULT Deactivate();
     HRESULT CanWeWorkWithThisInputType(const AM_MEDIA_TYPE *pmt);
 
 // IQualityControl

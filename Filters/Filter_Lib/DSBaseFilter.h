@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSBaseFilter.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ public:
     virtual HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum) = 0;
     virtual bool IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin) = 0;
     virtual HRESULT SendOutLastSamples(CDSBasePin* pPin) = 0;
-    virtual HRESULT FinishProcessing(CDSBasePin* pPin) = 0;
+    virtual HRESULT Flush(CDSBasePin* pPin) = 0;
     /// return S_FALSE if you don't want this message propogated
     virtual HRESULT NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate, CDSBasePin* pPin) = 0;
     virtual HRESULT Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin) = 0;
@@ -76,6 +76,8 @@ public:
     virtual HRESULT Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, CDSBasePin* pPin) = 0;
     virtual HRESULT Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin) = 0;
     virtual HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin) = 0;
+    virtual HRESULT Activate() = 0;
+    virtual HRESULT Deactivate() = 0;
 
 public:
     SI(IReferenceClock) m_RefClock;

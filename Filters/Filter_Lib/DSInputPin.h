@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSInputPin.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,7 +74,8 @@ public:
     STDMETHOD(DynamicDisconnect)(void);
 
 public:
-    HRESULT HandleStop();
+    HRESULT Activate();
+    HRESULT Deactivate();
     HRESULT Block(DWORD dwBlockFlags, HANDLE hEvent);
     BOOL IsFlushing() {return m_Flushing;};
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DScaler.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 // Revision 1.15  2003/12/09 11:45:51  adcockj
 // Improved implementation of EnumPins
 //
@@ -157,6 +162,20 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
         break;
     }
     return S_OK;
+}
+
+HRESULT CDScaler::GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText)
+{
+    switch(dwParamIndex)
+    {
+    case DEINTERLACEMODE:
+        return GetEnumTextDeinterlaceMode(ppwchText);
+        break;
+    case PULLDOWNMODE:
+        return GetEnumTextPuldownMode(ppwchText);
+        break;
+    }
+    return E_NOTIMPL;
 }
 
 HRESULT CDScaler::GetEnumTextDeinterlaceMode(WCHAR **ppwchText)
@@ -554,7 +573,7 @@ HRESULT CDScaler::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTy
     return E_NOTIMPL;
 }
 
-HRESULT CDScaler::FinishProcessing(CDSBasePin* pPin)
+HRESULT CDScaler::Flush(CDSBasePin* pPin)
 {
 	ClearAll();
     return S_OK;

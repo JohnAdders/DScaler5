@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.2 2004-02-10 13:24:12 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.3 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/10 13:24:12  adcockj
+// Lots of bug fixes + corrected interlaced YV12 upconversion
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -206,7 +209,7 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         }
     }
 
-    HRESULT hr = m_Filter->FinishProcessing(this);
+    HRESULT hr = m_Filter->Flush(this);
     CHECK(hr);
 
     // Calls EndFlush downstream. 
@@ -647,9 +650,14 @@ HRESULT CDSInputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)
     return S_OK;
 }
 
-HRESULT CDSInputPin::HandleStop()
+HRESULT CDSInputPin::Activate()
 {
-    LOG(DBGLOG_ALL, ("CDSOutputPin::HandleStop\n"));
+    return S_OK;
+}
+
+HRESULT CDSInputPin::Deactivate()
+{
+    LOG(DBGLOG_ALL, ("CDSOutputPin::Deactivate\n"));
 	CProtectCode WhileVarInScope(m_Filter);
 
     if(m_Block == TRUE)
@@ -660,6 +668,6 @@ HRESULT CDSInputPin::HandleStop()
         }
     }
 
-    return m_Filter->FinishProcessing(this);
+    return S_OK;
 }
 

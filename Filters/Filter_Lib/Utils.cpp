@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.2 2004-02-10 13:24:13 adcockj Exp $
+// $Id: Utils.cpp,v 1.3 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/10 13:24:13  adcockj
+// Lots of bug fixes + corrected interlaced YV12 upconversion
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -84,6 +87,24 @@ void ClearMediaType(AM_MEDIA_TYPE* TypeToClear)
     }
     ZeroMemory(TypeToClear, sizeof(AM_MEDIA_TYPE));
 }
+
+bool AreMediaTypesIdentical(const AM_MEDIA_TYPE* Type1, const AM_MEDIA_TYPE* Type2)
+{
+    if(Type1->majortype != Type2->majortype)
+        return false;
+    if(Type1->subtype != Type2->subtype)
+        return false;
+    if(Type1->formattype != Type2->formattype)
+        return false;
+    if(Type1->lSampleSize != Type2->lSampleSize)
+        return false;
+    if(Type1->cbFormat != Type2->cbFormat)
+        return false;
+    if(memcmp(Type1->pbFormat,Type2->pbFormat, Type1->cbFormat) != 0)
+        return false;
+    return true;
+}
+
 
 void FreeMediaType(AM_MEDIA_TYPE* TypeToFree)
 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:17  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DSBaseFilter.h"
@@ -192,16 +197,23 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
     
     int i;
     
-    for(i = 0; i < m_NumInputPins; ++i)
-    {
-        m_InputPins[i]->HandleStop();
-    }
-    for(i = 0; i < m_NumOutputPins; ++i)
-    {
-        m_OutputPins[i]->HandleStop();
-    }
-
+    // putting this first should amke all the receives fail
     m_State = State_Stopped;
+
+    if(m_State != State_Stopped)
+    {
+        for(i = 0; i < m_NumInputPins; ++i)
+        {
+            CProtectCode WhileVarInScope(m_InputPins[i]);
+            m_InputPins[i]->Deactivate();
+        }
+        for(i = 0; i < m_NumOutputPins; ++i)
+        {
+            CProtectCode WhileVarInScope(m_OutputPins[i]);
+            m_OutputPins[i]->Deactivate();
+        }
+        Deactivate();
+    }
 
 	LOG(DBGLOG_ALL, ("CDSBaseFilter::End Stop\n"));
 
@@ -214,9 +226,18 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
 
     CProtectCode WhileVarInScope(this);
 
-    for(int i(0); i < m_NumOutputPins; ++i)
+    if(m_State == State_Stopped)
     {
-        m_OutputPins[i]->HandlePause();
+        int i;
+        for(i = 0; i < m_NumInputPins; ++i)
+        {
+            m_InputPins[i]->Activate();
+        }
+        for(i = 0; i < m_NumOutputPins; ++i)
+        {
+            m_OutputPins[i]->Activate();
+        }
+        Activate();
     }
 
     m_State = State_Paused;
@@ -229,9 +250,18 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
 
     CProtectCode WhileVarInScope(this);
 
-    for(int i(0); i < m_NumOutputPins; ++i)
+    if(m_State == State_Stopped)
     {
-        m_OutputPins[i]->HandleRun();
+        int i;
+        for(i = 0; i < m_NumInputPins; ++i)
+        {
+            m_InputPins[i]->Activate();
+        }
+        for(i = 0; i < m_NumOutputPins; ++i)
+        {
+            m_OutputPins[i]->Activate();
+        }
+        Activate();
     }
 
     m_State = State_Running;

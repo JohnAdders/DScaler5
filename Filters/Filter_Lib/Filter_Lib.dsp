@@ -136,15 +136,7 @@ SOURCE=.\EnumMediaTypes.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\EnumMediaTypes.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\EnumPins.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\EnumPins.h
 # End Source File
 # Begin Source File
 
@@ -152,15 +144,7 @@ SOURCE=.\InputMemAlloc.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\InputMemAlloc.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\MediaBufferWrapper.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaBufferWrapper.h
 # End Source File
 # Begin Source File
 
@@ -170,10 +154,6 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\Utils.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Utils.h
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -197,7 +177,27 @@ SOURCE=.\DSOutputPin.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\EnumMediaTypes.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EnumPins.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\InputMemAlloc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\MediaBufferWrapper.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Utils.h
 # End Source File
 # End Group
 # Begin Source File

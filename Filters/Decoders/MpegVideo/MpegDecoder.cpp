@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.4 2004-02-10 13:24:12 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.5 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/10 13:24:12  adcockj
+// Lots of bug fixes + corrected interlaced YV12 upconversion
+//
 // Revision 1.3  2004/02/09 07:57:33  adcockj
 // Stopping big fix
 // Timestamps issue test fix
@@ -136,22 +139,12 @@ CMpegDecoder::CMpegDecoder() :
 	m_ratechange.Rate = 10000;
 	m_ratechange.StartTime = -1;
     m_CorrectTS = false;
-
-    m_dec = mpeg2_init();
-    if(m_dec == NULL)
-    {
-        throw(std::runtime_error("Can't create memory for decoder\n"));
-    }
+    m_dec = NULL;
 }
 
 CMpegDecoder::~CMpegDecoder()
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::~CMpegDecoder\n"));
-	if(m_sphli)
-	{
-		delete m_sphli;
-	}
-    mpeg2_free(m_dec);
 }
 
 STDMETHODIMP CMpegDecoder::GetClassID(CLSID __RPC_FAR *pClassID)
@@ -432,15 +425,15 @@ HRESULT CMpegDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     }
 }
 
-HRESULT CMpegDecoder::FinishProcessing(CDSBasePin* pPin)
+HRESULT CMpegDecoder::Flush(CDSBasePin* pPin)
 {
     if(pPin == m_VideoInPin)
     {
-        FinishProcessingMPEG();
+        FlushMPEG();
 	}
     else if(pPin == m_SubpictureInPin)
     {
-        FinishProcessingSubPic();
+        FlushSubPic();
     }
     return S_OK;
 }
@@ -1086,9 +1079,11 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	return hr;
 }
 
-void CMpegDecoder::FinishProcessingMPEG()
+void CMpegDecoder::FlushMPEG()
 {
-	m_fWaitForKeyFrame = true;
+	CProtectCode WhileVarInScope(m_VideoInPin);
+    	
+    m_fWaitForKeyFrame = true;
 	m_Discont = true;
 	mpeg2_reset(m_dec, 0);
 }
@@ -1300,4 +1295,32 @@ void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 				memset(pOut, 0, pitchOut);
 		}
 	}
+}
+
+HRESULT CMpegDecoder::Activate()
+{
+    if(m_dec != NULL)
+    {
+        mpeg2_free(m_dec);
+    }
+    m_dec = mpeg2_init();
+    if(m_dec == NULL)
+    {
+        return E_UNEXPECTED;
+    }
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::Deactivate()
+{
+	if(m_sphli)
+	{
+		delete m_sphli;
+	}
+    if(m_dec != NULL)
+    {
+        mpeg2_free(m_dec);
+        m_dec = NULL;
+    }
+    return S_OK;
 }

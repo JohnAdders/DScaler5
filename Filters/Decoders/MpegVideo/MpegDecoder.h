@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.3 2004-02-10 13:24:12 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.4 2004-02-12 17:06:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -88,13 +88,15 @@ public:
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum);
     bool IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin);
     HRESULT SendOutLastSamples(CDSBasePin* pPin);
-    HRESULT FinishProcessing(CDSBasePin* pPin);
+    HRESULT Flush(CDSBasePin* pPin);
     HRESULT NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate, CDSBasePin* pPin);
     HRESULT Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin);
     HRESULT GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBasePin* pPin);
     HRESULT Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, CDSBasePin* pPin);
     HRESULT Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin);
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
+    HRESULT Activate();
+    HRESULT Deactivate();
 
 protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
@@ -173,7 +175,7 @@ private:
 
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
-    void FinishProcessingMPEG();
+    void FlushMPEG();
     HRESULT ReconnectOutput(int w, int h);
     void ResetMpeg2Decoder();
 
@@ -211,7 +213,7 @@ private:
     HRESULT SupportPropSetSubPic(DWORD dwPropID, DWORD *pTypeSupport);
     HRESULT ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     bool DecodeSubpic(sp_t* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2);
-    void FinishProcessingSubPic();
+    void FlushSubPic();
     void RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h);
     void ClearOldSubpics(REFERENCE_TIME rt);
     bool HasSubpicsToRender(REFERENCE_TIME rt);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.1 2004-02-06 11:09:49 adcockj Exp $
+// $Id: Params.h,v 1.2 2004-02-12 17:06:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,12 +27,12 @@
     ParamInfo* _GetParamList(DWORD* pCount = NULL) { \
         static ParamInfo _params[] = { 
 
-#define DEFINE_PARAM_INT(min, max, neutral, unit, label) {{MPT_INT, 0, min, max, neutral, unit, label, }, neutral, NULL,},
-#define DEFINE_PARAM_FLOAT(min, max, neutral, unit, label) {{MPT_FLOAT, 0, min, max, neutral, unit, label,}, neutral, NULL,},
-#define DEFINE_PARAM_BOOL(neutral, label) {{MPT_BOOL, 0, 0, 1, neutral, L"None", label,}, neutral, NULL,},
-#define DEFINE_PARAM_ENUM(max, neutral, label, fn) {{MPT_ENUM, 0, 0, max, neutral, L"None", label,}, neutral, NULL,},
+#define DEFINE_PARAM_INT(min, max, neutral, unit, label) {{MPT_INT, 0, min, max, neutral, unit, label, }, neutral,},
+#define DEFINE_PARAM_FLOAT(min, max, neutral, unit, label) {{MPT_FLOAT, 0, min, max, neutral, unit, label,}, neutral,},
+#define DEFINE_PARAM_BOOL(neutral, label) {{MPT_BOOL, 0, 0, 1, neutral, L"None", label,}, neutral,},
+#define DEFINE_PARAM_ENUM(max, neutral, label) {{MPT_ENUM, 0, 0, max, neutral, L"None", label,}, neutral,},
 
-#define END_PARAM_LIST()         {{MPT_INT, 0, 0, 1, 0, L"", L"",}, 0, NULL,}, \
+#define END_PARAM_LIST()         {{MPT_INT, 0, 0, 1, 0, L"", L"",}, 0, }, \
                   }; if(pCount != NULL) *pCount = sizeof(_params)/sizeof(ParamInfo) - 1; return _params; }; \
 
 #define GetParamFloat(Index) ((float)_GetParamList()[Index].Value)
@@ -65,7 +65,6 @@ protected:
     {
         MP_PARAMINFO      MParamInfo;
         MP_DATA           Value;
-        LPFN_GETENUMTEXT* lpfnGetEnumText;
     } ParamInfo;
 
 
@@ -172,13 +171,9 @@ public:
             *(*ppwchText + wcslen(Params[dwParamIndex].MParamInfo.szLabel) + wcslen(Params[dwParamIndex].MParamInfo.szUnitText) + 1) = L'\0';
             return S_OK;
         }
-        else if(Params[dwParamIndex].lpfnGetEnumText != NULL)
-        {
-            return Params[dwParamIndex].lpfnGetEnumText(ppwchText);
-        }
         else
         {
-            return E_INVALIDARG;
+            return GetEnumText(dwParamIndex, ppwchText);
         }
         return S_OK;
     }
@@ -298,6 +293,7 @@ private:
 
 protected:
 	bool	m_fDirty;
+    virtual HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText) {return E_NOTIMPL;};
 
 };
 
