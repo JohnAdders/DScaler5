@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.9 2004-12-21 14:43:19 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.10 2005-01-21 14:25:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/12/21 14:43:19  adcockj
+// added stop times
+//
 // Revision 1.8  2004/12/06 18:04:57  adcockj
 // Major improvements to deinterlacing
 //
@@ -264,7 +267,7 @@ HRESULT CDivxDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
     }
     else if(pPin == m_VideoOutPin)
     {
-        pProperties->cBuffers = 3;
+        pProperties->cBuffers = 1;
         pProperties->cbBuffer = ExtractBIH(&m_VideoOutPin->m_ConnectedMediaType)->biSizeImage;
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
