@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.8 2003-05-07 16:27:41 adcockj Exp $
+// $Id: InputPin.cpp,v 1.9 2003-05-08 07:00:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2003/05/07 16:27:41  adcockj
+// Slightly better properties implementation
+//
 // Revision 1.7  2003/05/07 07:03:56  adcockj
 // Some bug fixes
 //
@@ -493,10 +496,10 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     }
     
     OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
+    OutSampleProperties.dwTypeSpecificFlags = AM_VIDEO_FLAG_WEAVE;
     OutSampleProperties.dwTypeSpecificFlags = 0;
     OutSampleProperties.tStart = SampleProperties.tStart;
     OutSampleProperties.tStop = SampleProperties.tStop;
-    OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
 
     if(m_OutputPin->m_FormatChanged == TRUE)
     {
@@ -723,7 +726,7 @@ HRESULT CInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTI
     CComQIPtr<IMediaSample2> Sample2 = Sample;
     if(Sample2 != NULL)
     {
-        hr = Sample2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&SampleProperties);
+        hr = Sample2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)SampleProperties);
     }
     else
     {
