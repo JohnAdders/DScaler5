@@ -141,7 +141,7 @@ STYLE WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_PARAMETERLIST,1,1,84,104,LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     CONTROL         "Slider1",IDC_SLIDER,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,121,45,150,16
     CONTROL         "Check1",IDC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,

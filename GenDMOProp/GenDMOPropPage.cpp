@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.7 2003-05-17 11:29:36 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.8 2003-07-21 08:44:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2003/05/17 11:29:36  adcockj
+// Fixed crashing
+//
 // Revision 1.6  2003/05/16 16:27:45  adcockj
 // Added a bit of a safety for the property page
 //
@@ -47,9 +50,9 @@
 
 CGenDMOPropPage::CGenDMOPropPage() 
 {
-	m_dwTitleID = IDS_TITLEGenDMOPropPage;
-	m_dwHelpFileID = IDS_HELPFILEGenDMOPropPage;
-	m_dwDocStringID = IDS_DOCSTRINGGenDMOPropPage;
+    m_dwTitleID = IDS_TITLEGenDMOPropPage;
+    m_dwHelpFileID = IDS_HELPFILEGenDMOPropPage;
+    m_dwDocStringID = IDS_DOCSTRINGGenDMOPropPage;
     m_NumParams = 0;
     m_ParamTexts = 0;
     m_Params = 0;
@@ -90,15 +93,15 @@ STDMETHODIMP CGenDMOPropPage::Deactivate()
 
 STDMETHODIMP CGenDMOPropPage::Apply(void)
 {
-	ATLTRACE(_T("CGenDMOPropPage::Apply\n"));
+    ATLTRACE(_T("CGenDMOPropPage::Apply\n"));
 
     if(IsWindow())
     {
         GetValueFromControls();
     }
     
-	for (DWORD i(0); i < m_NumParams; ++i)
-	{
+    for (DWORD i(0); i < m_NumParams; ++i)
+    {
         MP_DATA CurrentValue;
         HRESULT hr = m_MediaParams->GetParam(i, &CurrentValue);
         if(FAILED(hr)) return hr;
@@ -107,9 +110,9 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
             hr = m_MediaParams->SetParam(i, m_Params[i]);
             if(FAILED(hr)) return hr;
         }
-	}
-	m_bDirty = FALSE;
-	return S_OK;
+    }
+    m_bDirty = FALSE;
+    return S_OK;
 }
 
 STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
@@ -176,11 +179,11 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
 
 STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
-	HRESULT hr = IPropertyPageImpl<CGenDMOPropPage>::Activate(hWndParent,pRect,bModal);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
+    HRESULT hr = IPropertyPageImpl<CGenDMOPropPage>::Activate(hWndParent,pRect,bModal);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
 
     // Initialize the dialog
     m_ListBox.Attach(GetDlgItem(IDC_PARAMETERLIST));
@@ -198,9 +201,21 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
 
     // load up the names into the list box
     m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
+    m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT,0,0);
+
+    int MaxWidth=0;
     for(DWORD i(0); i < m_NumParams; ++i)
     {
         SendMessageW(m_ListBox.m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
+
+        // get the size of the text and adjust the horizontal scrollbar if nessesary
+        SIZE size;
+        GetTextSize(m_ParamTexts[i], size);
+        if(size.cx > MaxWidth)
+        {
+            MaxWidth = size.cx;
+            m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT, MaxWidth + 4, 0);
+        }
     }
     m_CurrentParam = 0;
     
@@ -208,6 +223,21 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
 
     return hr;
 }
+
+void CGenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
+{
+	HDC hDC = m_ListBox.GetDC();
+	HFONT hListBoxFont = m_ListBox.GetFont();
+    if(hListBoxFont != NULL)
+    {
+        HFONT hOldFont = (HFONT)SelectObject(hDC,(HGDIOBJ)hListBoxFont);
+        GetTextExtentPoint32W(hDC, wcItem, wcslen(wcItem), &size);
+        SelectObject(hDC,hOldFont);
+    }
+	ReleaseDC(hDC);
+}
+
+
 
 void CGenDMOPropPage::SetupControls()
 {
@@ -411,8 +441,8 @@ BOOL CGenDMOPropPage::HasAnythingChanged()
 {
     GetValueFromControls();
 
-	for (DWORD i(0); i < m_NumParams; ++i)
-	{
+    for (DWORD i(0); i < m_NumParams; ++i)
+    {
         MP_DATA CurrentValue;
         HRESULT hr = m_MediaParams->GetParam(i, &CurrentValue);
         if(FAILED(hr)) return hr;
@@ -420,8 +450,8 @@ BOOL CGenDMOPropPage::HasAnythingChanged()
         {
             return TRUE;
         }
-	}
-	return FALSE;
+    }
+    return FALSE;
 }
 
 LRESULT CGenDMOPropPage::OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
@@ -455,9 +485,9 @@ LRESULT CGenDMOPropPage::OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCt
 // the normal apply and cancel  behaviour
 void CGenDMOPropPage::SetDirty(BOOL bDirty)
 {
-	if (m_bDirty != bDirty)
-	{
-		m_bDirty = bDirty;
-		m_pPageSite->OnStatusChange(bDirty ? PROPPAGESTATUS_DIRTY : 0);
-	}
+    if (m_bDirty != bDirty)
+    {
+        m_bDirty = bDirty;
+        m_pPageSite->OnStatusChange(bDirty ? PROPPAGESTATUS_DIRTY : 0);
+    }
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.5 2003-05-07 16:27:03 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.6 2003-07-21 08:44:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -80,6 +80,7 @@ private:
     void SetupBoolValue();
     void SetupEnumValue();
     void SetupEnumCombo();
+    void GetTextSize(WCHAR *wcItem,SIZE &size);
 
 private:
     CComQIPtr<IMediaParamInfo> m_MediaParamInfo;
