@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.67 2005-02-09 07:27:32 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.68 2005-02-17 09:31:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.67  2005/02/09 07:27:32  adcockj
+// fixed buffer handling on reset
+//
 // Revision 1.66  2005/02/08 15:32:34  adcockj
 // Added CSS handling
 //
@@ -459,8 +462,6 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
         // don't care when this changes
         break;
     case DOACCURATEASPECT:
-        // \todo we should care when this changes
-        // but we would need to store the sequence
         break;
     case DVBASPECTPREFS:
         {
@@ -498,11 +499,7 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
             return S_FALSE;
         }
         break;
-    case FORCEDSCALERFILTER:
-        if(m_VideoOutPin->m_ConnectedPin)
-        {
-            return S_FALSE;
-        }
+    case ANALOGBLANKING:
         break;
     }
     return hr;
@@ -566,7 +563,7 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 	}
 	else
 	{
-		return E_FAIL;
+		//return E_FAIL;
 	}
 
     if(pPin == m_VideoOutPin)
@@ -827,10 +824,6 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
         DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
-        if(GetParamBool(FORCEDSCALERFILTER))
-        {
-            VideoFlags |= VIDEOTYPEFLAG_FORCE_DSCALER;
-        }
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
     else if(pPin == m_SubpictureInPin)
@@ -1085,7 +1078,10 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
     {
+        LOG(DBGLOG_FLOW, ("Got Discontinuity\n"));
         m_IsDiscontinuity = true;
+        m_fWaitForKeyFrame = true;
+        m_fFilm = false;
     }
 
     mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
@@ -1176,60 +1172,62 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         !!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
         !!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
 
-    // cope with a change in rate       
-    if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
-    {
-        m_rate.Rate = m_ratechange.Rate;
-        // looks like we need to do this ourselves
-        // as the time past originally seems like a best guess only
-        m_rate.StartTime = m_CurrentPicture->m_rtStart;
-        m_IsDiscontinuity = true;
-        LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
-    }
-
-
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
     
-    if(m_IsDiscontinuity)
+    if(!fRepeatLast)
     {
-        // if we're at a Discontinuity use the times we're being sent in
-        rtStart = m_rate.StartTime + (m_CurrentPicture->m_rtStart - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+        // cope with a change in rate       
+        if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
+        {
+            m_rate.Rate = m_ratechange.Rate;
+            // looks like we need to do this ourselves
+            // as the time past originally seems like a best guess only
+            m_rate.StartTime = m_CurrentPicture->m_rtStart;
+            m_IsDiscontinuity = true;
+            LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
+        }
+
+        if(m_IsDiscontinuity)
+        {
+            // if we're at a Discontinuity use the times we're being sent in
+            rtStart = m_rate.StartTime + (m_CurrentPicture->m_rtStart - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+        }
+        else
+        {
+            // if we're not at a Discontinuity
+            // make sure that time are contiguous
+            rtStart = m_LastOutputTime;
+        }
+
+        // if we want smooth frames then we simply adjust the stop time by half
+        // a frame so that 3:2 becomes 2.5:2.5
+        // the way we always use the previous stop time as the start time for the next 
+        // frame will mean that we only have to worry about adjusting the 3 field parts.
+        rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+
+        if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_CurrentPicture->m_NumFields == 3)
+        {
+            rtStop -= m_AvgTimePerFrame / 2 * abs(m_rate.Rate) / 10000;
+        }
+
+        rtStop += GetParamInt(VIDEODELAY) * 10000;
+
+        // ensure that times always go up
+        // and that Stop is always greater than start
+        if(rtStart < m_LastOutputTime && m_LastOutputTime != 0)
+        {
+            LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime));
+            rtStart = m_LastOutputTime;
+        }
+
+        if(rtStop <= rtStart)
+        {
+            rtStop = rtStart + 100;
+        }
+
+        m_LastOutputTime = rtStop;
     }
-    else
-    {
-        // if we're not at a Discontinuity
-        // make sure that time are contiguous
-        rtStart = m_LastOutputTime;
-    }
-
-    // if we want smooth frames then we simply adjust the stop time by half
-    // a frame so that 3:2 becomes 2.5:2.5
-    // the way we always use the previous stop time as the start time for the next 
-    // frame will mean that we only have to worry about adjusting the 3 field parts.
-    rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
-
-    if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_CurrentPicture->m_NumFields == 3)
-    {
-        rtStop -= m_AvgTimePerFrame / 2 * abs(m_rate.Rate) / 10000;
-    }
-
-    rtStop += GetParamInt(VIDEODELAY) * 10000;
-
-    // ensure that times always go up
-    // and that Stop is always greater than start
-    if(rtStart < m_LastOutputTime && m_LastOutputTime != 0)
-    {
-        LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime));
-        rtStart = m_LastOutputTime;
-    }
-
-    if(rtStop <= rtStart)
-    {
-        rtStop = rtStart + 100;
-    }
-
-    m_LastOutputTime = rtStop;
 
     HRESULT hr;
 
@@ -1278,34 +1276,27 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
-        Props.tStart = rtStart;
 
-        // stop times seem to be a good idea
-        Props.tStop = rtStop;
-        Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
-
+        Props.dwSampleFlags = AM_SAMPLE_SPLICEPOINT;
         // the overlay seems to stutter unless we set the discontinuity flag
         // all the time (should have believed Gabest's comment in the first place....)
         if(m_IsDiscontinuity || fRepeatLast || m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::OVERLAY_OUTFILTER)
         {
             Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
         }
-        else
-        {
-            Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
-        }
-        if(fRepeatLast)
-        {
-            Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
-        }
-        Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
-        Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
-        // send video flags to VMR only
-        // causes wierd strobing effect on film otherwise
-        if(m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR7_OUTFILTER || 
-            m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::VMR9_OUTFILTER ||
-            m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::DSCALER_OUTFILTER)
+        // do not set times on repeated frames
+        if(!fRepeatLast)
+        {
+            Props.tStart = rtStart;
+            Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
+            Props.tStop = rtStop;
+            Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
+        }
+
+        // don't send send video flags to overlay
+        // causes wierd strobing effect on film
+        if(m_VideoOutPin->GetConnectedType() != CDSVideoOutPin::OVERLAY_OUTFILTER)
         {
             if(m_CurrentPicture->m_NumFields == 3)
                 if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
@@ -1329,12 +1320,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
         }
     
-        // make sure the Dscaler filter knows it has to show this one without delay
-        if(m_LastPictureWasStill && m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::DSCALER_OUTFILTER)
-        {
-            Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_SHOWNOW;
-        }
-
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -1343,20 +1328,19 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     }
     else
     {
-        // ffdshow quality control requires stop times
-        // nothing else needs these and setting stop times
-        // seems to sometimes results in frames being dropped
-        // which we really wanted to show
+        // do not set times on repeated frames
         if(!fRepeatLast)
         {
             pOut->SetTime(&rtStart, &rtStop);
         }
         else
         {
-            pOut->SetTime(&rtStart, NULL);
+            pOut->SetTime(NULL, NULL);
         }
 
-        if(m_IsDiscontinuity || fRepeatLast)
+        // the overlay seems to stutter unless we set the discontinuity flag
+        // all the time (should have believed Gabest's comment in the first place....)
+        if(m_IsDiscontinuity || fRepeatLast || m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::OVERLAY_OUTFILTER)
         {
             pOut->SetDiscontinuity(TRUE);
         }
@@ -1420,7 +1404,10 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     else
     {
         // reset discontinuity flag
-        m_IsDiscontinuity = false;
+        // if we have a repeat then we
+        // didn't send a time stamp wityht he sample
+        // and so the next frame will be a discontinuity
+        m_IsDiscontinuity = fRepeatLast;
     }
 
     return hr;
@@ -1637,7 +1624,7 @@ void CMpegDecoder::UpdateAspectRatio()
     {
         m_AFD = 8;
     }
-    
+
     // optionally use accurate aspect ratio
     if(GetParamBool(DOACCURATEASPECT))
     {
@@ -1645,26 +1632,37 @@ void CMpegDecoder::UpdateAspectRatio()
         mpeg2_guess_aspect(mpeg2_info(m_dec)->sequence, &PixelX, &PixelY);
         m_ARMpegX = PixelX;
         m_ARMpegY = PixelY;
+
+        Simplify(m_ARMpegX, m_ARMpegY);
+
+        if(m_MpegWidth == 720 && GetParamBool(ANALOGBLANKING))
+        {
+            m_ARMpegX *= 704;
+        }
+        else
+        {
+            m_ARMpegX *= m_MpegWidth;
+        }
     }
     else
     {
         m_ARMpegX = m_CurrentSequence.pixel_width;
         m_ARMpegY = m_CurrentSequence.pixel_height;
+
+        Simplify(m_ARMpegX, m_ARMpegY);
+
+        m_ARMpegX *= m_MpegWidth;
     }
 
-    m_ARMpegX *= m_CurrentSequence.display_width;
-    m_ARMpegY *= m_CurrentSequence.display_height;
-
+    m_ARMpegY *= min(m_MpegHeight, 1080);
     Simplify(m_ARMpegX, m_ARMpegY);
+
 
     LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", m_CurrentSequence.pixel_width,
                                                     m_CurrentSequence.pixel_height,
                                                     m_CurrentSequence.display_width,
-                                                    m_CurrentSequence.display_height,
-                                                    m_OutputWidth,
-                                                    m_OutputHeight));
-
-
+                                                    m_CurrentSequence.display_height));
+    
     CorrectOutputSize();
 }
 
@@ -1921,6 +1919,8 @@ void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
 
 void CMpegDecoder::CorrectOutputSize()
 {
+    m_ARAdjustX = 1;
+    m_ARAdjustY = 1;
 
     if(m_MpegHeight == 1088)
     {
@@ -1935,11 +1935,16 @@ void CMpegDecoder::CorrectOutputSize()
         m_OutputHeight = m_MpegHeight;
     }
 
-    m_OutputWidth = m_MpegWidth;
-
-    m_ARAdjustX = 1;
-    m_ARAdjustY = 1;
-    m_VideoOutPin->SetPanScanX(0);
+    if(m_MpegWidth == 720 && GetParamBool(ANALOGBLANKING))
+    {
+        m_OutputWidth = 704;
+        m_VideoOutPin->SetPanScanX(8);
+    }
+    else
+    {
+        m_OutputWidth = m_MpegWidth;
+        m_VideoOutPin->SetPanScanX(0);
+    }
     m_VideoOutPin->SetPanScanY(0);
 
     if(m_AFD)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.15 2004-12-06 18:05:00 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.16 2005-02-17 09:31:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/12/06 18:05:00  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.14  2004/10/28 15:52:24  adcockj
 // Moved video output pin code into new class
 //
@@ -483,7 +486,7 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 {
     if(contrast == 0) return;
 
-    if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
+    if(m_MpegWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
     {
         if ((pt.x & 1) || (pt.y & 1))
         {
@@ -492,7 +495,7 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
         pt.y = pt.y /2;
         pt.x = max((pt.x - 8)/2, 0);
     }
-    else if(m_OutputWidth == 352)
+    else if(m_MpegWidth == 352)
     {
         if ((pt.x & 1))
         {
@@ -500,14 +503,14 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
         }
         pt.x = max((pt.x - 8)/2, 0);
     }
-    else if(m_OutputWidth == 704)
+    else if(m_MpegWidth == 704)
     {
         pt.x = max(pt.x - 8, 0);
     }
     else if(m_PanAndScanDVD && m_OutputWidth == 540)
     {
         pt.x *= 540;
-        pt.x /= 720;
+        pt.x /= m_MpegWidth;
         pt.x += (m_MpegWidth - m_OutputWidth) /2;
     }
 

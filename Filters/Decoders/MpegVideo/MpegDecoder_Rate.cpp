@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.7 2005-02-03 13:40:55 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.8 2005-02-17 09:31:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -37,6 +37,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2005/02/03 13:40:55  adcockj
+// Improved seek support
+//
 // Revision 1.6  2004/07/21 15:05:25  adcockj
 // Fixed some issues with ff & rew
 //
@@ -126,7 +129,6 @@ HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
             // but doing that seems to screw things up
             // Docs say 10000 / MAX_SPEED
             *p = 10000 * MAX_SPEED;
-			*p = 2500;
             *pcbReturned = sizeof(AM_MaxFullDataRate);
         }
         break;
