@@ -1209,7 +1209,7 @@ static void qmf_32_subbands (dts_state_t * state, int chans,
 
         /* Create 32 PCM output samples */
         for (i=0;i<32;i++)
-            samples_out[nChIndex++] = subband_fir_hist2[i] / scale + bias;
+            samples_out[nChIndex++] = SAMPLE(subband_fir_hist2[i] / scale + bias);
 
         /* Update working arrays */
         for (i=511;i>=32;i--)
@@ -1267,7 +1267,7 @@ static void lfe_interpolation_fir (int nDecimationSelect, int nNumDeciSample,
                 rTmp += samples_in[nDeciIndex-J]*prCoeff[k+J*nDeciFactor];
 
             /* Save interpolated samples */
-            samples_out[nInterpIndex++] = rTmp / scale + bias;
+            samples_out[nInterpIndex++] = SAMPLE(rTmp / scale + bias);
         }
     }
 }
