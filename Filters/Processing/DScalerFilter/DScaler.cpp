@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.15 2004-12-13 16:59:57 adcockj Exp $
+// $Id: DScaler.cpp,v 1.16 2004-12-15 13:04:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/12/13 16:59:57  adcockj
+// flag based film detection
+//
 // Revision 1.14  2004/12/07 08:44:00  adcockj
 // fixed VS6 issues
 //
@@ -325,6 +328,46 @@ STDMETHODIMP CDScaler::get_Authors(BSTR* Authors)
         return E_UNEXPECTED;
     }
 }
+STDMETHODIMP CDScaler::get_StatisticValue(DWORD Index, BSTR* StatValue)
+{
+    HRESULT hr = S_OK;
+    
+    CProtectCode WhileVarInScope(m_VideoInPin);
+
+    switch(Index)
+    {
+    case 0:
+        switch(m_DetectedPulldownType)
+        {
+        case FULLRATEVIDEO:
+            *StatValue = SysAllocString(L"Full Rate Video");
+            break;
+        case HALFRATEVIDEO:
+            *StatValue = SysAllocString(L"Half Rate Video");
+            break;
+        case PULLDOWN_22:
+            *StatValue = SysAllocString(L"2:2 Pulldown");
+            break;
+        case PULLDOWN_32:
+            *StatValue = SysAllocString(L"3:2 Pulldown");
+            break;
+        }
+        break;
+    case 1:
+        {
+            wchar_t Buffer[256];
+            wsprintfW(Buffer, L"%d", m_DetectedPulldownIndex);
+            *StatValue = SysAllocString(Buffer);
+        }
+        break;
+    default:
+        hr = E_UNEXPECTED;
+        break;
+    }
+
+    return hr;
+}
+
 
 HRESULT CDScaler::LoadDMOs()
 {

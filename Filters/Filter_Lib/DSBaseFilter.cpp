@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.10 2004-11-02 16:57:24 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.11 2004-12-15 13:04:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/11/02 16:57:24  adcockj
+// fix for crashing problem on exit
+//
 // Revision 1.9  2004/07/20 16:37:57  adcockj
 // Fixes for main issues raised in testing of 0.0.1
 //  - Improved parameter handling
@@ -354,12 +357,26 @@ STDMETHODIMP CDSBaseFilter::GetSyncSource(IReferenceClock **pClock)
 
 STDMETHODIMP CDSBaseFilter::GetPages(CAUUID* pPages)
 {
-    pPages->cElems = 2;
-    pPages->pElems = (CLSID*)CoTaskMemAlloc(sizeof(CLSID) * 2);
-    if(pPages->pElems == NULL)
-        return E_OUTOFMEMORY;
-    pPages->pElems[0] = CLSID_GenDMOPropPage;
-    pPages->pElems[1] = CLSID_LicensePropPage;
+    SI(IHaveStatistics) Stats = (IBaseFilter*)this;
+    if(Stats)
+    {
+        pPages->cElems = 3;
+        pPages->pElems = (CLSID*)CoTaskMemAlloc(sizeof(CLSID) * 3);
+        if(pPages->pElems == NULL)
+            return E_OUTOFMEMORY;
+        pPages->pElems[0] = CLSID_GenDMOPropPage;
+        pPages->pElems[1] = CLSID_StatisticsPropPage;
+        pPages->pElems[2] = CLSID_LicensePropPage;
+    }
+    else
+    {
+        pPages->cElems = 2;
+        pPages->pElems = (CLSID*)CoTaskMemAlloc(sizeof(CLSID) * 2);
+        if(pPages->pElems == NULL)
+            return E_OUTOFMEMORY;
+        pPages->pElems[0] = CLSID_GenDMOPropPage;
+        pPages->pElems[1] = CLSID_LicensePropPage;
+    }
     return S_OK;
 }
 

@@ -260,6 +260,9 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\StatisticsPropPage.cpp">
+			</File>
+			<File
 				RelativePath="StdAfx.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -295,6 +298,9 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				RelativePath="Resource.h">
 			</File>
 			<File
+				RelativePath=".\StatisticsPropPage.h">
+			</File>
+			<File
 				RelativePath="StdAfx.h">
 			</File>
 		</Filter>
@@ -306,6 +312,9 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			</File>
 			<File
 				RelativePath="LicensePropPage.rgs">
+			</File>
+			<File
+				RelativePath=".\StatisticsPropPage.rgs">
 			</File>
 		</Filter>
 	</Files>

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.12 2004-12-13 16:59:57 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.13 2004-12-15 13:04:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/12/13 16:59:57  adcockj
+// flag based film detection
+//
 // Revision 1.11  2004/12/06 18:05:01  adcockj
 // Major improvements to deinterlacing
 //
@@ -166,6 +169,19 @@ library GENDMOPROPLib
         [propget] HRESULT Authors([out, retval] BSTR* Authors);
 	}
 
+    [
+        object,
+		uuid(BBFCEC96-6D42-425e-9988-9C10E5ACDE27),
+		helpstring("IHaveStatistics Interface"),
+		pointer_default(unique)
+	]
+	interface IHaveStatistics : IUnknown
+	{
+        [propget] HRESULT NumStatistics([out, retval] DWORD* Number);
+		[propget] HRESULT StatisticName([in] DWORD Index, [out, retval] BSTR* StatName);
+		[propget] HRESULT StatisticValue([in] DWORD Index, [out, retval] BSTR* StatValue);
+	}
+
 	[
         object,
 		uuid(85F5007E-3759-4be0-854B-A78B06814DB7),
@@ -243,6 +259,15 @@ library GENDMOPROPLib
 		helpstring("LicensePropPage Class")
 	]
 	coclass LicensePropPage
+	{
+		interface IUnknown;
+	};
+
+    [
+		uuid(3DDF3FE5-24D4-4289-9143-E1FFD70CD934),
+		helpstring("StatisticsPropPage Class")
+	]
+	coclass StatisticsPropPage
 	{
 		interface IUnknown;
 	};

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.5 2004-12-15 13:04:10 adcockj Exp $
+// $Id: StatisticsPropPage.h,v 1.1 2004-12-15 13:04:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -19,30 +19,44 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#if !defined(AFX_STDAFX_H__0E93874E_7AED_11D7_B84B_0002A5623377__INCLUDED_)
-#define AFX_STDAFX_H__0E93874E_7AED_11D7_B84B_0002A5623377__INCLUDED_
+#ifndef __STATISTICSPROPPAGE_H_
+#define __STATISTICSPROPPAGE_H_
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
+#include "resource.h"       // main symbols
 
-#define STRICT
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0400
-#endif
-#define _ATL_APARTMENT_THREADED
+EXTERN_C const CLSID CLSID_StatisticsPropPage;
 
-#include <atlbase.h>
-//You may derive a class from CComModule and use it if you want to override
-//something, but do not change the name of _Module
-extern CComModule _Module;
-#include <atlcom.h>
-#include <atlctl.h>
-#include <windowsx.h>
+/////////////////////////////////////////////////////////////////////////////
+// CStatisticsPropPage
+class ATL_NO_VTABLE CStatisticsPropPage :
+	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComCoClass<CStatisticsPropPage, &CLSID_LicensePropPage>,
+	public IPropertyPageImpl<CStatisticsPropPage>,
+	public CDialogImpl<CStatisticsPropPage>
+{
+public:
+	CStatisticsPropPage();
 
-#include <medparam.h>
+	enum {IDD = IDD_STATISTICSPROPPAGE};
 
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+DECLARE_REGISTRY_RESOURCEID(IDR_STATISTICSPROPPAGE)
 
-#endif // !defined(AFX_STDAFX_H__0E93874E_7AED_11D7_B84B_0002A5623377__INCLUDED)
+DECLARE_PROTECT_FINAL_CONSTRUCT()
+
+BEGIN_COM_MAP(CStatisticsPropPage) 
+	COM_INTERFACE_ENTRY(IPropertyPage)
+END_COM_MAP()
+
+BEGIN_MSG_MAP(CStatisticsPropPage)
+	CHAIN_MSG_MAP(IPropertyPageImpl<CStatisticsPropPage>)
+END_MSG_MAP()
+
+	STDMETHOD(Apply)(void);
+    STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
+    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
+
+private:
+    CComQIPtr<IHaveStatistics> m_Statistics;
+};
+
+#endif //__LICENSEPROPPAGE_H_

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.cpp,v 1.2 2003-05-01 12:34:40 adcockj Exp $
+// $Id: GenDMOProp.cpp,v 1.3 2004-12-15 13:04:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/01 12:34:40  adcockj
+// Added headers and new license page
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -31,6 +34,7 @@
 #include "GenDMOProp_i.c"
 #include "GenDMOPropPage.h"
 #include "LicensePropPage.h"
+#include "StatisticsPropPage.h"
 
 
 CComModule _Module;
@@ -38,6 +42,7 @@ CComModule _Module;
 BEGIN_OBJECT_MAP(ObjectMap)
 OBJECT_ENTRY(CLSID_GenDMOPropPage, CGenDMOPropPage)
 OBJECT_ENTRY(CLSID_LicensePropPage, CLicensePropPage)
+OBJECT_ENTRY(CLSID_StatisticsPropPage, CStatisticsPropPage)
 END_OBJECT_MAP()
 
 /////////////////////////////////////////////////////////////////////////////

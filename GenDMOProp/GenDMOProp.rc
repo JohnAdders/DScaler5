@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE MOVEABLE PURE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE MOVEABLE PURE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE MOVEABLE PURE 
+3 TEXTINCLUDE 
 BEGIN
     "1 TYPELIB ""GenDMOProp.tlb""\r\n"
     "\0"
@@ -47,7 +47,6 @@ END
 #endif    // APSTUDIO_INVOKED
 
 
-#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -70,18 +69,16 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "This file is licensed under the LGPL\0"
-            VALUE "CompanyName", "DScaler Team\0"
-            VALUE "FileDescription", "GenDMOProp Module\0"
-            VALUE "FileVersion", "0, 0, 5, 0\0"
-            VALUE "InternalName", "GenDMOProp\0"
-            VALUE "LegalCopyright", "Copyright 2004 John Adcock et al\0"
-            VALUE "LegalTrademarks", "(c) 2004 John Adcock\0"
-            VALUE "OriginalFilename", "GenDMOProp.DLL\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "GenDMOProp Module\0"
-            VALUE "ProductVersion", "0, 0, 5, 0\0"
-            VALUE "SpecialBuild", "\0"
+            VALUE "Comments", "This file is licensed under the LGPL"
+            VALUE "CompanyName", "DScaler Team"
+            VALUE "FileDescription", "GenDMOProp Module"
+            VALUE "FileVersion", "0, 0, 5, 0"
+            VALUE "InternalName", "GenDMOProp"
+            VALUE "LegalCopyright", "Copyright 2004 John Adcock et al"
+            VALUE "LegalTrademarks", "(c) 2004 John Adcock"
+            VALUE "OriginalFilename", "GenDMOProp.DLL"
+            VALUE "ProductName", "GenDMOProp Module"
+            VALUE "ProductVersion", "0, 0, 5, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -90,15 +87,13 @@ BEGIN
     END
 END
 
-#endif    // !_MAC
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_PROJNAME            "GenDMOProp"
     IDS_TITLEGenDMOPropPage "Properties"
@@ -107,6 +102,12 @@ BEGIN
     IDS_DOCSTRINGLicensePropPage "License for this Filter"
     IDS_GPL                 "This filter comes with ABSOLUTELY NO WARRANTY.  This software is licenced under the terms of the GNU GPL. See http://www.fsf.org/licenses/gpl.html for details."
     IDS_LGPL                "This filter comes with ABSOLUTELY NO WARRANTY.  This software is licenced under the terms of the GNU LGPL. See http://www.fsf.org/licenses/lgpl.html for details."
+    IDS_TITLEStatisticsPropPage "Statistics"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_DOCSTRINGStatisticsPropPage "Statistics for this filter"
 END
 
 #endif    // English (U.S.) resources
@@ -127,16 +128,17 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
 // REGISTRY
 //
 
-IDR_GENDMOPROPPAGE      REGISTRY MOVEABLE PURE  "GenDMOPropPage.rgs"
-IDR_LICENSEPROPPAGE     REGISTRY MOVEABLE PURE  "LicensePropPage.rgs"
+IDR_GENDMOPROPPAGE      REGISTRY                "GenDMOPropPage.rgs"
+IDR_LICENSEPROPPAGE     REGISTRY                "LicensePropPage.rgs"
+IDR_STATISTICSPROPPAGE  REGISTRY                "StatisticsPropPage.rgs"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_GENDMOPROPPAGE DIALOG DISCARDABLE  0, 0, 271, 105
-STYLE WS_CHILD
+IDD_GENDMOPROPPAGE DIALOG  0, 0, 271, 105
+STYLE DS_SETFONT | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LISTBOX         IDC_PARAMETERLIST,1,1,84,104,LBS_NOINTEGRALHEIGHT | 
@@ -157,14 +159,22 @@ BEGIN
                     WS_VISIBLE
 END
 
-IDD_LICENSEPROPPAGE DIALOG DISCARDABLE  0, 0, 271, 105
-STYLE WS_CHILD
+IDD_LICENSEPROPPAGE DIALOG  0, 0, 271, 105
+STYLE DS_SETFONT | WS_CHILD
 FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Static",IDC_NAME,1,2,270,12
     LTEXT           "Static",IDC_COPYRIGHT,1,21,270,27
     LTEXT           "Static",IDC_LICENSE,1,55,270,33
     LTEXT           "Static",IDC_HOMEPAGE,1,93,266,11
+END
+
+IDD_STATISTICSPROPPAGE DIALOGEX 0, 0, 271, 105
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LISTBOX         IDC_LIST1,7,6,257,91,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
+                    WS_TABSTOP
 END
 
 #endif    // English (U.K.) resources
