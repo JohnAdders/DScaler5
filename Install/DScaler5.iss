@@ -1,5 +1,5 @@
 ;////////////////////////////////////////////////////////////////////////////
-;// $Id: DScaler5.iss,v 1.2 2004-04-14 16:29:26 adcockj Exp $
+;// $Id: DScaler5.iss,v 1.3 2004-07-11 15:29:23 adcockj Exp $
 ;/////////////////////////////////////////////////////////////////////////////
 ;// Copyright (c) 2002 John Adcock.  All rights reserved.
 ;/////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.2  2004/04/14 16:29:26  adcockj
+;// Updated instaler for help and to latest version of Innosetup
+;//
 ;// Revision 1.1  2004/04/08 19:03:28  adcockj
 ;// Added Install routine
 ;//
@@ -36,22 +39,17 @@ DefaultDirName={pf}\DScaler5
 DefaultGroupName=DScaler5
 AllowNoIcons=yes
 LicenseFile=gpl.rtf
-AppMutex=Dscaler5
+AppMutex=DScaler5
 ;required for installing the driver on NT platforms
-PrivilegesRequired=Admin
-VersionInfoVersion=0.0.1
-SolidCompression=yes
+AdminPrivilegesRequired=yes
+DisableStartupPrompt=yes
 
 
 
 [Messages]
-[Messages]
-BeveledLabel=DScaler
+BeveledLabel=DScaler 5
 WizardLicense=GPL License Agreement
-LicenseLabel=Please read the following important information before continuing.  The document explains the rights you have to this software.
-LicenseLabel3=Do you want to continue to install [name]?.
-LicenseAccepted=I want to &continue
-LicenseNotAccepted=I &do not want to continue
+LicenseLabel2=Do you want to continue to install [name]? If you choose No, Setup will close.
 WizardInfoBefore=Warning
 InfoBeforeLabel=Please read the following important warning before continuing.
 InfoBeforeClickLabel=When you are ready and happy to continue with Setup, click Next.
@@ -63,10 +61,10 @@ Name: "main"; Description: "Main Files"; Types: full; Flags: fixed
 Name: "desktopicon"; Description: "Create a &desktop icon"; GroupDescription: "Additional icons:"; MinVersion: 4,4
 
 [Files]
-Source: "..\Release\MpegAudio.dll"; DestDir: "{app}"; Flags: regserver ignoreversion;
-Source: "..\Release\MpegVideo.dll"; DestDir: "{app}"; Flags: regserver ignoreversion;
-Source: "..\Release\GenDMOProp.dll"; DestDir: "{app}"; Flags: regserver ignoreversion;
-Source: "..\Release\DScaler5.chm"; DestDir: "{app}"; Flags: ignoreversion;
+Source: "..\Release\MpegAudio.dll"; DestDir: "{app}"; Flags: regserver;
+Source: "..\Release\MpegVideo.dll"; DestDir: "{app}"; Flags: regserver;
+Source: "..\Release\GenDMOProp.dll"; DestDir: "{app}"; Flags: regserver;
+Source: "..\Release\DScaler5.chm"; DestDir: "{app}"; Flags:;
 
 [INI]
 Filename: "{app}\DScaler.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://www.dscaler.org"
@@ -76,7 +74,6 @@ Filename: "{app}\Support.url"; Section: "InternetShortcut"; Key: "URL"; String: 
 Name: "{group}\DScaler on the Web"; Filename: "{app}\DScaler.url"
 Name: "{group}\Support Forum"; Filename: "{app}\Support.url"
 Name: "{group}\DScaler 5 Help"; Filename: "{app}\DScaler5.chm"
-Name: "{group}\Uninstall DScaler 5"; Filename: "{uninstallexe}"
 
 [UninstallDelete]
 Type: files; Name: "{app}\DScaler.url"
