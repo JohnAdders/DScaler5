@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.10 2005-01-04 17:53:44 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.11 2005-02-03 15:34:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2005/01/04 17:53:44  adcockj
+// added option to force dscalewr filter to be loaded2
+//
 // Revision 1.9  2004/12/06 18:05:00  adcockj
 // Major improvements to deinterlacing
 //
@@ -94,50 +97,60 @@ HRESULT CDSVideoOutPin::NotifyConnected()
     CLSID Clsid;
 
     HRESULT hr = GetConnectedFilterCLSID(&Clsid);
-    if(Clsid == CLSID_VideoMixingRenderer9)
+    SI(IVMRVideoStreamControl9) VMR9Test = m_ConnectedPin;
+    SI(IVMRVideoStreamControl) VMR7Test = m_ConnectedPin;
+    if(VMR9Test)
     {
+        LOG(DBGLOG_FLOW, ("Connected to VMR9\n"));
         m_ConnectedType = VMR9_OUTFILTER;
         OnConnectToVMR9();
     }
-    else if(Clsid == CLSID_VideoMixingRenderer ||
+    else if(VMR7Test ||
+            Clsid == CLSID_VideoMixingRenderer ||
             Clsid == CLSID_VideoRendererDefault)
     {
+        LOG(DBGLOG_FLOW, ("Connected to VMR7\n"));
         m_ConnectedType = VMR7_OUTFILTER;
         OnConnectToVMR7();
     }
     else if(Clsid == CLSID_FFDShow ||
             Clsid == CLSID_FFDShowRaw)
     {
+        LOG(DBGLOG_FLOW, ("Connected to ffdshow\n"));
         m_ConnectedType = FFDSHOW_OUTFILTER;
     }
     else if(Clsid == CLSID_DirectVobSubFilter ||
         Clsid == CLSID_DirectVobSubFilter2)
     {
+        LOG(DBGLOG_FLOW, ("Connected to Vobsub\n"));
         m_ConnectedType = GABEST_OUTFILTER;
     }
     else if(Clsid == CLSID_OverlayMixer)
     {
+        LOG(DBGLOG_FLOW, ("Connected to Overlay\n"));
         OnConnectToOverlay();
         m_ConnectedType = OVERLAY_OUTFILTER;
     }
-	else if(Clsid == CLSID_WM10RENDERER)
-	{
+    else if(Clsid == CLSID_WM10RENDERER)
+    {
+        LOG(DBGLOG_FLOW, ("Connected to WM10\n"));
         m_ConnectedType = WM10_OUTFILTER;
-	}
-	else if(Clsid == CLSID_CDScaler)
-	{
+    }
+    else if(Clsid == CLSID_CDScaler)
+    {
+        LOG(DBGLOG_FLOW, ("Connected to Dscaler\n"));
         m_ConnectedType = DSCALER_OUTFILTER;
-	}
+    }
     else
     {
-	    LOG(DBGLOG_FLOW, ("Unknown Renderer - %s", GetGUIDName(Clsid)));
+        LOG(DBGLOG_FLOW, ("Unknown Renderer - %s\n", GetGUIDName(Clsid)));
         SI(IPinConnection) PinConnection = m_ConnectedPin;
         if(!PinConnection)
         {
             return VFW_E_NO_TRANSPORT;
         }
         m_ConnectedType = DEFAULT_OUTFILTER;
-		return VFW_E_NO_TRANSPORT;
+        return VFW_E_NO_TRANSPORT;
     }
     return hr;
 }
@@ -400,11 +413,11 @@ void CDSVideoOutPin::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-	if(pitchIn < w)
-	{
-	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
-		return;
-	}
+    if(pitchIn < w)
+    {
+        LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+        return;
+    }
 
 
     if(m_DoPanAndScan)
@@ -460,11 +473,11 @@ void CDSVideoOutPin::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-	if(pitchIn < w)
-	{
-	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
-		return;
-	}
+    if(pitchIn < w)
+    {
+        LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+        return;
+    }
 
     if(bihOut->biCompression == '2YUY')
     {
@@ -504,11 +517,11 @@ void CDSVideoOutPin::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
     BYTE* pInV = ppIn[2];
 
     w = (w+7)&~7;
-	if(pitchIn < w)
-	{
-	    LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
-		return;
-	}
+    if(pitchIn < w)
+    {
+        LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+        return;
+    }
 
     if(bihOut->biCompression == '2YUY')
     {
@@ -549,9 +562,9 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         (m_AspectX != m_CurrentAspectX) || 
         (m_AspectY != m_CurrentAspectY))
     {
-	    m_InsideReconnect = true;
-	    m_PitchWidth = 0;
-	    m_PitchHeight = 0;
+        m_InsideReconnect = true;
+        m_PitchWidth = 0;
+        m_PitchHeight = 0;
 
         switch(m_ConnectedType)
         {
@@ -565,9 +578,9 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         case DSCALER_OUTFILTER:
             hr = ReconnectOverlay();
             break;
-		case WM10_OUTFILTER:
-			hr = ReconnectWM10();
-			break;
+        case WM10_OUTFILTER:
+            hr = ReconnectWM10();
+            break;
         case DEFAULT_OUTFILTER:
             hr = ReconnectOther();
             break;
@@ -640,78 +653,78 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
     }
 
     bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
-	m_InternalMT.bFixedSizeSamples = 0;
-	m_InternalMT.lSampleSize = bmi->biSizeImage;
-	LogMediaType(&m_InternalMT, "VMR7 Type", DBGLOG_FLOW);
+    m_InternalMT.bFixedSizeSamples = 0;
+    m_InternalMT.lSampleSize = bmi->biSizeImage;
+    LogMediaType(&m_InternalMT, "VMR7 Type", DBGLOG_FLOW);
 
-	SI(IPinConnection) m_PinConnection = m_ConnectedPin;
-	if(m_PinConnection)
-	{
-		hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-	else
-	{
-		hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
+    SI(IPinConnection) m_PinConnection = m_ConnectedPin;
+    if(m_PinConnection)
+    {
+        hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
+    else
+    {
+        hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
 
-	if(NeedReconnect)
-	{
-		hr = m_ConnectedPin->BeginFlush();
-		LOG(DBGLOG_FLOW, ("BeginFlush %08x\n", hr));
-		CHECK(hr);
-		
-		hr = m_ConnectedPin->EndFlush();
-		LOG(DBGLOG_FLOW, ("EndFlush %08x\n", hr));
-		CHECK(hr);
+    if(NeedReconnect)
+    {
+        hr = m_ConnectedPin->BeginFlush();
+        LOG(DBGLOG_FLOW, ("BeginFlush %08x\n", hr));
+        CHECK(hr);
+        
+        hr = m_ConnectedPin->EndFlush();
+        LOG(DBGLOG_FLOW, ("EndFlush %08x\n", hr));
+        CHECK(hr);
 
 
-		hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
-		LOG(DBGLOG_FLOW, ("ReceiveConnection %08x\n", hr));
+        hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
+        LOG(DBGLOG_FLOW, ("ReceiveConnection %08x\n", hr));
 
         hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
         CHECK(hr);
 
-		ALLOCATOR_PROPERTIES AllocatorProps;
-		hr = m_Allocator->GetProperties(&AllocatorProps);
-		LOG(DBGLOG_FLOW, ("GetProperties %08x\n", hr));
-		CHECK(hr);
-		if(m_PitchWidth != 0 && (bmi->biWidth != m_PitchWidth || bmi->biHeight != m_PitchHeight))
-		{
-			bmi->biWidth = m_PitchWidth;
-			bmi->biHeight = m_PitchHeight;
-			bmi->biSizeImage = abs(m_PitchHeight)*bmi->biWidth*bmi->biBitCount>>3;
-			m_InternalMT.lSampleSize = bmi->biSizeImage;
-	        m_NeedToAttachFormat = true;
-		}
-		// if the new type would be greater than the old one then
-		// we need to reconnect otherwise just attach the type to the next sample
-		if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-		{	
-			hr = m_Allocator->Decommit();
+        ALLOCATOR_PROPERTIES AllocatorProps;
+        hr = m_Allocator->GetProperties(&AllocatorProps);
+        LOG(DBGLOG_FLOW, ("GetProperties %08x\n", hr));
+        CHECK(hr);
+        if(m_PitchWidth != 0 && (bmi->biWidth != m_PitchWidth || bmi->biHeight != m_PitchHeight))
+        {
+            bmi->biWidth = m_PitchWidth;
+            bmi->biHeight = m_PitchHeight;
+            bmi->biSizeImage = abs(m_PitchHeight)*bmi->biWidth*bmi->biBitCount>>3;
+            m_InternalMT.lSampleSize = bmi->biSizeImage;
+            m_NeedToAttachFormat = true;
+        }
+        // if the new type would be greater than the old one then
+        // we need to reconnect otherwise just attach the type to the next sample
+        if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+        {   
+            hr = m_Allocator->Decommit();
 
-			ALLOCATOR_PROPERTIES PropsAct;
-			AllocatorProps.cbBuffer = bmi->biSizeImage;
-			hr = m_Allocator->SetProperties(&AllocatorProps, &PropsAct);
-			CHECK(hr);     
-			LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+            ALLOCATOR_PROPERTIES PropsAct;
+            AllocatorProps.cbBuffer = bmi->biSizeImage;
+            hr = m_Allocator->SetProperties(&AllocatorProps, &PropsAct);
+            CHECK(hr);     
+            LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
 
-			LOG(DBGLOG_FLOW, ("Decommit %08x\n", hr));
-			hr = m_Allocator->Commit();
-		}
+            LOG(DBGLOG_FLOW, ("Decommit %08x\n", hr));
+            hr = m_Allocator->Commit();
+        }
     }
     else
     {
-    	m_NeedToAttachFormat = true; 
+        m_NeedToAttachFormat = true; 
     }
 
     return hr;
@@ -750,8 +763,8 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
     Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
 
     if((m_Width != m_CurrentWidth) || 
-		(m_Height != m_CurrentHeight))
-	{
+        (m_Height != m_CurrentHeight))
+    {
 
         bmi->biWidth = m_Width;
 
@@ -765,64 +778,64 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
         }
         bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
 
-	    m_InternalMT.bFixedSizeSamples = 1;
-	    m_InternalMT.lSampleSize = bmi->biSizeImage;
+        m_InternalMT.bFixedSizeSamples = 1;
+        m_InternalMT.lSampleSize = bmi->biSizeImage;
 
 
-    	SI(IPinConnection) m_PinConnection = m_ConnectedPin;
-	    if(m_PinConnection)
-	    {
-		    hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-		    if(hr != S_OK)
-		    {
-			    LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-			    return VFW_E_TYPE_NOT_ACCEPTED;
-		    }
-	    }
-	    else
-	    {
-		    hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
-		    if(hr != S_OK)
-		    {
-			    LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-			    return VFW_E_TYPE_NOT_ACCEPTED;
-		    }
-	    }
+        SI(IPinConnection) m_PinConnection = m_ConnectedPin;
+        if(m_PinConnection)
+        {
+            hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+            if(hr != S_OK)
+            {
+                LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
+        else
+        {
+            hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
+            if(hr != S_OK)
+            {
+                LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
 
-	    // if the new type would be greater than the old one then
-	    // we need to reconnect otherwise just attach the type to the next sample
-		hr = m_ConnectedPin->BeginFlush();
-		CHECK(hr);
-		hr = m_ConnectedPin->EndFlush();
-		CHECK(hr);
-		hr = m_Allocator->Decommit();
-		CHECK(hr);
+        // if the new type would be greater than the old one then
+        // we need to reconnect otherwise just attach the type to the next sample
+        hr = m_ConnectedPin->BeginFlush();
+        CHECK(hr);
+        hr = m_ConnectedPin->EndFlush();
+        CHECK(hr);
+        hr = m_Allocator->Decommit();
+        CHECK(hr);
 
-		hr = NegotiateAllocator(NULL, &m_InternalMT);
-		CHECK(hr);
+        hr = NegotiateAllocator(NULL, &m_InternalMT);
+        CHECK(hr);
 
-		hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
-		CHECK(hr);
+        hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
+        CHECK(hr);
 
-		hr = m_Allocator->Commit();
-		CHECK(hr);
+        hr = m_Allocator->Commit();
+        CHECK(hr);
 
         if(m_PitchWidth != 0)
-		{
-			bmi->biWidth = m_PitchWidth;
-			bmi->biHeight = m_PitchHeight;
-			bmi->biSizeImage = m_Height*bmi->biWidth*bmi->biBitCount>>3;
-			m_InternalMT.lSampleSize = bmi->biSizeImage;
+        {
+            bmi->biWidth = m_PitchWidth;
+            bmi->biHeight = m_PitchHeight;
+            bmi->biSizeImage = m_Height*bmi->biWidth*bmi->biBitCount>>3;
+            m_InternalMT.lSampleSize = bmi->biSizeImage;
 
             m_NeedToAttachFormat = true; 
-		}
+        }
 
-	}
-	else
-	{
+    }
+    else
+    {
         // only an aspect ratio change so just use the format
-		m_NeedToAttachFormat = true; 
-	}
+        m_NeedToAttachFormat = true; 
+    }
 
     return hr;
 }
@@ -869,39 +882,39 @@ HRESULT CDSVideoOutPin::ReconnectOther()
 
     bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
 
-	m_InternalMT.bFixedSizeSamples = 1;
-	m_InternalMT.lSampleSize = bmi->biSizeImage;
+    m_InternalMT.bFixedSizeSamples = 1;
+    m_InternalMT.lSampleSize = bmi->biSizeImage;
 
 
-	SI(IPinConnection) m_PinConnection = m_ConnectedPin;
-	if(m_PinConnection)
-	{
-		hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-	else
-	{
-		hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
+    SI(IPinConnection) m_PinConnection = m_ConnectedPin;
+    if(m_PinConnection)
+    {
+        hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
+    else
+    {
+        hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
 
-	if(!m_Allocator) return E_NOINTERFACE;
+    if(!m_Allocator) return E_NOINTERFACE;
 
-	SI(IGraphConfig) GraphConfig = m_Filter->m_Graph;
+    SI(IGraphConfig) GraphConfig = m_Filter->m_Graph;
 
-	if(GraphConfig)
-	{
-		hr = GraphConfig->Reconnect(this, m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-		CHECK(hr);
-	}
+    if(GraphConfig)
+    {
+        hr = GraphConfig->Reconnect(this, m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+        CHECK(hr);
+    }
 
     return hr;
 }
@@ -948,11 +961,11 @@ HRESULT CDSVideoOutPin::ReconnectWM10()
 
     bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
 
-	m_InternalMT.bFixedSizeSamples = 1;
-	m_InternalMT.lSampleSize = bmi->biSizeImage;
+    m_InternalMT.bFixedSizeSamples = 1;
+    m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-	m_NeedToAttachFormat = true; 
-	return S_OK;
+    m_NeedToAttachFormat = true; 
+    return S_OK;
 }
 
 
@@ -1063,28 +1076,28 @@ HRESULT CDSVideoOutPin::AdjustRenderersMediaType()
 
     bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
 
-	m_InternalMT.bFixedSizeSamples = 1;
-	m_InternalMT.lSampleSize = bmi->biSizeImage;
-	SI(IPinConnection) m_PinConnection = m_ConnectedPin;
+    m_InternalMT.bFixedSizeSamples = 1;
+    m_InternalMT.lSampleSize = bmi->biSizeImage;
+    SI(IPinConnection) m_PinConnection = m_ConnectedPin;
 
-	if(m_PinConnection)
-	{
-		hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
-	else
-	{
-		hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
-		if(hr != S_OK)
-		{
-			LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-			return VFW_E_TYPE_NOT_ACCEPTED;
-		}
-	}
+    if(m_PinConnection)
+    {
+        hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
+    else
+    {
+        hr = m_ConnectedPin->QueryAccept(&m_InternalMT);
+        if(hr != S_OK)
+        {
+            LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
     return S_OK;
 }
 
@@ -1117,21 +1130,21 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 
 void CDSVideoOutPin::SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame)
 {
-	if(AvgTimePerFrame != 0)
-	{
-	    m_AvgTimePerFrame = AvgTimePerFrame;
-	}
-	else
-	{
-		if(m_Height == 576)
-		{
-		    m_AvgTimePerFrame = 400000;
-		}
-		else
-		{
-		    m_AvgTimePerFrame = 333667;
-		}
-	}
+    if(AvgTimePerFrame != 0)
+    {
+        m_AvgTimePerFrame = AvgTimePerFrame;
+    }
+    else
+    {
+        if(m_Height == 576)
+        {
+            m_AvgTimePerFrame = 400000;
+        }
+        else
+        {
+            m_AvgTimePerFrame = 333667;
+        }
+    }
 }
 
 CDSVideoOutPin::OUT_TYPE CDSVideoOutPin::GetConnectedType()
