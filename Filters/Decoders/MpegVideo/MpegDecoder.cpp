@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.69 2005-03-04 17:54:37 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.70 2005-03-08 13:35:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.69  2005/03/04 17:54:37  adcockj
+// Menu fixes & added rate stuff locking
+//
 // Revision 1.68  2005/02/17 09:31:45  adcockj
 // Added analog blanking option
 // Removed force Dscaler filter option
@@ -568,7 +571,7 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 	}
 	else
 	{
-		//return E_FAIL;
+		return E_FAIL;
 	}
 
     if(pPin == m_VideoOutPin)
