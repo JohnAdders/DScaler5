@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.17 2005-02-08 15:32:36 adcockj Exp $
+// $Id: DScaler.h,v 1.18 2005-02-17 09:41:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -156,7 +156,7 @@ private:
 
     HRESULT InternalProcessOutput();
     eHowToProcess WorkOutHowToProcess(REFERENCE_TIME& FrameEndTime);
-    HRESULT WeaveOutput(REFERENCE_TIME& FrameEndTime);
+    HRESULT WeaveOutput(REFERENCE_TIME* FrameEndTime);
     HRESULT DeinterlaceOutput(REFERENCE_TIME& FrameEndTime);
     HRESULT Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer);
     void WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);

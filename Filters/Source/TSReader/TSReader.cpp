@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TSReader.cpp,v 1.2 2004-10-26 16:35:03 adcockj Exp $
+// $Id: TSReader.cpp,v 1.3 2005-02-17 09:41:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/10/26 16:35:03  adcockj
+// Whoops - should be GPL not LGPL
+//
 // Revision 1.1  2004/10/26 16:26:54  adcockj
 // Added new Transport stream source filter
 //
@@ -677,6 +680,7 @@ void CTSReader::CPSIData::UpdatePMT(dvbpsi_pmt_t* p_pmt)
         dvbpsi_pmt_es_t* pEs = p_pmt->p_first_es;
         while(pEs)
         {
+            LOG(DBGLOG_FLOW, (" PID %x Type %d\n", pEs->i_pid, pEs->i_type));
             if((pEs->i_type == 1 || pEs->i_type == 2) && m_VideoPid == -1)
             {
                 m_VideoPid = pEs->i_pid;

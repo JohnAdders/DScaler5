@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.18 2005-01-04 17:53:44 adcockj Exp $
+// $Id: DScaler.cpp,v 1.19 2005-02-17 09:41:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2005/01/04 17:53:44  adcockj
+// added option to force dscalewr filter to be loaded2
+//
 // Revision 1.17  2004/12/21 14:47:00  adcockj
 // fixed connection and settings issues
 //
@@ -182,7 +185,7 @@ CDScaler::~CDScaler()
 
 STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
 {
-    LOG(DBGLOG_FLOW, ("CDScaler::GetClassID\n"));
+    LOG(DBGLOG_ALL, ("CDScaler::GetClassID\n"));
     if(pClassID == NULL)
     {
         return E_POINTER;
@@ -761,7 +764,7 @@ HRESULT CDScaler::InternalProcessOutput()
         case PROCESS_IGNORE:
             break;
         case PROCESS_WEAVE:
-            hr = WeaveOutput(FrameEndTime);
+            hr = WeaveOutput(&FrameEndTime);
             break;
         case PROCESS_DEINTERLACE:
             hr = DeinterlaceOutput(FrameEndTime);
@@ -916,7 +919,7 @@ HRESULT CDScaler::UpdateMovementMap()
     return hr;
 }
 
-HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
+HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
 {
 	HRESULT hr = S_OK;
 
@@ -945,15 +948,26 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 
 	if(hr == S_OK && !m_VideoInPin->IsFlushing())
 	{
-        // just in case things go a bit funny
-        if(m_LastStartEnd >= FrameEndTime)
+        if(FrameEndTime)
         {
-            m_LastStartEnd = FrameEndTime - 1;
-        }
-		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
-		CHECK(hr);
+            // just in case things go a bit funny
+            if(m_LastStartEnd >= *FrameEndTime)
+            {
+                m_LastStartEnd = *FrameEndTime - 1;
+            }
+		    hr = OutSample->SetTime(&m_LastStartEnd, FrameEndTime);
+		    CHECK(hr);
         
-        LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
+            LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Weave]\n", 
+                            m_LastStartEnd, *FrameEndTime));
+
+            m_LastStartEnd = *FrameEndTime;
+        }
+        else
+        {
+		    hr = OutSample->SetTime(NULL, NULL);
+		    CHECK(hr);
+        }
 		
         // finally send the processed sample on it's way
 		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
@@ -965,8 +979,6 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 		LOG(DBGLOG_FLOW, ("Skipped\n"));
 		hr = S_OK;
 	}
-
-    m_LastStartEnd = FrameEndTime;
 
     return hr;
 }
@@ -1005,6 +1017,10 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 	{
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
+
+        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Deint]\n", 
+                        m_LastStartEnd, FrameEndTime));
+
 
         // finally send the processed sample on it's way
 		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
@@ -1223,43 +1239,47 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
         return E_UNEXPECTED;
     }
 
-    // if there was a discontinuity then we need to ask for the buffer
-    // differently 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	{
-		m_IsDiscontinuity = true;
-	}
-
-    if((pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID) != AM_SAMPLE_STOPVALID ||
-        pSampleProperties->tStop <= pSampleProperties->tStart ||
-        (pSampleProperties->tStop - pSampleProperties->tStart) == 1)
-	{
-        pSampleProperties->tStop = pSampleProperties->tStart + m_VideoOutPin->GetAvgTimePerFrame();
-		m_IsDiscontinuity = true;
-	}
-
-
-    if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)
-    {
-        VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
-        if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
-        {
-            pSampleProperties->dwTypeSpecificFlags |= AM_VIDEO_FLAG_FIELD1FIRST;
-        }
-    }
-
 	HRESULT hr = CheckProcessingLine();
 	CHECK(hr);
 
-    if(pSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_SHOWNOW)
+    if((pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID) == AM_SAMPLE_TIMEVALID)
     {
-        hr = ShowNow(InSample, pSampleProperties);
+        // if there was a discontinuity then we need to ask for the buffer
+        // differently 
+        if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+	    {
+		    m_IsDiscontinuity = true;
+            m_LastStartEnd = pSampleProperties->tStart;
+	    }
+
+        if((pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID) != AM_SAMPLE_STOPVALID ||
+            pSampleProperties->tStop <= pSampleProperties->tStart ||
+            (pSampleProperties->tStop - pSampleProperties->tStart) == 1)
+	    {
+            pSampleProperties->tStop = pSampleProperties->tStart + m_VideoOutPin->GetAvgTimePerFrame();
+	    }
+
+        if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)
+        {
+            VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+            if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+            {
+                pSampleProperties->dwTypeSpecificFlags |= AM_VIDEO_FLAG_FIELD1FIRST;
+            }
+        }
+
+        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [TypeSpec %x Flags %x]\n", 
+                        pSampleProperties->tStart, pSampleProperties->tStop,
+                        pSampleProperties->dwTypeSpecificFlags,
+                        pSampleProperties->dwSampleFlags));
+
+        hr = PushSample(InSample, pSampleProperties);
     }
     else
     {
-        hr = PushSample(InSample, pSampleProperties);
+        hr = ShowNow(InSample, pSampleProperties);
+		m_IsDiscontinuity = true;
     }
-    CHECK(hr);
 
 	if(FAILED(hr) || hr == S_FALSE)
 	{
@@ -1369,11 +1389,11 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
-            hr = InternalProcessOutput();
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
                 m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;    
             }
+            hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
@@ -1395,11 +1415,11 @@ HRESULT CDScaler::ShowNow(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSa
 
     ShiftUpSamples(1, InputSample);
     m_IncomingFields[0].m_IsTopLine = TRUE;
-    m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    m_IncomingFields[0].m_EndTime = 0;
     ShiftUpSamples(1, InputSample);
     m_IncomingFields[0].m_IsTopLine = FALSE;
-    m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
-    hr = WeaveOutput(InSampleProperties->tStop);
+    m_IncomingFields[0].m_EndTime = 0;
+    hr = WeaveOutput(NULL);
     CHECK(hr);
     PopStack();
     PopStack();
