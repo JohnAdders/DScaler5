@@ -11,7 +11,7 @@ cd DScaler5
 7z a -tzip ..\DScaler5%1src.zip *.* -r
 call c:\PROGRA~1\MICROS~2\VC98\bin\vcvars32.bat
 cd Help
-"c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler.hhp
+"c:\Program Files\HTML Help Workshop\hhc.exe" Dscaler5.hhp
 cd ..\Filters\Decoders\MpegAudio
 msdev MpegAudio.dsw /MAKE "All"
 cd ..\MpegVideo
