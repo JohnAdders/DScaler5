@@ -47,6 +47,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Filter_Lib
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name FD_DScaler
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -88,6 +91,24 @@ Package=<4>
 ###############################################################################
 
 Project: "Deint_Weave"=..\..\..\DMO\Deinterlace\Deint_Weave\Deint_Weave.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "FD_DScaler"=..\..\..\DMO\FilmDetect\FD_DScaler\FD_DScaler.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
