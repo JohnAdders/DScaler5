@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.11 2005-02-03 15:34:40 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.12 2005-03-10 09:03:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2005/02/03 15:34:40  adcockj
+// better vmr connections
+//
 // Revision 1.10  2005/01/04 17:53:44  adcockj
 // added option to force dscalewr filter to be loaded2
 //
@@ -379,6 +382,10 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         if(TypeNum%3 == InterlacedIndex)
         {
             vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
+            if(m_AvgTimePerFrame == 400000)
+            {
+                vih->dwInterlaceFlags |= AMINTERLACE_Field1First;
+            }
         }
         vih->AvgTimePerFrame = m_AvgTimePerFrame;
         vih->dwControlFlags = ControlFlags;
