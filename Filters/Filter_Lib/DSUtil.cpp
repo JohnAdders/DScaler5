@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.6 2004-08-06 08:38:53 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/08/06 08:38:53  adcockj
+// Added optional YV12 output type
+//
 // Revision 1.5  2004/07/29 13:44:59  adcockj
 // More fixes for Laurent's issues
 //
@@ -188,3 +191,46 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     return(true);
 }
 
+// function taken from 
+// header.c
+// Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
+// Copyright (C) 2003      Regis Duchesne <hpreg@zoy.org>
+// Copyright (C) 1999-2000 Aaron Holtzman <aholtzma@ess.engr.uvic.ca>
+//
+// This file is part of mpeg2dec, a free MPEG-2 video stream decoder.
+// See http://libmpeg2.sourceforge.net/ for updates.
+void Simplify(long& u, long& v)
+{
+    long a, b, tmp;
+
+    a = u;  
+    b = v;
+    
+    while (a) 
+    {   
+        /* find greatest common divisor */
+        tmp = a;    
+        a = b % tmp;    
+        b = tmp;
+    }
+    u /= b;
+    v /= b;
+}
+
+void Simplify(unsigned long& u, unsigned long& v)
+{
+    unsigned long a, b, tmp;
+
+    a = u;  
+    b = v;
+    
+    while (a) 
+    {   
+        /* find greatest common divisor */
+        tmp = a;    
+        a = b % tmp;    
+        b = tmp;
+    }
+    u /= b;
+    v /= b;
+}

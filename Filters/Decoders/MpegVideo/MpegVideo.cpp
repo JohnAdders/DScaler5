@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.7 2004-07-16 15:58:01 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.8 2004-10-28 15:52:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/16 15:58:01  adcockj
+// Fixed compilation issues under .NET
+// Changed name of filter
+// Some performance improvements to libmpeg2
+//
 // Revision 1.6  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -50,7 +55,6 @@
 #include "resource.h"
 #include <initguid.h>
 #include "MpegDecoder.h"
-#include "MoreUuids.h"
 #include "CPUID.h"
 
 #include "..\GenDMOProp\GenDMOProp_i.c"

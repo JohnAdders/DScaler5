@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToRGB.cpp,v 1.3 2004-07-07 14:07:07 adcockj Exp $
+// $Id: PlanarYUVToRGB.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  This file based on code taken from vd.cpp in the guliverkli project
@@ -29,6 +29,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.2  2004/03/08 17:04:02  adcockj
 // Removed all inline assembler to remove dependence on MS compilers
 //

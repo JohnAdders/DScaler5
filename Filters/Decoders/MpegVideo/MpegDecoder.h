@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.27 2004-10-26 16:23:44 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.28 2004-10-28 15:52:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -123,8 +123,6 @@ protected:
 private:
     mpeg2dec_t* m_dec;
     mpeg2_sequence_t m_CurrentSequence;
-    AM_MEDIA_TYPE m_InternalMT;
-    bool m_NeedToAttachFormat;
     REFERENCE_TIME m_AvgTimePerFrame;
     REFERENCE_TIME m_LastOutputTime;
     bool m_fWaitForKeyFrame;
@@ -134,11 +132,8 @@ private:
     int m_OutputWidth;
     int m_OutputHeight;
     int m_InternalPitch;
-    bool m_DoPanAndScan;
     bool m_FilmCameraModeHint;
     bool m_LetterBoxed;
-    DWORD m_PanScanOffsetX;
-    DWORD m_PanScanOffsetY;
     DWORD m_ControlFlags;
     DWORD m_PicturesSinceSequence;
     BYTE m_AFD;
@@ -180,30 +175,17 @@ private:
 
     enum
     {
-        DEFAULT_OUTFILTER,
-        FFDSHOW_OUTFILTER,
-        GABEST_OUTFILTER,
-        OVERLAY_OUTFILTER,
-        VMR7_OUTFILTER,
-        VMR9_OUTFILTER
-    } m_ConnectedToOut;
-
-    enum
-    {
         DEFAULT_INFILTER,
         DVD_INFILTER,
     } m_ConnectedToIn;
 
     int m_MpegWidth;
     int m_MpegHeight;
-    int m_CurrentWidth;
-    int m_CurrentHeight;
     long m_ARMpegX;
     long m_ARMpegY;
     long m_ARAdjustX;
     long m_ARAdjustY;
-    long m_ARCurrentOutX;
-    long m_ARCurrentOutY;
+    bool m_PanAndScanDVD;
     
     typedef enum 
     {
@@ -233,19 +215,10 @@ private:
         SPACE_YUY2,
     } eOutputSpace;
 
-    void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-    void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-    void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
-    HRESULT CheckForReconnection();
-    HRESULT ReconnectVMR();
-    HRESULT ReconnectGabest();
-    HRESULT ReconnectOverlay();
-    HRESULT ReconnectOther();
 
     HRESULT AdjustRenderersMediaType();
     void ResetMpeg2Decoder();
@@ -303,9 +276,6 @@ private:
     };
     std::list<CHighlight*> m_HighlightList;
     CCanLock m_SubPictureLock;
-    bool m_InsideReconnect;
-    long m_Pitch;
-    long m_Height;
 
 
     HRESULT SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
@@ -319,23 +289,13 @@ private:
     bool HasSubpicsToRender(REFERENCE_TIME rt);
     void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
-    void Simplify(long& u, long& v);
-    void Simplify(unsigned long& u, unsigned long& v);
     void CorrectOutputSize();
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
     void PillarBox(long YAdjust, long XAdjust);
-	void OnConnectToVMR7();
-	void OnConnectToVMR9();
-	void OnConnectToOverlay();
     bool m_LastPictureWasStill;
 };
 
 #define m_VideoInPin m_InputPins[0]
 #define m_SubpictureInPin m_InputPins[1]
-#define m_VideoOutPin m_OutputPins[0]
+#define m_VideoOutPin ((CDSVideoOutPin*)m_OutputPins[0])
 #define m_CCOutPin m_OutputPins[1]
-
-DEFINE_GUID(CLSID_FFDShow, 0x04FE9017, 0xf873, 0x410e, 0x87, 0x1e, 0xab, 0x91, 0x66, 0x1a, 0x4e, 0xf7);
-DEFINE_GUID(CLSID_FFDShowRaw, 0x0B390488, 0xd80f, 0x4a68, 0x84, 0x08, 0x48, 0xdc, 0x19, 0x9f, 0x0e, 0x97);
-DEFINE_GUID(CLSID_DirectVobSubFilter, 0x93a22e7a, 0x5091, 0x45ef, 0xba, 0x61, 0x6d, 0xa2, 0x61, 0x56, 0xa5, 0xd0);
-DEFINE_GUID(CLSID_DirectVobSubFilter2, 0x9852a670, 0xf845, 0x491b, 0x9b, 0xe6, 0xeb, 0xd8, 0x41, 0xb8, 0xa6, 0x13);

@@ -125,21 +125,70 @@
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
-				RelativePath="..\..\Common\CPUID.asm">
+				RelativePath=".\a_yuv2rgb.asm">
 				<FileConfiguration
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
-"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
-"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\a_yuv2yuy2.asm">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\a_yuvtable.asm">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\Common\CPUID.asm">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						Outputs="$(IntDir)\$(InputName).obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 			</File>
@@ -231,6 +280,12 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\DSUtil.cpp">
+			</File>
+			<File
+				RelativePath=".\DSVideoOutPin.cpp">
+			</File>
+			<File
 				RelativePath="EnumMediaTypes.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -315,6 +370,18 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\MediaTypes.cpp">
+			</File>
+			<File
+				RelativePath=".\MoreUuids.cpp">
+			</File>
+			<File
+				RelativePath=".\PlanarYUVToRGB.cpp">
+			</File>
+			<File
+				RelativePath=".\PlanarYUVToYUY2.cpp">
+			</File>
+			<File
 				RelativePath="StdAfx.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -381,6 +448,12 @@
 				RelativePath="DSOutputPin.h">
 			</File>
 			<File
+				RelativePath=".\DSUtil.h">
+			</File>
+			<File
+				RelativePath=".\DSVideoOutPin.h">
+			</File>
+			<File
 				RelativePath="EnumMediaTypes.h">
 			</File>
 			<File
@@ -396,7 +469,16 @@
 				RelativePath="MediaBufferWrapper.h">
 			</File>
 			<File
+				RelativePath=".\MediaTypes.h">
+			</File>
+			<File
 				RelativePath="..\..\Common\Params.h">
+			</File>
+			<File
+				RelativePath=".\PlanarYUVToRGB.h">
+			</File>
+			<File
+				RelativePath=".\PlanarYUVToYUY2.h">
 			</File>
 			<File
 				RelativePath="..\..\Common\ProtectCode.h">

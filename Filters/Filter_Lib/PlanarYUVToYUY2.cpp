@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.7 2004-08-06 08:38:54 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/08/06 08:38:54  adcockj
+// Added optional YV12 output type
+//
 // Revision 1.6  2004/07/16 15:58:01  adcockj
 // Fixed compilation issues under .NET
 // Changed name of filter

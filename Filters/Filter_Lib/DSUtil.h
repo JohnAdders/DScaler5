@@ -27,3 +27,6 @@ extern CLSID GetCLSID(IPin* pPin);
 const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt);
 extern bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary);
 
+extern void Simplify(long& u, long& v);
+extern void Simplify(unsigned long& u, unsigned long& v);
+
