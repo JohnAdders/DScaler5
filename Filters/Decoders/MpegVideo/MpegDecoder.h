@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.16 2004-05-10 16:48:50 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.17 2004-05-25 16:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -134,6 +134,7 @@ private:
 	DWORD m_PanScanOffsetX;
 	DWORD m_PanScanOffsetY;
 	DWORD m_ControlFlags;
+	DWORD m_PicturesSinceSequence;
 	BYTE m_AFD;
 	
     typedef enum 
@@ -225,7 +226,7 @@ private:
     HRESULT ProcessNewSequence();
     HRESULT ProcessModifiedSequence();
     HRESULT ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties);
-    HRESULT ProcessPictureDisplay();
+    HRESULT ProcessPictureDisplay(bool ProgressiveHint);
     HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
     HRESULT GetEnumTextDVBAspectPrefs(WCHAR **ppwchText);
 	void UpdateAspectRatio();

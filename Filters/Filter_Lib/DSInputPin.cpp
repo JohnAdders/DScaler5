@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.8 2004-04-29 16:16:46 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.9 2004-05-25 16:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/04/29 16:16:46  adcockj
+// Yet more reconnection fixes
+//
 // Revision 1.7  2004/04/20 16:30:31  adcockj
 // Improved Dynamic Connections
 //
@@ -234,8 +237,7 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         }
     }
 
-    HRESULT hr = m_Filter->Flush(this);
-    CHECK(hr);
+	HRESULT hr =  S_OK;
 
     // Calls EndFlush downstream. 
     for(int i(0); i < m_Filter->GetNumPins(); ++i)
@@ -251,13 +253,18 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
             CHECK(hr);
         }
     }
-    m_Flushing = FALSE;
+
+    hr = m_Filter->Flush(this);
+    CHECK(hr);
+
+    
+	m_Flushing = FALSE;
     return hr;
 }
 
 STDMETHODIMP CDSInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    LOG(DBGLOG_ALL, ("CDSInputPin::NewSegment\n"));
+    LOG(DBGLOG_FLOW, ("CDSInputPin::NewSegment %I64d %I64d %f\n", tStart, tStop, dRate));
     HRESULT hr = S_OK;
 
     // Will wait for all any streaming functions to finish

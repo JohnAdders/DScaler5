@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.h,v 1.1 2004-05-24 06:29:27 adcockj Exp $
+// $Id: DSBufferedInputPin.h,v 1.2 2004-05-25 16:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,8 +48,10 @@ public:
 
 // IPin
 public:
+    STDMETHOD(EndOfStream)(void);
     STDMETHOD(BeginFlush)(void);
     STDMETHOD(EndFlush)(void);
+	STDMETHOD(NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
 // IMemInputPin
 public:
@@ -63,11 +65,14 @@ public:
 protected:
     std::queue<SI(IMediaSample)> m_Samples;
     CCanLock m_SamplesLock;
+    CCanLock m_WorkerThreadLock;
     static void ProcessingThread(void* pParam);
     HRESULT ProcessBufferedSamples();
     HRESULT ProcessBufferedSample(IMediaSample* InSample);
     HANDLE m_SamplesReadyEvent;
     HANDLE m_ThreadStopEvent;
     HANDLE m_WorkerThread;
+	HRESULT m_ThreadRetCode;
+	DWORD m_ThreadId;
 };
 

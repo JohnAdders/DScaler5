@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.6 2004-04-14 16:31:34 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.7 2004-05-25 16:59:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/04/14 16:31:34  adcockj
+// Subpicture fixes, AFD started and minor fixes
+//
 // Revision 1.5  2004/03/15 17:17:05  adcockj
 // Basic registry saving support
 //
@@ -275,7 +278,7 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
 
 STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
 {
-    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run\n"));
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run %010I64d\n", tStart));
 
     CProtectCode WhileVarInScope(this);
 

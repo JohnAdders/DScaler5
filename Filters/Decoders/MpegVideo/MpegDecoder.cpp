@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.27 2004-05-24 06:29:26 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.28 2004-05-25 16:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.27  2004/05/24 06:29:26  adcockj
+// Interim buffer fix
+//
 // Revision 1.26  2004/05/12 17:01:03  adcockj
 // Hopefully correct treatment of timestamps at last
 //
@@ -199,6 +202,7 @@ CMpegDecoder::CMpegDecoder() :
 	m_rate.StartTime = 0;
 
 	m_LastOutputTime = 0;
+	m_PicturesSinceSequence = 0;
 
 	m_ProgressiveChroma = false;
     m_NextFrameDeint = DIBob;
@@ -1073,7 +1077,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 		case STATE_SLICE:
 		case STATE_END:
 		case STATE_INVALID_END:
-            hr = ProcessPictureDisplay();
+            hr = ProcessPictureDisplay((state == STATE_END) && (m_PicturesSinceSequence == 0));
             CHECK(hr);
 			break;
 		case STATE_GOP:
@@ -1373,6 +1377,7 @@ void CMpegDecoder::FlushMPEG()
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
 	m_IsDiscontinuity = true;
+	m_ratechange.StartTime = 0;
 	ResetMpeg2Decoder();
 }
 
@@ -1538,7 +1543,7 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
         else
 		{
 			if(!ForceReconnect)
-			{
+			{	
 				hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
 				CHECK(hr);
 
@@ -1551,6 +1556,11 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
 				{
 					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					CHECK(hr);
+				}
+				else
+				{
+					hr = m_VideoOutPin->m_Allocator->Commit();
 					CHECK(hr);
 				}
 			}
@@ -1871,6 +1881,7 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
 	m_fWaitForKeyFrame = true;
 	m_fFilm = false;
+	m_PicturesSinceSequence = 0;
 
 
     // todo move out to helper function so that we can
@@ -1991,7 +2002,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
     return S_OK;
 }
 
-HRESULT CMpegDecoder::ProcessPictureDisplay()
+HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
 {
     HRESULT hr = S_OK;
 
@@ -2006,41 +2017,56 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
 		    m_fWaitForKeyFrame = false;
         }
 
-        CFrameBuffer* LastPicture = m_CurrentPicture;
-        if(LastPicture != NULL)
-        {
-		    // flags
-		    if(!(mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE)
-			    && (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME))
-		    {
-			    if(!m_fFilm
-				    && (picture->nb_fields == 3)
-				    && !(LastPicture->m_NumFields == 3))
-			    {
-				    LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
-				    m_fFilm = true;
-			    }
-			    else if(m_fFilm
-				    && !(picture->nb_fields == 3)
-				    && !(LastPicture->m_NumFields == 3))
-			    {
-				    LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
-				    m_fFilm = false;
-			    }
-		    }
-		    else
-		    {
-			    if(m_fFilm)
-			    {
-				    if(!(LastPicture->m_NumFields == 3) || 
-					    !(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
-					    (picture->nb_fields > 2))
-				    {
-					    LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", LastPicture->m_NumFields, LastPicture->m_Flags, picture->nb_fields));
-					    m_fFilm = false;
-				    }
-			    }
-		    }
+		CFrameBuffer* LastPicture = m_CurrentPicture;
+		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
+			((ProgressiveHint == true) && (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)))
+		{
+			// we are being told this frame is progressive
+			// either because the MPEG is encoded as progressive
+			// which happens rarely (except MPEG1) or we get passed a 
+			// sequence with a single progressive frame which is how DVD menus are encoded
+			m_fFilm = true;
+			LOG(DBGLOG_FLOW, ("Progressive mode m_fFilm = true\n"));
+		}
+		else
+		{
+			if(LastPicture != NULL)
+			{
+				// Otherwise we start looking for 3:2 patterns
+				// and switch to film where we get a proper pattern
+				// we also switch out if anything odd happens to the
+				// pattern
+				if(picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
+				{
+					if(!m_fFilm
+						&& (picture->nb_fields == 3)
+						&& !(LastPicture->m_NumFields == 3))
+					{
+						LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
+						m_fFilm = true;
+					}
+					else if(m_fFilm
+						&& !(picture->nb_fields == 3)
+						&& !(LastPicture->m_NumFields == 3))
+					{
+						LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
+						m_fFilm = false;
+					}
+				}
+				else
+				{
+					if(m_fFilm)
+					{
+						if(!(LastPicture->m_NumFields == 3) || 
+							!(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
+							(picture->nb_fields > 2))
+						{
+							LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", LastPicture->m_NumFields, LastPicture->m_Flags, picture->nb_fields));
+							m_fFilm = false;
+						}
+					}
+				}
+			}
         }
 
         m_CurrentPicture = (CFrameBuffer*)fbuf->id;
@@ -2053,7 +2079,9 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
 		    m_CurrentPicture->m_NumFields += picture_2nd->nb_fields;
         }
 
-		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE)
+		// if the 
+		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
+			ProgressiveHint == true)
 		{
 			m_ProgressiveChroma = true;
 		}
@@ -2126,6 +2154,8 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
         {
             LastPicture->Release();
         }
+
+		++m_PicturesSinceSequence;
 	}
 
 	if (mpeg2_info(m_dec)->discard_fbuf)

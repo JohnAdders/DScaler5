@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.3 2004-04-08 16:41:57 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.4 2004-05-25 16:59:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -37,6 +37,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/04/08 16:41:57  adcockj
+// Tidy up subpicture support
+//
 // Revision 1.2  2004/03/06 20:50:29  adcockj
 // Put in correct ff rate supported
 //
@@ -70,6 +73,7 @@ HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
 		{
 			LONG* p = (LONG*)pPropertyData;
 			m_CorrectTS = (*p != 0);
+			LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
 		}
 		break;
 	default:
