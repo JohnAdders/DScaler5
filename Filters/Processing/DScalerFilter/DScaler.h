@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.8 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DScaler.h,v 1.9 2004-11-01 14:09:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -198,7 +198,6 @@ protected:
 	// we get odd field numbers
     CField m_IncomingFields[9];
     DWORD m_FieldsInBuffer;
-    bool m_NeedToAttachFormat;
 
 
 protected:
@@ -214,7 +213,6 @@ private:
     BOOL m_ChangeTypes;
     BOOL m_RebuildRequired;
     AM_MEDIA_TYPE m_InternalMTInput;
-    AM_MEDIA_TYPE m_InternalMTOutput;
     DWORD m_DetectedPulldownIndex;
     eDeinterlaceType m_DetectedPulldownType;
     DWORD m_NextFieldNumber;
@@ -223,4 +221,4 @@ private:
 };
 
 #define m_VideoInPin m_InputPins[0]
-#define m_VideoOutPin m_OutputPins[0]
+#define m_VideoOutPin ((CDSVideoOutPin*)m_OutputPins[0])

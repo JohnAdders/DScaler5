@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.50 2004-10-31 14:19:49 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.51 2004-11-01 14:09:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.50  2004/10/31 14:19:49  adcockj
+// fixed issues with avgtimeperframe
+//
 // Revision 1.49  2004/10/28 15:52:24  adcockj
 // Moved video output pin code into new class
 //
@@ -764,8 +767,8 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     if(pPin == m_VideoOutPin)
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
-
-        return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2), m_ControlFlags);
+        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:VIDEOTYPEFLAG_FORCE_YV12;
+        return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
     else if(pPin == m_SubpictureInPin)
     {
@@ -862,8 +865,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
                 LOG(DBGLOG_FLOW, ("Letterboxed Sent\n"));
                 m_LetterBoxed = true;
             }
-			m_VideoOutPin->SetAvgTimePerFrame(mvih->hdr.AvgTimePerFrame);
-		}
+            m_VideoOutPin->SetAvgTimePerFrame(mvih->hdr.AvgTimePerFrame);
+        }
 		else if(pMediaType->formattype == FORMAT_MPEGVideo ||
 					pMediaType->formattype == FORMAT_VideoInfo)
 		{

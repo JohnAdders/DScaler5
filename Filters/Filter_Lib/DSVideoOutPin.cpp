@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.2 2004-10-31 14:20:39 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.3 2004-11-01 14:09:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/10/31 14:20:39  adcockj
+// fixed issues with settings dialog
+//
 // Revision 1.1  2004/10/28 16:00:48  adcockj
 // added new files
 //
@@ -218,7 +221,7 @@ int CDSVideoOutPin::GetHeight()
     return m_Height;
 }
 
-HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, bool NotYV12, DWORD ControlFlags)
+HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags)
 {
     struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
     {
@@ -236,19 +239,54 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
     };
 
-    if(NotYV12)
+    int VariationsPerType = 3;
+    int InterlacedIndex = 0;
+    int VIHIndex = 2;
+
+    if(VideoControlFlags & VIDEOTYPEFLAG_PROGRESSIVE)
     {
-        TypeNum += 3;
+        VariationsPerType--;
+        InterlacedIndex = -1;
+        VIHIndex--;
+    }
+
+    if(VideoControlFlags & VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER)
+    {
+        VariationsPerType--;
+        VIHIndex = -1;
+    }
+
+    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
+    {
+        TypeNum += VariationsPerType;
+    }
+    
+    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
+    {
+        if(TypeNum >= VariationsPerType)
+        {
+            TypeNum += VariationsPerType;
+        }
     }
 
     // this will make sure we won't connect to the old renderer in dvd mode
     // that renderer can't switch the format dynamically
     if(TypeNum < 0) return E_INVALIDARG;
-    if(TypeNum >= 3*sizeof(fmts)/sizeof(fmts[0])) return VFW_S_NO_MORE_ITEMS;
+    if(VideoControlFlags & VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER)
+    {
+        // there should be no reason why 
+        // anything that doesn't support YUY2 or YV12 need the
+        // stupid old RGB types
+        if(TypeNum >= VariationsPerType * 2) 
+            return VFW_S_NO_MORE_ITEMS;
+    }
+    else
+    {
+        if(TypeNum >= VariationsPerType * countof(fmts)) 
+            return VFW_S_NO_MORE_ITEMS;
+    }
 
-
-    int FormatNum = TypeNum/3;
-    const AM_MEDIA_TYPE* mt = GetMediaType();
+    int FormatNum = TypeNum/VariationsPerType;
 
     pmt->majortype = MEDIATYPE_Video;
     pmt->subtype = *fmts[FormatNum].subtype;
@@ -266,7 +304,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
     bihOut.biYPelsPerMeter = bihOut.biHeight * m_AspectX;
     Simplify(bihOut.biXPelsPerMeter, bihOut.biYPelsPerMeter);
 
-    if(TypeNum%3 == 2)
+    if(TypeNum%VariationsPerType == VIHIndex)
     {
         pmt->formattype = FORMAT_VideoInfo;
         VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
@@ -287,7 +325,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         vih->dwPictAspectRatioX = m_AspectX;
         vih->dwPictAspectRatioY = m_AspectY;
         Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
-        if(TypeNum%3 == 0)
+        if(TypeNum%3 == InterlacedIndex)
         {
             vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
         }
@@ -837,12 +875,14 @@ HRESULT CDSVideoOutPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME
     // formats properly and should never call NegotiateAllocator
     if(hr == S_FALSE && m_NeedToAttachFormat)
     {
+        HRESULT hr;
         if(FAILED(hr = AdjustRenderersMediaType()))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
         hr = (*OutSample)->SetDiscontinuity(TRUE);
+        CHECK(hr);
     }
     return hr;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.1 2004-10-28 16:00:48 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.2 2004-11-01 14:09:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ public:
     ~CDSVideoOutPin();
 
     STDMETHODIMP QueryAccept(const AM_MEDIA_TYPE *pmt);
-    HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, bool NotYV12, DWORD ControlFlags);
+    HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
     HRESULT NotifyConnected();
 	void OnConnectToVMR7();
 	void OnConnectToVMR9();
@@ -113,3 +113,8 @@ private:
 
     AM_MEDIA_TYPE m_InternalMT;
 };
+
+#define VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER 1
+#define VIDEOTYPEFLAG_FORCE_YUY2 2
+#define VIDEOTYPEFLAG_FORCE_YV12 4
+#define VIDEOTYPEFLAG_PROGRESSIVE 8

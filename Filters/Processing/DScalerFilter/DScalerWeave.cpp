@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerWeave.cpp,v 1.3 2004-03-05 17:21:33 adcockj Exp $
+// $Id: DScalerWeave.cpp,v 1.4 2004-11-01 14:09:55 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/03/05 17:21:33  adcockj
+// Better handling of dynamic format changes
+//
 // Revision 1.2  2004/03/05 15:56:30  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -33,6 +36,7 @@
 
 #include "stdafx.h"
 #include "DScaler.h"
+#include "DSVideoOutPin.h"
 
 HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer)
 {
@@ -43,7 +47,7 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
 #endif
 
     VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
-    VIDEOINFOHEADER2* OutputInfo = (VIDEOINFOHEADER2*)(m_InternalMTOutput.pbFormat);
+    VIDEOINFOHEADER2* OutputInfo = (VIDEOINFOHEADER2*)(m_VideoOutPin->m_ConnectedMediaType.pbFormat);
 
     SI(IInterlacedField) pNewerBuffer;
     SI(IInterlacedField) pOlderBuffer;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.10 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DScaler.cpp,v 1.11 2004-11-01 14:09:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/08/31 16:33:42  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.9  2004/05/06 06:38:07  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -102,7 +107,7 @@
 #include "DScaler.h"
 #include "EnumPins.h"
 #include "DSInputPin.h"
-#include "DSOutputPin.h"
+#include "DSVideoOutPin.h"
 #include "MediaBufferWrapper.h"
 
 extern HINSTANCE g_hInstance;
@@ -111,7 +116,6 @@ CDScaler::CDScaler() :
     CDSBaseFilter(L"DScaler Filter", 1, 1)
 {
     InitMediaType(&m_InternalMTInput);
-    InitMediaType(&m_InternalMTOutput);
     m_TypesChanged = TRUE;
     m_RebuildRequired = TRUE;
 	m_ChangeTypes = FALSE;
@@ -121,7 +125,6 @@ CDScaler::CDScaler() :
 	m_LastStartEnd = 0;
     m_FieldTiming = 0;
 	m_FieldsInBuffer = 0;
-    m_NeedToAttachFormat = false;
 
     LOG(DBGLOG_FLOW, ("CDScaler::CreatePins\n"));
     
@@ -133,7 +136,7 @@ CDScaler::CDScaler() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Input");
     
-    m_VideoOutPin = new CDSOutputPin();
+    m_OutputPins[0] = new CDSVideoOutPin();
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -152,7 +155,6 @@ CDScaler::~CDScaler()
 {
     LOG(DBGLOG_FLOW, ("CDScaler::~CDScaler\n"));
     ClearMediaType(&m_InternalMTInput);
-    ClearMediaType(&m_InternalMTOutput);
     UnloadDMOs();
 }
 
@@ -504,7 +506,7 @@ HRESULT CDScaler::UpdateTypes()
     HRESULT hr = S_OK;
 	hr = UpdateTypes(m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]);
 	CHECK(hr);
-	hr = UpdateTypes(m_FilmDetectors[GetParamInt(DEINTERLACEMODE)]);
+	hr = UpdateTypes(m_FilmDetectors[GetParamInt(FILMDETECTMODE)]);
 	CHECK(hr);
     return hr;
 }
@@ -520,7 +522,7 @@ HRESULT CDScaler::UpdateTypes(IMediaObject* pDMO)
 	CHECK(hr);
 	pDMO->SetInputType(0, &m_InternalMTInput, 0);
 	CHECK(hr);
-	pDMO->SetOutputType(0, &m_InternalMTOutput, 0);
+	pDMO->SetOutputType(0, &m_VideoOutPin->m_ConnectedMediaType, 0);
 	CHECK(hr);
     return hr;
 }
@@ -638,38 +640,7 @@ HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBase
 
 HRESULT CDScaler::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
-    if(pPin == m_VideoOutPin)
-    {
-	    if(q.Type == Famine)
-	    {
-		    SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
-		    if(QualityControl)
-		    {
-                LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
-			    return QualityControl->Notify(pSelf, q);
-		    }
-		    else
-		    {
-                LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
-			    return E_NOTIMPL;
-		    }
-	    }
-	    if(q.Type == Flood)
-	    {
-			SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
-			if(QualityControl)
-			{
-                LOG(DBGLOG_ALL, ("Coped With Flood - %d\n", q.Late));
-				return QualityControl->Notify(pSelf, q);
-			}
-			else
-			{
-                LOG(DBGLOG_ALL, ("Ignored Flood - %d\n", q.Late));
-				return E_NOTIMPL;
-			}
-        }
-    }
-    return E_NOTIMPL;
+    return E_FAIL;
 }
 
 HRESULT CDScaler::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate, CDSBasePin* pPin)
@@ -734,6 +705,9 @@ HRESULT CDScaler::InternalProcessOutput(BOOL HurryUp)
 HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 {
 	HRESULT hr = S_OK;
+
+    hr = m_VideoOutPin->CheckForReconnection();
+
     SI(IMediaSample) OutSample;
 
     hr = m_VideoOutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
@@ -742,7 +716,6 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
     // if we get a new type in then we need to change internal type here
     if(hr == S_FALSE)
     {
-        hr = CreateInternalMediaTypes();
         CHECK(hr);
     }
 
@@ -766,13 +739,6 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
         
-        if(m_NeedToAttachFormat)
-        {
-            OutSample->SetMediaType(&m_InternalMTOutput);
-			m_VideoOutPin->SetType(&m_InternalMTOutput);
-            m_NeedToAttachFormat = false;
-        }
-
         LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
 		
         // finally send the processed sample on it's way
@@ -795,17 +761,13 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 {
 	HRESULT hr = S_OK;
+
+    hr = m_VideoOutPin->CheckForReconnection();
+
     SI(IMediaSample) OutSample;
 
     hr = m_VideoOutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
-
-    // if we get a new type in then we need to change internal type here
-    if(hr == S_FALSE)
-    {
-        hr = CreateInternalMediaTypes();
-        CHECK(hr);
-    }
 
 	SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
 
@@ -822,13 +784,6 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
 
-        if(m_NeedToAttachFormat)
-        {
-            OutSample->SetMediaType(&m_InternalMTOutput);
-			m_VideoOutPin->SetType(&m_InternalMTOutput);
-            m_NeedToAttachFormat = false;
-        }
-		
         // finally send the processed sample on it's way
 		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
 	}
@@ -987,13 +942,18 @@ HRESULT CDScaler::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin
     }
     else if(pPin == m_VideoOutPin)
     {
-		m_RebuildRequired = TRUE;
+        m_VideoOutPin->NotifyFormatChange(pMediaType);
+        m_TypesChanged = TRUE;
     }
     return S_OK;
 }
 
 HRESULT CDScaler::NotifyConnected(CDSBasePin* pPin)
 {
+    if(pPin == m_VideoOutPin)
+    {
+        m_VideoOutPin->NotifyConnected();
+    }
     return S_OK;
 }
 
@@ -1003,10 +963,16 @@ HRESULT CDScaler::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, 
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
-        if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
-        
-        return CopyMediaType(pmt, &m_InternalMTOutput);
+        DWORD VideoFlags = VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER | VIDEOTYPEFLAG_PROGRESSIVE;
+        if(m_InternalMTInput.subtype == MEDIASUBTYPE_YUY2)
+        {
+            VideoFlags = VIDEOTYPEFLAG_FORCE_YUY2;
+        }
+        else
+        {
+            VideoFlags = VIDEOTYPEFLAG_FORCE_YV12;
+        }
+        return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, 0);
     }
     else
     {
@@ -1214,33 +1180,14 @@ HRESULT CDScaler::CreateInternalMediaTypes()
 	memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
 
     m_InternalMTInput.lSampleSize = BitmapInfo->biSizeImage;
-    CopyMediaType(&m_InternalMTOutput, &m_InternalMTInput);
 
-    VIDEOINFOHEADER2* OutFormat = (VIDEOINFOHEADER2*)m_InternalMTOutput.pbFormat;
-    BitmapInfo = &OutFormat->bmiHeader;
-    OutFormat->dwBitRate = OutFormat->dwBitRate * 2;
-    OutFormat->AvgTimePerFrame = OutFormat->AvgTimePerFrame / 2;
-    OutFormat->dwInterlaceFlags = 0;
 
-    if(m_VideoOutPin->IsConnected())
-    {
-        const AM_MEDIA_TYPE* OutputType = m_VideoOutPin->GetMediaType();
-        VIDEOINFOHEADER2* OutPinFormat = (VIDEOINFOHEADER2*)OutputType->pbFormat;
-        if(OutPinFormat->bmiHeader.biHeight < 0)
-        {
-            OutFormat->bmiHeader.biHeight = -abs(OutFormat->bmiHeader.biHeight);
-        }
-        if(OutPinFormat->bmiHeader.biWidth > NewFormat->bmiHeader.biWidth)
-        {
-            OutFormat->rcSource.right = NewFormat->bmiHeader.biWidth;
-            OutFormat->rcSource.bottom = abs(NewFormat->bmiHeader.biHeight);
-            OutFormat->rcTarget.right = NewFormat->bmiHeader.biWidth;
-            OutFormat->rcTarget.bottom = abs(NewFormat->bmiHeader.biHeight);
-            OutFormat->bmiHeader.biWidth = OutPinFormat->bmiHeader.biWidth;
-        }
-    }
+    m_VideoOutPin->SetAspectX(NewFormat->dwPictAspectRatioX);
+    m_VideoOutPin->SetAspectY(NewFormat->dwPictAspectRatioY);
+    m_VideoOutPin->SetHeight(BitmapInfo->biHeight);
+    m_VideoOutPin->SetWidth(BitmapInfo->biWidth);
+    m_VideoOutPin->SetAvgTimePerFrame(NewFormat->AvgTimePerFrame / 2);
 
-    m_NeedToAttachFormat = true;
     m_TypesChanged = true;
 
     return S_OK;
