@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.50 2005-03-08 13:22:02 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.51 2005-03-20 14:17:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.50  2005/03/08 13:22:02  adcockj
+// Added connection type option
+//
 // Revision 1.49  2005/02/17 09:28:09  adcockj
 // Added extra type to work aroung bug in MPC with dvr-ms files
 //
@@ -708,7 +711,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-        LOG(DBGLOG_ALL, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
+        LOG(DBGLOG_FLOW, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
     }
 
 	m_Preroll = ((pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) == AM_SAMPLE_PREROLL);
@@ -868,6 +871,23 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 		rtStart += DelayMs * 10000;
 		rtStop += DelayMs * 10000;
 	}
+
+#ifdef _NOT_DEFINED_
+	REFERENCE_TIME Now = 0;
+    static REFERENCE_TIME Last = 0;
+    LARGE_INTEGER Freq;
+    LARGE_INTEGER Now2;
+    static LARGE_INTEGER Last2;
+    QueryPerformanceFrequency(&Freq);
+    QueryPerformanceCounter(&Now2);
+
+    m_RefClock->GetTime(&Now);
+
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", rtStart, rtStart, Now - m_rtStartTime, rtStop));
+    Last = Now;
+    Last2 = Now2;
+#endif
+
 
 	if(!m_Preroll && rtStop > 0)
 	{
