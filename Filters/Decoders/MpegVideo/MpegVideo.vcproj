@@ -167,6 +167,12 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			Name="Source Files"
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
 			<File
+				RelativePath=".\CSSauth.cpp">
+			</File>
+			<File
+				RelativePath=".\CSSscramble.cpp">
+			</File>
+			<File
 				RelativePath="FrameBuffer.cpp">
 				<FileConfiguration
 					Name="Release|Win32">
@@ -209,6 +215,9 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 						BasicRuntimeChecks="3"
 						BrowseInformation="1"/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\MpegDecoder_CopyProt.cpp">
 			</File>
 			<File
 				RelativePath="MpegDecoder_Rate.cpp">
@@ -332,6 +341,15 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
+			<File
+				RelativePath=".\CSSauth.h">
+			</File>
+			<File
+				RelativePath=".\CSSscramble.h">
+			</File>
+			<File
+				RelativePath=".\csstables.h">
+			</File>
 			<File
 				RelativePath="DScaler.h">
 			</File>

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.56 2004-11-25 17:22:10 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.57 2004-11-26 15:15:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.56  2004/11/25 17:22:10  adcockj
+// Fixed some more connection issues
+//
 // Revision 1.55  2004/11/18 07:40:56  adcockj
 // a few test bug fixes
 //
@@ -479,11 +482,11 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
     {
         return SupportPropSetSubPic(dwPropID, pTypeSupport);
     }
-    else
+    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
     {
-        return E_NOTIMPL;
+        return SupportPropSetCopyProt(dwPropID, pTypeSupport);
     }
-    return S_OK;
+    return E_NOTIMPL;
 }
 
 HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, CDSBasePin* pPin)
@@ -495,6 +498,10 @@ HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
+    }
+    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
+    {
+        return SetPropSetCopyProt(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
     else
     {
@@ -513,6 +520,10 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
     else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
+    }
+    else if(guidPropSet == AM_KSPROPSETID_CopyProt)
+    {
+        return GetPropSetCopyProt(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
     else
     {
@@ -1251,7 +1262,9 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         }
 
-        if(m_IsDiscontinuity || fRepeatLast)
+        // the overlay seems to stutter unless we set the discontinuity flag
+        // all the time (should have believed Gabest's comment in the first place....)
+        if(m_IsDiscontinuity || fRepeatLast || m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::OVERLAY_OUTFILTER)
         {
             Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
         }
@@ -2089,3 +2102,19 @@ void CMpegDecoder::CorrectOutputSize()
     m_VideoOutPin->SetWidth(m_OutputWidth);
     m_VideoOutPin->SetHeight(m_OutputHeight);
 }
+
+STDMETHODIMP CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData)
+{
+    return Set(guidPropSet, dwPropID, pInstanceData, cbInstanceData, pPropData, cbPropData, NULL);
+}
+
+STDMETHODIMP CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned)
+{
+    return Get(guidPropSet, dwPropID, pInstanceData, cbInstanceData, pPropData, cbPropData, pcbReturned, NULL);
+}
+
+STDMETHODIMP CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport)
+{
+    return QuerySupported(guidPropSet, dwPropID, pTypeSupport, NULL);
+}
+
