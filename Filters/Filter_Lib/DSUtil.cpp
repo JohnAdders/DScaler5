@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.2 2004-11-04 16:01:13 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.6  2004/08/06 08:38:53  adcockj
 // Added optional YV12 output type
 //
@@ -183,6 +186,14 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     {
 
     }
+    
+    // protect against zero values
+    if(arx == 0 || ary == 0)
+    {
+        arx = w;
+        ary = h;
+    }
+
 
     DWORD a = arx, b = ary;
     while(a) {int tmp = a; a = b % tmp; b = tmp;}
