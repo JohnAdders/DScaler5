@@ -41,6 +41,9 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name Deint_Weave
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Video_Gamma
+    End Project Dependency
 }}}
 
 ###############################################################################
@@ -107,6 +110,24 @@ Package=<5>
 
 Package=<4>
 {{{
+}}}
+
+###############################################################################
+
+Project: "Video_Gamma"=..\DMO\Video\Video_Gamma\Video_Gamma.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
 }}}
 
 ###############################################################################
