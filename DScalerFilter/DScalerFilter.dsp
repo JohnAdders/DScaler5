@@ -176,11 +176,19 @@ SOURCE=.\DScaler.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DSSampleField.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\EnumMediaTypes.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\EnumTwoPins.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Field.h
 # End Source File
 # Begin Source File
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.12 2003-08-21 16:17:58 adcockj Exp $
+// $Id: DScaler.cpp,v 1.13 2003-09-19 16:12:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2003/08/21 16:17:58  adcockj
+// Changed filter to wrap the deinterlacing DMO, fixed many bugs
+//
 // Revision 1.11  2003/05/20 16:50:58  adcockj
 // Interim checkin, preparation for DMO processing path
 //
@@ -255,6 +258,7 @@ STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
     }
 
     m_State = State_Running;
+	m_StartTime = tStart;
     return S_OK;
 }
 

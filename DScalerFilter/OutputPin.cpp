@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.18 2003-08-22 16:48:24 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.19 2003-09-19 16:12:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -450,19 +450,51 @@ STDMETHODIMP COutputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop,
 
 STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
 {
-    LOG(DBGLOG_FLOW, ("COutputPin::Notify \n Type %d Proportion %d Late %d\n", q.Type, q.Proportion, (long)q.Late));
     // \todo see what we get sent here and work out how to handle some
     // of the more common messages
     // in the mean time just pass the messages upstream
-    CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
-    if(QualityControl != NULL)
-    {
-        return QualityControl->Notify(pSelf, q);
-    }
-    else
-    {
-        return E_NOTIMPL;
-    }
+	if(q.Type == Famine)
+	{
+		if(q.Late > 400000)
+		{
+			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
+			if(QualityControl != NULL)
+			{
+				return QualityControl->Notify(pSelf, q);
+			}
+			else
+			{
+				return E_NOTIMPL;
+			}
+		}
+		else
+		{
+			return S_OK;
+		}
+	}
+	if(q.Type == Flood)
+	{
+		if(q.Late > 400000)
+		{
+			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
+			if(QualityControl != NULL)
+			{
+				return QualityControl->Notify(pSelf, q);
+			}
+			else
+			{
+				return E_NOTIMPL;
+			}
+		}
+		else
+		{
+			return S_OK;
+		}
+	}
+	else
+	{
+		return S_OK;
+	}
 }
 
 STDMETHODIMP COutputPin::SetSink(IQualityControl *piqc)
@@ -690,6 +722,7 @@ STDMETHODIMP COutputPin::GetPreroll(LONGLONG *pllPreroll)
 HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
 {
     BITMAPINFOHEADER* BitmapInfo = NULL;
+	LPRECT pSourceRect;
     NewType->majortype = MEDIATYPE_Video;
     NewType->subtype = InputType->subtype;
     NewType->bFixedSizeSamples = TRUE;
@@ -711,6 +744,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     {
         VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
         BitmapInfo = &OldFormat->bmiHeader;
+		pSourceRect = &OldFormat->rcSource;
         NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
         NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
         NewFormat->dwBitRate = OldFormat->dwBitRate * 2;
@@ -722,17 +756,11 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
         NewType->pbFormat =(BYTE*)NewFormat;
         VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)InputType->pbFormat;
         BitmapInfo = &OldFormat->bmiHeader;
+		pSourceRect = &OldFormat->rcSource;
 
         // if the input format is a known TV style one then
         // it should be assumed to be 4:3
-        if((BitmapInfo->biWidth == 704)  &&
-           (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
-        {
-            // adjustment to make 704 video the same shape as 720
-            NewFormat->dwPictAspectRatioX = 4 * 44;
-            NewFormat->dwPictAspectRatioY = 3 * 45;
-        }
-        else if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+		if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
             (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
         {
             NewFormat->dwPictAspectRatioX = 4;
@@ -762,6 +790,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
         ClearMediaType(NewType);
     }
 
+
     NewFormat->dwPictAspectRatioX *= m_Filter->GetParamInt(CDScaler::ASPECTINCREASEX);
     NewFormat->dwPictAspectRatioY *= m_Filter->GetParamInt(CDScaler::ASPECTINCREASEY);
 
@@ -774,7 +803,28 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     // we want to use the new height but we'll work with a normal stride
     // if it's within 32 of the new width
     long Height = BitmapInfo->biHeight; 
-    long Width = BitmapInfo->biWidth;
+    long Width;
+
+	if(Height == 576)
+	{
+		NewFormat->AvgTimePerFrame = 200000;
+	}
+
+	if(pSourceRect->right > 0)
+	{
+		Width = pSourceRect->right;
+	}
+	else
+	{
+		Width = BitmapInfo->biWidth;
+	}
+
+    if((Width == 704) && (Height == 480 || Height == 576))
+    {
+        // adjustment to make 704 video the same shape as 720
+        NewFormat->dwPictAspectRatioX = 4 * 44;
+        NewFormat->dwPictAspectRatioY = 3 * 45;
+    }
 
     DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
 

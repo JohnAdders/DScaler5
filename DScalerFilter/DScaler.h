@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.9 2003-05-20 16:50:59 adcockj Exp $
+// $Id: DScaler.h,v 1.10 2003-09-19 16:12:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -138,6 +138,7 @@ public:
     std::list<IMediaObject*> m_Filters;
     std::list<IMediaObject*> m_Deinterlacers;
     IMediaObject* m_CurrentDeinterlacingMethod;
+	REFERENCE_TIME m_StartTime;
     
 private:
     HRESULT LoadDMOs();

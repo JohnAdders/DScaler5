@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputMemAlloc.cpp,v 1.2 2003-08-22 16:48:24 adcockj Exp $
+// $Id: InputMemAlloc.cpp,v 1.3 2003-09-19 16:12:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -45,10 +45,20 @@ STDMETHODIMP CInputMemAlloc::SetProperties(ALLOCATOR_PROPERTIES *pRequest, ALLOC
 	{
 		pRequest->cBuffers = 4;
 	}
-	//if(pRequest->cbBuffer < 768*576*2)
-	//{
-	//	pRequest->cbBuffer = 768*576*2;
-	//}
+	// The Sonic decoders ask for NTSC size buffers too early
+	// and fail if a switch to PAL is required
+	// This avoids the need to tell the decoders to HardcodeForPal
+	switch(pRequest->cbBuffer)
+	{
+	case 720*480*2:
+		pRequest->cbBuffer = 720*576*2;
+		break;
+	case 704*480*2:
+		pRequest->cbBuffer = 704*576*2;
+		break;
+	default:
+		break;
+	}
 	if(pRequest->cbAlign < 16)
 	{
 		pRequest->cbAlign = 16;

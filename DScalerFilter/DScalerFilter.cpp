@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerFilter.cpp,v 1.3 2003-05-02 16:05:23 adcockj Exp $
+// $Id: DScalerFilter.cpp,v 1.4 2003-09-19 16:12:14 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/02 16:05:23  adcockj
+// Logging with file and line numbers
+//
 // Revision 1.2  2003/05/01 16:20:30  adcockj
 // Include generic property pages uuids
 //
@@ -84,15 +87,17 @@ STDAPI DllRegisterServer(void)
 {
     CComPtr<IFilterMapper2> FilterMapper;
 
-    REGPINTYPES Types[1] = {&MEDIATYPE_Video, &MEDIASUBTYPE_NULL};
+	REGPINTYPES Types[] = {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,  
+							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12, 
+							&MEDIATYPE_Video, &MEDIASUBTYPE_NV12 };
     
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, 1, Types, 0, NULL, &GUID_NULL}, 
-                              { REG_PINFLAG_B_OUTPUT , 1, 1, Types, 0, NULL, &GUID_NULL}};
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, sizeof(Types)/sizeof(REGPINTYPES), Types, 0, NULL, &GUID_NULL}, 
+                              { REG_PINFLAG_B_OUTPUT , 1, sizeof(Types)/sizeof(REGPINTYPES), Types, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
    
     RegInfo.dwVersion = 2;
-    RegInfo.dwMerit = MERIT_DO_NOT_USE;
+    RegInfo.dwMerit = 0x200000 + 5;
     RegInfo.cPins2 = 2;
     RegInfo.rgPins2 = Pins;
     
