@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MediaTypes.cpp,v 1.1 2004-02-06 12:17:16 adcockj Exp $
+// $Id: MediaTypes.cpp,v 1.2 2004-02-08 19:09:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -27,6 +27,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:16  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -364,7 +369,7 @@ void CorrectMediaType(AM_MEDIA_TYPE* pmt)
 				memcpy(NewFormat, pmt->pbFormat, sizeof(VIDEOINFOHEADER2));
                 CoTaskMemFree(pmt->pbFormat);
                 pmt->pbFormat = NewFormat;
-				pmt->cbFormat = vihs[i].size;
+				pmt->cbFormat = vih2s[i].size;
                 break;
 			}
 		}
