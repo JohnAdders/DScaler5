@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.17 2004-08-03 08:55:56 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.18 2004-08-04 13:14:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/08/03 08:55:56  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.16  2004/07/29 10:26:54  adcockj
 // Fixes for audio issues reported by Laurent
 //
@@ -185,13 +188,14 @@ HRESULT CAudioDecoder::ProcessMPA()
 
             if(m_CanReconnect && m_synth.pcm.samplerate != m_InputSampleRate)
             {
-                hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, 2, 0, 32);
+                hr = SendOutLastSamples(m_AudioInPin);
+                CHECK(hr);
+                m_InternalWFE.Format.nSamplesPerSec = m_synth.pcm.samplerate;
                 m_NeedToAttachFormat = true;
                 m_ConnectedAsSpdif = false;
+                m_InputSampleRate = m_synth.pcm.samplerate;
                 CHECK(hr);
             }
-
-            DWORD len = m_synth.pcm.length*m_ChannelsRequested*m_SampleSize;
 
             CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
             int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
