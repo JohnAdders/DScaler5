@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.12 2004-03-08 17:04:01 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.13 2004-03-11 16:52:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/03/08 17:04:01  adcockj
+// Removed all inline assembler to remove dependence on MS compilers
+//
 // Revision 1.11  2004/03/02 07:54:57  adcockj
 // Slightly improved discontinity handling
 //
@@ -1075,7 +1078,7 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 
 	HRESULT hr = S_OK;
 
-	if(fForceReconnection || m_win > m_wout || m_hin != m_hout || ((m_arxin != m_arxout) && m_arxout) || ((m_aryin != m_aryout) && m_aryout))
+	if(fForceReconnection || m_win != m_wout || m_hin != m_hout || ((m_arxin != m_arxout) && m_arxout) || ((m_aryin != m_aryout) && m_aryout))
 	{
         CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
 	
@@ -1085,7 +1088,22 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		{
 			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
 			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
-			SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
+			if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win * 2, m_hin * 2);
+			}
+			else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win * 2, m_hin);
+			}
+			else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win, m_hin);
+			}
+			else
+			{
+				SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
+			}
 			bmi = &vih->bmiHeader;
 			bmi->biXPelsPerMeter = m_win * m_aryin;
 			bmi->biYPelsPerMeter = m_hin * m_arxin;
@@ -1094,21 +1112,43 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		{
 			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
 			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
-			SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
+			if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win * 2 + 8, m_hin * 2);
+			}
+			else if(m_win == 352 && (m_hin == 480 || m_hin == 576))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win * 2 + 8, m_hin);
+			}
+			else if(m_win == 704 && (m_hin == 480 || m_hin == 576))
+			{
+				SetRect(&vih->rcTarget, 8, 0, m_win + 8, m_hin);
+			}
+			else
+			{
+				SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
+			}
 			bmi = &vih->bmiHeader;
 			vih->dwPictAspectRatioX = m_arxin;
 			vih->dwPictAspectRatioY = m_aryin;
 		}
 
-		bmi->biWidth = max(m_win,bmi->biWidth);
-        if(bmi->biHeight > 0)
-        {
-    		bmi->biHeight = m_hin;
-        }
-        else
-        {
-    		bmi->biHeight = -m_hin;
-        }
+		if(m_win > bmi->biWidth)
+		{
+			bmi->biWidth = m_win;
+		}
+
+		if(m_hin > abs(bmi->biHeight))
+		{
+			if(bmi->biHeight > 0)
+			{
+    			bmi->biHeight = m_hin;
+			}
+			else
+			{
+    			bmi->biHeight = -m_hin;
+			}
+		}
 		bmi->biSizeImage = m_hin*bmi->biWidth*bmi->biBitCount>>3;
         
         hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
@@ -1126,7 +1166,7 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 
         // if the height changes or if the width increses
         // call reconnect to inform the renderer of the change
-        if(m_win > m_wout || m_hin != m_hout)
+        if(m_win > m_wout || m_hin > m_hout)
         {
             hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
             CHECK(hr);
@@ -1144,8 +1184,8 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
         
         m_NeedToAttachFormat = true;
 
-        m_wout = m_win; 
-        m_hout = m_hin; 
+		m_wout = m_win; 
+		m_hout = m_hin; 
         m_arxout = m_arxin; 
         m_aryout = m_aryin; 
 

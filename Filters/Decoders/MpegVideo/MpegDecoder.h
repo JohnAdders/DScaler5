@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.7 2004-02-27 17:07:01 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.8 2004-03-11 16:52:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -185,6 +185,11 @@ private:
 
     CFrameBuffer* GetNextBuffer();
 
+	void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
+	void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
+								AM_PROPERTY_SPHLI& sphli, RECT& rc,
+								AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
+								AM_DVD_YUV* sppal);
 
 private:
     // Rate change Stuff

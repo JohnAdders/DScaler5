@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.5 2004-02-25 17:14:02 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.6 2004-03-11 16:52:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.4  2004/02/16 17:25:02  adcockj
 // Fix build errors, locking problems and DVD compatability
 //
@@ -425,9 +429,33 @@ static __inline BYTE GetNibble(BYTE* p, DWORD* offset, int& nField, int& fAligne
     return ret;
 }
 
-static __inline void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal)
+void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal)
 {
 	if(contrast == 0) return;
+
+	if(m_win == 352 && (m_hin == 240 || m_hin == 288))
+	{
+		if ((pt.x & 1) || (pt.y & 1))
+		{
+			return;
+		}
+		pt.y = pt.y /2;
+		pt.x = max((pt.x - 8)/2, 0);
+	}
+	else if(m_win == 352)
+	{
+		if ((pt.x & 1))
+		{
+			return;
+		}
+		pt.x = max((pt.x - 8)/2, 0);
+	}
+	else if(m_win == 704)
+	{
+		pt.x = max(pt.x - 8, 0);
+	}
+
+
 
 	BYTE* p = &yuv[0][pt.y*pitch + pt.x];
 //	*p = (*p*(15-contrast) + sppal[color].Y*contrast)>>4;
@@ -454,7 +482,7 @@ static __inline void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE
 	// the error is still not noticable.
 }
 
-static __inline void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
+void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
 								AM_PROPERTY_SPHLI& sphli, RECT& rc,
 								AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
 								AM_DVD_YUV* sppal)
