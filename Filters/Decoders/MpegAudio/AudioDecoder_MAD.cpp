@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.18 2004-08-04 13:14:42 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.19 2004-08-04 15:19:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2004/08/04 13:14:42  adcockj
+// Fix for Torjorn's issues with dynamic sample rate changes
+//
 // Revision 1.17  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -186,14 +189,20 @@ HRESULT CAudioDecoder::ProcessMPA()
             const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
             const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
 
-            if(m_CanReconnect && m_synth.pcm.samplerate != m_InputSampleRate)
+            if(m_CanReconnect && m_synth.pcm.samplerate != m_OutputSampleRate)
             {
                 hr = SendOutLastSamples(m_AudioInPin);
                 CHECK(hr);
-                m_InternalWFE.Format.nSamplesPerSec = m_synth.pcm.samplerate;
+                if(m_OutputSampleType == OUTSAMPLE_FLOAT)
+                {
+                    hr = CreateInternalIEEEMediaType(m_synth.pcm.samplerate, m_ChannelsRequested, m_ChannelMask);
+                }
+                else
+                {
+                    hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, m_ChannelsRequested, m_ChannelMask, 32);
+                }
                 m_NeedToAttachFormat = true;
-                m_ConnectedAsSpdif = false;
-                m_InputSampleRate = m_synth.pcm.samplerate;
+                m_OutputSampleRate = m_synth.pcm.samplerate;
                 CHECK(hr);
             }
 
