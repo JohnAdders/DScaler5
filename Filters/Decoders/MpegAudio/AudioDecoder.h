@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.14 2004-07-11 14:35:25 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.15 2004-07-11 15:07:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -177,6 +177,11 @@ protected:
     HRESULT CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask, WORD BitsPerSample);
     HRESULT CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nChannels, DWORD dwChannelMask);
     HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
+    BOOL IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType);
+    BOOL IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType);
+    BOOL IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType);
+    BOOL IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType);
+
 
 private:
     AM_MEDIA_TYPE m_InternalMT;

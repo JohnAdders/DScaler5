@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.18 2004-07-11 14:35:25 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.19 2004-07-11 15:07:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2004/07/11 14:35:25  adcockj
+// Fixed spdif connections and some dts issues
+//
 // Revision 1.17  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -749,7 +752,7 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
     return S_OK;
 }
 
-    HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
+HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum)
 {
 
     if(pPin == m_AudioOutPin)
@@ -757,10 +760,17 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
         if(!m_AudioInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
         if(TypeNum < 0) return E_INVALIDARG;
-        BOOL UseSpdif = GetParamBool(USESPDIF);
+        AM_MEDIA_TYPE* pMediaType = &m_AudioInPin->m_ConnectedMediaType;
+
+        BOOL UseSpdif = (GetParamBool(USESPDIF) &&
+                        (IsMediaTypeAC3(pMediaType) || IsMediaTypeDTS(pMediaType))) ||
+                        (GetParamBool(MPEGOVERSPDIF) && IsMediaTypeMP3(pMediaType));
 
         if(UseSpdif)
         {
+            // if we want spdif then we should always be able to connect
+            // at 48000 but at other frequencies we probably will have to fall back to
+            // PCM
             if(m_InputSampleRate == 48000)
             {
                 if(TypeNum > 0) return VFW_S_NO_MORE_ITEMS;
@@ -974,11 +984,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
         {
             HRESULT hr = S_OK;
-            if(pMediaType->subtype == MEDIASUBTYPE_MP3 ||
-                pMediaType->subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
-                pMediaType->subtype == MEDIASUBTYPE_MPEG1Payload ||
-                pMediaType->subtype == MEDIASUBTYPE_MPEG1Packet ||
-                pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO)
+            if(IsMediaTypeMP3(pMediaType))
             {
                 LOG(DBGLOG_FLOW, ("Got change to MP3\n"));
                 if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif && GetParamBool(MPEGOVERSPDIF))
@@ -1007,8 +1013,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
                     CHECK(hr);
                 }
             }
-            else if(pMediaType->subtype == MEDIASUBTYPE_DOLBY_AC3 ||
-                    pMediaType->subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3)
+            else if(IsMediaTypeAC3(pMediaType))
             {
                 LOG(DBGLOG_FLOW, ("Got change to AC3\n"));
                 if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
@@ -1036,8 +1041,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
                     CHECK(hr);
                 }
             }
-            else if(pMediaType->subtype == MEDIASUBTYPE_DTS ||
-                    pMediaType->subtype == MEDIASUBTYPE_WAVE_DTS)
+            else if(IsMediaTypeDTS(pMediaType))
             {
                 LOG(DBGLOG_FLOW, ("Got change to DTS\n"));
                 if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
@@ -1065,7 +1069,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
                     CHECK(hr);
                 }
             }
-            else if(pMediaType->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+            else if(IsMediaTypePCM(pMediaType))
             {
                 LOG(DBGLOG_FLOW, ("Got change to PCM\n"));
 
@@ -1236,4 +1240,30 @@ HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppD
     CHECK(hr);
     
     return hr;
+}
+
+BOOL CAudioDecoder::IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DOLBY_AC3 ||
+            pMediaType->subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3);
+}
+
+BOOL CAudioDecoder::IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DTS ||
+            pMediaType->subtype == MEDIASUBTYPE_WAVE_DTS);
+}
+
+BOOL CAudioDecoder::IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_MP3 ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1Payload ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1Packet ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO);
+}
+
+BOOL CAudioDecoder::IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
 }
