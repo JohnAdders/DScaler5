@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.4 2003-05-02 07:03:13 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.5 2003-05-02 10:51:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/02 07:03:13  adcockj
+// Some minor changes most not really improvements
+//
 // Revision 1.3  2003/05/01 18:15:17  adcockj
 // Moved IMedaiSeeking to output pin
 //
@@ -156,23 +159,46 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     // lets try and negotiate a sensible set of requirements
     // try to allocate the settings the renderer has asked for
     // subject to some sensible minumums.
-    // he old video renderer seems to ask for an alignment
-    // that it's own allocator doesn't in fact support
-    // we loop down until we find an alignment it does like
     ALLOCATOR_PROPERTIES Props;
     ALLOCATOR_PROPERTIES PropsAct;
-    hr = m_Allocator->GetProperties(&Props);
+    hr = m_MemInputPin->GetAllocatorRequirements(&Props);
+    if(FAILED(hr))
+    {
+        // if the pin doen't wnat to tell up what it wants 
+        // then see what the current allocator setup is
+        if(hr == E_NOTIMPL)
+        {
+            hr = m_Allocator->GetProperties(&Props);
+            if(FAILED(hr))
+            {
+                InternalDisconnect();
+                return VFW_E_NO_TRANSPORT;
+            }
+        }
+        else
+        {
+            InternalDisconnect();
+            return VFW_E_NO_TRANSPORT;
+        }
+    }
     
     Props.cBuffers = max(3, Props.cBuffers);
     Props.cbBuffer = max(max(ProposedType.lSampleSize, m_CurrentMediaType.lSampleSize), (ULONG)Props.cbBuffer);
     Props.cbAlign = max(1, Props.cbAlign);
 
     hr = m_Allocator->SetProperties(&Props, &PropsAct);
-    while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
-    {
-        Props.cbAlign /= 2;
-        hr = m_Allocator->SetProperties(&Props, &PropsAct);
-    }
+
+    // \todo see if we need this rubbish
+    // the old video renderer seems to set things up with
+    // an alignment of 16 
+    // that it's own allocator doesn't in fact support so
+    // we loop down until we find an alignment it does like
+    //while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
+    //{
+    //    Props.cbAlign /= 2;
+    //    hr = m_Allocator->SetProperties(&Props, &PropsAct);
+    //}
+
     if(FAILED(hr))
     {
         InternalDisconnect();
@@ -392,6 +418,14 @@ STDMETHODIMP COutputPin::SetSink(IQualityControl *piqc)
     LOG(DBGLOG_FLOW, "*Unexpected Call* - COutputPin::SetSink\n");
     return E_NOTIMPL;
 }
+
+STDMETHODIMP COutputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)
+{
+    LOG(DBGLOG_FLOW, "COutputPin::Block\n");
+    // \todo need to implement this and think about threading issues
+    return S_OK;
+}
+
 
 void COutputPin::InternalDisconnect()
 {

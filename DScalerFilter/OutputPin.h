@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.3 2003-05-01 18:15:17 adcockj Exp $
+// $Id: OutputPin.h,v 1.4 2003-05-02 10:51:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -32,6 +32,7 @@ class ATL_NO_VTABLE COutputPin :
 	public CComObjectRootEx<CComMultiThreadModel>,
 	public IPin,
     public IUpdateMediaTypes,
+    public IPinFlowControl,
     public IMediaSeeking,
     public IQualityControl
 {
@@ -42,6 +43,7 @@ public:
 
 BEGIN_COM_MAP(COutputPin)
 	COM_INTERFACE_ENTRY(IPin)
+    COM_INTERFACE_ENTRY(IPinFlowControl)
     COM_INTERFACE_ENTRY(IQualityControl)
 	COM_INTERFACE_ENTRY(IMediaSeeking)
 END_COM_MAP()
@@ -69,6 +71,10 @@ public:
 public:
     STDMETHOD(Notify)(IBaseFilter *pSelf, Quality q);
     STDMETHOD(SetSink)(IQualityControl *piqc);
+
+// IPinFlowControl
+public:
+    STDMETHOD(Block)(DWORD dwBlockFlags, HANDLE hEvent);
 
 // IMediaSeeking
 public:
@@ -114,6 +120,7 @@ public:
     CComQIPtr<IMemInputPin> m_MemInputPin;
     CComPtr<IMemAllocator> m_Allocator;
     BOOL m_FormatChanged;
+
     void InternalDisconnect();
 
 private:
