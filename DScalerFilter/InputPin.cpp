@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.27 2003-10-31 17:19:37 adcockj Exp $
+// $Id: InputPin.cpp,v 1.28 2003-11-13 17:27:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.27  2003/10/31 17:19:37  adcockj
+// Added support for manual pulldown selection (works with Elecard Filters)
+//
 // Revision 1.26  2003/09/30 16:59:26  adcockj
 // Improved handling of small format changes
 //
@@ -127,6 +130,8 @@ CInputPin::CInputPin()
     m_NextFieldNumber = 0;
     m_SourceType = SOURCE_DEFAULT;
     m_FieldTiming = 0;
+    m_DetectedPulldownIndex = 0;
+    m_DetectedPulldownType = FULLRATEVIDEO;
 }
 
 CInputPin::~CInputPin()
@@ -723,10 +728,15 @@ HRESULT CInputPin::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 
 	if(hr == S_OK && m_Flushing == FALSE)
 	{
+        // just in case things go a bit funny
+        if(m_LastStartEnd >= FrameEndTime)
+        {
+            m_LastStartEnd = FrameEndTime - 1;
+        }
 		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
 		CHECK(hr);
         
-        LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
+        //LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
 		
         // finally send the processed sample on it's way
 		hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
@@ -1383,6 +1393,11 @@ HRESULT CInputPin::PushSampleDefault(IMediaSample* InputSample, AM_SAMPLE2_PROPE
 
 HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
 {
+    if(m_FieldTiming > 0 && (InSampleProperties->tStop - InSampleProperties->tStart) > m_FieldTiming * 4)
+    {
+        ClearAll();
+    }
+
     switch(InSampleProperties->dwTypeSpecificFlags & (AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD))
     {
     // 2 fields field 2 first
@@ -1392,6 +1407,7 @@ HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPE
         m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
         m_IncomingFields[1].IsTopLine = FALSE;
         m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        SupplyHint(PULLDOWN_32, 1, FALSE);
         break;
     // 2 fields field 2 first
     case AM_VIDEO_FLAG_FIELD1FIRST:
@@ -1400,6 +1416,7 @@ HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPE
         m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
         m_IncomingFields[1].IsTopLine = TRUE;
         m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        SupplyHint(PULLDOWN_32, 1, FALSE);
         break;
     // 3 fields field 2 first
     case AM_VIDEO_FLAG_REPEAT_FIELD:
@@ -1410,6 +1427,7 @@ HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPE
         m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
         m_IncomingFields[2].IsTopLine = FALSE;
         m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        SupplyHint(PULLDOWN_32, 4, TRUE);
         break;
     // 3 fields field 1 first
     case (AM_VIDEO_FLAG_REPEAT_FIELD | AM_VIDEO_FLAG_FIELD1FIRST):
@@ -1420,6 +1438,7 @@ HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPE
         m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
         m_IncomingFields[2].IsTopLine = TRUE;
         m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        SupplyHint(PULLDOWN_32, 4, TRUE);
         break;
     }
 
@@ -1555,6 +1574,8 @@ STDMETHODIMP CInputPin::ClearAll()
         PopStack();
     }
     m_NextFieldNumber = 0;
+    m_DetectedPulldownIndex = 0;
+    m_DetectedPulldownType = FULLRATEVIDEO;
     return S_OK;
 }
 
@@ -1599,9 +1620,22 @@ CInputPin::eHowToProcess CInputPin::WorkOutHowToProcess(REFERENCE_TIME& FrameEnd
     {
         int FrameNum = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_FieldNumber;
         FrameEndTime = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_EndTime;
-        if(m_Filter->GetParamBool(CDScaler::MANUALPULLDOWN))
+
+        DWORD Index;
+        eDeinterlaceType CurrentType;
+
+        if(m_Filter->GetParamBool(CDScaler::MANUALPULLDOWN) == FALSE)
         {
-            DWORD Index = m_Filter->GetParamInt(CDScaler::PULLDOWNINDEX);
+            // use the detected mode to deinterlace
+            CurrentType = m_DetectedPulldownType;
+            Index = m_DetectedPulldownIndex;
+        }
+        else
+        {
+            // force the manually selected mode
+            CurrentType = (eDeinterlaceType)m_Filter->GetParamEnum(CDScaler::PULLDOWNMODE);
+            Index = m_Filter->GetParamInt(CDScaler::PULLDOWNINDEX);
+        }
 
             switch(m_Filter->GetParamEnum(CDScaler::PULLDOWNMODE))
             {
@@ -1630,8 +1664,6 @@ CInputPin::eHowToProcess CInputPin::WorkOutHowToProcess(REFERENCE_TIME& FrameEnd
                     HowToProcess = PROCESS_IGNORE;
                 }
                 break;
-            case FULLRATEVIDEO:
-                break;
             case HALFRATEVIDEO:
                 if((FrameNum & 1) == 0)
                 {
@@ -1642,17 +1674,39 @@ CInputPin::eHowToProcess CInputPin::WorkOutHowToProcess(REFERENCE_TIME& FrameEnd
                     HowToProcess = PROCESS_IGNORE;
                 }
                 break;
+        default:
+        case FULLRATEVIDEO:
+            break;
             }
         }
         else
         {
-            HowToProcess = PROCESS_DEINTERLACE;
+        HowToProcess = PROCESS_IGNORE;
         }
+
+    return HowToProcess;
+}
+
+void CInputPin::SupplyHint(eDeinterlaceType HintMode, DWORD HintIndex, BOOL StrongHint)
+{
+    switch(HintMode)
+    {
+    case PULLDOWN_32:
+        if(StrongHint == FALSE && HintMode != m_DetectedPulldownType)
+        {
+            return;
     }
     else
     {
-        HowToProcess = PROCESS_IGNORE;
+            if(StrongHint == TRUE && HintMode != m_DetectedPulldownType)
+            {
+                m_DetectedPulldownType = HintMode;
+                m_DetectedPulldownIndex = (m_NextFieldNumber - HintIndex + 9) % 5;
+            }
+            else if(m_DetectedPulldownIndex != ((m_NextFieldNumber - HintIndex + 9) % 5))
+            {
+                m_DetectedPulldownType = FULLRATEVIDEO;
+            }
+        }
     }
-
-    return HowToProcess;
 }

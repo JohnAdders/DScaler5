@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.11 2003-10-31 17:19:37 adcockj Exp $
+// $Id: InputPin.h,v 1.12 2003-11-13 17:27:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -200,6 +200,10 @@ private:
     HRESULT PushSampleNVDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
     HRESULT PushSampleWinDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
     void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
+    void SupplyHint(eDeinterlaceType HintMode, DWORD HintIndex, BOOL StrongHint);
     eSourceType m_SourceType;
+    DWORD m_DetectedPulldownIndex;
+    eDeinterlaceType m_DetectedPulldownType;
+
 };
 
