@@ -124,6 +124,10 @@ SOURCE=.\DSBasePin.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\DSBufferedInputPin.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\DSInputPin.cpp
 # End Source File
 # Begin Source File
@@ -166,6 +170,10 @@ SOURCE=.\DSBaseFilter.h
 # Begin Source File
 
 SOURCE=.\DSBasePin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\DSBufferedInputPin.h
 # End Source File
 # Begin Source File
 

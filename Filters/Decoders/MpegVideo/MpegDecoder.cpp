@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.26 2004-05-12 17:01:03 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.27 2004-05-24 06:29:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.26  2004/05/12 17:01:03  adcockj
+// Hopefully correct treatment of timestamps at last
+//
 // Revision 1.25  2004/05/10 16:48:50  adcockj
 // Imporved handling of sequence changes
 //
@@ -132,6 +135,7 @@
 #include "MpegDecoder.h"
 #include "EnumPins.h"
 #include "DSInputPin.h"
+#include "DSBufferedInputPin.h"
 #include "DSOutputPin.h"
 #include "MediaBufferWrapper.h"
 #include "MediaTypes.h"
@@ -147,7 +151,7 @@ CMpegDecoder::CMpegDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::CreatePins\n"));
     
-    m_VideoInPin = new CDSInputPin;
+    m_VideoInPin = new CDSBufferedInputPin;
     if(m_VideoInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
@@ -444,7 +448,7 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
 {
     if(pPin == m_VideoInPin)
     {
-	    pProperties->cBuffers = 1;
+	    pProperties->cBuffers = 200;
 	    pProperties->cbBuffer = 2048;
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
