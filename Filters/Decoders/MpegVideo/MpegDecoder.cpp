@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.66 2005-02-08 15:32:34 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.67 2005-02-09 07:27:32 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.66  2005/02/08 15:32:34  adcockj
+// Added CSS handling
+//
 // Revision 1.65  2005/02/03 13:40:54  adcockj
 // Improved seek support
 //
@@ -1450,22 +1453,26 @@ void CMpegDecoder::ResetMpeg2Decoder()
         cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
     }
 
+    if(m_CurrentPicture != NULL)
+    {
+        m_CurrentPicture->Release();
+        m_CurrentPicture = NULL;
+    }
+
     if(m_dec != NULL)
     {
-		mpeg2_reset(m_dec, 0);
+		mpeg2_reset(m_dec, 1);
 		//mpeg2_close(m_dec);
         //m_dec = mpeg2_init();
+        for(int i(0); i < NUM_BUFFERS; ++i)
+        {
+            m_Buffers[i].Clear();
+        }
         if(cbSequenceHeader > 0)
         {
             mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
             ProcessMPEGBuffer(NULL);
         }
-    }
-
-    if(m_CurrentPicture != NULL)
-    {
-        m_CurrentPicture->Release();
-        m_CurrentPicture = NULL;
     }
 
     m_fWaitForKeyFrame = true;
