@@ -1,0 +1,17 @@
+Known bugs to fix
+
+- See \todo entries in file
+
+New functionality to add
+
+- Support for post processing
+- Support for varying the output format based on user preference
+- Decent dithering when down-sampling
+- use fast double to long conversion using bias of 3158736
+- Support for getting PCM output to SPDIF directly using WAVE_FORMAT_DOLBY_AC3_SPDIF type
+
+Issues to think about
+
+- There are issues with the timestamps on the MPEG files produced by the Nebula DVB-T card
+  Need to come up with a work around for these (note that the Elecard demuxer has a use bitrate
+  flag that works for these)

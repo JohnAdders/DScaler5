@@ -1,0 +1,107 @@
+Microsoft Developer Studio Workspace File, Format Version 6.00
+# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!
+
+###############################################################################
+
+Project: "Filter_Lib"=..\..\Filter_Lib\Filter_Lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "GenDMOProp"=..\..\..\GenDMOProp\GenDMOProp.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "MpegAudio"=.\MpegAudio.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name Filter_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name liba52
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libmad
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name djbfft
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "djbfft"=.\djbfft\djbfft.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "liba52"=".\a52dec\vc++\liba52.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libmad"=".\libmad\msvc++\libmad.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Global:
+
+Package=<5>
+{{{
+}}}
+
+Package=<3>
+{{{
+}}}
+
+###############################################################################
+
