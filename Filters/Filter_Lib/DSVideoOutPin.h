@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.4 2004-12-06 18:05:01 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.5 2004-12-21 14:46:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,7 @@ public:
     HRESULT SendSample(IMediaSample* OutSample);
     HRESULT AdjustRenderersMediaType();
     void SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame);
+    REFERENCE_TIME GetAvgTimePerFrame() {return m_AvgTimePerFrame;};
     
     void SetPanScanX(DWORD OffsetX);
     void SetPanScanY(DWORD OffsetY);

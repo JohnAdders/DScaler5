@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.16 2004-12-15 13:04:08 adcockj Exp $
+// $Id: DScaler.cpp,v 1.17 2004-12-21 14:47:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/12/15 13:04:08  adcockj
+// added simple statistics display
+//
 // Revision 1.15  2004/12/13 16:59:57  adcockj
 // flag based film detection
 //
@@ -590,7 +593,7 @@ HRESULT CDScaler::UpdateTypes(IMediaObject* pDMO)
 
 void CDScaler::ResetPullDownIndexRange()
 {
-    switch((eDeinterlaceType)GetParamInt(PULLDOWNMODE))
+    switch((eDeinterlaceType)GetParamEnum(PULLDOWNMODE))
     {
     case FULLRATEVIDEO:
     case HALFRATEVIDEO:
@@ -606,7 +609,7 @@ void CDScaler::ResetPullDownIndexRange()
         _GetParamList()[PULLDOWNINDEX].MParamInfo.mpdMaxValue = 0;
         break;
     }
-    if(GetParamInt(PULLDOWNMODE) > _GetParamList()[PULLDOWNINDEX].MParamInfo.mpdMaxValue)
+    if(GetParamInt(PULLDOWNINDEX) > _GetParamList()[PULLDOWNINDEX].MParamInfo.mpdMaxValue)
     {
         _GetParamList()[PULLDOWNINDEX].Value = _GetParamList()[PULLDOWNINDEX].MParamInfo.mpdMaxValue;
     }
@@ -1124,24 +1127,23 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     
 		if(result)
 		{
+            BITMAPINFOHEADER* BitmapInfo;
+            if(pmt->formattype == FORMAT_VIDEOINFO2)
+            {
+                VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
+                BitmapInfo = &Format->bmiHeader;
+            }
+            else
+            {
+                VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
+                BitmapInfo = &Format->bmiHeader;
+            }
 
-        BITMAPINFOHEADER* BitmapInfo;
-        if(pmt->formattype == FORMAT_VIDEOINFO2)
-        {
-            VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
-            BitmapInfo = &Format->bmiHeader;
+            // check that the incoming format is SDTV    
+            result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
+
+            //result &= (BitmapInfo->biWidth <= 768);
         }
-        else
-        {
-            VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
-            BitmapInfo = &Format->bmiHeader;
-        }
-
-        // check that the incoming format is SDTV    
-        result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
-
-        //result &= (BitmapInfo->biWidth <= 768);
-    }
     }
     return result;
 }
@@ -1164,7 +1166,21 @@ HRESULT CDScaler::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin
 
 HRESULT CDScaler::NotifyConnected(CDSBasePin* pPin)
 {
-    if(pPin == m_VideoOutPin)
+    if(pPin == m_VideoInPin)
+    {
+        SI(IKsPropertySet) PropSet = m_VideoInPin->m_ConnectedPin;
+        if(PropSet)
+        {
+            GUID PinCategory = GUID_NULL;
+            DWORD cbReturned;
+            HRESULT hr = PropSet->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL, 0, &PinCategory, sizeof(GUID), &cbReturned);
+            if(hr == S_OK && PinCategory == PIN_CATEGORY_PREVIEW)
+            {
+                return VFW_E_NO_INTERFACE;
+            }
+        }
+    }
+    else if(pPin == m_VideoOutPin)
     {
         m_VideoOutPin->NotifyConnected();
     }
@@ -1208,6 +1224,15 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
 	{
 		m_IsDiscontinuity = true;
 	}
+
+    if((pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID) != AM_SAMPLE_STOPVALID ||
+        pSampleProperties->tStop <= pSampleProperties->tStart ||
+        (pSampleProperties->tStop - pSampleProperties->tStart) == 1)
+	{
+        pSampleProperties->tStop = pSampleProperties->tStart + m_VideoOutPin->GetAvgTimePerFrame();
+		m_IsDiscontinuity = true;
+	}
+
 
     if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)
     {

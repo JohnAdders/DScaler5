@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.15 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.16 2004-12-21 14:46:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/08/31 16:33:42  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.14  2004/08/04 13:34:58  adcockj
 // Changed order of filter flush to match docs
 //
@@ -138,8 +143,12 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     CHECK(hr);
 
     m_ConnectedPin = pConnector;
-
+    
     hr = m_Filter->NotifyConnected(this);
+    if(FAILED(hr))
+    {
+        m_ConnectedPin.Detach();
+    }
 
     LOG(DBGLOG_ALL, ("CDSInputPin::ReceiveConnection Exit\n"));
     return hr;

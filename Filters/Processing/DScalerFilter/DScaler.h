@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.14 2004-12-20 08:51:53 adcockj Exp $
+// $Id: DScaler.h,v 1.15 2004-12-21 14:47:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -59,7 +59,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(0, L"Is Input Anamorphic")
     DEFINE_PARAM_ENUM(0, 0, L"Deinterlace Mode")
     DEFINE_PARAM_BOOL(0, L"Manual Pulldown Mode")
-    DEFINE_PARAM_ENUM(FULLRATEVIDEO, PULLDOWN_32, L"Pulldown Mode")
+    DEFINE_PARAM_ENUM(PULLDOWN_32, FULLRATEVIDEO, L"Pulldown Mode")
     DEFINE_PARAM_INT(0, 4, 0, L"None", L"Pulldown Mode Index")
     DEFINE_PARAM_ENUM(0, 0, L"Film Detect Mode")
 END_PARAM_LIST()
