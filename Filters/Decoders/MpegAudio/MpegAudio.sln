@@ -1,0 +1,106 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib.vcproj", "{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{834F7447-938B-4230-890A-2CCAE695DB78} = {834F7447-938B-4230-890A-2CCAE695DB78}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp.vcproj", "{834F7447-938B-4230-890A-2CCAE695DB78}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcproj", "{03D9F999-CEDA-47B8-8B27-CA4821F9D960}"
+	ProjectSection(ProjectDependencies) = postProject
+		{40F89392-9461-452B-819A-133D35F45068} = {40F89392-9461-452B-819A-133D35F45068}
+		{C5E554C0-18F9-4471-B670-81938D292C44} = {C5E554C0-18F9-4471-B670-81938D292C44}
+		{200F90F7-4E25-4118-A926-87E9EEECD53E} = {200F90F7-4E25-4118-A926-87E9EEECD53E}
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE} = {0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}
+		{834F7447-938B-4230-890A-2CCAE695DB78} = {834F7447-938B-4230-890A-2CCAE695DB78}
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0} = {ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "djbfft", "djbfft\djbfft.vcproj", "{C5E554C0-18F9-4471-B670-81938D292C44}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "a52dec\vc++\liba52.vcproj", "{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "dtsdec\vc++\libdts.vcproj", "{40F89392-9461-452B-819A-133D35F45068}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "libmad\msvc++\libmad.vcproj", "{200F90F7-4E25-4118-A926-87E9EEECD53E}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Debug Fixed Point = Debug Fixed Point
+		Release = Release
+		Release Fixed Point = Release Fixed Point
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug.ActiveCfg = Debug|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug.Build.0 = Debug|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Debug Fixed Point.Build.0 = Debug|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release.ActiveCfg = Release|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release.Build.0 = Release|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release Fixed Point.ActiveCfg = Release|Win32
+		{ED9CDF11-9F92-4A90-975B-D4F0EEB547E0}.Release Fixed Point.Build.0 = Release|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug.ActiveCfg = Debug|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug.Build.0 = Debug|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Debug Fixed Point.Build.0 = Debug|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Release.ActiveCfg = Release|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Release.Build.0 = Release|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Release Fixed Point.ActiveCfg = Release|Win32
+		{834F7447-938B-4230-890A-2CCAE695DB78}.Release Fixed Point.Build.0 = Release|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug.ActiveCfg = Debug|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug.Build.0 = Debug|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release.ActiveCfg = Release|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release.Build.0 = Release|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{03D9F999-CEDA-47B8-8B27-CA4821F9D960}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug.ActiveCfg = Debug|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug.Build.0 = Debug|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Debug Fixed Point.Build.0 = Debug|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Release.ActiveCfg = Release|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Release.Build.0 = Release|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Release Fixed Point.ActiveCfg = Release|Win32
+		{C5E554C0-18F9-4471-B670-81938D292C44}.Release Fixed Point.Build.0 = Release|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug.ActiveCfg = Debug|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug.Build.0 = Debug|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release.ActiveCfg = Release|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release.Build.0 = Release|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{0A5F3A5C-C2BF-48AD-8672-7D36397F9FEE}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Debug.ActiveCfg = Debug|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Debug.Build.0 = Debug|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Release.ActiveCfg = Release|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Release.Build.0 = Release|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{40F89392-9461-452B-819A-133D35F45068}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug.ActiveCfg = Debug|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug.Build.0 = Debug|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Debug Fixed Point.Build.0 = Debug|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release.ActiveCfg = Release|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release.Build.0 = Release|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release Fixed Point.ActiveCfg = Release|Win32
+		{200F90F7-4E25-4118-A926-87E9EEECD53E}.Release Fixed Point.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
