@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.1 2003-07-18 09:26:34 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.2 2003-09-24 07:01:02 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.1  2003/07/18 09:26:34  adcockj
+;// Corrections to assembler files (does not compile)
+;//
 ;//////////////////////////////////////////////////////////////////////////////
 
 USE32
@@ -39,7 +42,10 @@ proc _Deint_Diag_Core_YUY2%1
     %$Dest arg
     %$PixelCount arg
 
-    sub     esp, 20                 ; 16 bytes of local stack space 
+    sub     esp, 24                 ; 24 bytes of local stack space 
+	
+	mov [esp+16], esi
+	mov [esp+20], edi
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
@@ -197,14 +203,14 @@ LoopYUY2%1:
     ; operate only on luma as we will always bob the chroma
     pand    mm3, [YMask]
 
-    mov     eax, [esp + %$T4]
+    mov     eax, [ebp + %$T4]
     movq	mm2, [ebx]
     movq	mm4, [eax + ecx]
 
     DS_PABS mm2, mm4, mm5
     pand    mm2, [YMask]
 
-    mov     eax, [esp + %$B4]
+    mov     eax, [ebp + %$B4]
     movq	mm4, [edx]
     movq	mm7, [eax + ecx]
 
@@ -253,6 +259,11 @@ LoopYUY2%1:
 	mov		eax, [ebp + %$Dest]
 	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
 	DS_MOVNTQ [eax + ecx], mm0
+
+	mov esi, [esp+16]
+	mov edi, [esp+20]
+
+	emms
     
     %undef %1
 endproc
@@ -278,7 +289,10 @@ proc _Deint_Diag_Core_Luma%1
     %$Dest arg
     %$PixelCount arg
 
-    sub     esp, 20                 ; 16 bytes of local stack space 
+    sub     esp, 24                 ; 24 bytes of local stack space 
+	
+	mov [esp+16], esi
+	mov [esp+20], edi
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
@@ -432,13 +446,13 @@ LoopLuma%1:
     ; mm3 = "movement" in the centre
     ; mm6 = Bob pixels          
 
-    mov     eax, [esp + %$T4]
+    mov     eax, [ebp + %$T4]
     movq	mm2, [ebx]
     movq	mm4, [eax + ecx]
 
     DS_PABS mm2, mm4, mm5
 
-    mov     eax, [esp + %$B4]
+    mov     eax, [ebp + %$B4]
     movq	mm4, [edx]
     movq	mm7, [eax + ecx]
 
@@ -484,7 +498,12 @@ LoopLuma%1:
 	mov		eax, [ebp + %$Dest]
 	DS_PAVGB mm0, [edx], mm2, [ShiftMask]
 	DS_MOVNTQ [eax + ecx], mm0
-    
+	
+	mov esi, [esp+16]
+	mov edi, [esp+20]
+
+	emms
+
     %undef %1
 endproc
 %endmacro

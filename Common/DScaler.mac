@@ -1,5 +1,5 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: DScaler.mac,v 1.1 2003-07-28 08:35:53 adcockj Exp $
+;// $Id: DScaler.mac,v 1.2 2003-09-24 07:01:00 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// Copyright (c) 2003 John Adcock.  All rights reserved.
 ;// Some macros taken from c32.mac from NASM
@@ -22,6 +22,9 @@
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.1  2003/07/28 08:35:53  adcockj
+;// Added missing files
+;//
 ;///////////////////////////////////////////////////////////////////////////////
 
 ;///////////////////////////////////////////////////////////////////////////////
@@ -29,9 +32,9 @@
 ;///////////////////////////////////////////////////////////////////////////////
 %imacro proc 1			; begin a procedure definition
 %push proc
-          global %1
-%1:       push ebp
-          mov ebp,esp
+        global %1
+%1:     push ebp
+		mov ebp,esp
     %assign %$arg 8
     %define %$procname %1
 %endmacro
@@ -47,8 +50,8 @@
 %ifnctx proc
 %error Mismatched `endproc'/`proc'
 %else
-	  leave
-	  ret
+		leave
+		ret
 __end_%$procname:		; useful for calculating function size
 %pop
 %endif
