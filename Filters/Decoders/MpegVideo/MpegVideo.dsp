@@ -54,8 +54,8 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\Debug/MpegVideo.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug
-TargetPath=\source\deinterlace\DScaler5\Debug\MpegVideo.dll
-InputPath=\source\deinterlace\DScaler5\Debug\MpegVideo.dll
+TargetPath=\Source\deinterlace\DScaler5\Debug\MpegVideo.dll
+InputPath=\Source\deinterlace\DScaler5\Debug\MpegVideo.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -89,8 +89,8 @@ LINK32=link.exe
 # ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\..\..\Release/MpegVideo.dll"
 # Begin Custom Build - Performing registration
 OutDir=.\Release
-TargetPath=\source\deinterlace\DScaler5\Release\MpegVideo.dll
-InputPath=\source\deinterlace\DScaler5\Release\MpegVideo.dll
+TargetPath=\Source\deinterlace\DScaler5\Release\MpegVideo.dll
+InputPath=\Source\deinterlace\DScaler5\Release\MpegVideo.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -108,103 +108,6 @@ SOURCE="$(InputPath)"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
-# Begin Source File
-
-SOURCE=.\a_yuv2rgb.asm
-
-!IF  "$(CFG)" == "MpegVideo - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuv2rgb.asm
-InputName=a_yuv2rgb
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "MpegVideo - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuv2rgb.asm
-InputName=a_yuv2rgb
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\a_yuv2yuy2.asm
-
-!IF  "$(CFG)" == "MpegVideo - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuv2yuy2.asm
-InputName=a_yuv2yuy2
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "MpegVideo - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuv2yuy2.asm
-InputName=a_yuv2yuy2
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\a_yuvtable.asm
-
-!IF  "$(CFG)" == "MpegVideo - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuvtable.asm
-InputName=a_yuvtable
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "MpegVideo - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuvtable.asm
-InputName=a_yuvtable
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSUtil.cpp
-# End Source File
 # Begin Source File
 
 SOURCE=.\FrameBuffer.cpp
@@ -243,14 +146,6 @@ SOURCE=.\MpegVideo.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\PlanarYUVToRGB.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToYUY2.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -264,27 +159,7 @@ SOURCE=.\DScaler.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\DSUtil.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaTypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\moreuuids.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\MpegDecoder.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToRGB.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToYUY2.h
 # End Source File
 # Begin Source File
 
