@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.2 2004-03-06 20:50:29 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.3 2004-04-08 16:41:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -37,6 +37,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/03/06 20:50:29  adcockj
+// Put in correct ff rate supported
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -60,7 +63,7 @@ HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
 			if(!m_CorrectTS) return E_PROP_ID_UNSUPPORTED;
 			m_ratechange.Rate = p->Rate;
 			m_ratechange.StartTime = p->StartTime;
-			LOG(DBGLOG_FLOW, ("StartTime=%I64d, Rate=%d\n", p->StartTime, p->Rate));
+			LOG(DBGLOG_FLOW, ("Simple Rate Change StartTime=%I64d, Rate=%d\n", p->StartTime, p->Rate));
 		}
 		break;
 	case AM_RATE_CorrectTS:

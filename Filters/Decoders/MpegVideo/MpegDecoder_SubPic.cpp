@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.7 2004-04-06 16:46:12 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.8 2004-04-08 16:41:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/04/06 16:46:12  adcockj
+// DVD Test Annex Compatability fixes
+//
 // Revision 1.6  2004/03/11 16:52:22  adcockj
 // Improved subpicture drawing with different video widths/heights
 //
@@ -90,56 +93,64 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 		    CProtectCode WhileVarInScope(&m_SubPictureLock);
 			AM_PROPERTY_SPHLI* pSPHLI = (AM_PROPERTY_SPHLI*)pPropertyData;
 
-			if(m_sphli)
-			{
-				delete m_sphli;
-				m_sphli = NULL;
-			}
 
+			std::list<CHighlight*>::iterator it = m_HighlightList.begin();
+			while(it != m_HighlightList.end())
+			{
+				if((*it)->rtStart >= PTS2RT(pSPHLI->StartPTM) || pSPHLI->HLISS == 0 || pSPHLI->StartPTM == 0xFFFFFFFF)
+				{
+					delete *it;
+					m_HighlightList.pop_front();
+					it = m_HighlightList.begin();
+				}
+				else
+				{
+					it++;
+				}
+			}
+							
 			if(pSPHLI->HLISS)
 			{
-				std::list<sp_t*>::iterator it = m_sps.begin();
-				while(it != m_sps.end())
+				// switch off any previous highlights
+				if(m_HighlightList.size() > 0)
 				{
-					sp_t* sp = *it;
-					//if(sp->rtStart <= PTS2RT(pSPHLI->StartPTM) && PTS2RT(pSPHLI->StartPTM) < sp->rtStop)
-					if(ComparePTSWithRt(sp->rtStart, pSPHLI->StartPTM))
+					if(m_HighlightList.back()->rtStop > PTS2RT(pSPHLI->StartPTM))
 					{
-						fRefresh = true;
-						if(!sp->sphli)
+						m_HighlightList.back()->rtStop = PTS2RT(pSPHLI->StartPTM);
+						if(m_HighlightList.back()->rtStart >= m_HighlightList.back()->rtStop)
 						{
-							sp->sphli = new AM_PROPERTY_SPHLI;
+							m_HighlightList.back()->rtStart = m_HighlightList.back()->rtStop - 1;
 						}
-						memcpy(sp->sphli, pSPHLI, sizeof(AM_PROPERTY_SPHLI));
-						LOG(DBGLOG_FLOW,("Attach hili\n"));
 					}
-					it++;
+				}
+				
+				// add new highlight into list
+				CHighlight* NewHighlight = new CHighlight();
+				memcpy(&NewHighlight->m_Hi, pSPHLI, sizeof(AM_PROPERTY_SPHLI));
+				if(pSPHLI->StartPTM != 0xFFFFFFFF)
+				{
+					NewHighlight->rtStart = PTS2RT(pSPHLI->StartPTM);
+				}
+				else
+				{
+					NewHighlight->rtStart = _I64_MIN;
+				}
+				if(pSPHLI->EndPTM != 0xFFFFFFFF)
+				{
+					NewHighlight->rtStop = PTS2RT(pSPHLI->EndPTM);
+				}
+				else
+				{
+					NewHighlight->rtStop = _I64_MAX;
 				}
 
-				if(!fRefresh) // save it for later, a subpic might be late for this hli
-				{
-					m_sphli = new AM_PROPERTY_SPHLI;
-					memcpy(m_sphli, pSPHLI, sizeof(AM_PROPERTY_SPHLI));
-					LOG(DBGLOG_FLOW,("Save hili\n"));
-				}
-			}
-			else
-			{
-				std::list<sp_t*>::iterator it = m_sps.begin();
-				while(it != m_sps.end())
-				{
-					sp_t* sp = *it;
-					fRefresh = !!(sp->sphli);
-					delete sp->sphli;
-					sp->sphli = NULL;
-					it++;
-				}
-			}
+				m_HighlightList.push_back(NewHighlight);
+				fRefresh = true;
 
-			if(pSPHLI->HLISS)
-			LOG(DBGLOG_FLOW,("hli: %I64d - %I64d, (%d,%d) - (%d,%d)\n", 
-				PTS2RT(pSPHLI->StartPTM)/10000, PTS2RT(pSPHLI->EndPTM)/10000,
-				pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY));
+				LOG(DBGLOG_ALL,("hli: %I64d - %I64d, (%d,%d) - (%d,%d) %d\n", 
+					NewHighlight->rtStart, NewHighlight->rtStop,
+					pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY, &NewHighlight->m_Hi));
+			}
 		}
 		break;
 	case AM_PROPERTY_DVDSUBPIC_COMPOSIT_ON:
@@ -147,6 +158,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 		    CProtectCode WhileVarInScope(&m_SubPictureLock);
 			AM_PROPERTY_COMPOSIT_ON* pCompositOn = (AM_PROPERTY_COMPOSIT_ON*)pPropertyData;
 			m_spon = *pCompositOn;
+			fRefresh = true;
 		}
 		break;
 	default:
@@ -155,7 +167,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
 
 	if(fRefresh)
 	{
-		LOG(DBGLOG_FLOW,("Refresh Image\n"));
+		LOG(DBGLOG_ALL,("Refresh Image\n"));
     	CProtectCode WhileVarInScope(&m_DeliverLock);
 		Deliver(true);
 	}
@@ -190,9 +202,6 @@ HRESULT CMpegDecoder::SupportPropSetSubPic(DWORD dwPropID, DWORD *pTypeSupport)
 HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
 	HRESULT hr;
-
-	LOG(DBGLOG_FLOW,("Decode SubPic\n"));
-
 
 	BYTE* pDataIn = pSampleProperties->pbBuffer;
 
@@ -239,9 +248,9 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	if(FAILED(hr))
 	{
 		CProtectCode WhileVarInScope(&m_SubPictureLock);
-		if(m_sps.size() > 0)
+		if(m_SubPicureList.size() > 0)
 		{
-			sp_t* sp = m_sps.back();
+			CSubPicture* sp = m_SubPicureList.back();
 			sp->pData.resize(sp->pData.size() + len);
 			memcpy(&sp->pData[0] + sp->pData.size() - len, pDataIn, len);
 		}
@@ -250,11 +259,11 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	{
 		CProtectCode WhileVarInScope(&m_SubPictureLock);
 
-		std::list<sp_t*>::iterator it = m_sps.end();
-		while(it != m_sps.begin())
+		std::list<CSubPicture*>::iterator it = m_SubPicureList.end();
+		while(it != m_SubPicureList.begin())
 		{
 			it--;
-			sp_t* sp = *it;
+			CSubPicture* sp = *it;
 			if(sp->rtStop == _I64_MAX && sp->rtStart < rtStart)
 			{
 				sp->rtStop = rtStart;
@@ -262,39 +271,18 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 			}
 		}
 
-		sp_t* p = new sp_t();
+		CSubPicture* p = new CSubPicture();
 		p->rtStart = rtStart;
+		p->rtStop = _I64_MAX;
 		p->pData.resize(len);
 		memcpy(&(p->pData[0]), pDataIn, len);
 
-		if(m_sphli && ComparePTSWithRt(p->rtStart, m_sphli->StartPTM))
-		{
-			p->sphli = m_sphli;
-			m_sphli = NULL;
-		}
-
-		m_sps.push_back(p);
+		m_SubPicureList.push_back(p);
 	}
 
-	if(m_sps.size() > 0)
+	if(m_SubPicureList.size() > 0)
 	{
-		AM_PROPERTY_SPHLI sphli;
-		DWORD offset[2];
-
-		std::list<sp_t*>::iterator it = m_sps.end();
-		while(it != m_sps.begin())
-		{
-			it--;
-			sp_t* sp = *it;
-			LOG(DBGLOG_FLOW,("Stack: %I64d - %I64d %d %d\n", sp->rtStart, sp->rtStop, sp->fForced, sp->sphli));
-			DecodeSubpic(sp, sphli, offset[0], offset[1]);
-		}
-
-	}
-
-	if(m_sps.size() > 0)
-	{
-		LOG(DBGLOG_FLOW,("Refresh Image\n"));
+		LOG(DBGLOG_ALL,("Refresh Image\n"));
     	CProtectCode WhileVarInScope(&m_DeliverLock);
 		Deliver(true);
 	}
@@ -302,7 +290,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 	return S_OK;
 }
 
-bool CMpegDecoder::DecodeSubpic(sp_t* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2)
+bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2)
 {
 	memset(&sphli, 0, sizeof(sphli));
 
@@ -414,14 +402,15 @@ bool CMpegDecoder::DecodeSubpic(sp_t* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offse
 void CMpegDecoder::FlushSubPic()
 {
     // clear out all the subpictures
-	std::list<sp_t*>::iterator it = m_sps.begin();
-	while(it != m_sps.end())
-	{
-		delete *it;
-		m_sps.pop_front();
-		it = m_sps.begin();
-	}
-	m_sps.clear();
+	std::list<CSubPicture*>::iterator it = m_SubPicureList.begin();
+	while(it != m_SubPicureList.end())
+		delete *it++;
+	m_SubPicureList.clear();
+
+	std::list<CHighlight*>::iterator it2 = m_HighlightList.begin();
+	while(it2 != m_HighlightList.end())
+		delete *it2++;
+	m_HighlightList.clear();
 }
 
 static __inline BYTE GetNibble(BYTE* p, DWORD* offset, int& nField, int& fAligned)
@@ -542,8 +531,19 @@ void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE col
 	}
 }
 
+void CMpegDecoder::RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli)
+{
+	POINT pt = {sphli_hli->StartX, sphli_hli->StartY};
+	for(; pt.y <= sphli_hli->StopY;  pt.y++)
+	{
+		for(pt.x = sphli_hli->StartX; pt.x <= sphli_hli->StopX;  pt.x++)
+		{
+			DrawPixel(p, pt, w,sphli_hli->ColCon.patcol, sphli_hli->ColCon.patcon, m_sppal);
+		}
+	}
+}
 
-void CMpegDecoder::RenderSubpic(sp_t* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli)
+void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli)
 {
 	AM_PROPERTY_SPHLI sphli;
 	DWORD offset[2];
@@ -554,7 +554,6 @@ void CMpegDecoder::RenderSubpic(sp_t* sp, BYTE** p, int w, int h, AM_PROPERTY_SP
 	}
 
 	BYTE* pData = &sp->pData[0];
-	POINT pt = {sphli.StartX, sphli.StartY};
 	RECT rc = {sphli.StartX, sphli.StartY, sphli.StopX, sphli.StopY};
 	RECT rchli = {0,0,0,0};
 
@@ -565,30 +564,55 @@ void CMpegDecoder::RenderSubpic(sp_t* sp, BYTE** p, int w, int h, AM_PROPERTY_SP
 	}
 
 	int nField = 0;
-	int fAligned = 1;
 
 	DWORD end[2] = {offset[1], (pData[2]<<8)|pData[3]};
 
-	while((nField == 0 && offset[0] < end[0]) || (nField == 1 && offset[1] < end[1]))
+	for(nField = 0; nField < 2; nField++)
 	{
-		DWORD code;
-
-		if((code = GetNibble(pData, offset, nField, fAligned)) >= 0x4
-		|| (code = (code << 4) | GetNibble(pData, offset, nField, fAligned)) >= 0x10
-		|| (code = (code << 4) | GetNibble(pData, offset, nField, fAligned)) >= 0x40
-		|| (code = (code << 4) | GetNibble(pData, offset, nField, fAligned)) >= 0x100)
+		POINT pt = {sphli.StartX, sphli.StartY + nField};
+		int fAligned = 1;
+		
+		while(offset[nField] < end[nField] && pt.y <= sphli.StopY)
 		{
-			DrawPixels(p, pt, w, code >> 2, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
-			if((pt.x += code >> 2) < rc.right) continue;
+			DWORD code;
+			DWORD len = 0;
+
+			code = GetNibble(pData, offset, nField, fAligned);
+			if(code < 0x004)
+			{
+				code = (code << 4) | GetNibble(pData, offset, nField, fAligned);
+				if(code < 0x0010)
+				{
+					code = (code << 4) | GetNibble(pData, offset, nField, fAligned);
+					if(code < 0x0040)
+					{
+						code = (code << 4) | GetNibble(pData, offset, nField, fAligned);
+					}
+				}
+			}
+			if(code != 0)
+				code = code;
+			len = code >> 2;
+			if(len == 0)
+			{
+				len = rc.right - pt.x;
+			}
+			DrawPixels(p, pt, w, len, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
+
+			//DrawPixels(p, pt, w, rc.right - pt.x, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
+
+
+			pt.x += len;
+			if(pt.x >= sphli.StopX)
+			{
+				if(!fAligned) 
+				{
+					GetNibble(pData, offset, nField, fAligned); // align to byte
+				}
+				pt.y += 2;
+				pt.x = sphli.StartX;
+			}
 		}
-
-		DrawPixels(p, pt, w, rc.right - pt.x, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
-
-		if(!fAligned) GetNibble(pData, offset, nField, fAligned); // align to byte
-
-		pt.x = rc.left;
-		pt.y++;
-		nField = 1 - nField;
 	}
 }
 
@@ -598,10 +622,18 @@ bool CMpegDecoder::HasSubpicsToRender(REFERENCE_TIME rt)
 
 	CProtectCode WhileVarInScope(&m_SubPictureLock);
 
-	for(std::list<sp_t*>::iterator it = m_sps.begin(); it != m_sps.end(); it++)
+	for(std::list<CSubPicture*>::iterator it = m_SubPicureList.begin(); it != m_SubPicureList.end(); it++)
 	{
-		sp_t* sp = *it;
-		if(sp->rtStart <= rt && rt < sp->rtStop && (/*sp->sphli ||*/ sp->fForced || m_spon))
+		CSubPicture* sp = *it;
+		if(sp->rtStart <= rt && rt < sp->rtStop && (sp->fForced || m_spon))
+		{
+			return(true);
+		}
+	}
+	for(std::list<CHighlight*>::iterator it2 = m_HighlightList.begin(); it2 != m_HighlightList.end(); it2++)
+	{
+		CHighlight* hi = *it2;
+		if(hi->rtStart <= rt && rt < hi->rtStop )
 		{
 			return(true);
 		}
@@ -617,58 +649,99 @@ void CMpegDecoder::ClearOldSubpics(REFERENCE_TIME rt)
 	CProtectCode WhileVarInScope(&m_SubPictureLock);
 
 	// remove no longer needed things first
-	std::list<sp_t*>::iterator it = m_sps.begin();
-	while(it != m_sps.end() && ((*it)->rtStop <= rt + 90000))
+	std::list<CSubPicture*>::iterator it = m_SubPicureList.begin();
+	while(it != m_SubPicureList.end() && ((*it)->rtStop <= rt + 90000))
 	{
-		LOG(DBGLOG_FLOW,("DeleteSubpic: %I64d - %I64d - %I64d %d\n", rt, (*it)->rtStart, (*it)->rtStop, (*it)->sphli));
+		LOG(DBGLOG_ALL,("DeleteSubpic: %I64d - %I64d - %I64d\n", rt, (*it)->rtStart, (*it)->rtStop));
 		delete *it;
-		m_sps.pop_front();
-		it = m_sps.begin();
+		m_SubPicureList.pop_front();
+		it = m_SubPicureList.begin();
+	}
+
+	std::list<CHighlight*>::iterator it2 = m_HighlightList.begin();
+	while(it2 != m_HighlightList.end() && ((*it2)->rtStop <= rt + 90000))
+	{
+		LOG(DBGLOG_ALL,("DeleteHighlight: %I64d - %I64d - %I64d %d\n", rt, (*it2)->rtStart, (*it2)->rtStop));
+		delete *it2;
+		m_HighlightList.pop_front();
+		it2 = m_HighlightList.begin();
 	}
 }
 
 void CMpegDecoder::RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h)
 {
 	CProtectCode WhileVarInScope(&m_SubPictureLock);
-	// remove no longer needed things first
-	std::list<sp_t*>::iterator it = m_sps.begin();
-	while(it != m_sps.end() && ((*it)->rtStop <= rt + 90000))
+	std::list<CSubPicture*>::iterator it = m_SubPicureList.begin();
+	while(it != m_SubPicureList.end() && ((*it)->rtStop <= rt + 90000))
 	{
-		LOG(DBGLOG_FLOW,("DeleteSubpic: %I64d - %I64d - %I64d %d\n", rt, (*it)->rtStart, (*it)->rtStop, (*it)->sphli));
+		LOG(DBGLOG_ALL,("DeleteSubpic: %I64d - %I64d - %I64d\n", rt, (*it)->rtStart, (*it)->rtStop));
 		delete *it;
-		m_sps.pop_front();
-		it = m_sps.begin();
+		m_SubPicureList.pop_front();
+		it = m_SubPicureList.begin();
 	}
 
-	while(it != m_sps.end())
+	std::list<CHighlight*>::iterator it2 = m_HighlightList.begin();
+	while(it2 != m_HighlightList.end() && ((*it2)->rtStop <= rt + 90000))
 	{
-		sp_t* sp = *it;
-		if(sp->rtStart <= rt + 90000 && rt < sp->rtStop
-		&& (m_spon || sp->fForced && (GetParamBool(DISPLAYFORCEDSUBS) || sp->sphli)))
+		LOG(DBGLOG_ALL,("DeleteHighlight: %I64d - %I64d - %I64d\n", rt, (*it2)->rtStart, (*it2)->rtStop));
+		delete *it2;
+		m_HighlightList.pop_front();
+		it2 = m_HighlightList.begin();
+	}
+
+	AM_PROPERTY_SPHLI* sphli_hli = NULL;
+	if(m_HighlightList.size() > 0)
+	{
+		CHighlight* Highlight = m_HighlightList.front();
+		if(Highlight->rtStart <= rt + 90000 && rt < Highlight->rtStop)
 		{
-			RenderSubpic(sp, p, w, h, sp->sphli);
-			LOG(DBGLOG_FLOW,("RenderSubpic: %I64d - %I64d - %I64d %d\n", rt, sp->rtStart, sp->rtStop, sp->sphli));
+			sphli_hli = &Highlight->m_Hi;
+		}
+	}
+
+	bool pDone = false;
+	while(it != m_SubPicureList.end())
+	{
+		CSubPicture* sp = *it;
+		if(sp->rtStart <= rt + 90000 && rt < sp->rtStop
+		&& (m_spon || sp->fForced && (GetParamBool(DISPLAYFORCEDSUBS) || sphli_hli)))
+		{
+			RenderSubpic(sp, p, w, h, sphli_hli);
+			LOG(DBGLOG_ALL,("RenderSubpic: %I64d - %I64d - %I64d %d\n", rt, sp->rtStart, sp->rtStop, sphli_hli));
+			pDone = true;
 		}
 		it++;
 	}
+	if(pDone == false && sphli_hli)
+	{
+		RenderHighlight(p, w, h, sphli_hli);
+		LOG(DBGLOG_ALL,("RenderHighlight: %I64d\n", rt));
+	}
 }
 
 
-CMpegDecoder::sp_t::sp_t()
+CMpegDecoder::CSubPicture::CSubPicture()
 {
-	rtStart = _I64_MAX;
+	rtStart = _I64_MIN;
 	rtStop = _I64_MAX;
-	sphli = NULL;
 	fForced = false;
 }
 
-CMpegDecoder::sp_t::~sp_t()
+CMpegDecoder::CSubPicture::~CSubPicture()
 {
-	if(sphli != NULL)
-	{
-		delete sphli;
-	}
+	pData.clear();
 }
+
+CMpegDecoder::CHighlight::CHighlight()
+{
+	rtStart = _I64_MIN;
+	rtStop = _I64_MAX;
+}
+
+CMpegDecoder::CHighlight::~CHighlight()
+{
+}
+
 
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.10 2004-04-06 16:46:12 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.11 2004-04-08 16:41:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -210,18 +210,27 @@ private:
     // Subpicture Stuff
 	AM_PROPERTY_COMPOSIT_ON m_spon;
 	AM_DVD_YUV m_sppal[16];
-	AM_PROPERTY_SPHLI* m_sphli; // temp
-	class sp_t
+	class CSubPicture
 	{
 	public:
-		sp_t();
-		~sp_t();
-		REFERENCE_TIME rtStart, rtStop; 
+		CSubPicture();
+		~CSubPicture();
+		REFERENCE_TIME rtStart;
+		REFERENCE_TIME rtStop; 
 		std::vector<BYTE> pData;
-		AM_PROPERTY_SPHLI* sphli; // hli
 		bool fForced;
 	};
-	std::list<sp_t*> m_sps;
+	std::list<CSubPicture*> m_SubPicureList;
+	class CHighlight
+	{
+	public:
+		CHighlight();
+		~CHighlight();
+		AM_PROPERTY_SPHLI m_Hi;
+		REFERENCE_TIME rtStart;
+		REFERENCE_TIME rtStop; 
+	};
+	std::list<CHighlight*> m_HighlightList;
 	CCanLock m_SubPictureLock;
 
 
@@ -229,12 +238,13 @@ private:
     HRESULT GetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
     HRESULT SupportPropSetSubPic(DWORD dwPropID, DWORD *pTypeSupport);
     HRESULT ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
-    bool DecodeSubpic(sp_t* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2);
+    bool DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2);
     void FlushSubPic();
     void RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h);
     void ClearOldSubpics(REFERENCE_TIME rt);
     bool HasSubpicsToRender(REFERENCE_TIME rt);
-    void RenderSubpic(sp_t* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
+    void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
+    void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
 };
 
 #define m_VideoInPin m_InputPins[0]

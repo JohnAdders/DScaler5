@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.15 2004-04-06 16:46:12 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.16 2004-04-08 16:41:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/04/06 16:46:12  adcockj
+// DVD Test Annex Compatability fixes
+//
 // Revision 1.14  2004/03/15 17:16:02  adcockj
 // Better PES header handling - Inspired by Gabest's latest MPC patch
 //
@@ -156,7 +159,6 @@ CMpegDecoder::CMpegDecoder() :
     
     ClearMediaType(&MT);
 
-	m_sphli = NULL;
 	m_spon = TRUE;
 
 	m_rate.Rate = 10000;
@@ -530,10 +532,6 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
 	}
     else if(pPin == m_SubpictureInPin)
     {
-		if(m_sphli)
-		{
-			delete m_sphli;
-		}
         return S_FALSE;
     }
     else
@@ -914,8 +912,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// when we're not really ready
 
 	TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    //LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [prsq %d prfr %d tff %d rff %d nb_fields %d ref %d] (%dx%d/%dx%d)\n", 
-	LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+	LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
 		m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
 		frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
 		m_CurrentPicture->m_NumFields,
@@ -979,7 +976,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     }
     if(rtStop <= rtStart)
 	{
-		rtStop = rtStart + 1;
+		rtStop = rtStart + 100;
 	}
 
     m_LastOutputTime = rtStop;
@@ -1487,10 +1484,6 @@ HRESULT CMpegDecoder::Activate()
 
 HRESULT CMpegDecoder::Deactivate()
 {
-	if(m_sphli)
-	{
-		delete m_sphli;
-	}
     if(m_dec != NULL)
     {
         mpeg2_free(m_dec);
