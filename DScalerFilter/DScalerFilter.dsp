@@ -151,6 +151,18 @@ SOURCE=.\OutputPin.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ProcessNV12.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ProcessYUY2.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\ProcessYV12.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
@@ -181,6 +193,10 @@ SOURCE=.\InputPin.h
 # Begin Source File
 
 SOURCE=.\OutputPin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Process.h
 # End Source File
 # Begin Source File
 
