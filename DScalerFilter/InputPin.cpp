@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.17 2003-05-20 16:50:59 adcockj Exp $
+// $Id: InputPin.cpp,v 1.18 2003-07-25 16:00:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2003/05/20 16:50:59  adcockj
+// Interim checkin, preparation for DMO processing path
+//
 // Revision 1.16  2003/05/17 11:29:35  adcockj
 // Fixed crashing
 //
@@ -1035,7 +1038,14 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
 
         // if the input format is a known TV style one then
         // it should be assumed to be 4:3
-        if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+        if((BitmapInfo->biWidth == 704)  &&
+           (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+        {
+            // adjustment to make 704 video the same shape as 720
+            NewFormat->dwPictAspectRatioX = 4 * 44;
+            NewFormat->dwPictAspectRatioY = 3 * 45;
+        }
+        else if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
             (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
         {
             NewFormat->dwPictAspectRatioX = 4;

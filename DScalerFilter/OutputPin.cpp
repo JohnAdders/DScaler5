@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.15 2003-05-20 16:50:59 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.16 2003-07-25 16:00:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2003/05/20 16:50:59  adcockj
+// Interim checkin, preparation for DMO processing path
+//
 // Revision 1.14  2003/05/19 07:02:24  adcockj
 // Patches from Torbjorn to extend logging
 //
@@ -720,7 +723,14 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
 
         // if the input format is a known TV style one then
         // it should be assumed to be 4:3
-        if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+        if((BitmapInfo->biWidth == 704)  &&
+           (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
+        {
+            // adjustment to make 704 video the same shape as 720
+            NewFormat->dwPictAspectRatioX = 4 * 44;
+            NewFormat->dwPictAspectRatioY = 3 * 45;
+        }
+        else if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
             (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
         {
             NewFormat->dwPictAspectRatioX = 4;
@@ -768,12 +778,6 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     // if it's within 32 of the new width
     long Height = BitmapInfo->biHeight; 
     long Width = BitmapInfo->biWidth;
-
-    // we're going to expand analog blanked sources out to normal width
-    if(Width == 704)
-    {
-        Width = 720;
-    }
 
     DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProcessYUY2.cpp,v 1.3 2003-05-09 16:02:47 adcockj Exp $
+// $Id: ProcessYUY2.cpp,v 1.4 2003-07-25 16:00:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/09 16:02:47  adcockj
+// Added some test code for trying to work out what's going on with the VMR9
+//
 // Revision 1.2  2003/05/09 07:03:26  adcockj
 // Bug fixes for new format code
 //
@@ -42,17 +45,6 @@ void FillScreenWithAlternatingLines(int Lines, BITMAPINFOHEADER* InputBMI, BITMA
 {
     for(int i(0); i < Lines; ++i)
     {
-        // black out first 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-                *(pOutBuffer++) = 128;
-            }
-        }
-
         if(i & 1)
         {
             for(int j(0); j < InputBMI->biWidth; ++j)
@@ -70,23 +62,7 @@ void FillScreenWithAlternatingLines(int Lines, BITMAPINFOHEADER* InputBMI, BITMA
             }
         }
         
-        // black out last 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-                *(pOutBuffer++) = 128;
-            }
-            pOutBuffer -= 720 * 2;
-        }
-        else
-        {
-            pOutBuffer -= InputBMI->biWidth * 2;
-        }
-
-        pOutBuffer += OutputBMI->biWidth * 2;
+        pOutBuffer += OutputBMI->biWidth * 2 - InputBMI->biWidth * 2;
         pInBuffer += InputBMI->biWidth * 2;
     }
 
@@ -101,32 +77,8 @@ void ProcessYUY2(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
 
     for(int i(0); i < Lines; ++i)
     {
-        // black out first 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-                *(pOutBuffer++) = 128;
-            }
-        }
-        
         memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth * 2);
         
-        // black out last 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            pOutBuffer += 704 * 2;
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-                *(pOutBuffer++) = 128;
-            }
-            pOutBuffer -= 720 * 2;
-        }
-
         pOutBuffer += OutputBMI->biWidth * 2;
         pInBuffer += InputBMI->biWidth * 2;
     }

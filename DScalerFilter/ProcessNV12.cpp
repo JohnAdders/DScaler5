@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProcessNV12.cpp,v 1.2 2003-05-09 07:03:26 adcockj Exp $
+// $Id: ProcessNV12.cpp,v 1.3 2003-07-25 16:00:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2003/05/09 07:03:26  adcockj
+// Bug fixes for new format code
+//
 // Revision 1.1  2003/05/08 15:58:38  adcockj
 // Better error handling, threading and format support
 //
@@ -44,29 +47,8 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
     // process Y samples
     for(i = 0; i < Lines; ++i)
     {
-        // black out first 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-            }
-        }
 
         memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth);
-
-        // black out last 8 pixels if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            pOutBuffer += 704;
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 0;
-            }
-            pOutBuffer -= 720;
-        }
 
         pOutBuffer += OutputBMI->biWidth;
         pInBuffer += InputBMI->biWidth;
@@ -75,29 +57,7 @@ void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* Output
     // do UV samples
     for(i = 0; i < Lines/2; ++i)
     {
-        // black out first 8 samples if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 128;
-            }
-        }
-
         memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth);
-
-        // black out last 8 samples if we have a 
-        // 704 width source that we are extending up to 720
-        if(InputBMI->biWidth == 704)
-        {
-            pOutBuffer += 704;
-            for(int i(0); i < 8; ++i)
-            {
-                *(pOutBuffer++) = 128;
-            }
-            pOutBuffer -= 720;
-        }
 
         pOutBuffer += OutputBMI->biWidth;
         pInBuffer += InputBMI->biWidth;
