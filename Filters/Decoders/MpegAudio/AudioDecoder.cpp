@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.23 2004-07-20 20:01:59 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.24 2004-07-23 16:25:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.23  2004/07/20 20:01:59  adcockj
+// Fixed accidental check in of test code
+//
 // Revision 1.22  2004/07/20 20:00:27  adcockj
 // Fixes for compilation under VS 6
 //
@@ -762,18 +765,27 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
 {
     HRESULT hr;
 
-    if(Len > m_OutputBufferSize)
+    if(Len != m_InternalMT.lSampleSize)
     {
         // should have already done a QueryAccept when deciding types
         // so no need to do again here
+        m_InternalMT.bFixedSizeSamples = TRUE;
+        m_InternalMT.lSampleSize = Len;
+        m_OutputBufferSize = Len;
+        hr = m_AudioOutPin->m_Allocator->Decommit();
+        CHECK(hr);
+        ALLOCATOR_PROPERTIES Props, ActualProps;
+        hr = m_AudioOutPin->m_Allocator->GetProperties(&Props);
+        CHECK(hr);
+        Props.cbBuffer = Len;
+        hr = m_AudioOutPin->m_Allocator->SetProperties(&Props, &ActualProps);
+        CHECK(hr);
+        hr = m_AudioOutPin->m_MemInputPin->NotifyAllocator(m_AudioOutPin->m_Allocator.GetNonAddRefedInterface(), FALSE);
+        CHECK(hr);
+        hr = m_AudioOutPin->m_Allocator->Commit();
 
-        if((DWORD)Len > m_OutputBufferSize)
-        {
-            m_OutputBufferSize = Len * 3 / 2;
-            
-            hr = m_AudioOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-            CHECK(hr);
-        }
+        //hr = m_AudioOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+        CHECK(hr);
     }
     return S_OK;
 }
@@ -993,6 +1005,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         WAVEFORMATEX* wfe = (WAVEFORMATEX*)(pMediaType->pbFormat);
         m_InputSampleRate = wfe->nSamplesPerSec;
         m_IsDiscontinuity = true;
+        m_NeedToAttachFormat = true;
         
         // cope with dynamic format changes
         // these can happen during DVD playback

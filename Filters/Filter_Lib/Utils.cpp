@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.7 2004-07-16 16:03:20 adcockj Exp $
+// $Id: Utils.cpp,v 1.8 2004-07-23 16:25:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/16 16:03:20  adcockj
+// Fixed compilation issues under .NET
+//
 // Revision 1.6  2004/04/29 16:16:46  adcockj
 // Yet more reconnection fixes
 //
@@ -135,6 +138,11 @@ void FreeMediaType(AM_MEDIA_TYPE* TypeToFree)
 
 HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
 {
+    // protect against copying to ourselves
+    if(Source == Dest)
+    {
+        return S_OK;
+    }
     ClearMediaType(Dest);
     Dest->majortype = Source->majortype;
     Dest->subtype = Source->subtype;
