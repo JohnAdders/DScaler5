@@ -5,25 +5,31 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcpr
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
 		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
 		{68876F9C-E66B-40CE-A590-58FDCE7B8CCB} = {68876F9C-E66B-40CE-A590-58FDCE7B8CCB}
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826} = {FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}
+		{74462BDC-197C-4142-9AAB-64BD2DA9B257} = {74462BDC-197C-4142-9AAB-64BD2DA9B257}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\a52dec\vc++\liba52.vcproj", "{B215D073-1246-432F-A047-B98D47434C82}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "a52dec\vc++\liba52.vcproj", "{B215D073-1246-432F-A047-B98D47434C82}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\dtsdec\vc++\libdts.vcproj", "{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "dtsdec\vc++\libdts.vcproj", "{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Decoders\MpegAudio\libmad\msvc++\libmad.vcproj", "{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "libmad\msvc++\libmad.vcproj", "{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\..\..\DScaler5Build004\DScaler5\Filters\Filter_Lib\Filter_Lib.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\..\DScaler5Build004\DScaler5\GenDMOProp\GenDMOProp.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "djbfft", "djbfft\djbfft.vcproj", "{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -83,6 +89,14 @@ Global
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release.Build.0 = Release|Win32
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release Fixed Point.ActiveCfg = Release|Win32
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release Fixed Point.Build.0 = Release|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Debug.ActiveCfg = Debug|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Debug.Build.0 = Debug|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Debug Fixed Point.ActiveCfg = Debug|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Debug Fixed Point.Build.0 = Debug|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Release.ActiveCfg = Release|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Release.Build.0 = Release|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Release Fixed Point.ActiveCfg = Release|Win32
+		{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}.Release Fixed Point.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

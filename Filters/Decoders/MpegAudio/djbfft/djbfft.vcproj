@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="djbfft"
+	ProjectGUID="{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
