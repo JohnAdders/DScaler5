@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.17 2003-08-21 16:17:58 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.18 2003-08-22 16:48:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2003/08/21 16:17:58  adcockj
+// Changed filter to wrap the deinterlacing DMO, fixed many bugs
+//
 // Revision 1.16  2003/07/25 16:00:55  adcockj
 // Remove 704 stuff
 //
@@ -166,7 +169,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
     }
     
     Props.cBuffers = max(1, Props.cBuffers);
-    Props.cbBuffer = max(ProposedType->lSampleSize, (ULONG)Props.cbBuffer);
+    Props.cbBuffer = max(768*576*2, (ULONG)Props.cbBuffer);
     Props.cbAlign = max(1, Props.cbAlign);
 
     hr = m_Allocator->SetProperties(&Props, &PropsAct);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.21 2003-08-21 16:17:58 adcockj Exp $
+// $Id: InputPin.cpp,v 1.22 2003-08-22 16:48:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2003/08/21 16:17:58  adcockj
+// Changed filter to wrap the deinterlacing DMO, fixed many bugs
+//
 // Revision 1.20  2003/07/30 06:58:42  adcockj
 // Uncommented temporary non-processing of YUY2
 //
@@ -105,6 +108,7 @@ CInputPin::CInputPin()
     m_BlockEvent = NULL;
 	m_dwFlags = AM_GBF_PREVFRAMESKIPPED;
 	m_MyMemAlloc = new CComObject<CInputMemAlloc>;
+	m_ExpectedStart = 0;
 }
 
 CInputPin::~CInputPin()
@@ -345,8 +349,20 @@ STDMETHODIMP CInputPin::EndOfStream(void)
         {
 			hr = m_Filter->m_CurrentDeinterlacingMethod->Discontinuity(0);
             CHECK(hr);
-			hr = InternalProcessOutput();
+
+            IMediaSample* OutSample = NULL;
+            hr = GetOutputSample(&OutSample);
             CHECK(hr);
+
+			hr = InternalProcessOutput(&OutSample);
+
+            if(OutSample != NULL)
+            {
+                OutSample->Release();
+            }
+
+            CHECK(hr);
+
             hr = m_OutputPin->m_ConnectedPin->EndOfStream();
             CHECK(hr);
         }
@@ -404,7 +420,7 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
         // Will wait for all any streaming functions to finish
         // may block so be careful
         CProtectCode WhileVarInScope(this);
-
+		m_ExpectedStart = tStart;
         hr = m_OutputPin->m_ConnectedPin->NewSegment(tStart, tStop, dRate);
         CHECK(hr);
     }
@@ -456,7 +472,7 @@ STDMETHODIMP CInputPin::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps)
 
 STDMETHODIMP CInputPin::Receive(IMediaSample *InSample)
 {
-    LOG(DBGLOG_FLOW, ("CInputPin::Receive\n"));
+    //LOG(DBGLOG_FLOW, ("CInputPin::Receive\n"));
 
     if(InSample == NULL)
     {
@@ -476,8 +492,8 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *InSample)
     // functions with this line
     CProtectCode WhileVarInScope(this);
     
-    HRESULT hr = m_Filter->CheckProcessingLine();
-    CHECK(hr);
+    //HRESULT hr = m_Filter->CheckProcessingLine();
+    //CHECK(hr);
 
     return InternalReceive(InSample);
 }
@@ -487,6 +503,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
     HRESULT hr = S_OK;
     AM_SAMPLE2_PROPERTIES InSampleProperties;
     ZeroMemory(&InSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
+    IMediaSample* OutSample;
 
     __try
     {
@@ -531,21 +548,35 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
             SetInputType(InSampleProperties.pMediaType);
         }
 
+		// check to see if we are blocked
+        // need to check this before we get each sample
+        CheckForBlocking();
+
+        hr = GetOutputSample(&OutSample);
+        CHECK(hr);
+
+		if(OutSample == NULL)
+		{
+			return S_FALSE;
+		}
+
+        hr = m_Filter->CheckProcessingLine();
+        CHECK(hr);
+
         // if there was a discontinuity then we need to ask for the buffer
         // differently 
-        if(InSampleProperties.dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+        if(InSampleProperties.dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY ||
+			(m_ExpectedStart != 0 && m_ExpectedStart != InSampleProperties.tStart))
         {
             GuessInterlaceFlags(&InSampleProperties);
 			hr = m_Filter->m_CurrentDeinterlacingMethod->Discontinuity(0);
 			CHECK(hr);
-			hr = InternalProcessOutput();
-			//CHECK(hr);
+
+			hr = InternalProcessOutput(&OutSample);
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         }
-
-        // check to see if we are blocked
-        // need to check this before we get each sample
-        CheckForBlocking();
+		
+		m_ExpectedStart = InSampleProperties.tStop;
 
 		// pass input buffer to DMO
         IMediaBuffer* InBuffer = CMediaBufferWrapper::CreateBuffer(InSample);
@@ -559,13 +590,15 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
    																 );
         InSample->Release();
 
+
 		if(hr == DMO_E_NOTACCEPTING)
 		{
 			return S_FALSE;
 		}
 		CHECK(hr);
 
-		hr = InternalProcessOutput();
+		hr = InternalProcessOutput(&OutSample);
+
 		if(FAILED(hr) || hr == S_FALSE)
 		{
 			return S_FALSE;
@@ -580,11 +613,49 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         {
             FreeMediaType(InSampleProperties.pMediaType);
         }
+        if(OutSample != NULL)
+        {
+            OutSample->Release();
+        }
     }
     return hr;
 }
 
-HRESULT CInputPin::InternalProcessOutput()
+HRESULT CInputPin::GetOutputSample(IMediaSample** OutSample)
+{
+    *OutSample = NULL;
+
+	// get a sample to output to
+	HRESULT hr = m_OutputPin->m_Allocator->GetBuffer(OutSample, NULL, NULL, m_dwFlags);
+	if(FAILED(hr) || *OutSample == NULL)
+	{
+		LOG(DBGLOG_FLOW, ("Frame Skipped\n"));
+		m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
+		return S_FALSE;
+	}
+	else
+	{
+		m_dwFlags = 0;
+	}
+
+	// check for media type changes on the output side
+	// a NULL means the type is the same as last time
+    AM_MEDIA_TYPE* pMediaType = NULL;
+
+    hr = (*OutSample)->GetMediaType(&pMediaType);
+
+	CHECK(hr);
+
+	if(hr == S_OK && pMediaType != NULL)
+	{
+		hr = m_OutputPin->SetMediaType(pMediaType);
+		CHECK(hr);
+        FreeMediaType(pMediaType);
+	}
+    return S_OK;
+}
+
+HRESULT CInputPin::InternalProcessOutput(IMediaSample** OutSample)
 {
 	DMO_OUTPUT_DATA_BUFFER OutDataBuffer;
 	HRESULT hr = S_OK;
@@ -593,74 +664,45 @@ HRESULT CInputPin::InternalProcessOutput()
 
 	while(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
 	{
-		AM_SAMPLE2_PROPERTIES OutSampleProperties;
-		IMediaSample* OutSample = NULL;
-		ZeroMemory(&OutSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
+        IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(*OutSample);
 
-		__try
+		OutDataBuffer.pBuffer = OutBuffer;
+		OutDataBuffer.rtTimelength = 0;
+		OutDataBuffer.rtTimestamp = 0;
+
+		DWORD Status(0);
+
+		hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
+																	0, 
+																	1,
+																	&OutDataBuffer, 
+																	&Status
+																);
+		
+		if(hr == S_OK && m_Flushing == FALSE)
 		{
-			// get a sample to output to
-			hr = m_OutputPin->m_Allocator->GetBuffer(&OutSample, NULL, NULL, m_dwFlags);
-			if(FAILED(hr) || OutSample == NULL)
-			{
-				LOG(DBGLOG_FLOW, ("Frame Skipped\n"));
-				m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-				return S_FALSE;
-			}
-			else
-			{
-				m_dwFlags = 0;
-			}
-
-			// check for media type changes on the output side
-			// a NULL means the type is the same as last time
-			hr = GetSampleProperties(OutSample, &OutSampleProperties);
-			CHECK(hr);
-			if(OutSampleProperties.pMediaType != NULL)
-			{
-				hr = m_OutputPin->SetMediaType(OutSampleProperties.pMediaType);
-				CHECK(hr);
-			}
-
-            IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
-
-			OutDataBuffer.pBuffer = OutBuffer;
-			OutDataBuffer.rtTimelength = 0;
-			OutDataBuffer.rtTimestamp = 0;
-
-			DWORD Status(0);
-
-			hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
-																		0, 
-																		1,
-																		&OutDataBuffer, 
-																		&Status
-																	);
-			
-			if(hr == S_OK && m_Flushing == FALSE)
-			{
-				// finally send the processed sample on it's way
-				hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
-			}
-			// if we are at the start then we might need to send 
-			// a couple of frames in before getting a response
-			else if(hr == S_FALSE)
-			{
-				hr = S_OK;
-			}
-
-			OutBuffer->Release();
+			// finally send the processed sample on it's way
+			hr = m_OutputPin->m_MemInputPin->Receive(*OutSample);
 		}
-		__finally
+		// if we are at the start then we might need to send 
+		// a couple of frames in before getting a response
+		else if(hr == S_FALSE)
 		{
-			if(OutSampleProperties.pMediaType != NULL)
+			hr = S_OK;
+		}
+
+		OutBuffer->Release();
+
+		if(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
+		{
+			if(*OutSample != NULL)
 			{
-				FreeMediaType(OutSampleProperties.pMediaType);
+				(*OutSample)->Release();
+				*OutSample = NULL;
 			}
-			if(OutSample != NULL)
-			{
-				OutSample->Release();
-			}
+
+			hr = GetOutputSample(OutSample);
+            CHECK(hr);
 		}
 	}
 	return hr;
@@ -1051,6 +1093,11 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
         {
             NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
         }
+		else if(OldFormat->dwInterlaceFlags & AMINTERLACE_DisplayModeWeaveOnly && BitmapInfo->biHeight == 576)
+        {
+            NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
+        }
+
     }
     else if(InputType->formattype == FORMAT_VideoInfo)
     {
@@ -1108,35 +1155,8 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
         NewFormat->dwPictAspectRatioY *= 3;
     }
 
-    // we want to use the new height but we'll work with a normal stride
-    // if it's within 32 of the new width
-    long Height = BitmapInfo->biHeight; 
-    long Width = BitmapInfo->biWidth;
+	memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
 
-    DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
-
-    NewFormat->rcSource.top = 0;
-    NewFormat->rcSource.bottom = Height;
-    NewFormat->rcSource.left = 0;
-    NewFormat->rcSource.right = Width;
-    NewFormat->rcTarget.top = 0;
-    NewFormat->rcTarget.bottom = Height;
-    NewFormat->rcTarget.left = 0;
-    NewFormat->rcTarget.right = Width;
-    
-    NewFormat->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-
-    NewFormat->bmiHeader.biHeight = Height;
-    NewFormat->bmiHeader.biWidth = Width;
-    NewFormat->bmiHeader.biPlanes = 1;
-    NewFormat->bmiHeader.biBitCount = BitmapInfo->biBitCount;
-    NewFormat->bmiHeader.biCompression = BitmapInfo->biCompression;
-    NewFormat->bmiHeader.biSizeImage = Size;
-    NewFormat->bmiHeader.biXPelsPerMeter = 0;
-    NewFormat->bmiHeader.biYPelsPerMeter = 0;
-    NewFormat->bmiHeader.biClrUsed = 0;
-    NewFormat->bmiHeader.biClrImportant = 0;
-
-    NewType->lSampleSize = Size;
+    NewType->lSampleSize = BitmapInfo->biSizeImage;
     return S_OK;
 }
