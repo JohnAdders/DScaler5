@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.10 2004-07-26 17:08:13 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.11 2004-07-27 16:53:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/07/26 17:08:13  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.9  2004/07/24 21:20:37  adcockj
 // Patch for international lanugauges in OSD from Alexander Choporov
 //
@@ -200,6 +203,7 @@ HRESULT CAudioDecoder::ProcessDTS()
     BYTE* p = &m_buff[0];
     BYTE* base = p;
     BYTE* end = p + m_buff.size();
+    HRESULT hr = S_OK;
 
     while(end - p >= 14)
     {
@@ -224,16 +228,17 @@ HRESULT CAudioDecoder::ProcessDTS()
 
                     if(frame_length == 512)
                     {
-                        return SendDigitalData(0x000b, size, len, (char*)p);
+                        hr = SendDigitalData(0x000b, size, len, (char*)p);
                     }
                     else if(frame_length == 1024)
                     {
-                        return SendDigitalData(0x000c, size, len, (char*)p);
+                        hr = SendDigitalData(0x000c, size, len, (char*)p);
                     }
                     else
                     {
-                        return SendDigitalData(0x000d, size, len, (char*)p);
+                        hr = SendDigitalData(0x000d, size, len, (char*)p);
                     }
+                    CHECK(hr);
                 }
                 else
                 {
@@ -272,8 +277,6 @@ HRESULT CAudioDecoder::ProcessDTS()
                         scmap_t& scmap = s_scmap_dts[scmapidx + ((flags&DTS_LFE)?(countof(s_scmap_dts)/2):0)]; 
     
                         int blocks = dts_blocks_num(m_dts_state); 
-
-                        HRESULT hr = S_OK;
 
                         int i = 0;
                         CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
@@ -344,6 +347,6 @@ HRESULT CAudioDecoder::ProcessDTS()
 
     m_buff.resize(end - p);
 
-    return S_OK;
+    return hr;
 }
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.26 2004-07-26 17:24:43 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.27 2004-07-27 16:53:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.26  2004/07/26 17:24:43  adcockj
+// Fixed crashing
+//
 // Revision 1.25  2004/07/26 17:08:00  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -185,6 +188,7 @@ CAudioDecoder::CAudioDecoder() :
     m_BytesLeftInBuffer = 0;
     m_pDataOut = NULL;
     m_BufferSizeAtFrameStart = 0;
+    m_NeedToSendAC3Silence = false;
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
@@ -888,7 +892,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
         pmt->pbFormat = (BYTE*)wfe;
         pmt->bFixedSizeSamples = TRUE;
         // make the sample buffer a quarter of a secong long
-        pmt->lSampleSize = m_InputSampleRate * ChannelsRequested * wfe->Format.wBitsPerSample / 32;
+        pmt->lSampleSize = 4 * 6 * 256 * ChannelsRequested * wfe->Format.wBitsPerSample / 8;
         return S_OK;
     }
     else
@@ -910,6 +914,7 @@ HRESULT CAudioDecoder::Activate()
     mad_stream_options(&m_stream, 0);
 
     m_rtNextFrameStart = _I64_MIN;
+    m_NeedToSendAC3Silence = true;
 
     return S_OK;
 }
@@ -1339,7 +1344,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
     }
     _swab((char*)pData, (char*)m_pDataOut, BytesToGo);
     m_pDataOut += BytesToGo;
-    m_BytesLeftInBuffer -= m_BytesLeftInBuffer;
+    m_BytesLeftInBuffer -= BytesToGo;
 
     BytesToGo = FinalLength - DigitalLength - 8;
 
@@ -1358,8 +1363,48 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         m_pDataOut += BytesToGo;
         m_BytesLeftInBuffer -= BytesToGo;
     }
+
+    if(m_BytesLeftInBuffer == 0)
+    {
+        hr = Deliver();
+        CHECK(hr);
+    }
+
     return hr;
 }
+
+HRESULT CAudioDecoder::SendDigitalSilence()
+{
+    ASSERT(m_BytesLeftInBuffer == 0);
+
+    HRESULT hr = GetOutputSampleAndPointer();
+    CHECK(hr);
+
+    int Padding = m_InternalMT.lSampleSize % 0x1800;
+    if(Padding > 0)
+    {
+        ZeroMemory(m_pDataOut, Padding);
+        m_pDataOut += Padding;
+    }
+
+    int DigitalLength = 0x1800 - 8;
+    for(DWORD i = 0; i < m_InternalMT.lSampleSize / 0x1800; ++i)
+    {
+        *m_pDataOut++ = 0x72;
+        *m_pDataOut++ = 0xf8;
+        *m_pDataOut++ = 0x1f;
+        *m_pDataOut++ = 0x4e;
+        *m_pDataOut++ = 0x00;
+        *m_pDataOut++ = 0x03;
+        *m_pDataOut++ = (BYTE)(DigitalLength << 3);
+        *m_pDataOut++ = (BYTE)(DigitalLength >> 5);
+        ZeroMemory(m_pDataOut, DigitalLength);
+        m_pDataOut += DigitalLength;
+    }
+    m_BytesLeftInBuffer = 0;
+    return Deliver();
+}
+
 
 void CAudioDecoder::UpdateStartTime()
 {

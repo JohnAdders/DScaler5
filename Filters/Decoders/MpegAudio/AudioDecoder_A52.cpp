@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.8 2004-07-26 17:08:13 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.9 2004-07-27 16:53:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/26 17:08:13  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.7  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -179,6 +182,7 @@ HRESULT CAudioDecoder::ProcessAC3()
     BYTE* p = &m_buff[0];
     BYTE* base = p;
     BYTE* end = p + m_buff.size();
+    HRESULT hr = S_OK;
 
     while(end - p >= 7)
     {
@@ -194,6 +198,13 @@ HRESULT CAudioDecoder::ProcessAC3()
             {
                 LOG(DBGLOG_ALL, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
                 
+                if(m_ConnectedAsSpdif && m_NeedToSendAC3Silence)
+                {
+                    hr = SendDigitalSilence();
+                    CHECK(hr);
+                    m_NeedToSendAC3Silence = false;
+                }
+
                 if(m_BufferSizeAtFrameStart <= 0)
                 {
                     UpdateStartTime();
@@ -201,7 +212,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 
                 if(m_ConnectedAsSpdif)
                 {
-                    return SendDigitalData(0x0001, size, 0x1800, (char*)p);
+                    hr = SendDigitalData(0x0001, size, 0x1800, (char*)p);
+                    CHECK(hr);
                 }
                 else
                 {
@@ -241,8 +253,6 @@ HRESULT CAudioDecoder::ProcessAC3()
                         int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
 
-                        HRESULT hr = S_OK;
-                    
                         int i = 0;
                         CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
 
@@ -313,5 +323,5 @@ HRESULT CAudioDecoder::ProcessAC3()
 
     m_buff.resize(end - p);
 
-    return S_OK;
+    return hr;
 }

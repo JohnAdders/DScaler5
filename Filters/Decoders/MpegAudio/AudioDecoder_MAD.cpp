@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.13 2004-07-26 17:08:13 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.14 2004-07-27 16:53:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/07/26 17:08:13  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.12  2004/07/16 15:45:19  adcockj
 // Fixed compilation issues under .NET
 // Improved (hopefully) handling of negative times and preroll
@@ -107,6 +110,7 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 HRESULT CAudioDecoder::ProcessMPA()
 {
     mad_stream_buffer(&m_stream, &m_buff[0], m_buff.size());
+    HRESULT hr = S_OK;
 
     while(1)
     {
@@ -148,12 +152,13 @@ HRESULT CAudioDecoder::ProcessMPA()
 
             if(m_frame.header.layer == MAD_LAYER_I)
             {
-                return SendDigitalData(0x0004, len, FinalLen, (char*)m_stream.this_frame);
+                hr = SendDigitalData(0x0004, len, FinalLen, (char*)m_stream.this_frame);
             }
             else
             {
-                return SendDigitalData(0x0005, len, FinalLen, (char*)m_stream.this_frame);
+                hr = SendDigitalData(0x0005, len, FinalLen, (char*)m_stream.this_frame);
             }
+            CHECK(hr);
         }
         else
         {
@@ -167,8 +172,6 @@ HRESULT CAudioDecoder::ProcessMPA()
 
             const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
             const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
-
-            HRESULT hr = S_OK;
 
             if(m_CanReconnect && m_synth.pcm.samplerate != m_InputSampleRate)
             {
