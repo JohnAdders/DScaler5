@@ -3,6 +3,30 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "DivxVideo"=.\DivxVideo.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name Filter_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libDivx
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libavcodec
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "Filter_Lib"=..\..\Filter_Lib\Filter_Lib.dsp - Package Owner=<4>
 
 Package=<5>
@@ -30,28 +54,7 @@ Package=<4>
 
 ###############################################################################
 
-Project: "DivxVideo"=.\DivxVideo.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name Filter_Lib
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name GenDMOProp
-    End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libDivx
-    End Project Dependency
-}}}
-
-###############################################################################
-
-Project: "libDivx"=".\Divxdec\vc++\libDivx.dsp" - Package Owner=<4>
+Project: "libavcodec"=..\..\..\FFMPEG\libavcodec.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

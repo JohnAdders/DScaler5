@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.52 2004-11-05 16:58:31 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.53 2004-11-06 14:36:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.52  2004/11/05 16:58:31  adcockj
+// Fix for use with other containers
+//
 // Revision 1.51  2004/11/01 14:09:38  adcockj
 // More DScaler filter insipred changes
 //
@@ -716,7 +719,7 @@ HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
 
 HRESULT CMpegDecoder::GetEnumTextOutputSpace(WCHAR **ppwchText)
 {
-    wchar_t Text[] = L"OutputColoure Space\0" L"None\0" L"YV12\0" L"YUY2\0";
+    wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, Text, sizeof(Text));
