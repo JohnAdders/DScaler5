@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.11 2004-08-03 08:55:56 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.12 2004-08-16 16:08:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/08/03 08:55:56  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.10  2004/07/28 13:59:29  adcockj
 // spdif fixes
 //
@@ -213,7 +216,10 @@ HRESULT CAudioDecoder::ProcessAC3()
                 if(m_ConnectedAsSpdif)
                 {
                     hr = SendDigitalData(0x0001, size, 0x1800, (char*)p);
-                    CHECK(hr);
+                    if(hr != S_OK)
+                    {
+                        return hr;
+                    }
                 }
                 else
                 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.13 2004-08-03 08:55:56 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.14 2004-08-16 16:08:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/08/03 08:55:56  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.12  2004/07/28 13:59:30  adcockj
 // spdif fixes
 //
@@ -245,7 +248,10 @@ HRESULT CAudioDecoder::ProcessDTS()
                     {
                         hr = SendDigitalData(0x000d, size, len, (char*)p);
                     }
-                    CHECK(hr);
+                    if(hr != S_OK)
+                    {
+                        return hr;
+                    }
                 }
                 else
                 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.19 2004-08-04 15:19:25 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.20 2004-08-16 16:08:45 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2004/08/04 15:19:25  adcockj
+// Change output sample rate on dynamic change
+//
 // Revision 1.18  2004/08/04 13:14:42  adcockj
 // Fix for Torjorn's issues with dynamic sample rate changes
 //
@@ -174,7 +177,10 @@ HRESULT CAudioDecoder::ProcessMPA()
             {
                 hr = SendDigitalData(0x0005, len, FinalLen, (char*)m_stream.this_frame);
             }
-            CHECK(hr);
+            if(hr != S_OK)
+            {
+                return hr;
+            }
         }
         else
         {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.34 2004-08-03 18:47:40 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.35 2004-08-16 16:08:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.34  2004/08/03 18:47:40  adcockj
+// spdif fixes
+//
 // Revision 1.33  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -587,10 +590,13 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         m_BufferSizeAtFrameStart = 0;
     }
 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID && m_rtNextFrameStart == _I64_MIN)
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-        m_rtNextFrameStart = pSampleProperties->tStart;
-        m_BufferSizeAtFrameStart = m_buff.size();
+        if(m_rtNextFrameStart == _I64_MIN)
+        {
+            m_rtNextFrameStart = pSampleProperties->tStart;
+            m_BufferSizeAtFrameStart = m_buff.size();
+        }
     }
     else
     {
@@ -768,7 +774,7 @@ HRESULT CAudioDecoder::Deliver()
 		}
 		else
 		{
-			m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
+			//m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
 		}
 
 	    
@@ -785,7 +791,10 @@ HRESULT CAudioDecoder::Deliver()
 		LOG(DBGLOG_FLOW, ("Preroll: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 	}
 
-    m_rtOutputStart += rtDur;
+    if(hr == S_OK)
+    {
+        m_rtOutputStart += rtDur;
+    }
     return hr;
 }
 
