@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.49 2004-10-28 15:52:24 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.50 2004-10-31 14:19:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.49  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.48  2004/10/28 09:05:25  adcockj
 // Fixed issue with negative settings
 //
@@ -838,7 +841,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         {
             VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
             m_ControlFlags = vih->dwControlFlags;
-        }
+        	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
+		}
         else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
         {
             MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
@@ -858,7 +862,15 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
                 LOG(DBGLOG_FLOW, ("Letterboxed Sent\n"));
                 m_LetterBoxed = true;
             }
-        }
+			m_VideoOutPin->SetAvgTimePerFrame(mvih->hdr.AvgTimePerFrame);
+		}
+		else if(pMediaType->formattype == FORMAT_MPEGVideo ||
+					pMediaType->formattype == FORMAT_VideoInfo)
+		{
+            VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pMediaType->pbFormat;
+            m_ControlFlags = 0;
+        	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
+		}
 
         CorrectOutputSize();
     }
