@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.3 2004-04-16 16:19:44 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.4 2004-04-20 16:30:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/04/16 16:19:44  adcockj
+// Better reconnection and improved AFD support
+//
 // Revision 1.2  2004/02/25 17:14:03  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -245,4 +248,28 @@ STDMETHODIMP CDSBasePin::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWO
 {
     CProtectCode WhileVarInScope(this);
     return m_Filter->QuerySupported(guidPropSet, dwPropID, pTypeSupport, this);
+}
+
+HRESULT CDSBasePin::GetConnectedFilterCLSID(CLSID* pClsid)
+{
+	PIN_INFO PinInfo;
+	BOOL RetVal = TRUE;
+
+
+	if(!m_ConnectedPin)
+	{
+		return VFW_E_NOT_CONNECTED;
+	}
+
+	HRESULT hr = m_ConnectedPin->QueryPinInfo(&PinInfo);
+	if(SUCCEEDED(hr))
+	{
+		if(PinInfo.pFilter != NULL)
+		{
+			hr = PinInfo.pFilter->GetClassID(pClsid);
+			PinInfo.pFilter->Release();
+		}
+	}
+
+	return hr;
 }

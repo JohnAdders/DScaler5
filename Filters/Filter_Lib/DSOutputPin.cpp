@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.9 2004-04-16 16:19:44 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.10 2004-04-20 16:30:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/04/16 16:19:44  adcockj
+// Better reconnection and improved AFD support
+//
 // Revision 1.8  2004/03/08 17:20:05  adcockj
 // Minor bug fixes
 //
@@ -58,8 +61,9 @@
 #include "DSBaseFilter.h"
 #include "EnumMediaTypes.h"
 
-CDSOutputPin::CDSOutputPin() :
-    CDSBasePin(PINDIR_OUTPUT)
+CDSOutputPin::CDSOutputPin(bool Dynamic) :
+    CDSBasePin(PINDIR_OUTPUT),
+	m_Dynamic(Dynamic)
 {
     LOG(DBGLOG_ALL, ("CDSOutputPin::CDSOutputPin\n"));
 }
@@ -85,6 +89,16 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     {
         return VFW_E_NO_TRANSPORT;
     }
+
+	// soem pins require the ability to dynamically reconnect
+	if(m_Dynamic)
+	{
+		SI(IPinConnection) TestForDynamic = pReceivePin;
+		if(TestForDynamic == NULL)
+		{
+			return VFW_E_NO_TRANSPORT;
+		}
+	}
     
     AM_MEDIA_TYPE ProposedType;
     InitMediaType(&ProposedType);
@@ -137,6 +151,9 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     CHECK(hr);
 
     ClearMediaType(&ProposedType);
+
+	hr = m_Filter->NotifyConnected(this);
+
     return hr;
 }
 
@@ -522,7 +539,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    if(FAILED(hr) && false)
+    if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return VFW_E_NO_TRANSPORT;

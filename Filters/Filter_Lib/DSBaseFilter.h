@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.h,v 1.4 2004-04-14 16:31:34 adcockj Exp $
+// $Id: DSBaseFilter.h,v 1.5 2004-04-20 16:30:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,6 +62,7 @@ public:
     long GetNumPins() {return m_NumInputPins + m_NumOutputPins;};
     CDSBasePin* GetPin(int PinIndex);
     virtual HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin) = 0;
+	virtual HRESULT NotifyConnected(CDSBasePin* pPin) = 0;
     virtual HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin) = 0;
     /// return VFW_S_NO_MORE_ITEMS when you have no more types you can generate, TypeNum = 0 is the first
     virtual HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum) = 0;

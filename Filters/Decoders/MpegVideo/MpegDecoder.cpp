@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.19 2004-04-16 16:19:44 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.20 2004-04-20 16:30:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2004/04/16 16:19:44  adcockj
+// Better reconnection and improved AFD support
+//
 // Revision 1.18  2004/04/14 16:31:34  adcockj
 // Subpicture fixes, AFD started and minor fixes
 //
@@ -142,7 +145,7 @@ CMpegDecoder::CMpegDecoder() :
     m_SubpictureInPin->AddRef();
     m_SubpictureInPin->SetupObject(this, L"SubPicture");
     
-    m_VideoOutPin = new CDSOutputPin;
+    m_VideoOutPin = new CDSOutputPin(true);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 3"));
@@ -150,7 +153,7 @@ CMpegDecoder::CMpegDecoder() :
     m_VideoOutPin->AddRef();
     m_VideoOutPin->SetupObject(this, L"Video Out");
 
-    m_CCOutPin = new CDSOutputPin;
+    m_CCOutPin = new CDSOutputPin(false);
     if(m_CCOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 4"));
@@ -209,6 +212,10 @@ CMpegDecoder::CMpegDecoder() :
 	m_ARAdjustX = 0;
 	m_ARAdjustY = 0;
 	m_AFD = 0;
+
+	m_InsideReconnect = false;
+	m_ConnectedToIn = DEFAULT_INFILTER;
+	m_ConnectedToOut = DEFAULT_OUTFILTER;
 
     InitMediaType(&m_InternalMT);
     m_NeedToAttachFormat = false;
@@ -436,7 +443,14 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
 
 	    pProperties->cBuffers = 3;
         // make sure we've always got enough for standard definition TV YUY2
-	    pProperties->cbBuffer = max(bih.biSizeImage, 768*576*2);
+		if(m_InsideReconnect)
+		{
+			pProperties->cbBuffer = m_InternalMT.lSampleSize;
+		}
+		else
+		{
+			pProperties->cbBuffer = bih.biSizeImage;
+		}
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
     }
@@ -494,6 +508,11 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555);
+		if(m_InsideReconnect)
+		{
+			m_Pitch = wout;
+			m_Height = hout;
+		}
     }
     else if(pPin == m_CCOutPin)
     {
@@ -597,17 +616,24 @@ HRESULT CMpegDecoder::SendOutLastSamples(CDSBasePin* pPin)
 void CMpegDecoder::CorrectSourceTarget(RECT& rcSource, RECT& rcTarget)
 {
 	SetRect(&rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
-	if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
+	if(m_ConnectedToIn == DVD_INFILTER && m_ConnectedToOut != DEFAULT_OUTFILTER)
 	{
-		SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
-	}
-	else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-	{
-		SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
-	}
-	else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-	{
-		SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
+		if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
+		{
+			SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
+		}
+		else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+		{
+			SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
+		}
+		else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+		{
+			SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
+		}
+		else
+		{
+			SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
+		}
 	}
 	else
 	{
@@ -752,6 +778,8 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 
 HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin)
 {
+	HRESULT hr = S_OK;
+
     if(pPin == m_VideoInPin)
     {
 		m_MpegWidth = m_MpegHeight = 0;
@@ -803,11 +831,51 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 			m_CurrentHeight = hout; 
 			m_ARCurrentOutX = arxout; 
 			m_ARCurrentOutY = aryout; 
-		}
 
+		}
     }
     return S_OK;
 }
+
+HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
+{
+	HRESULT hr = S_OK;
+	if(pPin == m_VideoInPin)
+	{
+		CLSID Clsid;
+
+		HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
+		if(Clsid == CLSID_DVDNavigator)
+		{
+			m_ConnectedToIn = DVD_INFILTER;
+		}
+		else
+		{
+			m_ConnectedToIn = DEFAULT_INFILTER;
+		}
+	}
+	if(pPin == m_VideoOutPin)
+	{
+		CLSID Clsid;
+
+		HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
+		if(Clsid == CLSID_VideoMixingRenderer9)
+		{
+			m_ConnectedToOut = VMR9_OUTFILTER;
+		}
+		else if(Clsid == CLSID_VideoMixingRenderer ||
+				Clsid == CLSID_VideoRendererDefault)
+		{
+			m_ConnectedToOut = VMR7_OUTFILTER;
+		}
+		else
+		{
+			m_ConnectedToOut = DEFAULT_OUTFILTER;
+		}
+	}
+	return S_OK;
+}
+
 
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
@@ -1077,7 +1145,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     m_LastOutputTime = rtStop;
 
 	HRESULT hr;
-	m_NeedToAttachFormat = false;
 
 	// cope with dynamic format changes from our side
 	// will possibly call NegotiateAllocator on the output pins
@@ -1105,13 +1172,20 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// formats properly and should never call NegotiateAllocator
 	if(hr == S_FALSE && m_NeedToAttachFormat)
 	{
+		//pOut.Detach();
 		if(FAILED(hr = ReconnectOutput(true)))
 		{
 			LogBadHRESULT(hr, __FILE__, __LINE__);
 			return hr;
 		}
-	}
 
+		//hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
+		if(FAILED(hr))
+		{
+			LogBadHRESULT(hr, __FILE__, __LINE__);
+			return hr;
+		}
+	}
 
 	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
 
@@ -1181,17 +1255,17 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	{
 		m_VideoOutPin->SetType(&m_InternalMT);
 		pOut->SetMediaType(&m_InternalMT);
-
-        SI(IMediaEventSink) pMES = m_Graph;
-        if(pMES)
-        {
-		    // some renderers don't send this
-		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
-        }
-
-	    m_NeedToAttachFormat = false;
-
+		m_NeedToAttachFormat = false;
 	}
+
+
+    SI(IMediaEventSink) pMES = m_Graph;
+    if(pMES)
+    {
+		// some renderers don't send this
+		pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
+    }
+
 
 	BYTE** buf = &m_CurrentPicture->m_Buf[0];
 
@@ -1270,6 +1344,11 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 {
 	HRESULT hr = S_OK;
 
+	if(m_ConnectedToOut == DEFAULT_OUTFILTER && ForceReconnect == TRUE)
+	{
+		return S_OK;
+	}
+
 	if((m_OutputWidth != m_CurrentWidth) || 
 		(m_OutputHeight != m_CurrentHeight) || 
 		(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
@@ -1298,62 +1377,116 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
 			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 		}
-		
-		if((m_OutputWidth > bmi->biWidth) || (m_OutputWidth != m_CurrentWidth))
+
+		if(m_ConnectedToOut != DEFAULT_OUTFILTER)
+		{
+			if((m_OutputWidth > bmi->biWidth))
+			{
+				bmi->biWidth = m_OutputWidth;
+			}
+		}
+		else
 		{
 			bmi->biWidth = m_OutputWidth;
 		}
 
-		if(m_OutputHeight > abs(bmi->biHeight))
+		if(bmi->biHeight > 0)
 		{
-			if(bmi->biHeight > 0)
-			{
-    			bmi->biHeight = m_OutputHeight;
-			}
-			else
-			{
-    			bmi->biHeight = -m_OutputHeight;
-			}
+    		bmi->biHeight = m_OutputHeight;
 		}
+		else
+		{
+    		bmi->biHeight = -m_OutputHeight;
+		}
+
 		bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
         
-        hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+		m_InternalMT.bFixedSizeSamples = 1;
+		m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+		m_InsideReconnect = true;
+		m_Pitch = 0;
+		m_Height = 0;
+
+
+		SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
+
+        hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
         if(hr != S_OK)
         {
-    		LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+    		LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
 
-    	if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
-
-	    ALLOCATOR_PROPERTIES AllocatorProps;
-	    hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-        CHECK(hr);
-
-        if((m_OutputWidth != m_CurrentWidth) || 
-			(m_OutputHeight != m_CurrentHeight) ||
-			(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
-			(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY))
+		if(m_ConnectedToOut == DEFAULT_OUTFILTER)
 		{
+			if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+
 			SI(IGraphConfig) GraphConfig = m_Graph;
+
 			if(GraphConfig)
 			{
 				hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
 				CHECK(hr);
+
+				if(m_Pitch != 0)
+				{
+					bmi->biWidth = m_Pitch;
+					bmi->biHeight = m_Height;
+					bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+					m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+					hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+					CHECK(hr);
+				}
+				m_NeedToAttachFormat = true; 
 			}
-        }
-        
-		if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-		{
-			hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-			CHECK(hr);
 		}
-		m_NeedToAttachFormat = true; 
+		else
+		{
+			if(m_OutputWidth > m_CurrentWidth || m_OutputHeight > m_CurrentHeight)
+			{
+				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+
+				hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+
+				CHECK(hr);
+
+				if(m_Pitch != 0)
+				{
+					bmi->biWidth = m_Pitch;
+					bmi->biHeight = m_Height;
+					bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+					m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+					hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+					CHECK(hr);
+				}
+
+				ALLOCATOR_PROPERTIES AllocatorProps;
+				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+				CHECK(hr);
+
+				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer && ForceReconnect)
+				{
+					//hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+					CHECK(hr);
+				}
+			}
+			m_NeedToAttachFormat = true; 
+		}
+		
+		m_InsideReconnect = false;
+
 
 		m_CurrentWidth = m_OutputWidth;
 		m_CurrentHeight = m_OutputHeight;
         m_ARCurrentOutX = m_ARMpegX * m_ARAdjustX; 
         m_ARCurrentOutY = m_ARMpegY * m_ARAdjustY; 
+	}
+	else
+	{
+		m_NeedToAttachFormat = false; 
 	}
 
 	return S_OK;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.6 2004-03-08 17:20:05 adcockj Exp $
+// $Id: DScaler.cpp,v 1.7 2004-04-20 16:30:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/03/08 17:20:05  adcockj
+// Minor bug fixes
+//
 // Revision 1.5  2004/03/06 20:51:10  adcockj
 // Correct isue with aspect ratio changes
 //
@@ -121,7 +124,7 @@ CDScaler::CDScaler() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Input");
     
-    m_VideoOutPin = new CDSOutputPin;
+    m_VideoOutPin = new CDSOutputPin(true);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -879,6 +882,11 @@ HRESULT CDScaler::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin
     {
 		m_RebuildRequired = TRUE;
     }
+    return S_OK;
+}
+
+HRESULT CDScaler::NotifyConnected(CDSBasePin* pPin)
+{
     return S_OK;
 }
 

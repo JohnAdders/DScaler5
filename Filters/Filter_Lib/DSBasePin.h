@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSBasePin.h,v 1.3 2004-04-20 16:30:30 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,6 +66,7 @@ public:
     HRESULT SetType(const AM_MEDIA_TYPE* pmt);
     bool IsConnected() {return m_ConnectedPin?true:false;};
     const AM_MEDIA_TYPE* GetMediaType() {return &m_ConnectedMediaType;};
+	HRESULT GetConnectedFilterCLSID(CLSID* pClsid);
 
 public:
     CDSBaseFilter* m_Filter;

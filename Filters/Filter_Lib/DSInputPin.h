@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSInputPin.h,v 1.3 2004-04-20 16:30:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ protected:
         SOURCE_DV,
     };
 
-	BOOL WorkOutWhoWeAreTalkingTo(IPin* pConnector);
+	BOOL AreWeAreTalkingToOurself(IPin* pConnector);
 	void FixupMediaType(AM_MEDIA_TYPE *pmt);
     HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.10 2004-04-06 16:46:11 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.11 2004-04-20 16:30:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/04/06 16:46:11  adcockj
+// DVD Test Annex Compatability fixes
+//
 // Revision 1.9  2004/03/25 18:01:30  adcockj
 // Fixed issues with downmixing
 //
@@ -98,7 +101,7 @@ CAudioDecoder::CAudioDecoder() :
     m_AudioInPin->AddRef();
     m_AudioInPin->SetupObject(this, L"Audio In");
 
-    m_AudioOutPin = new CDSOutputPin;
+    m_AudioOutPin = new CDSOutputPin(true);
     if(m_AudioOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -780,6 +783,11 @@ HRESULT CAudioDecoder::SendOutLastSamples(CDSBasePin* pPin)
 }
 
 HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin)
+{
+    return S_OK;
+}
+
+HRESULT CAudioDecoder::NotifyConnected(CDSBasePin* pPin)
 {
     return S_OK;
 }

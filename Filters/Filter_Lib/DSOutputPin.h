@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.5 2004-02-29 13:47:49 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.6 2004-04-20 16:30:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ BEGIN_INTERFACE_TABLE(CDSOutputPin)
 END_INTERFACE_TABLE()
 
 public:
-	CDSOutputPin();
+	CDSOutputPin(bool Dynamic);
 	~CDSOutputPin();
 
 // IPin
@@ -118,6 +118,7 @@ public:
 
 protected:
     void InternalDisconnect();
+	bool m_Dynamic;
 
 };
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.6 2004-04-14 16:31:34 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.7 2004-04-20 16:30:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/04/14 16:31:34  adcockj
+// Subpicture fixes, AFD started and minor fixes
+//
 // Revision 1.5  2004/02/27 17:08:16  adcockj
 // Improved locking at state changes
 // Better error handling at state changes
@@ -90,7 +93,7 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     // the filter at the other end
     // if this function returns TRUE we are talking to 
     // ourself then error
-	if(WorkOutWhoWeAreTalkingTo(pConnector) == TRUE)
+	if(AreWeAreTalkingToOurself(pConnector) == TRUE)
 	{
         return VFW_E_TYPE_NOT_ACCEPTED;
 	}
@@ -110,6 +113,8 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     CHECK(hr);
 
     m_ConnectedPin = pConnector;
+
+	hr = m_Filter->NotifyConnected(this);
 
     LOG(DBGLOG_ALL, ("CDSInputPin::ReceiveConnection Exit\n"));
     return hr;
@@ -198,6 +203,10 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
         if(pPin->m_Direction == PINDIR_OUTPUT && pPin->m_ConnectedPin != NULL)
         {
             HRESULT hr = pPin->m_ConnectedPin->BeginFlush();
+			if(hr == E_FAIL)
+			{
+				hr = S_OK;
+			}
             CHECK(hr);
         }
     }
@@ -232,6 +241,10 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         if(pPin->m_Direction == PINDIR_OUTPUT && pPin->m_ConnectedPin != NULL)
         {
             hr = pPin->m_ConnectedPin->EndFlush();
+			if(hr == E_FAIL)
+			{
+				hr = S_OK;
+			}
             CHECK(hr);
         }
     }
@@ -581,7 +594,7 @@ void CDSInputPin::CheckForBlocking()
 }
 
 
-BOOL CDSInputPin::WorkOutWhoWeAreTalkingTo(IPin* pConnector)
+BOOL CDSInputPin::AreWeAreTalkingToOurself(IPin* pConnector)
 {
 	PIN_INFO PinInfo;
 	BOOL RetVal = TRUE;
@@ -595,23 +608,23 @@ BOOL CDSInputPin::WorkOutWhoWeAreTalkingTo(IPin* pConnector)
 	hr = pConnector->QueryPinInfo(&PinInfo);
 	if(SUCCEEDED(hr))
 	{
-		CLSID ClassId;
-		hr = PinInfo.pFilter->GetClassID(&ClassId);
-		if(SUCCEEDED(hr))
-		{
-			if(ClassId == MyClassId)
-			{   
-                // if we're talking to ourselves
-                // return TRUE
-    			RetVal = TRUE;
-            }
-            else
-            {
-    			RetVal = FALSE;
-            }
-		}
 		if(PinInfo.pFilter != NULL)
 		{
+			CLSID ClassId;
+			hr = PinInfo.pFilter->GetClassID(&ClassId);
+			if(SUCCEEDED(hr))
+			{
+				if(ClassId == MyClassId)
+				{   
+					// if we're talking to ourselves
+					// return TRUE
+    				RetVal = TRUE;
+				}
+				else
+				{
+    				RetVal = FALSE;
+				}
+			}
 			PinInfo.pFilter->Release();
 		}
 	}

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.13 2004-04-16 16:19:44 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.14 2004-04-20 16:30:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -95,6 +95,7 @@ public:
 
 public:
     HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin);
+	HRESULT NotifyConnected(CDSBasePin* pPin);
     HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin);
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum);
     bool IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin);
@@ -168,6 +169,19 @@ private:
     CFrameBuffer m_Buffers[NUM_BUFFERS];
     CFrameBuffer* m_CurrentPicture;
     CFrameBuffer m_SubPicBuffer;
+
+	enum
+	{
+		DEFAULT_OUTFILTER,
+		VMR7_OUTFILTER,
+		VMR9_OUTFILTER
+	} m_ConnectedToOut;
+
+	enum
+	{
+		DEFAULT_INFILTER,
+		DVD_INFILTER,
+	} m_ConnectedToIn;
 
 	int m_MpegWidth;
 	int m_MpegHeight;
@@ -254,6 +268,9 @@ private:
 	};
 	std::list<CHighlight*> m_HighlightList;
 	CCanLock m_SubPictureLock;
+	bool m_InsideReconnect;
+	long m_Pitch;
+	long m_Height;
 
 
     HRESULT SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
