@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.cpp,v 1.5 2004-09-10 15:35:57 adcockj Exp $
+// $Id: DSBufferedInputPin.cpp,v 1.6 2004-10-05 19:27:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/09/10 15:35:57  adcockj
+// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
+//
 // Revision 1.4  2004/08/03 08:55:57  adcockj
 // Fixes for seeking issues
 //
@@ -194,7 +197,7 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
 {
     CDSBufferedInputPin* pThis = (CDSBufferedInputPin*)pParam;
 
-    SetThreadPriority(pThis->m_WorkerThread, THREAD_PRIORITY_HIGHEST);
+    //SetThreadPriority(pThis->m_WorkerThread, THREAD_PRIORITY_HIGHEST);
 
     while(1)
     {

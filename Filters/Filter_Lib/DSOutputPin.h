@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.12 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.13 2004-10-05 19:27:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,6 @@ BEGIN_INTERFACE_TABLE(CDSOutputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
     IMPLEMENTS_INTERFACE(IMediaSeeking)
     IMPLEMENTS_INTERFACE(IKsPropertySet)
-    IMPLEMENTS_INTERFACE(IAMPushSource)
     IMPLEMENTS_INTERFACE(IAMLatency)
 END_INTERFACE_TABLE()
 
@@ -131,3 +130,21 @@ protected:
     void InternalDisconnect();
 };
 
+class CDSOutputPushPin : public CDSOutputPin
+{
+public:
+
+IMPLEMENT_UNKNOWN(CDSOutputPushPin)
+
+BEGIN_INTERFACE_TABLE(CDSOutputPushPin)
+    IMPLEMENTS_INTERFACE(IPin)
+    IMPLEMENTS_INTERFACE(IPinFlowControl)
+    IMPLEMENTS_INTERFACE(IQualityControl)
+    IMPLEMENTS_INTERFACE(IMediaSeeking)
+    IMPLEMENTS_INTERFACE(IKsPropertySet)
+    IMPLEMENTS_INTERFACE(IAMPushSource)
+    IMPLEMENTS_INTERFACE(IAMLatency)
+END_INTERFACE_TABLE()
+
+    CDSOutputPushPin() : CDSOutputPin(){};
+};

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.37 2004-09-23 14:27:57 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.38 2004-10-05 19:27:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.37  2004/09/23 14:27:57  adcockj
+// preliminary fixed for reconnection issues
+//
 // Revision 1.36  2004/08/31 16:33:40  adcockj
 // Minor improvements to quality control
 // Preparation for next version
@@ -196,7 +199,7 @@ CAudioDecoder::CAudioDecoder() :
     m_AudioInPin->AddRef();
     m_AudioInPin->SetupObject(this, L"Audio In");
 
-    m_AudioOutPin = new CDSOutputPin();
+    m_AudioOutPin = new CDSOutputPushPin();
     if(m_AudioOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
