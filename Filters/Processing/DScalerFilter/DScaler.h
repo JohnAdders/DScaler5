@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.10 2004-12-06 18:05:01 adcockj Exp $
+// $Id: DScaler.h,v 1.11 2004-12-13 16:59:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -150,6 +150,7 @@ private:
     HRESULT Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer);
     void WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
     HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT ShowNow(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
     void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
     HRESULT CreateInternalMediaTypes();
     HRESULT UpdateMovementMap();
@@ -169,6 +170,7 @@ protected:
 	    STDMETHOD(SetLength)(DWORD cbLength);
         STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
 		STDMETHOD(get_Hint)(eDetectionHint *HintValue);
+        STDMETHOD(get_FieldNumber)(DWORD* FieldNumber);
 		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
 		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
 		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
@@ -197,6 +199,11 @@ protected:
 		eDetectionHint m_Hint;
     };
 
+    // leave plenty of room in case
+	// we get odd field numbers
+    CField m_IncomingFields[9];
+    DWORD m_FieldsInBuffer;
+
     class CMap: public IMediaBuffer
     {
     public:
@@ -215,12 +222,6 @@ protected:
         BYTE* m_Map;
         DWORD m_Length;
     };
-
-	// leave plenty of room in case
-	// we get odd field numbers
-    CField m_IncomingFields[9];
-    DWORD m_FieldsInBuffer;
-
 
 protected:
 

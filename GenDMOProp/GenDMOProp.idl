@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.11 2004-12-06 18:05:01 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.12 2004-12-13 16:59:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/12/06 18:05:01  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.10  2004/08/31 16:33:48  adcockj
 // Minor improvements to quality control
 // Preparation for next version
@@ -113,10 +116,14 @@ library GENDMOPROPLib
     typedef enum
     {
         HINT_NONE,
-        WEAVE_WITH_NEXT_32_3,
-        WEAVE_WITH_NEXT_32_2,
+        WEAVE_WITH_AFTERNEXT_32,
+        WEAVE_WITH_NEXT_32,
         WEAVE_WITH_NEXT_22,
+        WEAVE_WITH_PREV_32,
+        WEAVE_WITH_PREV_22,
     } eDetectionHint;
+
+    cpp_quote("#define AM_VIDEO_FLAG_SHOWNOW           0x00008000")
     
     [
         object,
@@ -128,6 +135,7 @@ library GENDMOPROPLib
 	{
         [propget] HRESULT TopFieldFirst([out,retval] BOOLEAN* TopFieldFirst);
         [propget] HRESULT Hint([out,retval] eDetectionHint* HintValue);
+        [propget] HRESULT FieldNumber([out,retval] DWORD* FieldNumber);
     };
 
     [

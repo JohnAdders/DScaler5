@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.60 2004-12-12 20:35:15 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.61 2004-12-13 16:59:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.60  2004/12/12 20:35:15  adcockj
+// fixed leak
+//
 // Revision 1.59  2004/12/06 18:04:58  adcockj
 // Major improvements to deinterlacing
 //
@@ -1247,15 +1250,9 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         }
         Props.tStart = rtStart;
 
-        // ffdshow quality control requires stop times
-        // nothing else needs these and setting stop times
-        // seems to sometimes results in frames being dropped
-        // which we really wanted to show
-        if(!fRepeatLast)
-        {
-            Props.tStop = rtStop;
-            Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
-        }
+        // stop times seem to be a good idea
+        Props.tStop = rtStop;
+        Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
 
         // the overlay seems to stutter unless we set the discontinuity flag
         // all the time (should have believed Gabest's comment in the first place....)
@@ -1298,7 +1295,15 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
         // tell the next filter that this is film
         if(m_NextFrameDeint == DIWeave)
+        {
             Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
+        }
+    
+        // make sure the Dscaler filter knows it has to show this one without delay
+        if(m_LastPictureWasStill && m_VideoOutPin->GetConnectedType() == CDSVideoOutPin::DSCALER_OUTFILTER)
+        {
+            Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_SHOWNOW;
+        }
 
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
         {

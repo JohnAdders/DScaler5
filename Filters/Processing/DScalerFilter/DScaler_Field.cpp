@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler_Field.cpp,v 1.2 2004-03-05 15:56:30 adcockj Exp $
+// $Id: DScaler_Field.cpp,v 1.3 2004-12-13 16:59:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/03/05 15:56:30  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -63,5 +66,11 @@ STDMETHODIMP CDScaler::CField::get_TopFieldFirst(BOOLEAN* TopFieldFirst)
 STDMETHODIMP CDScaler::CField::get_Hint(eDetectionHint *HintValue)
 {
     *HintValue = m_Hint;
+    return S_OK;
+}
+
+STDMETHODIMP CDScaler::CField::get_FieldNumber(DWORD* FieldNumber)
+{
+    *FieldNumber = m_FieldNumber;
     return S_OK;
 }

@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: DScalerWeave.cpp,v 1.5 2004-12-06 18:05:01 adcockj Exp $
+// $Id: DScalerWeave.cpp,v 1.6 2004-12-13 16:59:57 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/12/06 18:05:01  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.4  2004/11/01 14:09:55  adcockj
 // More DScaler filter insipred changes
 //
@@ -198,8 +201,8 @@ void CDScaler::WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* p
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
         memcpy(pOutputData, pLowerChroma, LineLength);
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
-        pLowerChroma += InputInfo->bmiHeader.biWidth / 2;
-        pUpperChroma += InputInfo->bmiHeader.biWidth / 2;
+        pLowerChroma += InputInfo->bmiHeader.biWidth;
+        pUpperChroma += InputInfo->bmiHeader.biWidth;
     }
 }
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.14 2004-12-07 08:44:00 adcockj Exp $
+// $Id: DScaler.cpp,v 1.15 2004-12-13 16:59:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/12/07 08:44:00  adcockj
+// fixed VS6 issues
+//
 // Revision 1.13  2004/12/06 18:05:01  adcockj
 // Major improvements to deinterlacing
 //
@@ -978,8 +981,8 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
 
     if(m_FieldsInBuffer > Delay)
     {
-        int FrameNum = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_FieldNumber;
-        FrameEndTime = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_EndTime;
+        int FrameNum = m_IncomingFields[0].m_FieldNumber;
+        FrameEndTime = m_IncomingFields[0].m_EndTime;
 
         DWORD Index;
         eDeinterlaceType CurrentType;
@@ -1006,7 +1009,7 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
             {
             case 1:
                 HowToProcess = PROCESS_WEAVE;
-                FrameEndTime += m_FieldTiming / 2;
+                //FrameEndTime += m_FieldTiming / 2;
                 break;
             case 4:
                 HowToProcess = PROCESS_WEAVE;
@@ -1175,7 +1178,14 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
 	HRESULT hr = CheckProcessingLine();
 	CHECK(hr);
 
-    hr = PushSample(InSample, pSampleProperties);
+    if(pSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_SHOWNOW)
+    {
+        hr = ShowNow(InSample, pSampleProperties);
+    }
+    else
+    {
+        hr = PushSample(InSample, pSampleProperties);
+    }
     CHECK(hr);
 
 	if(FAILED(hr) || hr == S_FALSE)
@@ -1200,18 +1210,30 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
         if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_FIELD1FIRST)
         {
             ShiftUpSamples(1, InputSample);
-            m_IncomingFields[2].m_IsTopLine = TRUE;
-            m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            m_IncomingFields[0].m_IsTopLine = TRUE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_AFTERNEXT_32;
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
-            m_IncomingFields[1].m_IsTopLine = FALSE;
-            m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            m_IncomingFields[0].m_IsTopLine = FALSE;
+            m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
         }
@@ -1220,16 +1242,28 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_AFTERNEXT_32;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
         }
@@ -1241,11 +1275,19 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
         }
@@ -1255,16 +1297,42 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_IsTopLine = FALSE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
             hr = InternalProcessOutput();
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;    
+            }
             CHECK(hr);
             ShiftUpSamples(1, InputSample);
             m_IncomingFields[0].m_IsTopLine = TRUE;
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+            if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
+            {
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;    
+            }
             hr = InternalProcessOutput();
             CHECK(hr);
         }
     }
     return S_OK;
 }
+
+HRESULT CDScaler::ShowNow(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    HRESULT hr = S_OK;
+
+    ShiftUpSamples(1, InputSample);
+    m_IncomingFields[0].m_IsTopLine = TRUE;
+    m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    ShiftUpSamples(1, InputSample);
+    m_IncomingFields[0].m_IsTopLine = FALSE;
+    m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+    hr = WeaveOutput(InSampleProperties->tStop);
+    CHECK(hr);
+    PopStack();
+    PopStack();
+    return S_OK;
+}
+
 
 void CDScaler::ShiftUpSamples(int NumberToShift, IMediaSample* InputSample)
 {
@@ -1382,7 +1450,7 @@ HRESULT CDScaler::CreateInternalMediaTypes()
     m_VideoOutPin->SetAspectY(NewFormat->dwPictAspectRatioY);
     m_VideoOutPin->SetHeight(BitmapInfo->biHeight);
     m_VideoOutPin->SetWidth(BitmapInfo->biWidth);
-    m_VideoOutPin->SetAvgTimePerFrame(NewFormat->AvgTimePerFrame / 2);
+    m_VideoOutPin->SetAvgTimePerFrame(NewFormat->AvgTimePerFrame);
 
     m_TypesChanged = true;
 
