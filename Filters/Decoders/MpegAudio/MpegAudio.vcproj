@@ -503,6 +503,9 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\AudioDecoder_Rate.cpp">
+			</File>
+			<File
 				RelativePath="Dither.cpp">
 				<FileConfiguration
 					Name="Release|Win32">

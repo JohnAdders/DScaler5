@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.45 2005-01-21 13:52:42 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.46 2005-02-03 13:36:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.45  2005/01/21 13:52:42  adcockj
+// Discontinuity and preroll changes
+//
 // Revision 1.44  2004/10/31 14:19:10  adcockj
 // Comments clean
 //
@@ -253,6 +256,13 @@ CAudioDecoder::CAudioDecoder() :
     m_a52_state = NULL;
     m_dts_state = NULL;
     m_madinit = false;
+
+    m_rate.Rate = 10000;
+    m_rate.StartTime = 0;
+
+	m_ratechange.Rate = 10000;
+    m_ratechange.StartTime = -1;
+
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -341,18 +351,39 @@ HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
 
 HRESULT CAudioDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin)
 {
-    return E_NOTIMPL;
+    if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    {
+        return SupportPropSetRate(dwPropID, pTypeSupport);
+    }
+	else
+	{
+        return E_NOTIMPL;
+	}
 }
 
 
 HRESULT CAudioDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, CDSBasePin* pPin)
 {
-    return E_NOTIMPL;
+    if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    {
+        return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
+    }
+    else
+    {
+        return E_NOTIMPL;
+    }
 }
 
 HRESULT CAudioDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin)
 {
-    return E_NOTIMPL;
+    if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    {
+        return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
+    }
+    else
+    {
+        return E_NOTIMPL;
+    }
 }
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.24 2004-10-28 11:42:14 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.25 2005-02-03 13:36:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -192,6 +192,15 @@ protected:
     HRESULT UpdateStartTime();
     void InitLibraries();
     void FinishLibraries();
+
+private:
+    // Rate change Stuff
+    AM_SimpleRateChange m_rate;
+    AM_SimpleRateChange m_ratechange;
+    bool m_CorrectTS;
+    HRESULT SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
+    HRESULT GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
+    HRESULT SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport);
 
 private:
     AM_MEDIA_TYPE m_InternalMT;
