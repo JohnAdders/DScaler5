@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.9 2004-07-20 16:37:57 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.10 2004-11-02 16:57:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/07/20 16:37:57  adcockj
+// Fixes for main issues raised in testing of 0.0.1
+//  - Improved parameter handling
+//  - Fixed some overlay issues
+//  - Auto aspect ratio with VMR
+//  - Fixed some overlay stutters
+//  - Fixed some push filter issues
+//  - ffdshow and DirectVobSub connection issues
+//
+// Added
+//  - Hardcode for PAL setting for ffdshow
+//  - Added choice of IDCT for testing
+//
 // Revision 1.8  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -404,17 +417,29 @@ bool CDSBaseFilter::IsClockUpstreamFromFilter(IBaseFilter* Filter)
                     if(hr == S_OK)
                     {
                         SI(IReferenceClock) RefClock = PinInfo.pFilter;
+                        bool RetVal = false;
                         if(RefClock == m_RefClock)
                         {
-                            return true;
+                            RetVal = true;
                         }
-                        else
+                        else if(PinInfo.pFilter != NULL)
                         {
-                            return IsClockUpstreamFromFilter(PinInfo.pFilter);
+                            RetVal = IsClockUpstreamFromFilter(PinInfo.pFilter);
+                        }
+                        if(PinInfo.pFilter != NULL)
+                        {
+                            PinInfo.pFilter->Release();
+                        }
+                        if(RetVal)
+                        {
+                            return RetVal;
                         }
                     }
                 }
             }
+            // need to do the detach otherwise we
+            // end up releasing a pin twice causing crashes
+            Pin.Detach();
             hr = EnumPins->Next(1, Pin.GetReleasedInterfaceReference(), NULL);
         }
     }

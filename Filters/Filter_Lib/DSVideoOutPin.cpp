@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.3 2004-11-01 14:09:39 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.4 2004-11-02 16:57:24 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/11/01 14:09:39  adcockj
+// More DScaler filter insipred changes
+//
 // Revision 1.2  2004/10/31 14:20:39  adcockj
 // fixed issues with settings dialog
 //
@@ -300,9 +303,6 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
     bihOut.biBitCount = fmts[FormatNum].biBitCount;
     bihOut.biCompression = fmts[FormatNum].biCompression;
     bihOut.biSizeImage = bihOut.biWidth * bihOut.biHeight * bihOut.biBitCount>>3;
-    bihOut.biXPelsPerMeter = bihOut.biWidth * m_AspectY;
-    bihOut.biYPelsPerMeter = bihOut.biHeight * m_AspectX;
-    Simplify(bihOut.biXPelsPerMeter, bihOut.biYPelsPerMeter);
 
     if(TypeNum%VariationsPerType == VIHIndex)
     {
@@ -315,6 +315,9 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         pmt->cbFormat = sizeof(VIDEOINFOHEADER);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
         SetRect(&vih->rcTarget, 0, 0, 0, 0);
+        bihOut.biXPelsPerMeter = bihOut.biWidth * m_AspectY;
+        bihOut.biYPelsPerMeter = bihOut.biHeight * m_AspectX;
+        Simplify(bihOut.biXPelsPerMeter, bihOut.biYPelsPerMeter);
     }
     else
     {
