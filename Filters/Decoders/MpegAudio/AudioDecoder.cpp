@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.33 2004-08-03 08:55:56 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.34 2004-08-03 18:47:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.33  2004/08/03 08:55:56  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.32  2004/07/31 18:52:09  adcockj
 // Test seeking fix
 //
@@ -987,8 +990,7 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     m_pDataOut = NULL;
     m_rtNextFrameStart = _I64_MIN;
     m_BufferSizeAtFrameStart = 0;
-    // hmmm,thought this was required but it screws up seeking
-
+  
     if(m_ConnectedAsSpdif && m_ProcessingType == PROCESS_AC3)
     {
         m_AC3SilenceFrames = 3;
@@ -1436,6 +1438,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
             _swab((char*)pData, (char*)m_pDataOut, m_BytesLeftInBuffer);
             pData += m_BytesLeftInBuffer;
             BytesToGo -= m_BytesLeftInBuffer;
+            hr = Deliver();
             if(hr != S_OK)
             {
                 return hr;
@@ -1462,6 +1465,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         {
             ZeroMemory(m_pDataOut, m_BytesLeftInBuffer);
             BytesToGo -= m_BytesLeftInBuffer;
+            hr = Deliver();
             if(hr != S_OK)
             {
                 return hr;
@@ -1477,6 +1481,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 
     if(m_BytesLeftInBuffer == 0)
     {
+        hr = Deliver();
         if(hr != S_OK)
         {
             return hr;
