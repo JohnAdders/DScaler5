@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.29 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.30 2004-07-11 14:36:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.29  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.28  2004/05/25 16:59:29  adcockj
 // fixed issues with new buffered pin
 //
@@ -1108,7 +1113,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // when we're not really ready
 
     TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    LOG(DBGLOG_ALL, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
         frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
         m_CurrentPicture->m_NumFields,
