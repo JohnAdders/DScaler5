@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.9 2004-07-01 20:03:08 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.10 2004-07-01 20:07:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ BEGIN_INTERFACE_TABLE(CDSOutputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
 	IMPLEMENTS_INTERFACE(IMediaSeeking)
 	IMPLEMENTS_INTERFACE(IKsPropertySet)
-	//IMPLEMENTS_INTERFACE(IAMPushSource)
+	IMPLEMENTS_INTERFACE(IAMPushSource)
 	IMPLEMENTS_INTERFACE(IAMLatency)
 END_INTERFACE_TABLE()
 
