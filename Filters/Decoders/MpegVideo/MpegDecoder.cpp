@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.44 2004-09-27 20:59:17 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.45 2004-10-21 18:51:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.44  2004/09/27 20:59:17  adcockj
+// Not fully tested MCE fixes
+//
 // Revision 1.43  2004/09/23 14:27:58  adcockj
 // preliminary fixed for reconnection issues
 //
@@ -495,6 +498,7 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
 
 HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
+	                return E_FAIL;
     if(pPin == m_VideoOutPin)
     {
         if(q.Type == Famine)
@@ -1661,7 +1665,7 @@ HRESULT CMpegDecoder::ReconnectVMR7()
 
     bool NeedReconnect = false;
 
-    if(m_OutputWidth > bmi->biWidth)
+    if(m_OutputWidth != bmi->biWidth)
     {
         bmi->biWidth = m_OutputWidth;
         NeedReconnect = true;
