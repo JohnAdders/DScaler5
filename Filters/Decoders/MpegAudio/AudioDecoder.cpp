@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.14 2004-07-01 16:12:47 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.15 2004-07-01 20:03:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.13  2004/05/12 15:55:06  adcockj
 // Foxed issue with format changes during preroll
 //
@@ -103,7 +107,7 @@ CAudioDecoder::CAudioDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CAudioDecoder::CreatePins\n"));
     
-    m_AudioInPin = new CDSBufferedInputPin;
+    m_AudioInPin = new CDSInputPin();
     if(m_AudioInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
@@ -214,7 +218,10 @@ HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
 	case SPEAKERCONFIG:
     case USESPDIF:
     case MPEGOVERSPDIF:
-		return VFW_E_ALREADY_CONNECTED;
+        if(m_AudioInPin->m_ConnectedPin)
+        {
+		    return VFW_E_ALREADY_CONNECTED;
+        }
 	default:
 		break;
 	}
@@ -494,7 +501,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         m_IsDiscontinuity = true;
 		m_buff.resize(0);
         m_sample_max = 0.1f;
-		m_rtOutputStart = 0;
+		//m_rtOutputStart = 0;
 	}
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID && m_rtNextFrameStart == _I64_MIN)
@@ -680,7 +687,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFEREN
 
 	rtDur += m_rtOutputStart;
 
-	pOut->SetTime(&m_rtOutputStart, &rtDur);
+	pOut->SetTime(&m_rtOutputStart, NULL);
 	//pOut->SetMediaTime(NULL, NULL);
 
 	pOut->SetPreroll(FALSE);

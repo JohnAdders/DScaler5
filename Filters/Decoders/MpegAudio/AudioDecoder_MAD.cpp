@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.8 2004-07-01 16:12:47 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.9 2004-07-01 20:03:08 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.7  2004/05/10 06:40:26  adcockj
 // Fixes for better compatability with PES streams
 //
@@ -152,7 +156,7 @@ HRESULT CAudioDecoder::ProcessMPA()
         {
 			mad_synth_frame(&m_synth, &m_frame);
 
-            // check that the incomming format is reasonable
+            // check that the incoming format is reasonable
             // sometimes we get told we have a lower format than we
             // actually get
 		    if(wfein->nSamplesPerSec > m_synth.pcm.samplerate)
