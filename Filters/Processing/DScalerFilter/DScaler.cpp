@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.5 2004-03-06 20:51:10 adcockj Exp $
+// $Id: DScaler.cpp,v 1.6 2004-03-08 17:20:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/03/06 20:51:10  adcockj
+// Correct isue with aspect ratio changes
+//
 // Revision 1.4  2004/03/05 17:21:32  adcockj
 // Better handling of dynamic format changes
 //
@@ -858,7 +861,7 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
         // check that the incoming format is SDTV    
         result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
 
-        result &= (BitmapInfo->biWidth < 768);
+        result &= (BitmapInfo->biWidth <= 768);
     }
     }
     return result;

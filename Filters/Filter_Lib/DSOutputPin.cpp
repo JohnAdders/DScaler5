@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.7 2004-03-05 15:56:29 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.8 2004-03-08 17:20:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/03/05 15:56:29  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.6  2004/02/29 13:47:49  adcockj
 // Format change fixes
 // Minor library updates
@@ -511,7 +514,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    if(FAILED(hr) && FALSE)
+    if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return VFW_E_NO_TRANSPORT;
