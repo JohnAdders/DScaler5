@@ -1,0 +1,34 @@
+[OPTIONS]
+Binary Index=No
+Compatibility=1.1 or later
+Compiled file=..\Release\DScaler5.chm
+Contents file=TOC.hhc
+Default topic=Help.htm
+Display compile progress=No
+Full text search stop list file=SearchList.stp
+Full-text search=Yes
+Index file=Index.hhk
+Language=0x409 English (United States)
+Title=DScaler 5 Help
+
+
+[FILES]
+Help.htm
+News.htm
+FAQ.htm
+user_support.htm
+Authors.htm
+Thanks.htm
+COPYING.html
+Developer.htm
+Standards.htm
+CVS_Instructions.htm
+DScaler_Readme.htm
+MpegVideo.htm
+MpegAudio.htm
+
+[MAP]
+#include helpids.h
+
+[INFOTYPES]
+

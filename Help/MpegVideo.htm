@@ -1,0 +1,131 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<!-- #BeginTemplate "/Templates/dtvnormal.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" -->
+<title>Mpeg Video Decoder</title>
+<!-- #EndEditable -->
+<meta http-equiv="Content-Type" content=
+"text/html; charset=iso-8859-1">
+<style type="text/css">
+<!--
+p {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+.bottommenu {  font-family: Arial, Helvetica, sans-serif; font-size: 8pt; font-style: normal; text-decoration: none}
+h3 {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt; font-style: normal; font-weight: bold}
+h1 {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 18pt; font-weight: bold}
+li {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+h2 {  font-family: Arial, Helvetica, sans-serif; font-size: 14pt; font-weight: bold}
+ol {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+blockquote {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+pre {  font-family: "Courier New", Courier, mono; font-size: 9pt}
+ul {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+-->
+</style>
+</head>
+<body bgcolor="#FFFFFF">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td height="1" width="160"><img src="images/spacer.gif" width="1"
+height="1"></td>
+<td height="1" width="342"><img src="images/spacer.gif" width="1"
+height="1"></td>
+<td height="1" width="501"><img src="images/spacer.gif" width="1"
+height="1"></td>
+</tr>
+
+<tr>
+<td width="160"><img src="images/dscalerlogo.jpg" alt=
+"DScaler Logo"></td>
+    <td colspan="2" align="right" valign="bottom"><font face=
+"Verdana, Arial, Helvetica, sans-serif" size="5"><b> <!-- #BeginEditable "Page%20Title" --> 
+      Mpeg Video Filter <!-- #EndEditable --></b></font></td>
+</tr>
+
+<tr bgcolor="#FFCC00" align="right">
+<td colspan="3"><img src="images/yellowspacer.gif" width="100%"
+height="2"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+  <tr> 
+    <td colspan="3"> <!-- #BeginEditable "Text" --> 
+      <p>This filter can decode all types of MPEG1 and MPEG 2 video.</p>
+			
+      <p>There are a few settings available to configure the decoder and 
+			these are explained below.</p>
+      <p> 
+      <table border="1">
+        <tr> 
+          <th>Setting</th>
+          <th>Default</th>
+          <th>Description</th>
+        </tr>
+        <tr> 
+          <td>Display Forced Subtitles</td>
+          <td>On</td>
+          <td>Allows you to switch off forced subtitles.</td>
+        </tr>
+        <tr> 
+          <td>Frame smooth 3:2</td>
+          <td>On</td>
+          <td>This option controls the timestamps that are placed on the output 
+					samples when 24fps film has been detected.  Those with 60Hz displays may 
+					get better results with this off but most other users will want this on.</td>
+        </tr>
+        <tr> 
+          <td>Deinterlace mode</td>
+          <td>Auto</td>
+          <td>Three modes are supported. Auto means use the MPEG flags to switch
+					automatically between weave and bob modes.  Bob means force interlaced 
+					output.  Weave forces the MPEG frames to be displayed as they come out 
+					of the decoder and also forces progressive chroma upsampling.</td>
+        </tr>
+        <tr> 
+          <td>Video Delay</td>
+          <td>0</td>
+          <td>Allow the user to delay the display of video to match the sound.
+					The delay is expressed in milliseconds and has a max of 200 ms</td>
+        </tr>
+        <tr> 
+          <td>Do Acurate Aspect</td>
+          <td>On</td>
+          <td>This option controls the calculation of aspect ratio.</td>
+        </tr>
+        <tr> 
+          <td>DVB Aspect Prefs</td>
+          <td>16:9 Display</td>
+          <td>Controls how the decoder responds to AFD infromation that is present 
+					in some DVB streams.</td>
+        </tr>
+      </table>
+			</p>
+      <!-- #EndEditable --> </td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr>
+<td colspan="3"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr bgcolor="#FFCC00">
+<td colspan="3">
+<div align="center"><img src="images/yellowspacer.gif" width=
+"100%" height="2"></div>
+</td>
+</tr>
+</table>
+
+</body><!-- #EndTemplate -->
+
+</html>
+

@@ -1,0 +1,124 @@
+ 
+<html>
+<!-- #BeginTemplate "/Templates/dtvnormal.dwt" --> 
+<head>
+<!-- #BeginEditable "doctitle" --> 
+<title>DScaler - CVS Instructions</title>
+<!-- #EndEditable --> 
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<style type="text/css">
+<!--
+p {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+.bottommenu {  font-family: Arial, Helvetica, sans-serif; font-size: 8pt; font-style: normal; text-decoration: none}
+h3 {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt; font-style: normal; font-weight: bold}
+h1 {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 18pt; font-weight: bold}
+li {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+h2 {  font-family: Arial, Helvetica, sans-serif; font-size: 14pt; font-weight: bold}
+ol {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+blockquote {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+pre {  font-family: "Courier New", Courier, mono; font-size: 9pt}
+ul {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+-->
+</style>
+</head>
+<body bgcolor="#FFFFFF">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr> 
+    <td height="3" width="160"><img src="images/spacer.gif" width="1" height="1"></td>
+    <td height="3" width="342"><img src="images/spacer.gif" width="1" height="1"></td>
+    <td height="3" width="501"><img src="images/spacer.gif" width="1" height="1"></td>
+  </tr>
+  <tr> 
+    <td width="160" height="142"><img src="images/dscalerlogo.jpg" alt="DScaler logo"></td>
+    <td colspan="2" align="right" valign="bottom" height="142"> <font face="Verdana, Arial, Helvetica, sans-serif" size="5"><b><!-- #BeginEditable "Page%20Title" -->CVS 
+      Instructions<!-- #EndEditable --></b></font></td>
+</tr>
+
+<tr bgcolor="#FFCC00" align="right">
+<td colspan="3"><img src="images/yellowspacer.gif" width="100%"
+height="2"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr>
+    <td colspan="3"><!-- #BeginEditable "Text" --> 
+      <ol>
+        <li>Download the latest version of WinCVS from <a target="_blank" href="http://www.cvsgui.org/">http://www.cvsgui.org</a>. 
+          Install it. (Instructions confirmed with version 1.3 beta 6.)<br>
+          &nbsp; </li>
+        <li> Download the latest windows setup program from <a href="http://sfsetup.sourceforge.net">http://sfsetup.sourceforge.net/</a> 
+          and unpack it. (Instructions confirmed with version 1.3.)<br>
+          &nbsp; </li>
+        <li> Run sfsetup.exe... It may give you a WinCVS error. That`s OK. Have 
+          it set up ssh and the DScaler project. Make sure you specify your sourceforge 
+          username, the project as &quot;deinterlace&quot;, the home directory 
+          as the directory in which you installed ssh, and the checkout directory 
+          as the directory where you want to save the DScaler code on your local 
+          machine.<br>
+          &nbsp; <br>
+          NOTICE TO WINDOWS 2000 USERS -- Before running make sure your C:\AUTOEXEC.BAT 
+          exists and is writable (and not hidden, not system). It cannot be blank 
+          - it must have at least one line of text in it. If it is 0 bytes, add 
+          an "@echo off" line to it, followed by an Enter.<br>
+          &nbsp; <br>
+          NOTICE TO WINDOWS 95/98/ME USERS -- After running sfsetup, reboot the 
+          computer to load the new AUTOEXEC.BAT settings.<br>
+          &nbsp; </li>
+        <li> Run WinCVS.<br>
+          &nbsp; </li>
+        <li>Choose Create-Checkout Module. The modules available in the Deinterlace 
+          project include:<br>
+          &nbsp;<br>
+          a) DScaler5 -- the main DScaler5 code base;<br>
+          b) htdocs -- the web site.<br>
+          &nbsp; </li>
+        <li>Click OK. After a couple of seconds a minimized ssh DOS window will 
+          appear. Maximize the window. It MAY be blank, it MAY say "Password:"; 
+          Enter your password even if the DOS window is completely blank without 
+          the "Password:" prompt. There will be no echo. Just type your password 
+          and then hit Enter.<br>
+          &nbsp;<br>
+          NB: Upon running for the first time, the DOS window will mention that 
+          a random seed is being generated for the Sourceforge site. Again, you 
+          may not be prompted for your password, but you will need to enter it 
+          anyway.<br>
+          &nbsp; </li>
+        <li>WinCVS should now be checking out the code.<br>
+          &nbsp; </li>
+        <li>For those who will be making edits to the code, you can do so with 
+          impunity. Make your edits and submit them to the CVS by first selecting 
+          the file. Choose Modify-Update Selection from the menu. This merges 
+          your local changes with the CVS code. Next, choose Modify-Commit Selection. 
+          This will make the changes in the CVS. After each step, you will be 
+          presented with the DOS window discussed in #6, above.</li>
+      </ol>
+      <!-- #EndEditable --> </td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr>
+<td colspan="3"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr bgcolor="#FFCC00">
+<td colspan="3">
+<div align="center"><img src="images/yellowspacer.gif" width=
+"100%" height="2"></div>
+</td>
+</tr>
+</table>
+
+</body><!-- #EndTemplate -->
+
+</html>
+

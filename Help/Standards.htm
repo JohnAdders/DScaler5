@@ -1,0 +1,1458 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<!-- #BeginTemplate "/Templates/dtvnormal.dwt" -->
+<head>
+<!-- #BeginEditable "doctitle" -->
+<title>DScaler -- Coding Standards</title>
+<!-- #EndEditable -->
+<meta http-equiv="Content-Type" content=
+"text/html; charset=iso-8859-1">
+<style type="text/css">
+<!--
+p {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+.bottommenu {  font-family: Arial, Helvetica, sans-serif; font-size: 8pt; font-style: normal; text-decoration: none}
+h3 {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt; font-style: normal; font-weight: bold}
+h1 {  font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 18pt; font-weight: bold}
+li {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+h2 {  font-family: Arial, Helvetica, sans-serif; font-size: 14pt; font-weight: bold}
+ol {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+blockquote {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+pre {  font-family: "Courier New", Courier, mono; font-size: 9pt}
+ul {  font-family: Arial, Helvetica, sans-serif; font-size: 10pt}
+-->
+</style>
+</head>
+<body bgcolor="#FFFFFF">
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td height="1" width="160"><img src="images/spacer.gif" width="1"
+height="1"></td>
+<td height="1" width="342"><img src="images/spacer.gif" width="1"
+height="1"></td>
+<td height="1" width="501"><img src="images/spacer.gif" width="1"
+height="1"></td>
+</tr>
+
+<tr>
+<td width="160"><img src="images/dscalerlogo.jpg" alt=
+"DScaler Logo"></td>
+<td colspan="2" align="right" valign="bottom"><font face=
+"Verdana, Arial, Helvetica, sans-serif" size="5"><b>
+<!-- #BeginEditable "Page%20Title" -->
+Coding Standards
+<!-- #EndEditable --></b></font></td>
+</tr>
+
+<tr bgcolor="#FFCC00" align="right">
+<td colspan="3"><img src="images/yellowspacer.gif" width="100%"
+height="2"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr>
+<td colspan="3">
+<!-- #BeginEditable "Text" -->
+<p align="RIGHT"><b>The Deinterlace Project - Revision 1.0</b></p>
+
+<b><font size="4"></font></b>
+<p><b><font size="4">Abstract:</font></b></p>
+
+<p>This document describes the <font face=
+"Courier New">C++</font> Coding Standards as they are used in the
+<font face="Courier New">deinterlace</font> project. It provides
+a set of guidelines, rationales and standards for <font face=
+"Courier New">C/C++</font> coding.</p>
+
+<p><b>Copyright notice</b></p>
+
+<p><font face="Courier New">Deinterlace Copyright (c) 2001 John
+Adcock</font></p>
+
+<p><font face="Courier New">Revision 1.6 , Last Modified:
+2001/07/13</font></p>
+
+<p>This material may be distributed only subject to the terms and
+conditions set forth in the Open Publication License.</p>
+
+<p>This document was based on the on the CoreLinux C++ Coding
+standards document version 1.6</p>
+
+<p>The original document can be found <u><font color=
+"#0000ff">http://corelinux.sourceforge.net/cppstnd.php</font></u></p>
+
+<p><font face="Courier New">CoreLinux++ Copyright (c) 1999, 2000
+CoreLinux Consortium</font></p>
+
+<p><font face="Courier New">Revision 1.6 , Last Modified:
+2000/09/22</font></p>
+
+<p>This material may be distributed only subject to the terms and
+conditions set forth in the Open Publication License.</p>
+
+<p><b><font face="Arial" size="4">Scope</font></b></p>
+
+<p>The principle function of this document is to establish a
+consistent standard which will provide for easier maintenance of
+code. This will benefit the team and the project in that those
+who are new to the code can quickly orient themselves, and
+thereby sooner become productive members of the team. It is
+intended to be a dynamic document and can be reviewed as needed.
+It is recommended that each programmer keep a copy on hand
+also.</p>
+
+<p><b><i><font face="Arial">Document Overview</font></i></b></p>
+
+<p>The following document sections contain standards, guidelines,
+and rationales. Guidelines must be adhered to unless there is
+compelling reason to deviate. Deviation from a guideline must be
+discussed and approved during the code walk-through. A standard
+is an item to which compliance is mandatory. Deviation from a
+standard must be discussed, approved, and signed-off on by the
+team lead during the code walk-through. Rationales have been used
+where necessary to explain the meaning of an item, or why it was
+chosen.</p>
+
+<p><b><font face="Arial">General Principles</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section contains the basic philosophy a developer should
+keep in mind while coding.</p>
+</div>
+
+<p><b><font face="Arial">Comments</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section deals with the placement and contents of comments
+in the code.</p>
+</div>
+
+<p><b><font face="Arial">Code Layout</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section has to do with the alignment of the code, white
+space, declarations and keywords, and where they should all be
+located.</p>
+</div>
+
+<p><b><font face="Arial">Naming Conventions</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section contains the structure for naming classes,
+functions, files, and directories.</p>
+</div>
+
+<p><b><font face="Arial">Usage</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section concerns the 'how' and 'when' certain constructs
+should be used (for example, loops, inheritance, error handling,
+etc.)</p>
+</div>
+
+<p><b><font face="Arial">File Layout</font></b></p>
+
+<div style="margin-left: 2em">
+<p>This section applies to where things should be located in
+header files and modules.</p>
+
+</div>
+
+<p><b><font face="Arial" size="4">General Principles</font></b></p>
+
+<p>The primary goal of the coding standard is maintainability.
+Other important considerations that relate to the spirit of the
+standard are correctness, readability, consistency,
+extensibility, portability, clarity, and simplicity. When in
+doubt, the programmer should strive for clarity first, then
+efficiency.</p>
+
+<p>Think of the reader. Do not just write for yourself. Keep it
+simple. Break down complexity into simpler chunks. Clearly
+comment necessary complexity. Be explicit. Avoid implicit or
+obscure language features. Be consistent. Minimize scope, both
+logical and visual.</p>
+
+<p>Much of the code in DScaler does not conform to these
+standards. Please when making changes try to apply the standards
+to any surrounding code. This is especially true of comments and
+variable naming.</p>
+
+
+<p><b><font face="Arial" size="4">Comments</font></b></p>
+
+<p><i>Guideline 1:</i>	Be clear and concise. Say what is
+happening and why. Do not restate code.</p>
+
+<p><i>Guideline 2:</i>	Keep code and comments visually
+separate.</p>
+
+<p><i>Standard 1:</i>	Use top of file comments for all files.
+Include CVS $Id: Standards.htm,v 1.1 2004-04-14 16:28:41 adcockj Exp $ and $Log: not supported by cvs2svn $ tags on this block. Include the
+correct GPL comment and assign copyright to yourself for totally
+new files or the same as the original source if splitting
+files.</p>
+
+<p><i>Standard 1:</i>	Use only the <font face=
+"Courier New">C++</font> comment style (double slashes) for
+single line comments.</p>
+
+<p><i>Guideline 3:</i>	For block comment styles either <font
+face="Courier New">C++</font> (double slashes) or C style (<font
+face="Courier New">/* ... */</font>) can be used.</p>
+
+<pre>
+// ...
+</pre>
+
+<p>-OR-</p>
+
+<pre>
+/* ... */
+</pre>
+
+<p><i>Guideline 4:</i>	Prefer block comments over trailing
+comments. Use block comments regularly. Only use trailing
+comments for special items.</p>
+
+<p><i>Standard 5:</i>	Trailing comments must all start in the
+same column in the function.</p>
+
+<p><i>Standard 6:</i>	Trailing comments at a closing brace are
+indented one level from brace.</p>
+
+<p><i>Standard 7:</i>	Block comments are at the same indentation
+level as the block they describe.</p>
+
+<p><i>Standard 8:</i>	Ensure comments are correct (and stay
+correct).</p>
+
+<p><b><font face="Arial" size="4"> </font></b></p>
+
+<p><b><font face="Arial" size="4">Code Layout</font></b></p>
+
+<p><i>Guideline 5:</i>	Write code in a series of chunks.</p>
+
+<p><i>Guideline 6:</i>	Use block comments to separate the
+chunks.</p>
+
+<p><i>Standard 9:</i>	Put one statement per line, except with
+in-line code in a header file.</p>
+
+<p><i>Guideline 7:</i>	Functions shall have a single exit point.
+Exceptions to this rule are allowed in simple cases (e.g. where
+functions are less than 15 lines) and for invalid parameter
+checks.</p>
+
+<p><i>Rationale:</i>	Multiple exit points usually add to the
+complexity of a function.</p>
+
+<p><i>Standard 10:</i>	Indentation level is four (4) spaces. Set
+editor to replace tabs with spaces</p>
+
+<p><b><i><font face="Arial"> </font></i></b></p>
+
+<p><b><i><font face="Arial">Braces and
+Parenthesis</font></i></b></p>
+
+<p><b>Standard 11:</b>	Braces shall be aligned using Ulman style
+where the braces are at the same scope as the statement that
+proceeds them and the code within the braces is indented one
+level. Braces are always on a line by themselves.</p>
+
+<code><pre>
+void DoSomething( void )
+{
+    if(x != y)
+    {
+        y = x;
+    }
+    else
+    {
+        ; // do nothing
+    }
+}</pre></code>
+
+<p>-NOT-</p>
+
+<code><pre>
+void DoSomething( void )
+{
+    if(x != y)
+    {
+    y = x; // should be indented
+    }
+    else
+    {
+    ; // do nothing
+    }
+}
+</pre></code>
+<p>- OR -</p>
+<code><pre>
+void DoSomething( void )
+{
+    if(x != y)
+        { // brace is not the same scope
+        y = x;
+        }
+    else
+        {
+        ; // do nothing
+        }
+}
+</pre></code>
+
+<p>- OR -</p>
+
+<code><pre>
+void DoSomething( void )
+{
+    if(x != y){ // brace is not on a line by itself
+        y = x;
+    }
+    else{
+        ; // do nothing
+    }
+}
+
+</pre></code>
+
+<p><i>Standard 12:</i>	While, for and if statements shall always
+use braces, even if they are not syntactically required.</p>
+
+<p><i>Guideline 8:</i>	Use parenthesis to group within a
+statement and to emphasize evaluation order.</p>
+
+<p><i>Guideline 9:</i>	Avoid unnecessary parentheses.</p>
+
+<p><i>Guideline 10:</i>	Avoid deep (more than three) levels of
+parenthesis nesting.</p>
+
+<p><b><i><font face="Arial">Declarations</font></i></b></p>
+
+<p><b>Standard 14:</b>	Start each declaration on a new line.
+(Except for loops where the counter can be defined within the
+statement)</p>
+
+<p><i>Standard 15:</i>	Enumeration declarations will be declared
+with named constants in upper case and the identifier specified
+as described in Naming conventions. Where it is expected that
+code will iterate over the space defined by the enum then there
+should be a ???_LAST_ONE entry defined.</p>
+
+<code><pre>
+enum eIdentifier
+{
+    ONE,
+    TWO,
+    THREE
+};
+</pre></code>
+<p>- or -</p>
+ 
+<code><pre>
+enum eIdentifier
+{
+    ONE = 1,
+    TWO,
+    THREE,
+    IDENTIFIER_LAST_ONE,
+};
+</pre></code>
+
+<p><i>Standard 16:</i>	All variables must be initialized.</p>
+
+<p><i>Guideline 11:</i>	Use vertical alignment to ease scanning
+of declarations. Where possible the variable names should start
+in column 15.</p>
+
+<code><pre>
+STRING         StringToUse;
+int            MyInt;
+COMPLEX        ComplexNumberToUse;
+</pre></code>
+
+<p>-instead of-</p>
+
+<code><pre>
+STRING StringToUse;
+int MyInt;
+COMPLEX ComplexNumberToUse;
+</pre></code>
+
+<p><i>Standard 17:</i>	Do not create anonymous types (structs),
+except in a class declaration where a private structure is
+declared.</p>
+
+<p><b><i><font face="Arial">Keyword Constructs</font></i></b></p>
+
+
+<p><i>Standard 19:</i>	Nested else if statements shall be
+indented as normal statements, the if shall appear on the same
+line as the else, and shall have a final else statement (most
+likely with a <font face="Courier New">NEVER_GET_HERE</font>;
+statement).</p>
+
+ 
+<code><pre>
+if( x &gt; y )
+{
+    x = x - y;
+}
+else if( x &lt; y )
+{
+    y = y - x;
+}
+else
+{
+    // x and y should never be equal
+    NEVER_GET_HERE;
+}
+</pre></code>
+
+
+<p><i>Standard 20:</i>	Cases should be at the same level as the
+<font face="Courier New">switch</font> and indent the code one
+level beyond the case. The break statement is at the same
+indentation level as the code.</p>
+
+
+<p><i>Standard 21:</i>	All <font face="Courier New">switch</font>
+statements shall have a <font face="Courier New">default</font>
+case. If all cases have been handled then the default code shall
+be <font face="Courier New">NEVER_GET_HERE</font>. If not then it
+shall be an empty statement.</p>
+
+
+<code><pre>
+switch(Variable)
+{
+case 1:
+    // ... code ...
+    break;
+
+case 2:
+    // ... code ...
+    break;
+
+default:
+    NEVER_GET_HERE;
+    break;
+}
+</pre></code>
+
+<p>- OR -</p>
+
+<code><pre>
+switch(Variable)
+{
+case 1:
+    // ... code ...
+    break;
+
+case 2:
+    // ... code ...
+    break;
+
+default:
+    ; // do nothing
+    break;
+}
+</pre></code>
+
+<p><i>Standard 22:</i>	Put the <font face=
+"Courier New">while</font> in a <font face="Courier New">do
+while</font> statement on the same line as the closing brace.</p>
+
+ 
+
+do
+{
+    ++x;
+} while(x &lt; y);
+
+<p><b><i><font face="Arial">Preprocessor</font></i></b></p>
+
+<p><b>Guideline 13:</b>	Preprocessor directives should be avoided
+whenever possible.</p>
+
+<p><i>Standard 25:</i>	Multi-statement macros shall have one
+statement per line.</p>
+
+
+<code><pre>
+#define MULTIPLE_LINE_MACRO( s ) \
+     ++(s); \
+     (s) = ((s) % 3 ? ++(s) : (s))
+</pre></code>
+
+<p><b><i><font face="Arial">Spaces</font></i></b></p>
+
+<p><i>Standard 26:</i>	Do not use spaces in object
+de-references.</p>
+
+<code><pre>
+val = *pFoo; // ok
+val = * pFoo; // wrong
+</pre></code>
+
+
+<p><i>Standard 27:</i>	When defining pointer types put asterix
+next to type with no spaces.</p>
+
+<code><pre>
+CClass* pFoo; // ok
+CClass *pFoo; // wrong
+CClass foo, *pFoo; // very wrong
+</pre></code>
+
+<p><i>Standard 28:</i>	Do not space between an unary operator and
+its operand, but do space the other side.</p>
+
+<p><i>Standard 29:</i>	Balance spacing on either side of binary
+operators.</p>
+
+<p><i>Standard 30:</i>	Do not space before separators (
+semicolon, argument comma separator ) but do space the other
+side.</p>
+
+<p><i>Standard 32:</i>	Balance spacing inside parenthesis.</p>
+
+<p><i>Standard 34:</i>	Use blank lines before and after block
+comments.</p>
+
+<p><i>Standard 35:</i>	Use vertical alignment to indicate
+association.</p>
+
+<p><i>Standard 36:</i>	Use spaces, not tabs.</p>
+
+<p><i>Rationale:</i>	Tab sizes vary between developers. When
+spaces are used, the alignment is maintained no matter where the
+file is edited.</p>
+
+<p><b><i><font face="Arial">Wrapping</font></i></b></p>
+
+<p><b>Guideline 15:</b>	No line of code should extend beyond
+column 100.</p>
+
+<p><i>Rationale:</i>	When the audience for the source and headers
+of a project may reach hundreds, if not more, readability and
+continuity become prime factors for comprehension. Additionally,
+in a multi-developer environment, the potential for disjoint
+style is personified with no restrictions on column length.</p>
+
+<p><i>Standard 37:</i>	When wrapping lines, indent the
+continuation line past the current indent column.</p>
+
+
+<code><pre>
+int Val(2);
+cout &lt;&lt; "This is an example where I wrap "
+     &lt;&lt; Val
+     &lt;&lt; " lines of code" &lt;&lt; endl;
+</pre></code>
+
+<p><i>Standard 38:</i>	Wrap assignments past the equal sign.</p>
+
+<code><pre>
+CObjectMapConstIterator Iterator =
+        m_MapOfObjects.begin();
+</pre></code>
+
+<p><i>Standard 39:</i>	Wrap conditional expressions after the
+operators.</p>
+
+
+<code><pre>
+if(m_NameOfTheGame == gameName &amp;&amp;
+   m_TimeBeingPlayed &gt; Limit)
+{
+    // ...
+}
+</pre></code>
+
+<p><i>Standard 40:</i>	Wrap <font face="Courier New">for</font>
+statements after the semi-colons.</p>
+
+
+<p><i>Standard 41:</i>	Wrap long function signatures with one
+parameter per line.</p>
+
+<code><pre>
+void CClassMethod::setValues(
+                               const Object&amp; Object1,
+                               const Object&amp; Object2,
+                               const STRING&amp; Name,
+                               const int Value,
+                               ...
+                            )
+{
+    ;
+}
+</pre></code>
+
+<p><b><font face="Arial" size="4">Naming
+Conventions</font></b></p>
+
+ <i></i>
+<p><i>Standard 42:</i>	Spell words using correct English
+spelling. For the most part, avoid abbreviations. Abbreviations
+for common longwinded phases may be used as though they are
+normal words if the abbreviation is placed in the Glossary and
+the usage remains clear in the context.</p>
+
+<p><i>Rationale:</i>	The semantics of a type are much better
+understood by the reader when they have names like
+"SpeakerCabinet" instead of "SpkCb".</p>
+
+<p><i>Guideline 16:</i>	Make names clearly unique. Avoid
+similar-sounding names and similarly-spelled names.</p>
+
+<code><pre>
+int Count;
+String Surname;
+CObject Person;
+</pre>
+</code>
+<p>- INSTEAD OF -</p>
+
+<code><pre>
+int x1;
+String x2;
+CObject x3;
+</pre></code>
+
+<p><i>Standard 43:</i>	Make all identifiers unique within a
+function.</p>
+
+<p><i>Standard 44:</i>	Use mixed case to distinguish name
+segments instead of underscores.</p>
+
+<code><pre>
+CWellFormedObject WellFormedObject;   // ok
+non_standard_form Wellformedobject;   // wrong
+</pre></code>
+
+<p><i>Standard 45:</i>	Types are all upper case and use
+underscores to separate name segments. (i.e. <font face=
+"Courier New">CURRENCY</font>, <font face=
+"Courier New">BIG_CAR,STRING</font>).</p>
+
+<p><i>Standard 46:</i>	Variables and objects names that are data
+members of a class start with a '<font face=
+"Courier New">m_</font>' and followed by an upper case letter
+then mixed case.</p>
+
+<code><pre>
+class CFoo
+{
+public:
+	  // ..
+protected:
+    NEW_TYPE m_NewType;
+};
+</pre></code>
+
+<p><i>Standard 47:</i>	Variables and objects names that are
+arguments or locals start with an upper case letter and are mixed
+case thereafter. (i.e. <font face="Courier New">NEW_TYPE</font>
+NewType<font face="Courier New">;</font> ).</p>
+
+<p><i>Standard 48:</i>	Pointer variable names are prefixed <font
+face="Courier New">'p'</font> followed by an upper case
+letter.</p>
+
+<p><i>Guideline 17:</i>	Only use short variable names when they
+have limited scope and obvious meaning. Beware of them causing
+confusion. Short variables may be lower case e.g. i in loops.</p>
+
+<p><i>Standard 49:</i>	Use capital letters to begin new name
+segments within the name.</p>
+
+<p><i>Guideline 18:</i>	Name functions with verb-noun (verb
+object) combinations. The first letter of functions should be
+upper case.</p>
+
+<p><i>Guideline 19:</i>	Name variables and structures with noun,
+adjective noun combinations.</p>
+
+<p><i>Standard 50:</i>	Accessor methods start with the word
+'<font face="Courier New">Get</font>' and should be <font face=
+"Courier New">const</font>.</p>
+
+<p><i>Standard 51:</i>	Boolean accessor functions start with
+'<font face="Courier New">Is</font>' and return <font face=
+"Courier New">bool</font>.</p>
+
+<p><i>Standard 52:</i>	Mutator procedures start with the word
+'<font face="Courier New">Put</font>' and don't return
+values.</p>
+
+<code><pre>
+class CFoo
+{
+public:
+    //
+    // Accessor
+    //
+    const BSTR GetName(void) const;
+    bool IsNameEmpty(void) const;
+
+    //
+    // Mutator
+    //
+    void PutName(const BSTR name);
+protected:
+    BSTR m_Name;
+};
+</pre>
+</code>
+
+
+<p><i>Standard 53:</i>	Factory instantiation functions start with
+the word '<font face="Courier New">Create</font>'.</p>
+
+<code><pre>
+CThread*  CreateThread(void);
+</pre></code>
+
+<p><i>Standard 54:</i>	Factory destruction functions start with
+the word '<font face="Courier New">Destroy</font>'.</p>
+
+<code><pre>
+void DestroyThread(CThread* threadToDestroy);
+</pre></code>
+
+<p><b><i><font face="Arial">Files and
+Directories</font></i></b></p>
+
+<p><i>Guideline 20:</i>	Name files like variables, describing the
+functions they contain. Long file names are encouraged.</p>
+
+<p><i>Standard 56:</i>	Use <font face="Courier New">.cpp</font>
+and <font face="Courier New">.h</font> for class definition
+source and header file suffixes.</p>
+
+<p><i>Standard 57:</i>	Any procedural code written should be
+compiled in <font face="Courier New">C++</font> .</p>
+
+<p><i>Rationale:</i>	<font face="Courier New">C++</font>
+compilers provide much stricter type checking than C compilers.
+The stronger type checking is well worth using, even if the code
+does not take advantage of the object oriented features of <font
+face="Courier New">C++</font> .</p>
+
+<p><i>Guideline 23:</i>	Name directories like nested
+structures.</p>
+
+<p><b><font face="Arial" size="4">Usage</font></b></p>
+
+<p><i>Guideline 24:</i>	There are no circumstances where <font
+face="Courier New">goto</font> is allowed.</p>
+
+<p><i>Guideline 25:</i>	Avoid deep nesting of statements,
+parentheses, and structures.</p>
+
+<p><i>Guideline 26:</i>	All assignments shall stand alone, unless
+a series of variables are being assigned to the same value.</p>
+
+<p><i>Standard 58:</i>	Do not use comparisons in mathematical
+expressions.</p>
+
+<code><pre>
+numberOfDays = ( get_IsLeapYear() == TRUE ) + 28; // not OK
+</pre></code>
+
+<p><i>Guideline 59:</i>	All non-boolean comparison expressions
+should use a comparison operator. Do not use implicit <font face=
+"Courier New">!= 0</font>.</p>
+
+<p><font face="Courier New"> </font></p>
+
+<p><font face="Courier New">ASSERT(pObject != 0); //
+good</font></p>
+
+<p><font face="Courier New">ASSERT(pObject); // bad</font></p>
+
+<p><i>Guideline 27:</i>	Avoid assignment in comparisons, except
+where the alternative is significantly more complex.</p>
+
+<p><i>Standard 60:</i>	Use explicit casting, instead of the
+compiler default.</p>
+
+DWORD UnsignedValue(0);
+REAL RealValue(3.7);
+BigValue = DWORD(RealValue);
+
+<p>Also note that the class operator overloads should be used as
+a preference for upcasting and downcasting:</p>
+
+<code><pre>
+class CFoo
+{
+public:
+    operator DWORD(void) const
+    {
+        return DWORD(m_Value);
+    }
+
+    operator SHORT(void) const
+    {
+        return SHORT(m_Value);
+    }
+
+protected:
+    REAL m_Value;
+};
+</pre></code>
+
+<p><i>Guideline 28:</i>	Default to pre-increment and
+pre-decrement unless the post-increment/decrement operators are
+logically necessary.</p>
+
+<p><i>Guideline 29:</i>	Minimize negative comparisons.</p>
+
+<p><i>Guideline 30:</i>	Minimize use of the comma operator.</p>
+
+<p><b><i><font face="Arial">Conditionals</font></i></b></p>
+
+<p><b>Guideline 31:</b>	Use <font face="Courier New">if (</font>
+cond) ...<font face="Courier New">else</font> rather than
+conditional expressions <font face="Courier New">( (</font>
+cond<font face="Courier New">) ? : )</font> if only to clarify
+the intended operation.</p>
+
+<p><i>Guideline 32:</i>	Use nested if only to clarify the
+intended order of evaluation.</p>
+
+ 
+<code><pre>
+if( Foo() == true )
+{
+    if( Bar() == true )
+    {
+    }
+}
+</pre></code>
+
+<p>-- VERSUS&mdash;</p>
+
+<code><pre>
+if( Foo() &amp;&amp; Bar())
+{
+}
+</pre></code>
+
+<p><i>Standard 61:</i>	In a <font face=
+"Courier New">switch</font> statement, make all cases independent
+by using break at the end of each. All switch statements should
+have a default. If all cases have been handled, then the default
+should never be <font face="Courier New">NEVER_GET_HERE</font>.
+This is also true for if...elseif...else blocks.</p>
+
+<p><i>Standard 62:</i>	Use <font face=
+"Courier New">if...else</font> for two alternative actions. Put
+the major action first. Exceptions to this standard are checks at
+the top of a function.</p>
+
+<p><b><i><font face="Arial">Loop Constructs</font></i></b></p>
+
+<p><b>Guideline 33:</b>	Count for loops in ascending.</p>
+
+<code><pre>
+for(int x(0); x &lt; ListSize; ++x)
+{
+    // code
+}
+</pre></code>
+
+<p><i>Standard 63:</i>	Use for loops when the loop control needs
+initializing or recalculating; otherwise, use while.</p>
+
+<code><pre>
+// go backwards down array
+x = ArrayOfThings.GetSize();
+while(x-- &gt; 0)
+{
+    Array[x].DoSomethingWithThing();
+}
+</pre></code>
+
+<p><i>Standard 64:</i>	Use <font face="Courier New">while( 1
+)</font> to implement an infinite loop. Make its usage clear with
+comments.</p>
+
+<p><i>Guideline 34:</i>	Be careful with the logic of do loops.
+Use <font face="Courier New">do...while( !(...) )</font> to loop
+until a comparison becomes true.</p>
+
+<p><i>Guideline 35:</i>	Minimize use of <font face=
+"Courier New">break</font> in loops. Only use it for abnormal
+escape.</p>
+
+<p><i>Guideline 36:</i>	Use <font face=
+"Courier New">continue</font> sparingly. Clearly comment why
+<font face="Courier New">continue</font> is used.</p>
+
+<p><b><i><font face="Arial">Data</font></i></b></p>
+
+<p><b>Guideline 38:</b>	Beware of operations with constants going
+out of range.</p>
+
+<p><i>Standard 67:</i>	Use single-quoted characters for character
+constants, but never single-quote more than one character (or hex
+for non-printing).</p>
+
+<p><i>Standard 68:</i>	Use <font face="Courier New">sizeof</font>
+rather than a constant.</p>
+
+<p><i>Standard 69:</i>	Do not compare floating point numbers for
+equality.</p>
+
+<p><i>Standard 70:</i>	Assign to all data members in <font face=
+"Courier New">operator=</font>.</p>
+
+<p><i>Standard 71:</i>	Check for assignment to <font face=
+"Courier New">this</font> in <font face=
+"Courier New">operator=</font>. If assignment to <font face=
+"Courier New">this</font> is attempted, simply return from the
+function.</p>
+
+
+<code><pre>
+MyClassRef MyClass::operator=(MyClassCref aRef)
+{
+    if( this != &amp;aRef )
+    {
+        // do the assignment
+        ...
+    }
+    else
+    {
+        ; // do nothing
+    }
+    return *this;
+}
+</pre></code>
+
+<p><i>Standard 72:</i>	Make sure <font face=
+"Courier New">operator=</font> invokes any parents' <font face=
+"Courier New">operator=</font>, except with virtual
+inheritance.</p>
+
+
+<p><b><i><font face="Arial">Initialization</font></i></b></p>
+
+<p><b>Standard 77:</b>	Explicitly initialize static data.</p>
+
+<p><i>Standard 78:</i>	Initialize all variables at the time they
+are declared to the appropriate value. If the value is not yet
+known, initialize pointers to simple types to zero or NULL.</p>
+
+<p><i>Standard 79:</i>	List members in a constructor
+initialization list in order in which they are declared in the
+class header.</p>
+
+<p><i>Standard 80:</i>	Check for empty pointer or handle by
+comparison with NULL.</p>
+
+<p><b><i><font face="Arial">Declaration</font></i></b></p>
+
+<p><b>Guideline 40:</b>	All data should be defined as close as
+possible to where it is needed.</p>
+
+<p><i>Guideline 41:</i>	Use floating point numbers only where
+necessary.</p>
+
+<p><i>Guideline 42:</i>	Do not use global data. Consider putting
+global information in the context of a static class.</p>
+
+<p><i>Guideline 43:</i>	Do not use unions.</p>
+
+<p><i>Guideline 44:</i>	Do not use bit structures.</p>
+
+<p><b><i><font face="Arial">Programming</font></i></b></p>
+
+<p><b>Guideline 45:</b>	Make sure interface definitions are clear
+and sufficient.</p>
+
+<p><i>Guideline 46:</i>	Defend against system, program and user
+errors. Heavy use of assertions and exceptions are
+encouraged.</p>
+
+<p><i>Guideline 47:</i>	Enable the user and the maintainer to
+find sufficient information to understand an error. Include
+enough diagnostic information to give an accurate picture of why
+the error occurred.</p>
+
+<p><i>Guideline 48:</i>	Do not use arbitrary, predefined limits(
+e.g. on symbol table entries, user names, file names).</p>
+
+<p><i>Standard 87:</i>	Use the same form in corresponding calls
+to <font face="Courier New">new</font> and <font face=
+"Courier New">delete</font> (i.e. <font face="Courier New">new
+CFoo</font> uses <font face="Courier New">delete pFoo</font> and
+<font face="Courier New">new CFoo[100]</font> uses <font face=
+"Courier New">delete []</font> <font face=
+"Courier New">fooArray</font>.</p>
+
+<p><i>Guideline 50:</i>	Know what <font face=
+"Courier New">C++</font> silently creates and calls (e.g. default
+constructor, copy constructor, assignment operator, address-of
+operators(const and not), and the destructor for a derived class
+where the base class's destructor is defined.)</p>
+
+<p><i>Standard 88:</i>	Ensure that objects (both simple and
+class) are initialized before they are used.</p>
+
+<p><i>Standard 83:</i>	Eradicate all compiler warnings. Set the
+compiler to the highest warning level. Any unavoidable warnings
+must be explicitly commented in the code. Unavoidable compiler
+warnings should be extremely rare.</p>
+
+<p><b><i><font face="Arial">Class and
+Functions</font></i></b></p>
+
+<p><b>Guideline 51:</b>	Strive for class interfaces that are
+complete and minimal.</p>
+
+<p><i>Guideline 52:</i>	The programmer should only have to look
+at the .h file to use a class.</p>
+
+<p><i>Guideline 53:</i>	Do not put data members in the public
+interface.</p>
+
+<p><i>Standard 90:</i>	Pass and return objects be reference
+instead of value whenever possible.</p>
+
+<p><i>Standard 91:</i>	If the passed object is not going to be
+modified then pass it as a const reference.</p>
+
+<p><i>Standard 92:</i>	The keyword class will appear in the left
+most column. If declaring the class in the scope of a namespace,
+then class will be indented appropriately.</p>
+
+<p><i>Standard 93:</i>	The member access controls appear flush
+with the class keyword.</p>
+
+<p><i>Standard 94:</i>	Access controls that have no members may
+be omitted.</p>
+
+<p><i>Standard 95:</i>	Access controls appear in the following
+order</p>
+
+<code><pre>
+public: // Public method declarations
+
+protected: // Protected method declarations
+
+private: // Private method declarations
+
+protected: // Protected class data members
+
+private: // Private class data members
+
+</pre></code>
+
+<p>comments here are for clarification.</p>
+
+<p><i>Standard 96:</i>	The virtual or static declarations appear
+in the first indentation level from the class declaration.</p>
+
+<p><i>Standard 97:</i>	The return type of a class method or the
+storage type of a class data member appear after the first tab
+position beyond the space were virtual applied.</p>
+
+<p><i>Standard 98:</i>	Method identifiers follow the return type
+and should be reasonably lined with other method
+declarations.</p>
+
+<p><i>Standard 99:</i>	In each access control group for methods,
+Constructors are followed by destructor, followed by operator
+overloads, followed by accessors followed by mutators.</p>
+
+<code><pre>
+class CMyClass
+{
+public:
+    /// Default constructor
+    CMyClass(void)
+
+    /**
+    Copy constructor
+    @param Object constant reference
+    */
+    CMyClass(const Object&amp; init);
+
+    /// Destructor
+    virtual ~CMyClass(void);
+
+    /**
+    Equality operator overload
+    @param CMyClass constant reference
+    @return bool - true if equal, false otherwise
+    */
+
+    bool operator==(const CMyClass&amp; copy);
+
+    //
+    // Accessors
+    //
+ 
+    /**
+    Get the number of MyClass instantiations.
+    @return Int const reference to count
+    */
+     static const INT GetInstanceCount(void);
+
+    /**
+    Return the object data member
+    @return Object const
+    reference
+    */
+
+    const CObject&amp; GetObject(void) const;
+
+    //
+    // Mutators
+    //
+
+    /**
+    Sets the something thing
+    @param Something const reference
+    */
+
+    virtual void PutSomething(const CSomething&amp; something);
+
+protected:
+    /// Copy never allowed
+    CMyClass(const CMyClass&amp; ) throw(Assertion)
+    {
+        NEVER_GET_HERE;
+    }
+
+    /// Assignment operator denied
+    CMyClassRef operator=( const CMyClass&amp; ) throw(Assertion)
+    {
+		    NEVER_GET_HERE;
+        return *this;
+    }
+
+private:
+    // No private methods
+
+protected:
+    // No public data members
+
+private:
+    /// Class instance counter
+    static int m_InstanceCount;
+};
+
+</pre></code>
+
+<p><i>Guideline 54:</i>	Don't return a reference, or pointer,
+when you must return an object, and don't return an object when
+you mean a reference.</p>
+
+<p><i>Guideline 55:</i>	Avoid overloading on a pointer and a
+numerical type. (i.e. <font face="Courier New">Foo(char *)</font>
+vs. <font face="Courier New">Foo(int)</font> - a call to <font
+face="Courier New">Foo(0)</font> is ambiguous).</p>
+
+<p><i>Standard 100:</i>	Do not return handles to internal data
+from const member functions. If a handle must be returned, make
+it const.</p>
+
+<p><i>Standard 101:</i>	Avoid member functions that return
+pointers or references to members less accessible than
+themselves. Use <font face="Courier New">const</font> !</p>
+
+<p><i>Standard 102:</i>	Never return a reference to a local
+object or a de-referenced pointer initialized by new within the
+function.</p>
+
+<p><i>Rationale:</i>	Obviously, when a functions ends, the local
+object goes out of scope, and the reference is no longer valid.
+One might attempt to NEW the object in the function instead, but
+then who would call the corresponding DELETE?</p>
+
+<p><i>Standard 103:</i>	Use enums for integral class
+constants.</p>
+
+<p><i>Guideline 57:</i>	Use inlining judiciously.</p>
+
+<p><i>Guideline 58:</i>	Inlines cause code bloat, slow down
+compile times, eat up name space, and not all compilers handle
+them the same way.</p>
+
+<p><b><i><font face="Arial">Inheritance</font></i></b></p>
+
+<p><b>Guideline 59:</b>	Make sure public inheritance models
+'is-a'.</p>
+
+<p><i>Guideline 60:</i>	Differentiate between inheritance of the
+interface and of the implementation, and prefer delegation to
+implementation inheritance.</p>
+
+<p><i>Rationale:</i>	Inheritance of the interface only is forced
+by making a function pure virtual- its implementation must be
+defined by the derived class. Inheritance of implementation
+occurs when the function is declared as simple virtual-derived
+classes may or may not override the implementation.</p>
+
+<p><i>Standard 106:</i>	Never redefine an inherited non-virtual
+function.</p>
+
+<p><i>Standard 107:</i>	Never redefine an inherited default
+parameter value.</p>
+
+<p><i>Guideline 61:</i>	Use private inheritance judiciously.</p>
+
+<p><i>Guideline 62:</i>	Differentiate between inheritance and
+templates.</p>
+
+<p><i>Rationale:</i>	If the type of the object being manipulated
+does not affect the behavior or the class, then a template will
+do. However, if the type of the object DOES affect the behavior,
+then virtual functions should be used through inheritance.</p>
+
+<p><b><i><font face="Arial">Object-Oriented
+Considerations</font></i></b></p>
+
+<p><b>Standard 109:</b>	Factor our common code into an
+ancestor.</p>
+
+<p><i>Guideline 63:</i>	Encapsulate external code within an
+operation or class.</p>
+
+<p><i>Guideline 64:</i>	Keep member functions small, coherent and
+consistent.</p>
+
+<p><i>Guideline 65:</i>	Separate policy member functions (e.g.
+error and status checkers) from implementation member functions
+(computational).</p>
+
+<p><i>Standard 110:</i>	Do not use indirect function calls unless
+absolutely necessary.</p>
+
+<p><i>Standard 111:</i>	Write member functions for all
+combinations of input conditions. Avoid using modes to
+distinguish between conditions. Use member function overloading
+instead.</p>
+
+<p><i>Standard 112:</i>	Avoid case statements on object type; use
+member functions instead.</p>
+
+<p><i>Standard 113:</i>	Keep internal class structure hidden from
+other classes. Do not use global or public data.</p>
+
+<p><i>Standard 114:</i>	Do not traverse multiple links or member
+functions in a single statement. Invoke each member function via
+a temporary pointer or reference.</p>
+
+<p><i>Standard 115:</i>	Use <font face="Courier New">const</font>
+wherever a function, parameter or return value will not
+change.</p>
+
+<p><i>Guideline 116:</i>	All accessor functions should be <font
+face="Courier New">const</font>.</p>
+
+<p><b><i><font face="Arial">Error Handling</font></i></b></p>
+
+<p><b>Standard 117:</b>	Use exceptions rather than returning a
+failure status. However do not use exceptions for conditions that
+are expected to occur frequently.</p>
+
+<p><i>Standard 118:</i>	Use assertions (<font face=
+"Courier New">ASSERT</font>, <font face=
+"Courier New">VERIFY</font>, <font face=
+"Courier New">NEVER_GET_HERE</font>) liberally.</p>
+
+<p><b><font face="Arial" size="4">File Layout</font></b></p>
+
+<p><i>Guideline 66:</i>	Use functional cohesion to group similar
+items.</p>
+
+<p><i>Guideline 67:</i>	Source files may be split up along
+boundaries between class administrator, accessor, mutator and
+provider functions.</p>
+
+<p><i>Standard 123:</i>	A class shall have a single header
+file.</p>
+
+<p><i>Guideline 68:</i>	Layout data files to reflect the systems
+they serve.</p>
+
+<p><i>Standard 124:</i>	Do not reserve memory in header
+files.</p>
+
+<p><i>Standard 125:</i>	Minimize header file interdependence.</p>
+
+<p><i>Guideline 69:</i>	Keep function length in code files to
+within one or two pages (100 lines).</p>
+
+<p><i>Guideline 70:</i>	Keep modules small. Each module should be
+functionally cohesive and should be as small as possible. Modules
+should not exceed 10-15 pages in length.</p>
+
+<p><i>Guideline 71:</i>	Classes with a large number of functions
+should break the implementation into several <font face=
+"Courier New">.CPP</font> files. These files should be
+functionally cohesive.</p>
+
+<p><b><i><font face="Arial">Header File Layout</font></i></b></p>
+
+<p><b>Standard 126:</b>	All headers must be wrapped to prevent
+multiple inclusion.</p>
+
+<code><pre>
+#if !defined(__MYHEADER_H__)
+#define __MYHEADER_H__
+
+...
+
+#endif // __MYHEADER_H__
+</pre></code>
+
+<p>-OR-</p>
+
+<code><pre>
+#pragma once
+</pre></code>
+
+<p><i>Standard 127:</i>	The wrapper must be the name of the file,
+prefixed with a double underscore <font face=
+"Courier New">__</font> and followed by _<i><font face=
+"Courier New">H</font>__</i>. (i.e. <font face=
+"Courier New">__COMMON_H__</font>).</p>
+
+<p><i>Standard 128:</i>	public, protected and private line appear
+in column 0 within a class definition.</p>
+
+<p><i>Standard 129:</i>	Types, returns, member names, functions
+must be lined up consistently in header.</p>
+
+<p><i>Standard 130:</i>	Trailing comments must be aligned within
+the module.</p>
+
+<p><b><font size="5">Bibliography</font></b></p>
+
+<p>Grady Booch.</p>
+
+<div style="margin-left: 2em">
+<p><i>Object Oriented Analysis and Design With
+Applications</i>.</p>
+
+<p>Benjamin/Cummings, Redwood City, CA, 2nd edition, 1994.</p>
+</div>
+
+<p>The Corelinux Consortium.</p>
+
+<div style="margin-left: 2em">
+<p><i>The Corelinux C++ Coding Standards</i>.</p>
+
+<p>The Corelinux Consortium, 1.3 edition, May 2000a.</p>
+
+<p>http://corelinux.sourceforge.net/cppstnd.php.</p>
+</div>
+
+<p>The Corelinux Consortium.</p>
+
+<div style="margin-left: 2em">
+<p><i>The Corelinux Object Oriented Design Standards</i>.</p>
+
+<p>The Corelinux Consortium, 1.3 edition, May 2000b.</p>
+</div>
+
+<p>Phillip B. Crosby.</p>
+
+<div style="margin-left: 2em">
+<p><i>Quality Is Free</i>.</p>
+
+<p>McGraw-Hill, New York, NY., 10020, 1976.</p>
+</div>
+
+<p>FSF.</p>
+
+<div style="margin-left: 2em">
+<p><i>GNU Autoconf Manual</i>.</p>
+
+<p>FSF, 2.13 edition, 1999.</p>
+</div>
+
+<p>FSF.</p>
+
+<div style="margin-left: 2em">
+<p><i>GNU Automake Manual</i>.</p>
+
+<p>FSF, 1.4 edition, 2000a.</p>
+</div>
+
+<p>FSF.</p>
+
+<div style="margin-left: 2em">
+<p><i>GNU Libtool Manual</i>.</p>
+
+<p>FSF, 1.3.4 edition, 2000b.</p>
+</div>
+
+<p>D.E. Knuth.</p>
+
+<div style="margin-left: 2em">
+<p>Structured programming with goto's.</p>
+
+<p><i>ACM Computing Surveys</i>, Vol 6(No. 4), December 1974.</p>
+</div>
+
+<p>Bertrand Meyer.</p>
+
+<div style="margin-left: 2em">
+<p><i>Object Oriented Software Construction</i>.</p>
+
+<p>Prentice Hall, Englewood Cliffs, NJ, 1988.</p>
+</div>
+
+<p>Inc. Taligent.</p>
+
+<div style="margin-left: 2em">
+<p><i>The Taligent Guide to Well-Mannered Object-Oriented
+Programs</i>.</p>
+
+<p>Taligent Inc., Cupertino, CA., 1994.</p>
+
+</div>
+
+<p><i>Frank V. Castellucci 2001-01-01</i></p>
+
+<p><i>Modifications John Adcock 2001-07-13</i></p>
+<!-- #EndEditable -->
+</td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr>
+<td colspan="3"></td>
+</tr>
+
+<tr>
+<td colspan="3"> </td>
+</tr>
+
+<tr bgcolor="#FFCC00">
+<td colspan="3">
+<div align="center"><img src="images/yellowspacer.gif" width=
+"100%" height="2"></div>
+</td>
+</tr>
+</table>
+
+<!-- #EndTemplate -->
+</body>
+</html>
