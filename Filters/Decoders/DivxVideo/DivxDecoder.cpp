@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.5 2004-11-09 17:21:37 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.6 2004-11-18 21:26:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/11/09 17:21:37  adcockj
+// Seeking fixes
+//
 // Revision 1.4  2004/11/06 14:36:08  adcockj
 // VS6 project update
 //
@@ -102,6 +105,7 @@ CDivxDecoder::CDivxDecoder() :
     av_set_memory(malloc,free,realloc);
     avcodec_init();
     av_log_set_callback(avlog);
+    m_Rate = 10000;
 }
 
 CDivxDecoder::~CDivxDecoder()
@@ -596,6 +600,7 @@ HRESULT CDivxDecoder::Deliver()
 
     HRESULT hr = S_OK;
     m_LastOutputTime = rtStop;
+    
     if(m_fWaitForKeyFrame)
     {
         if(m_CurrentPicture->m_Picture.key_frame)
@@ -608,113 +613,118 @@ HRESULT CDivxDecoder::Deliver()
         }
     }
 
-    // cope with dynamic format changes from our side
-    // will possibly call NegotiateAllocator on the output pins
-    // which flushes so we shouldn't have any samples outstanding here
-    if(FAILED(hr = m_VideoOutPin->CheckForReconnection()))
+    if(rtStop > 0)
     {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return hr;
-    }
 
-    SI(IMediaSample) pOut;
-    BYTE* pDataOut = NULL;
-    
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return hr;
-    }
 
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
-
-    SI(IMediaSample2) pOut2 = pOut;
-    if(pOut2)
-    {
-        AM_SAMPLE2_PROPERTIES Props;
-        if(FAILED(hr = pOut2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+        // cope with dynamic format changes from our side
+        // will possibly call NegotiateAllocator on the output pins
+        // which flushes so we shouldn't have any samples outstanding here
+        if(FAILED(hr = m_VideoOutPin->CheckForReconnection()))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
-        Props.tStart = rtStart;
 
-        // ffdshow quality control requires stop times
-        // nothing else needs these and setting stop times
-        // seems to sometimes results in frames being dropped
-        // which we really wanted to show
-
-        if(m_IsDiscontinuity)
-        {
-            Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
-        }
-        else
-        {
-            Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
-        }
-        Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
-        Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
-
-        Props.dwTypeSpecificFlags = 0;
-
-        // tell the next filter that this is film
-        if(m_NextFrameDeint == DIWeave)
-            Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
-
-        if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+        SI(IMediaSample) pOut;
+        BYTE* pDataOut = NULL;
+        
+        hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
+        if(FAILED(hr))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
-    }
-    else
-    {
-        // ffdshow quality control requires stop times
-        // nothing else needs these and setting stop times
-        // seems to sometimes results in frames being dropped
-        // which we really wanted to show
-        pOut->SetTime(&rtStart, &rtStop);
 
-        if(m_IsDiscontinuity)
+        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
+
+        SI(IMediaSample2) pOut2 = pOut;
+        if(pOut2)
         {
-            pOut->SetDiscontinuity(TRUE);
-        }
-        pOut->SetSyncPoint(TRUE);
-    }
+            AM_SAMPLE2_PROPERTIES Props;
+            if(FAILED(hr = pOut2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+                return hr;
+            }
+            Props.tStart = rtStart;
 
-    BYTE** buf = &m_CurrentPicture->m_Picture.data[0];
+            // ffdshow quality control requires stop times
+            // nothing else needs these and setting stop times
+            // seems to sometimes results in frames being dropped
+            // which we really wanted to show
 
-    if(FAILED(hr = pOut->GetPointer(&pDataOut)))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-        return hr;
-    }
+            if(m_IsDiscontinuity)
+            {
+                Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
+            }
+            else
+            {
+                Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
+            }
+            Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
+            Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
-    m_VideoOutPin->Copy420(pDataOut, buf, m_DivxWidth, m_DivxHeight, m_CurrentPicture->m_Picture.linesize[0], true);
+            Props.dwTypeSpecificFlags = 0;
 
-    hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
-    if(FAILED(hr))
-    {
-        if(hr == E_FAIL)
-        {
-            // sometimes happens with overlay
-            // supress the error and  set
-            // discontinuity flag so that the
-            // overlay will do a mini reset
-            LOG(DBGLOG_FLOW, ("SendSample failed\n"));
-            m_IsDiscontinuity = true;
-            hr = S_OK;
+            // tell the next filter that this is film
+            if(m_NextFrameDeint == DIWeave)
+                Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
+
+            if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+                return hr;
+            }
         }
         else
         {
-            LogBadHRESULT(hr, __FILE__, __LINE__);
+            // ffdshow quality control requires stop times
+            // nothing else needs these and setting stop times
+            // seems to sometimes results in frames being dropped
+            // which we really wanted to show
+            pOut->SetTime(&rtStart, &rtStop);
+
+            if(m_IsDiscontinuity)
+            {
+                pOut->SetDiscontinuity(TRUE);
+            }
+            pOut->SetSyncPoint(TRUE);
         }
-    }
-    else
-    {
-        // reset discontinuity flag
-        m_IsDiscontinuity = false;
+
+        BYTE** buf = &m_CurrentPicture->m_Picture.data[0];
+
+        if(FAILED(hr = pOut->GetPointer(&pDataOut)))
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+            return hr;
+        }
+
+        m_VideoOutPin->Copy420(pDataOut, buf, m_DivxWidth, m_DivxHeight, m_CurrentPicture->m_Picture.linesize[0], true);
+
+        hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
+        if(FAILED(hr))
+        {
+            if(hr == E_FAIL)
+            {
+                // sometimes happens with overlay
+                // supress the error and  set
+                // discontinuity flag so that the
+                // overlay will do a mini reset
+                LOG(DBGLOG_FLOW, ("SendSample failed\n"));
+                m_IsDiscontinuity = true;
+                hr = S_OK;
+            }
+            else
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+            }
+        }
+        else
+        {
+            // reset discontinuity flag
+            m_IsDiscontinuity = false;
+        }
     }
 
     return hr;

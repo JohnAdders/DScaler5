@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.2 2004-11-09 17:21:37 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.3 2004-11-18 21:26:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -116,6 +116,7 @@ private:
     void* m_ExtraData;
     int m_ExtraSize;
     DWORD m_FourCC;
+
 
     AVCodec* m_Codec;
     AVCodecContext* m_CodecContext;
