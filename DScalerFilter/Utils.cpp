@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.8 2003-05-19 07:02:24 adcockj Exp $
+// $Id: Utils.cpp,v 1.9 2003-09-30 16:59:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2003/05/19 07:02:24  adcockj
+// Patches from Torbjorn to extend logging
+//
 // Revision 1.7  2003/05/09 07:03:26  adcockj
 // Bug fixes for new format code
 //
@@ -49,7 +52,7 @@
 #include <dxerr9.h>
 
 #ifdef _DEBUG
-int CurrentDebugLevel = DBGLOG_ALL;
+int CurrentDebugLevel = DBGLOG_FLOW;
 #else
 int CurrentDebugLevel = DBGLOG_ERROR;
 #endif

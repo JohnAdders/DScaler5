@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.8 2003-05-20 16:50:59 adcockj Exp $
+// $Id: OutputPin.h,v 1.9 2003-09-30 16:59:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -125,6 +125,7 @@ public:
     ULONG m_FormatVersion;
 
     HRESULT CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
+    HRESULT CreateOutputMediaTypeBasedOnExisting(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType, const AM_MEDIA_TYPE* OldType);
 
 private:
     BOOL AreTypesCloseEnough(const AM_MEDIA_TYPE* CurrentType, const AM_MEDIA_TYPE* ProposedType);

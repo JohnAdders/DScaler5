@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.25 2003-09-28 15:08:07 adcockj Exp $
+// $Id: InputPin.cpp,v 1.26 2003-09-30 16:59:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.25  2003/09/28 15:08:07  adcockj
+// optimization fix and minor changes
+//
 // Revision 1.24  2003/09/24 16:33:00  adcockj
 // Bug fixes - starting to work now..
 //
@@ -141,7 +144,6 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     if(pConnector == NULL || pmt == NULL)
     {
         return E_POINTER;
-
     }
 	
 	FixupMediaType((AM_MEDIA_TYPE *)pmt);
@@ -609,7 +611,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         }
 
-		LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.pbBuffer));
+		LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.dwTypeSpecificFlags));
 		
 		m_ExpectedStartIn = InSampleProperties.tStop;
 

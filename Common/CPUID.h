@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// $Id: CPUID.h,v 1.1 2003-07-28 08:35:53 adcockj Exp $
+// $Id: CPUID.h,v 1.2 2003-09-30 16:59:26 adcockj Exp $
 /////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock.  All rights reserved.
 /////////////////////////////////////////////////////////////////////////////
@@ -18,9 +18,19 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2003/07/28 08:35:53  adcockj
+// Added missing files
+//
 /////////////////////////////////////////////////////////////////////////////
 
 #pragma once 
+
+#define FEATURE_MMX            0x00000020
+#define FEATURE_3DNOW          0x00000080
+#define FEATURE_3DNOWEXT       0x00000100
+#define FEATURE_MMXEXT         0x00000200
+#define FEATURE_SSE            0x00002000
+#define FEATURE_SSE2           0x00004000
 
 extern "C"
 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.20 2003-09-28 15:08:07 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.21 2003-09-30 16:59:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2003/09/28 15:08:07  adcockj
+// optimization fix and minor changes
+//
 // Revision 1.19  2003/09/19 16:12:14  adcockj
 // Further improvements
 //
@@ -100,11 +103,22 @@ COutputPin::~COutputPin()
 HRESULT COutputPin::ChangeOutputFormat(const AM_MEDIA_TYPE* InputType)
 {
     AM_MEDIA_TYPE ProposedType;
+    HRESULT hr = S_OK;
     InitMediaType(&ProposedType);
 
-    // say which type we really want to send out
-    HRESULT hr = CreateOutputMediaType(InputType, &ProposedType);
-    CHECK(hr);
+    // if we are running then behave slightly differently
+    if(m_ConnectedPin != NULL && m_Filter->m_State != State_Stopped && m_PinConnection != NULL)
+    {
+        // say which type we really want to send out
+        hr = CreateOutputMediaTypeBasedOnExisting(InputType, &ProposedType, &m_CurrentMediaType);
+        CHECK(hr);
+    }
+    else
+    {
+        // say which type we really want to send out
+        hr = CreateOutputMediaType(InputType, &ProposedType);
+        CHECK(hr);
+    }
     
     hr = m_Allocator->Decommit();
     CHECK(hr);
@@ -463,12 +477,12 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
 			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
 			if(QualityControl != NULL)
 			{
-                LOG(DBGLOG_FLOW, ("Coped With Famine - %d\n", q.Late));
+                LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
 				return QualityControl->Notify(pSelf, q);
 			}
 			else
 			{
-                LOG(DBGLOG_FLOW, ("Ignored Famine - %d\n", q.Late));
+                LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
 				return E_NOTIMPL;
 			}
 		}
@@ -481,16 +495,15 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
 	{
 		//if(q.Late > 400000)
 		{
-            LOG(DBGLOG_FLOW, ("Flood - %d\n", q.Late));
 			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
 			if(QualityControl != NULL)
 			{
-                LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
+                LOG(DBGLOG_ALL, ("Coped With Flood - %d\n", q.Late));
 				return QualityControl->Notify(pSelf, q);
 			}
 			else
 			{
-                LOG(DBGLOG_FLOW, ("Ignored Flood - %d\n", q.Late));
+                LOG(DBGLOG_ALL, ("Ignored Flood - %d\n", q.Late));
 				return E_NOTIMPL;
 			}
 		}
@@ -862,6 +875,30 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     return S_OK;
 }
 
+HRESULT COutputPin::CreateOutputMediaTypeBasedOnExisting(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType, const AM_MEDIA_TYPE* OldType)
+{
+    HRESULT hr = COutputPin::CreateOutputMediaType(InputType, NewType);
+    CHECK(hr);
+    if(NewType->lSampleSize <= OldType->lSampleSize)
+    {
+        VIDEOINFOHEADER2* NewFormat = (VIDEOINFOHEADER2*)NewType->pbFormat;
+        VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)OldType->pbFormat;
+        DWORD Height = NewFormat->bmiHeader.biHeight * ((OldFormat->bmiHeader.biHeight < 0)?-1:1);
+        DWORD Width = max(NewFormat->bmiHeader.biWidth, OldFormat->bmiHeader.biWidth);
+
+        if(abs(Height) * Width * NewFormat->bmiHeader.biBitCount / 8 < OldType->lSampleSize)
+        {
+            NewFormat->bmiHeader.biHeight = Height;
+
+            NewFormat->bmiHeader.biWidth = Width;
+            NewFormat->bmiHeader.biSizeImage = abs(Height) * Width * NewFormat->bmiHeader.biBitCount / 8;
+            NewType->lSampleSize = OldType->lSampleSize;
+        }
+    }
+    return hr;
+}
+
+
 BITMAPINFOHEADER* COutputPin::GetBitmapInfo()
 {
     VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)m_CurrentMediaType.pbFormat;
@@ -889,11 +926,11 @@ BOOL COutputPin::AreTypesCloseEnough(const AM_MEDIA_TYPE* CurrentType, const AM_
     VIDEOINFOHEADER2* CurrentFormat = (VIDEOINFOHEADER2*)CurrentType->pbFormat;
     VIDEOINFOHEADER2* ProposedFormat = (VIDEOINFOHEADER2*)ProposedType->pbFormat;
 
-    if(CurrentFormat->bmiHeader.biWidth > ProposedFormat->bmiHeader.biWidth)
+    if(CurrentFormat->bmiHeader.biWidth < ProposedFormat->bmiHeader.biWidth)
     {
         return FALSE;
     }
-    if(abs(CurrentFormat->bmiHeader.biHeight) != abs(ProposedFormat->bmiHeader.biHeight))
+    if(abs(CurrentFormat->bmiHeader.biHeight) < abs(ProposedFormat->bmiHeader.biHeight))
     {
         return FALSE;
     }
