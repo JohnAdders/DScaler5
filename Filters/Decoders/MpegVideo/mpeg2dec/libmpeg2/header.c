@@ -377,13 +377,12 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
     for (pix_width = 1; width * pix_width <= 352; pix_width <<= 1);
     width *= pix_width;
 
-    if (! (sequence->flags & SEQ_FLAG_MPEG2)) {
-	static unsigned int mpeg1_check[2][2] = {{11, 54}, {27, 45}};
-	DAR_16_9 = (sequence->pixel_height == 27 ||
-		    sequence->pixel_height == 45);
-	if (width < 704 ||
-	    sequence->pixel_height != mpeg1_check[DAR_16_9][height == 576])
-	    return 0;
+    if (! (sequence->flags & SEQ_FLAG_MPEG2)) 
+    {
+        // if the pixel_width isn't 2000 then it should already be correct
+	    if (width < 704 || sequence->pixel_width != 2000)
+    	    return 0;
+	    DAR_16_9 = 0;
     } else {
 	DAR_16_9 = (3 * sequence->picture_width * sequence->pixel_width >
 		    4 * sequence->picture_height * sequence->pixel_height);

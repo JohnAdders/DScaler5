@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.17 2004-08-31 16:33:42 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.18 2004-09-10 15:35:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/08/31 16:33:42  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.16  2004/07/26 17:08:13  adcockj
 // Force use of fixed size output buffers to work around issues with Wave renderer
 //
@@ -479,7 +484,7 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 
     if(hr == S_OK && pMediaType != NULL)
     {
-        LOG(DBGLOG_ALL, ("Got new media type from renderer\n"));
+        LogMediaType(pMediaType, "Media type from renderer", DBGLOG_ALL);
 
         hr = SetType(pMediaType);
         CHECK(hr);
@@ -580,12 +585,14 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
             hr = m_Allocator->GetProperties(&Props);
             if(FAILED(hr))
             {
+                m_Allocator.Detach();
                 return VFW_E_NO_TRANSPORT;
             }
         }
         else
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
+            m_Allocator.Detach();
             return VFW_E_NO_TRANSPORT;
         }
     }
@@ -625,6 +632,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     if(FAILED(hr))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
+        m_Allocator.Detach();
         return VFW_E_NO_TRANSPORT;
     }
     

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.cpp,v 1.4 2004-08-03 08:55:57 adcockj Exp $
+// $Id: DSBufferedInputPin.cpp,v 1.5 2004-09-10 15:35:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/08/03 08:55:57  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.3  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -92,7 +95,7 @@ CDSBufferedInputPin::~CDSBufferedInputPin()
 
 STDMETHODIMP CDSBufferedInputPin::BeginFlush(void)
 {
-    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::BeginFlush\n"));
+    LOG(DBGLOG_ALL, ("CDSBufferedInputPin::BeginFlush\n"));
 
     HRESULT hr = CDSInputPin::BeginFlush();
 
@@ -108,7 +111,7 @@ STDMETHODIMP CDSBufferedInputPin::BeginFlush(void)
 
 STDMETHODIMP CDSBufferedInputPin::EndFlush(void)
 {
-    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::EndFlush\n"));
+    LOG(DBGLOG_ALL, ("CDSBufferedInputPin::EndFlush\n"));
 
     // make sure we are not in ProcessBufferedSamples
     CProtectCode WhileVarInScope(&m_WorkerThreadLock);
@@ -120,7 +123,7 @@ STDMETHODIMP CDSBufferedInputPin::EndFlush(void)
 
 STDMETHODIMP CDSBufferedInputPin::EndOfStream(void)
 {
-    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::EndOfStream\n"));
+    LOG(DBGLOG_ALL, ("CDSBufferedInputPin::EndOfStream\n"));
 
     // all code below here is protected
     // from runnning at the same time as other 
@@ -138,7 +141,7 @@ STDMETHODIMP CDSBufferedInputPin::EndOfStream(void)
 
 STDMETHODIMP CDSBufferedInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate)
 {
-    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::EndOfStream\n"));
+    LOG(DBGLOG_ALL, ("CDSBufferedInputPin::NewSegment\n"));
 
     // make sure we are not in ProcessBufferedSamples
     CProtectCode WhileVarInScope(&m_WorkerThreadLock);

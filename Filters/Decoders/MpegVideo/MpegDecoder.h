@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.23 2004-08-06 08:38:54 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.24 2004-09-10 15:35:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -183,6 +183,7 @@ private:
         DEFAULT_OUTFILTER,
         FFDSHOW_OUTFILTER,
         GABEST_OUTFILTER,
+        OVERLAY_OUTFILTER,
         VMR7_OUTFILTER,
         VMR9_OUTFILTER
     } m_ConnectedToOut;
@@ -237,6 +238,7 @@ private:
     void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
+    HRESULT ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
     HRESULT ReconnectOutput(bool ForceReconnect);

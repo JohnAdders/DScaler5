@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.8 2004-07-23 16:25:07 adcockj Exp $
+// $Id: Utils.cpp,v 1.9 2004-09-10 15:35:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/23 16:25:07  adcockj
+// Fix issues with changing buffer size with wave renderer to hopefully fix DTS problem
+//
 // Revision 1.7  2004/07/16 16:03:20  adcockj
 // Fixed compilation issues under .NET
 //
@@ -286,7 +289,7 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
     LOG(LogLevel, (" Format size %d\n", MediaType->cbFormat));
     LOG(LogLevel, (" Format Type %s\n", GetGUIDName(MediaType->formattype)));
 
-    if(MediaType->formattype==FORMAT_VideoInfo || MediaType->formattype==FORMAT_VideoInfo2)
+    if(MediaType->formattype==FORMAT_VideoInfo || MediaType->formattype==FORMAT_VideoInfo2 || MediaType->formattype==FORMAT_MPEG2_VIDEO || MediaType->formattype==FORMAT_MPEGVideo)
     {
         BITMAPINFOHEADER *pBMI=NULL;
         VIDEOINFOHEADER* pHeader = (VIDEOINFOHEADER*)MediaType->pbFormat;
@@ -297,11 +300,11 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
         LOG(LogLevel, (" BitRate: %lu ErrorRate: %lu\n",pHeader->dwBitRate,pHeader->dwBitErrorRate));
         LOG(LogLevel, (" AvgTimePerFrame: %g fps\n",1/(pHeader->AvgTimePerFrame/(double)10000000)));
 
-        if(MediaType->formattype == FORMAT_VideoInfo)
+        if(MediaType->formattype == FORMAT_VideoInfo || MediaType->formattype==FORMAT_MPEGVideo)
         {
             pBMI=&pHeader->bmiHeader;
         }
-        else if(MediaType->formattype == FORMAT_VideoInfo2)
+        else
         {
             VIDEOINFOHEADER2* pHeader2 = (VIDEOINFOHEADER2*)MediaType->pbFormat;
             pBMI=&pHeader2->bmiHeader;
@@ -358,6 +361,8 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
         LOG(LogLevel, (" biBitCount %d\n", pBMI->biBitCount));
         LOG(LogLevel, (" biCompression %d\n", pBMI->biCompression));
         LOG(LogLevel, (" biSizeImage %d\n", pBMI->biSizeImage));
+        LOG(LogLevel, (" biXPelsPerMeter %d\n", pBMI->biXPelsPerMeter));
+        LOG(LogLevel, (" biYPelsPerMeter %d\n", pBMI->biYPelsPerMeter));
     }
 }
 
@@ -399,4 +404,12 @@ HRESULT UnregisterFilter(const CLSID& clsidFilter)
     hr = FilterMapper->UnregisterFilter(NULL, NULL, clsidFilter);
     CHECK(hr);
     return hr;
+}
+
+bool IsRunningInGraphEdit()
+{
+    char szCmdLine[MAX_PATH*2 + 1];
+    strncpy(szCmdLine, GetCommandLine(), MAX_PATH*2);
+    _strlwr(szCmdLine);
+    return (strstr(szCmdLine, "graphedt.exe") != NULL);
 }

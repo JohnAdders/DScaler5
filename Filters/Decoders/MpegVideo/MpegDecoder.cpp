@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.40 2004-08-31 16:33:41 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.41 2004-09-10 15:35:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.40  2004/08/31 16:33:41  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.39  2004/08/06 08:38:53  adcockj
 // Added optional YV12 output type
 //
@@ -503,7 +508,7 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             return E_FAIL;
         }
     }
-    return E_FAIL;
+    return S_OK;
 }
 
 STDMETHODIMP CMpegDecoder::GetDecoderCaps(DWORD dwCapIndex,DWORD* lpdwCap)
@@ -957,7 +962,6 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_CurrentHeight = abs(hout); 
             m_ARCurrentOutX = arxout; 
             m_ARCurrentOutY = aryout; 
-
         }
     }
     return S_OK;
@@ -1009,7 +1013,7 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
         else if(Clsid == CLSID_OverlayMixer)
         {
             OnConnectToOverlay();
-            m_ConnectedToOut = DEFAULT_OUTFILTER;
+            m_ConnectedToOut = OVERLAY_OUTFILTER;
         }
         else
         {
@@ -1028,8 +1032,6 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
     CProtectCode WhileVarInScope(&m_DeliverLock);
-
-    HRESULT hr;
 
     if(pSampleProperties->dwStreamId != AM_STREAM_MEDIA)
         return m_VideoOutPin->SendSample(InSample);
@@ -1144,6 +1146,12 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
     }
 
     mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
+    return ProcessMPEGBuffer(pSampleProperties);
+}
+
+HRESULT CMpegDecoder::ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties)
+{
+    HRESULT hr = S_OK;
     while(1)
     {
         mpeg2_state_t state = mpeg2_parse(m_dec);
@@ -1345,6 +1353,16 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         }
         Props.tStart = rtStart;
 
+        // ffdshow quality control requires stop times
+        // nothing else needs these and setting stop times
+        // seems to sometimes results in frames being dropped
+        // which we really wanted to show
+        if(m_ConnectedToOut == FFDSHOW_OUTFILTER)
+        {
+            Props.tStop = rtStop;
+            Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
+        }
+
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
         {
             Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
@@ -1392,7 +1410,18 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     }
     else
     {
-        pOut->SetTime(&rtStart, NULL);
+        // ffdshow quality control requires stop times
+        // nothing else needs these and setting stop times
+        // seems to sometimes results in frames being dropped
+        // which we really wanted to show
+        if(m_ConnectedToOut == FFDSHOW_OUTFILTER)
+        {
+            pOut->SetTime(&rtStart, &rtStop);
+        }
+        else
+        {
+            pOut->SetTime(&rtStart, NULL);
+        }
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
             pOut->SetDiscontinuity(TRUE);
@@ -1535,17 +1564,11 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
         {
             if(m_ConnectedToOut == VMR9_OUTFILTER)
             {
-                if(!ForceReconnect)
-                {
-                    bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
-                }
+                bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
             }
-            else if(m_ConnectedToOut != DEFAULT_OUTFILTER)
+            else if(m_ConnectedToOut == OVERLAY_OUTFILTER)
             {
-                if(!ForceReconnect)
-                {
-                    bmi->biWidth = m_OutputWidth;
-                }
+                bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
             }
             else
             {
@@ -1562,7 +1585,6 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
             }
 
             bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-
         }
         
         m_InternalMT.bFixedSizeSamples = 1;
@@ -1576,7 +1598,6 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
         SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
         if(m_PinConnection)
         {
-
             hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
             if(hr != S_OK)
             {
@@ -1596,29 +1617,26 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 
         if(m_ConnectedToOut == DEFAULT_OUTFILTER)
         {
-            if(!ForceReconnect)
+            if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+
+            SI(IGraphConfig) GraphConfig = m_Graph;
+
+            if(GraphConfig)
             {
-                if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+                hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+                CHECK(hr);
 
-                SI(IGraphConfig) GraphConfig = m_Graph;
-
-                if(GraphConfig)
+                if(m_Pitch != 0)
                 {
+                    bmi->biWidth = m_Pitch;
+                    bmi->biHeight = m_Height;
+                    bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+                    m_InternalMT.lSampleSize = bmi->biSizeImage;
+
                     hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
                     CHECK(hr);
-
-                    if(m_Pitch != 0)
-                    {
-                        bmi->biWidth = m_Pitch;
-                        bmi->biHeight = m_Height;
-                        bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-                        m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-                        hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-                        CHECK(hr);
-                    }
-                    m_NeedToAttachFormat = true; 
                 }
+                m_NeedToAttachFormat = true; 
             }
         }
         else if(m_ConnectedToOut == VMR9_OUTFILTER)
@@ -1668,32 +1686,46 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
                 m_NeedToAttachFormat = true; 
             }
         }
+        // method used for overlay, VMR7 and ffdshow
         else
         {
+            LogMediaType(&m_InternalMT, "Reconnect", DBGLOG_FLOW);
+
             if(!ForceReconnect)
             {   
-                hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-                CHECK(hr);
-
                 ALLOCATOR_PROPERTIES AllocatorProps;
                 hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
                 CHECK(hr);
 
                 // if the new type would be greater than the old one then
                 // we need to reconnect otherwise just attach the type to the next sample
-                if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+                if((m_OutputWidth != m_CurrentWidth) || 
+                      (m_OutputHeight != m_CurrentHeight))
                 {
+                    hr = m_VideoOutPin->m_ConnectedPin->BeginFlush();
+                    CHECK(hr);
+                    hr = m_VideoOutPin->m_ConnectedPin->EndFlush();
+                    CHECK(hr);
+                    hr = m_VideoOutPin->m_Allocator->Decommit();
+                    CHECK(hr);
+
                     hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
                     CHECK(hr);
+
+                    hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+                    CHECK(hr);
+
+                    hr = m_VideoOutPin->m_Allocator->Commit();
+                    CHECK(hr);
+                    
+                    m_NeedToAttachFormat = false; 
                 }
                 else
                 {
-                    hr = m_VideoOutPin->m_Allocator->Commit();
-                    CHECK(hr);
+                    m_NeedToAttachFormat = true; 
                 }
-                
-            }   
-            m_NeedToAttachFormat = true; 
+
+            }
         }
         
         m_InsideReconnect = false;
@@ -1740,6 +1772,7 @@ void CMpegDecoder::ResetMpeg2Decoder()
         if(cbSequenceHeader > 0)
         {
             mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
+            ProcessMPEGBuffer(NULL);
         }
     }
 
@@ -1897,11 +1930,27 @@ void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitc
 
 HRESULT CMpegDecoder::Activate()
 {
-    if(m_dec != NULL)
+    BYTE* pSequenceHeader = NULL;
+    DWORD cbSequenceHeader = 0;
+
+    if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEGVideo)
     {
-        mpeg2_free(m_dec);
+        pSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->bSequenceHeader;
+        cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
     }
+    else if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEG2_VIDEO)
+    {
+        pSequenceHeader = (BYTE*)((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->dwSequenceHeader;
+        cbSequenceHeader = ((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
+    }
+
     m_dec = mpeg2_init();
+    if(cbSequenceHeader > 0)
+    {
+        mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
+        ProcessMPEGBuffer(NULL);
+    }
+
     if(m_dec == NULL)
     {
         return E_UNEXPECTED;
@@ -2588,19 +2637,29 @@ void CMpegDecoder::CorrectOutputSize()
 
 void CMpegDecoder::OnConnectToVMR7()
 {
-    SI(IVMRAspectRatioControl) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
-    if(AspectRatioControl)
+    // when testing it's a pain to have top set up the VMR to display the aspect ratio
+    // properly so do it here but only do so if running in graphedit
+    if(IsRunningInGraphEdit())
     {
-        AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+        SI(IVMRAspectRatioControl) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+        if(AspectRatioControl)
+        {
+            AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+        }
     }
 }
 
 void CMpegDecoder::OnConnectToVMR9()
 {
-    SI(IVMRAspectRatioControl9) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
-    if(AspectRatioControl)
+    // when testing it's a pain to have top set up the VMR to display the aspect ratio
+    // properly so do it here but only do so if running in graphedit
+    if(IsRunningInGraphEdit())
     {
-        AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+        SI(IVMRAspectRatioControl9) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+        if(AspectRatioControl)
+        {
+            AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+        }
     }
 }
 
