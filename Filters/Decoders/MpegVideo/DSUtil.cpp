@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.4 2004-07-07 14:07:07 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.5 2004-07-29 13:44:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.3  2004/05/06 06:38:06  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -108,7 +113,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     {
         VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
         w = vih->bmiHeader.biWidth;
-        h = abs(vih->bmiHeader.biHeight);
+        h = vih->bmiHeader.biHeight;
         arx = w * vih->bmiHeader.biYPelsPerMeter;
         ary = h * vih->bmiHeader.biXPelsPerMeter;
     }
@@ -116,7 +121,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     {
         VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pmt->pbFormat;
         w = vih->bmiHeader.biWidth;
-        h = abs(vih->bmiHeader.biHeight);
+        h = vih->bmiHeader.biHeight;
         arx = vih->dwPictAspectRatioX;
         ary = vih->dwPictAspectRatioY;
     }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.29 2004-07-29 10:26:54 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.30 2004-07-29 13:44:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.29  2004/07/29 10:26:54  adcockj
+// Fixes for audio issues reported by Laurent
+//
 // Revision 1.28  2004/07/28 13:59:29  adcockj
 // spdif fixes
 //
@@ -1037,171 +1040,168 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         //    so we try and do the best we can
         // also we need to cope with getting 96000 kHz pcm and the renderer not
         // being able to support that
-        if(m_AudioOutPin->m_ConnectedPin)
+        HRESULT hr = S_OK;
+        if(IsMediaTypeMP3(pMediaType))
         {
-            HRESULT hr = S_OK;
-            if(IsMediaTypeMP3(pMediaType))
-            {
-                LOG(DBGLOG_FLOW, ("Got change to MP3\n"));
-                m_ProcessingType = PROCESS_MPA;
+            LOG(DBGLOG_FLOW, ("Got change to MP3\n"));
+            m_ProcessingType = PROCESS_MPA;
 
-                if( m_CanReconnect)
+            if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
+            {
+                if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif && GetParamBool(MPEGOVERSPDIF))
                 {
-                    if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif && GetParamBool(MPEGOVERSPDIF))
+                    hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_ConnectedAsSpdif = TRUE;
+                    m_NeedToAttachFormat = true;
+                }
+                else if((m_InputSampleRate != m_OutputSampleRate) ||
+                    (GetParamBool(USESPDIF) && m_ConnectedAsSpdif && !GetParamBool(MPEGOVERSPDIF)))
+                {
+                    if(m_OutputSampleType == OUTSAMPLE_FLOAT)
                     {
-                        hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_ConnectedAsSpdif = TRUE;
-                        m_NeedToAttachFormat = true;
+                        hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
                     }
-                    else if((m_InputSampleRate != m_OutputSampleRate) ||
-                        (GetParamBool(USESPDIF) && m_ConnectedAsSpdif && !GetParamBool(MPEGOVERSPDIF)))
+                    else
                     {
-                        if(m_OutputSampleType == OUTSAMPLE_FLOAT)
-                        {
-                            hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
-                        }
-                        else
-                        {
-                            hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
-                        }
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_NeedToAttachFormat = true;
-                        m_ConnectedAsSpdif = false;
-                        CHECK(hr);
+                        hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
                     }
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_NeedToAttachFormat = true;
+                    m_ConnectedAsSpdif = false;
+                    CHECK(hr);
                 }
             }
-            else if(IsMediaTypeAC3(pMediaType))
-            {
-                LOG(DBGLOG_FLOW, ("Got change to AC3\n"));
-                m_ProcessingType = PROCESS_AC3;
+        }
+        else if(IsMediaTypeAC3(pMediaType))
+        {
+            LOG(DBGLOG_FLOW, ("Got change to AC3\n"));
+            m_ProcessingType = PROCESS_AC3;
 
-                if(m_ConnectedAsSpdif)
+            if(m_ConnectedAsSpdif)
+            {
+                m_AC3SilenceFrames = 3;
+            }
+            
+            if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
+            {
+                if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
                 {
-                    m_AC3SilenceFrames = 3;
+                    hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_ConnectedAsSpdif = TRUE;
+                    m_NeedToAttachFormat = true;
                 }
-                
-                if( m_CanReconnect)
+                else if(m_InputSampleRate != m_OutputSampleRate)
                 {
-                    if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
+                    if(m_OutputSampleType == OUTSAMPLE_FLOAT)
                     {
-                        hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_ConnectedAsSpdif = TRUE;
-                        m_NeedToAttachFormat = true;
+                        hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
                     }
-                    else if(m_InputSampleRate != m_OutputSampleRate)
+                    else
                     {
-                        if(m_OutputSampleType == OUTSAMPLE_FLOAT)
-                        {
-                            hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
-                        }
-                        else
-                        {
-                            hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
-                        }
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_NeedToAttachFormat = true;
-                        m_ConnectedAsSpdif = false;
-                        CHECK(hr);
+                        hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
                     }
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_NeedToAttachFormat = true;
+                    m_ConnectedAsSpdif = false;
+                    CHECK(hr);
                 }
             }
-            else if(IsMediaTypeDTS(pMediaType))
-            {
-                LOG(DBGLOG_FLOW, ("Got change to DTS\n"));
-                m_ProcessingType = PROCESS_DTS;
+        }
+        else if(IsMediaTypeDTS(pMediaType))
+        {
+            LOG(DBGLOG_FLOW, ("Got change to DTS\n"));
+            m_ProcessingType = PROCESS_DTS;
 
-                if( m_CanReconnect)
+            if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
+            {
+                if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
                 {
-                    if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
+                    hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_ConnectedAsSpdif = TRUE;
+                    m_NeedToAttachFormat = true;
+                }
+                else if(m_InputSampleRate != m_OutputSampleRate)
+                {
+                    if(m_OutputSampleType == OUTSAMPLE_FLOAT)
                     {
-                        hr = CreateInternalSPDIFMediaType(m_InputSampleRate, 16);
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_ConnectedAsSpdif = TRUE;
-                        m_NeedToAttachFormat = true;
+                        hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
                     }
-                    else if(m_InputSampleRate != m_OutputSampleRate)
+                    else
                     {
-                        if(m_OutputSampleType == OUTSAMPLE_FLOAT)
-                        {
-                            hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
-                        }
-                        else
-                        {
-                            hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
-                        }
-                        CHECK(hr);
-                        m_OutputSampleRate = m_InputSampleRate;
-                        m_NeedToAttachFormat = true;
-                        m_ConnectedAsSpdif = false;
-                        CHECK(hr);
+                        hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
                     }
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_NeedToAttachFormat = true;
+                    m_ConnectedAsSpdif = false;
+                    CHECK(hr);
                 }
             }
-            else if(IsMediaTypePCM(pMediaType))
-            {
-                LOG(DBGLOG_FLOW, ("Got change to PCM\n"));
-                m_ProcessingType = PROCESS_PCM;
+        }
+        else if(IsMediaTypePCM(pMediaType))
+        {
+            LOG(DBGLOG_FLOW, ("Got change to PCM\n"));
+            m_ProcessingType = PROCESS_PCM;
 
-                if( m_CanReconnect)
+            if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
+            {
+                if(m_ConnectedAsSpdif || m_InputSampleRate != m_OutputSampleRate)
                 {
-                    if(m_ConnectedAsSpdif || m_InputSampleRate != m_OutputSampleRate)
+                    if(m_OutputSampleType == OUTSAMPLE_FLOAT)
                     {
-                        if(m_OutputSampleType == OUTSAMPLE_FLOAT)
+                        hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
+                    }
+                    else
+                    {
+                        hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
+                    }
+                    if(m_InputSampleRate == 96000)
+                    {
+                        if(FAILED(hr))
                         {
-                            hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
-                        }
-                        else
-                        {
-                            hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
-                        }
-                        if(m_InputSampleRate == 96000)
-                        {
-                            if(FAILED(hr))
+                            if(m_OutputSampleType == OUTSAMPLE_FLOAT)
                             {
-                                if(m_OutputSampleType == OUTSAMPLE_FLOAT)
-                                {
-                                    hr = CreateInternalIEEEMediaType(48000, m_ChannelsRequested, m_ChannelMask);
-                                }
-                                else
-                                {
-                                    hr = CreateInternalPCMMediaType(48000, m_ChannelsRequested, m_ChannelMask, 32);
-                                }
-                                m_OutputSampleRate = 48000;
-                                CHECK(hr);
-                                m_DownSample = true;
+                                hr = CreateInternalIEEEMediaType(48000, m_ChannelsRequested, m_ChannelMask);
                             }
                             else
                             {
-                                m_OutputSampleRate = m_InputSampleRate;
-                                m_DownSample = false;
+                                hr = CreateInternalPCMMediaType(48000, m_ChannelsRequested, m_ChannelMask, 32);
                             }
+                            m_OutputSampleRate = 48000;
+                            CHECK(hr);
+                            m_DownSample = true;
                         }
                         else
                         {
                             m_OutputSampleRate = m_InputSampleRate;
+                            m_DownSample = false;
                         }
-                        CHECK(hr);
-                        m_NeedToAttachFormat = true;
-                        m_ConnectedAsSpdif = false;
                     }
-                }
-                else
-                {
-                    m_DownSample = true;
+                    else
+                    {
+                        m_OutputSampleRate = m_InputSampleRate;
+                    }
+                    CHECK(hr);
+                    m_NeedToAttachFormat = true;
+                    m_ConnectedAsSpdif = false;
                 }
             }
             else
             {
-                LOG(DBGLOG_FLOW, ("Got unexpected change format\n"));
+                m_DownSample = true;
             }
+        }
+        else
+        {
+            LOG(DBGLOG_FLOW, ("Got unexpected change format\n"));
         }
     }
     else if(pPin == m_AudioOutPin)

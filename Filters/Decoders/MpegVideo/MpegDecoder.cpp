@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.36 2004-07-29 08:31:07 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.37 2004-07-29 13:44:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.36  2004/07/29 08:31:07  adcockj
+// Fixed issue with 100% CPU with MPC and overlay
+//
 // Revision 1.35  2004/07/28 16:32:34  adcockj
 // Fixes Blight's problems from the forum
 //
@@ -872,11 +875,13 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_ARMpegY = 3;
         m_ARAdjustX = m_ARAdjustY = 1;
         ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY);
+        m_MpegHeight = abs(m_MpegHeight);
         m_ControlFlags = 0;
         m_DoPanAndScan = false;
         m_FilmCameraModeHint = false;
         m_LetterBoxed = false;
         m_AFD = 0;
+        m_fWaitForKeyFrame = true;
 
         if(pMediaType->formattype == FORMAT_VideoInfo2)
         {
@@ -911,8 +916,7 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         int wout = 0, hout = 0;
         long arxout = 0, aryout = 0; 
         ExtractDim(pMediaType, wout, hout, arxout, aryout); 
-
-        if(wout == m_OutputWidth && hout == m_OutputHeight &&
+        if(wout == m_OutputWidth && abs(hout) == m_OutputHeight &&
             arxout == m_ARAdjustX * m_ARMpegX &&
             aryout == m_ARAdjustY * m_ARMpegY)
         {
@@ -1568,7 +1572,6 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 
                     if(m_Pitch != 0)
                     {
-
                         bmi->biWidth = m_Pitch;
                         bmi->biHeight = m_Height;
                         bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
