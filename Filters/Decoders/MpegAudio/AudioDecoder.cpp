@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.44 2004-10-31 14:19:10 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.45 2005-01-21 13:52:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.44  2004/10/31 14:19:10  adcockj
+// Comments clean
+//
 // Revision 1.43  2004/10/29 09:11:58  adcockj
 // Fixed spdif connection issue
 //
@@ -820,16 +823,11 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 		rtStop += DelayMs * 10000;
 	}
 
-	if (rtStart < 0)
+	if(!m_Preroll && rtStop > 0)
 	{
-		rtStart = 0;
-		rtStop = rtStart + rtDur;
-	}
-    m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
-	m_CurrentOutputSample->SetMediaTime(NULL, NULL);
+        m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
+	    m_CurrentOutputSample->SetMediaTime(NULL, NULL);
 
-	if(!m_Preroll)
-	{
 	    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 
 		m_CurrentOutputSample->SetPreroll(FALSE);
@@ -843,9 +841,8 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 		}
 		else
 		{
-			//m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
+			m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
 		}
-
 	    
 		m_IsDiscontinuity = false;
 
@@ -1640,11 +1637,18 @@ HRESULT CAudioDecoder::UpdateStartTime()
         {
             OutputStart -= 10000000i64 * (m_InternalMT.lSampleSize - m_BytesLeftInBuffer) / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
         }
-        if(OutputStart < m_rtOutputStart)
+        // always go forward but never go back for small clock adjustments
+        // this sort of readjustement seems to happen with MPEG streams
+        // as the times are encoded as PTS values which are less accurate than 
+        // the MS time values
+        if(m_rtOutputStart == 0 || (OutputStart - m_rtOutputStart) >= 0 || (OutputStart - m_rtOutputStart) < -2000)
         {
-            LOG(DBGLOG_FLOW, ("Going backwards %I64d - %I64d\n", OutputStart, m_rtOutputStart));
+            m_rtOutputStart = OutputStart;
         }
-        m_rtOutputStart = OutputStart;
+        else 
+        {
+            LOG(DBGLOG_FLOW, ("Minor adjustment ignored %I64d - %I64d\n", OutputStart, m_rtOutputStart));
+        }
    }
     
     m_rtNextFrameStart = _I64_MIN;
