@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.46 2004-10-22 07:34:40 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.47 2004-10-26 16:23:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.46  2004/10/22 07:34:40  adcockj
+// fix for some connection issues
+//
 // Revision 1.45  2004/10/21 18:51:41  adcockj
 // Simple VMR compatable quality control
 //
@@ -319,6 +322,8 @@ CMpegDecoder::CMpegDecoder() :
     m_NeedToAttachFormat = false;
 
     ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
+
+    m_LastPictureWasStill = false;
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -1199,7 +1204,11 @@ HRESULT CMpegDecoder::ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties
         case STATE_SLICE:
         case STATE_END:
         case STATE_INVALID_END:
-            hr = ProcessPictureDisplay((state == STATE_END) && (m_PicturesSinceSequence == 0));
+            // we will need to refresh subpictures if we are at a clean end of stream
+            m_LastPictureWasStill = (state == STATE_END);
+            // we tell the decoder to decode single frames progressively
+            // these tend to be used as still or DVD menus
+            hr = ProcessPictureDisplay(m_LastPictureWasStill && (m_PicturesSinceSequence == 0));
             if(hr != S_OK)
             {
                 return hr;
@@ -2072,6 +2081,7 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
+    m_LastPictureWasStill = false;
 }
 
 void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.26 2004-10-22 07:34:40 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.27 2004-10-26 16:23:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -327,6 +327,7 @@ private:
 	void OnConnectToVMR7();
 	void OnConnectToVMR9();
 	void OnConnectToOverlay();
+    bool m_LastPictureWasStill;
 };
 
 #define m_VideoInPin m_InputPins[0]

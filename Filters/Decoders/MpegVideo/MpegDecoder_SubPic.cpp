@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.12 2004-08-03 08:55:57 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.13 2004-10-26 16:23:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/08/03 08:55:57  adcockj
+// Fixes for seeking issues
+//
 // Revision 1.11  2004/07/28 16:32:34  adcockj
 // Fixes Blight's problems from the forum
 //
@@ -179,7 +182,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
         return E_PROP_ID_UNSUPPORTED;
     }
 
-    if(fRefresh)
+    if(fRefresh && m_LastPictureWasStill)
     {
         LOG(DBGLOG_ALL,("Refresh Image\n"));
         CProtectCode WhileVarInScope(&m_DeliverLock);
@@ -300,7 +303,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
         if(!DecodeSubpic(m_SubPicureList.back(), sphli, offset1, offset2))
         {
             CProtectCode WhileVarInScope(&m_DeliverLock);
-            if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart))
+            if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart) && m_LastPictureWasStill)
             {
                 LOG(DBGLOG_ALL,("Refresh Image\n"));
                 hr = Deliver(true);
