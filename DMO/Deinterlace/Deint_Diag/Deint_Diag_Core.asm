@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.3 2003-09-24 16:33:00 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.4 2003-10-31 17:19:37 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.3  2003/09/24 16:33:00  adcockj
+;// Bug fixes - starting to work now..
+;//
 ;// Revision 1.2  2003/09/24 07:01:02  adcockj
 ;// fix some release issues
 ;//
@@ -32,7 +35,7 @@ segment .text
 
 global _Deint_Diag_Core_YUY2%1
 
-proc _Deint_Diag_Core_YUY2%1
+proc _Deint_Diag_Core_YUY2%1, 28
 
     %define %1 1
 
@@ -45,10 +48,9 @@ proc _Deint_Diag_Core_YUY2%1
     %$Dest arg
     %$PixelCount arg
 
-    sub     esp, 24                 ; 24 bytes of local stack space 
-	
 	mov [esp+16], esi
 	mov [esp+20], edi
+	mov [esp+24], ebx
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
@@ -265,6 +267,7 @@ LoopYUY2%1:
 
 	mov esi, [esp+16]
 	mov edi, [esp+20]
+	mov ebx, [esp+24]
 
 	emms
     
@@ -279,7 +282,7 @@ endproc
 
 global _Deint_Diag_Core_Luma%1
 
-proc _Deint_Diag_Core_Luma%1
+proc _Deint_Diag_Core_Luma%1, 28
 
     %define %1 1
 
@@ -292,10 +295,11 @@ proc _Deint_Diag_Core_Luma%1
     %$Dest arg
     %$PixelCount arg
 
-    sub     esp, 24                 ; 24 bytes of local stack space 
+    ;sub     esp, 24                 ; 24 bytes of local stack space 
 	
 	mov [esp+16], esi
 	mov [esp+20], edi
+	mov [esp+24], ebx
 
 	mov ebx, [ebp + %$T2]
 	mov edx, [ebp + %$B2]
@@ -504,6 +508,7 @@ LoopLuma%1:
 	
 	mov esi, [esp+16]
 	mov edi, [esp+20]
+	mov ebx, [esp+24]
 
 	emms
 

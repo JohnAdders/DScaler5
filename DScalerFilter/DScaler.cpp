@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.13 2003-09-19 16:12:14 adcockj Exp $
+// $Id: DScaler.cpp,v 1.14 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2003/09/19 16:12:14  adcockj
+// Further improvements
+//
 // Revision 1.12  2003/08/21 16:17:58  adcockj
 // Changed filter to wrap the deinterlacing DMO, fixed many bugs
 //
@@ -66,11 +69,15 @@
 #include "OutputPin.h"
 
 // define any parameters used
-const MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] = 
+MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] = 
 {
     { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment X" },
     { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment Y" },
     { MPT_BOOL, 0, 0, 1, 0, L"None", L"Is Input Anamorphic" }, 
+    { MPT_ENUM, 0, 0, 1, 0, L"None", L"Deinterlace Mode" }, 
+    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Manual Pulldown Mode" }, 
+    { MPT_ENUM, 0, FULLRATEVIDEO, PULLDOWN_32, 0, L"None", L"Pulldown Mode" }, 
+    { MPT_INT, 0, 0, 4, 0, L"None", L"Pulldown Mode Index" },
 };
 
 
@@ -87,6 +94,7 @@ CDScaler::CDScaler()
     }
     m_TypesChanged = TRUE;
     m_RebuildRequired = TRUE;
+	m_ChangeTypes = FALSE;
 }
 
 HRESULT CDScaler::FinalConstruct()
@@ -405,8 +413,28 @@ STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
     {
         CProtectCode WhileVarInScope(this);
         m_ParamValues[dwParamIndex] = value;
-        // \todo need to work out some way of informing to processing that a change has
-        // happened
+        m_IsDirty = TRUE;
+        switch(dwParamIndex)
+        {
+        case ASPECTINCREASEX:
+        case ASPECTINCREASEY:
+        case INPUTISANAMORPHIC:
+            m_ChangeTypes = TRUE;
+            break;
+		case DEINTERLACEMODE:
+            m_RebuildRequired = TRUE;
+            break;  
+        case MANUALPULLDOWN:
+            break;
+        case PULLDOWNMODE:
+            ResetPullDownIndexRange();
+            break;
+        case PULLDOWNINDEX:
+            break;
+        default:
+	        return E_INVALIDARG;
+            break;
+        }
         return S_OK;
     }
     else
@@ -480,12 +508,30 @@ STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
     }
     else
     {
-        if(dwParamIndex == 3)
+        if(dwParamIndex == DEINTERLACEMODE)
         {
-            *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+            *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_DeinterlaceNames.length() + 2 + 22 * 2);
             if(*ppwchText == NULL) return E_OUTOFMEMORY;
-            memcpy(*ppwchText, L"Name4\0Units4\0Val1\0Val2\0Val3\0Val4\0", 68);
+			memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
+            for(size_t i(0); i < m_DeinterlaceNames.length(); ++i)
+            {
+                if(m_DeinterlaceNames[i] != L'~')
+                {
+                    (*ppwchText)[i + 22] = m_DeinterlaceNames[i];
+                }
+                else
+                {
+                    (*ppwchText)[i + 22] = 0;
+                }
+            }
+            (*ppwchText)[i + 22] = 0;
             return S_OK;
+        }
+        else if(dwParamIndex == PULLDOWNMODE)
+        {
+            wchar_t PulldownText[] = L"Pulldown Mode\0" L"None\0" L"Full Rate Video\0" L"Half Rate Video\0" L"2:2 Pulldown\0" L"3:2 Pulldown\0";
+            *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(PulldownText));
+            memcpy(*ppwchText, PulldownText, sizeof(PulldownText));
         }
     }
     return S_OK;
@@ -615,6 +661,8 @@ HRESULT CDScaler::LoadDMOs()
                 if(DeinterlaceDMO != NULL)
                 {
                     m_Deinterlacers.push_back(DMO.Detach());
+                    m_DeinterlaceNames += wszName;
+                    m_DeinterlaceNames += L"~";
                 }
                 else
                 {
@@ -635,9 +683,11 @@ HRESULT CDScaler::LoadDMOs()
     // we need at least one deinterlacing method
     if(m_Deinterlacers.size() > 0)
     {
-        // \todo real storage of current method
-        // for the time being use the first one
-        m_CurrentDeinterlacingMethod = m_Deinterlacers.front();
+		m_ParamInfos[DEINTERLACEMODE].mpdMaxValue = (MP_DATA)(m_Deinterlacers.size() - 1);
+		if(m_ParamValues[DEINTERLACEMODE] > m_ParamInfos[DEINTERLACEMODE].mpdMaxValue)
+		{
+			m_ParamValues[DEINTERLACEMODE] = m_ParamInfos[DEINTERLACEMODE].mpdMaxValue;
+		}
         return S_OK;
     }
     else
@@ -650,8 +700,7 @@ HRESULT CDScaler::LoadDMOs()
 void CDScaler::UnloadDMOs()
 {
     // release our hold on all the Deinterlacing DMO's
-    EmptyList(m_Deinterlacers); 
-    m_CurrentDeinterlacingMethod = NULL;
+    EmptyVector(m_Deinterlacers); 
     // release our hold on all the Filter DMO's
     EmptyList(m_Filters); 
 }
@@ -666,6 +715,17 @@ void CDScaler::EmptyList(std::list<IMediaObject*>& List)
         (*it)->Release();
     }
     List.empty();
+}
+
+void CDScaler::EmptyVector(std::vector<IMediaObject*>& Vector)
+{
+    for(std::vector<IMediaObject*>::iterator it = Vector.begin(); 
+        it != Vector.end(); 
+        ++it)
+    {
+        (*it)->Release();
+    }
+    Vector.empty();
 }
 
 void CDScaler::SetTypesChangedFlag()
@@ -690,28 +750,74 @@ HRESULT CDScaler::CheckProcessingLine()
         CHECK(hr);
 		m_TypesChanged = FALSE;
     }
-    return hr;
+    
+    if(m_ChangeTypes)
+    {
+        m_ChangeTypes = FALSE;
+        return S_FALSE;
+    }
+    else
+    {
+        return S_OK;
+    }
 }
 
 HRESULT CDScaler::RebuildProcessingLine()
 {
     HRESULT hr = S_OK;
-    // \todo stop inform DMO's of correct types
+	
+	// set it to the new one
+	m_CurrentDeinterlacingMethod = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]];
+    CComQIPtr<IDScalerVideoFilterPlugin> pVPI = m_CurrentDeinterlacingMethod;
+    if(pVPI != NULL)
+    {
+	    hr = pVPI->get_NumFieldsBuffered(&m_NumberOfFieldsToBuffer);
+    }
+    else
+    {
+        m_NumberOfFieldsToBuffer = 1;
+    }
+	// make sure we set the types up
+	m_TypesChanged = TRUE;
     return hr;
 }
 
 HRESULT CDScaler::UpdateTypes()
 {
     HRESULT hr = S_OK;
-	hr = m_CurrentDeinterlacingMethod->Flush();
+	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->Flush();
 	CHECK(hr);
-	hr = m_CurrentDeinterlacingMethod->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
 	CHECK(hr);
-	hr = m_CurrentDeinterlacingMethod->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
 	CHECK(hr);
-	hr = m_CurrentDeinterlacingMethod->SetInputType(0, &m_InputPin->m_InternalMediaType, 0);
+	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, &m_InputPin->m_InternalMediaType, 0);
 	CHECK(hr);
-	hr = m_CurrentDeinterlacingMethod->SetOutputType(0, &m_OutputPin->m_CurrentMediaType, 0);
+	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, &m_OutputPin->m_CurrentMediaType, 0);
 	CHECK(hr);
     return hr;
+}
+
+void CDScaler::ResetPullDownIndexRange()
+{
+    switch((eDeinterlaceType)(long)m_ParamValues[PULLDOWNMODE])
+    {
+    case FULLRATEVIDEO:
+    case HALFRATEVIDEO:
+        m_ParamInfos[PULLDOWNINDEX].mpdMaxValue = 0;
+        break;
+    case PULLDOWN_22:
+        m_ParamInfos[PULLDOWNINDEX].mpdMaxValue = 1;
+        break;
+    case PULLDOWN_32:
+        m_ParamInfos[PULLDOWNINDEX].mpdMaxValue = 4;
+        break;
+    default:
+        m_ParamInfos[PULLDOWNINDEX].mpdMaxValue = 0;
+        break;
+    }
+    if(m_ParamValues[PULLDOWNINDEX] > m_ParamInfos[PULLDOWNINDEX].mpdMaxValue)
+    {
+        m_ParamValues[PULLDOWNINDEX] = m_ParamInfos[PULLDOWNINDEX].mpdMaxValue;
+    }
 }

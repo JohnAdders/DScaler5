@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.10 2003-09-24 16:33:00 adcockj Exp $
+// $Id: InputPin.h,v 1.11 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -34,7 +34,8 @@ class ATL_NO_VTABLE CInputPin :
 	public IPin,
     public IMemInputPin,
     public IPinConnection,
-    public IUpdateMediaTypes
+    public IUpdateMediaTypes,
+    public IInterlacedBufferStack
 {
 public:
 	CInputPin();
@@ -45,6 +46,7 @@ BEGIN_COM_MAP(CInputPin)
 	COM_INTERFACE_ENTRY(IPin)
     COM_INTERFACE_ENTRY(IMemInputPin)
     COM_INTERFACE_ENTRY(IPinConnection)
+	COM_INTERFACE_ENTRY(IInterlacedBufferStack)
 END_COM_MAP()
 
 // IPin
@@ -81,6 +83,13 @@ public:
     STDMETHOD(IsEndPin)(void);
     STDMETHOD(DynamicDisconnect)(void);
 
+// IInterlacedBufferStack
+public:
+    STDMETHOD(get_NumFields)(DWORD* Count);
+    STDMETHOD(GetField)(DWORD Index, IInterlacedField** Field);
+    STDMETHOD(PopStack)();
+    STDMETHOD(ClearAll)();
+
 public:
     ULONG FormatVersion();
     HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
@@ -107,10 +116,69 @@ public:
 	DWORD m_dwFlags;
 	CComPtr<IMemAllocator> m_MyMemAlloc;
 	REFERENCE_TIME m_ExpectedStartIn;
-	REFERENCE_TIME m_ExpectedStartOut;
+	REFERENCE_TIME m_LastStartEnd;
+    REFERENCE_TIME m_FieldTiming;
 	BYTE m_Counter;
+protected:
+    class CField: public IInterlacedField
+    {
+    public:
+		CField(){};
+		~CField(){};
+	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+	    STDMETHOD(SetLength)(DWORD cbLength);
+        STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
+		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+		void Clear()
+		{
+			IsTopLine = FALSE;
+			m_Sample.Release();
+		};
+		const CField& operator=(const CField& RHS)
+		{
+			IsTopLine = RHS.IsTopLine;
+			m_Sample = RHS.m_Sample;
+			return *this;
+		}
+    public:
+        BOOL IsTopLine;
+        CComPtr<IMediaSample> m_Sample;
+        REFERENCE_TIME m_EndTime;
+        DWORD m_FieldNumber;
+    };
+
+    CField m_IncomingFields[6];
+    DWORD m_FieldsInBuffer;
+
 private:
+    enum eHowToProcess
+    {
+        PROCESS_IGNORE,
+        PROCESS_WEAVE,
+        PROCESS_DEINTERLACE,
+    };
+
+    enum eSourceType
+    {
+        SOURCE_DEFAULT,
+        SOURCE_ELECARD,
+        SOURCE_SONIC,
+        SOURCE_NVDVD,
+        SOURCE_WINDVD,
+        SOURCE_DV,
+    };
+
     void InternalDisconnect();
+    eHowToProcess WorkOutHowToProcess(REFERENCE_TIME& FrameEndTime);
+    HRESULT WeaveOutput(REFERENCE_TIME& FrameEndTime);
+    HRESULT DeinterlaceOutput(REFERENCE_TIME& FrameEndTime);
+
+    STDMETHOD(Weave)(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer);
+    void ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo);
+
     void GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props);
     HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
@@ -118,9 +186,20 @@ private:
 	void FixupMediaType(AM_MEDIA_TYPE *pmt);
     void CheckForBlocking();
     HRESULT InternalReceive(IMediaSample *InSample);
-    HRESULT InternalProcessOutput(IMediaSample** OutSample, BOOL HurryUp);
+    HRESULT InternalProcessOutput(BOOL HurryUp);
     HRESULT CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
     HRESULT UpdateMediaTypeInFilters();
     HRESULT GetOutputSample(IMediaSample** OutSample);
+	BOOL WorkOutWhoWeAreTalkingTo(IPin* pConnector);
+    DWORD m_NextFieldNumber;
+
+    HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT PushSampleDefault(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT PushSampleSonic(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT PushSampleNVDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    HRESULT PushSampleWinDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);
+    void ShiftUpSamples(int NumberToShift, IMediaSample* InputSample);
+    eSourceType m_SourceType;
 };
 

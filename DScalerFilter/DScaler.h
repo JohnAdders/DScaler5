@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.10 2003-09-19 16:12:14 adcockj Exp $
+// $Id: DScaler.h,v 1.11 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -71,6 +71,10 @@ END_PROP_MAP()
         ASPECTINCREASEX,
         ASPECTINCREASEY,
         INPUTISANAMORPHIC,
+		DEINTERLACEMODE,
+		MANUALPULLDOWN,
+		PULLDOWNMODE,
+		PULLDOWNINDEX,
         PARAMS_LASTONE,
     };
 
@@ -136,21 +140,26 @@ public:
     WCHAR m_Name[MAX_FILTER_NAME];
     BOOL m_IsDirty;
     std::list<IMediaObject*> m_Filters;
-    std::list<IMediaObject*> m_Deinterlacers;
-    IMediaObject* m_CurrentDeinterlacingMethod;
+    std::vector<IMediaObject*> m_Deinterlacers;
+    CComQIPtr<IDeinterlace> m_CurrentDeinterlacingMethod;
 	REFERENCE_TIME m_StartTime;
+    std::wstring m_DeinterlaceNames;
+    DWORD m_NumberOfFieldsToBuffer;
     
 private:
     HRESULT LoadDMOs();
     void UnloadDMOs();
     void EmptyList(std::list<IMediaObject*>& List);
+	void EmptyVector(std::vector<IMediaObject*>& Vector);
     HRESULT RebuildProcessingLine();
     HRESULT UpdateTypes();
+    void ResetPullDownIndexRange();
 
 private:
     MP_DATA m_ParamValues[PARAMS_LASTONE];
-    static const MP_PARAMINFO m_ParamInfos[PARAMS_LASTONE];
+    static MP_PARAMINFO m_ParamInfos[PARAMS_LASTONE];
     BOOL m_TypesChanged;
+    BOOL m_ChangeTypes;
     BOOL m_RebuildRequired;
 };
 

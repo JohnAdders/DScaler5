@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.5 2003-05-20 16:51:01 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.6 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2003/05/20 16:51:01  adcockj
+// Interim checkin, preparation for DMO processing path
+//
 // Revision 1.4  2003/05/16 15:18:37  adcockj
 // Interim check inas we move to supporting DMO plug-ins
 //
@@ -34,6 +37,10 @@
 
 import "oaidl.idl";
 import "ocidl.idl";
+import "mediaobj.idl";
+cpp_quote("#if 0")
+typedef LPVOID*  IMediaSample;
+cpp_quote("#endif")
 
 [
 	uuid(0E93874B-7AED-11D7-B84B-0002A5623377),
@@ -53,6 +60,14 @@ library GENDMOPROPLib
 
     typedef enum
     {
+        FULLRATEVIDEO,
+        HALFRATEVIDEO,
+        PULLDOWN_22,
+        PULLDOWN_32,
+    } eDeinterlaceType;
+
+    typedef enum
+    {
         PRE_FILMDETECT_1,
         PRE_FILMDETECT_2,
         PRE_FILMDETECT_3,
@@ -65,6 +80,31 @@ library GENDMOPROPLib
         POST_DEINT_2,
         POST_DEINT_3,
     } eVideoFilterPosition;
+    
+    [
+        object,
+		uuid(7317990A-1A7F-4499-938A-1100D8F75E95),
+		helpstring("IInterlacedField Interface"),
+		pointer_default(unique)
+	]
+	interface IInterlacedField : IMediaBuffer
+	{
+        [propget] HRESULT TopFieldFirst([out,retval] BOOLEAN* TopFieldFirst);
+    };
+
+    [
+        object,
+		uuid(85E79149-6CB3-4f72-B8F1-983425D31C5B),
+		helpstring("IInterlacedBufferStack Interface"),
+		pointer_default(unique)
+	]
+	interface IInterlacedBufferStack : IUnknown
+	{
+        [propget] HRESULT NumFields([out,retval] DWORD* Count);
+        HRESULT GetField([in] DWORD Index, [out,retval] IInterlacedField** Field);
+        HRESULT PopStack();
+        HRESULT ClearAll();
+    }
 
 	[
         object,
@@ -77,20 +117,9 @@ library GENDMOPROPLib
         [propget] HRESULT Name([out, retval] BSTR* Name);
 		[propget] HRESULT License([out, retval] eFreeLicense* License);
         [propget] HRESULT Authors([out, retval] BSTR* Authors);
-	};
+	}
 
-	[
-        object,
-		uuid(7F7E0B71-860E-11d7-B84E-0002A5623377),
-		helpstring("IDeinterlace Interface"),
-		pointer_default(unique)
-	]
-	interface IDeinterlace : IUnknown
-	{
-        [propget] HRESULT ComplexityIndex([out, retval] long* pComplexity);
-    }
-
-	[
+    [
         object,
 		uuid(7F7E0B72-860E-11d7-B84E-0002A5623377),
 		helpstring("IDScalerFilterPlugin Interface"),
@@ -102,7 +131,7 @@ library GENDMOPROPLib
         HRESULT Detach();
     }
 
-	[
+   	[
         object,
 		uuid(D2C9AF19-8AC4-11d7-B851-0002A5623377),
 		helpstring("IDScalerVideoFilterPlugin Interface"),
@@ -111,10 +140,22 @@ library GENDMOPROPLib
 	interface IDScalerVideoFilterPlugin : IUnknown
 	{
         [propget] HRESULT Position([out, retval] eVideoFilterPosition* pPosition);
-        [propget] HRESULT NumFieldsDelay([out, retval] long* pFieldsDelay);
-        [propget] HRESULT NumFieldsBuffered([out, retval] long* pFieldsBuffered);
+        [propget] HRESULT NumFieldsDelay([out, retval] DWORD* pFieldsDelay);
+        [propget] HRESULT NumFieldsBuffered([out, retval] DWORD* pFieldsBuffered);
     }
-    
+
+	[
+        object,
+		uuid(7F7E0B71-860E-11d7-B84E-0002A5623377),
+		helpstring("IDeinterlace Interface"),
+		pointer_default(unique)
+	]
+	interface IDeinterlace : IUnknown
+	{
+        [propget] HRESULT ComplexityIndex([out, retval] long* pComplexity);
+        HRESULT Process([in] IInterlacedBufferStack* Stack, [in] IMediaBuffer* pBuffer);
+    }
+
     [
         uuid(0E938757-7AED-11D7-B84B-0002A5623377),
  		helpstring("GenDMOPropPage Class")

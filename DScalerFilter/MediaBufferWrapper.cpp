@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MediaBufferWrapper.cpp,v 1.1 2003-08-21 16:17:58 adcockj Exp $
+// $Id: MediaBufferWrapper.cpp,v 1.2 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2003/08/21 16:17:58  adcockj
+// Changed filter to wrap the deinterlacing DMO, fixed many bugs
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -48,7 +51,7 @@ STDMETHODIMP CMediaBufferWrapper::GetMaxLength(DWORD* pcbMaxLength)
 
 STDMETHODIMP CMediaBufferWrapper::SetLength(DWORD cbLength)
 {
-	return m_pSample->SetActualDataLength(cbLength);;
+	return m_pSample->SetActualDataLength(cbLength);
 }
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.26 2003-09-30 16:59:26 adcockj Exp $
+// $Id: InputPin.cpp,v 1.27 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.26  2003/09/30 16:59:26  adcockj
+// Improved handling of small format changes
+//
 // Revision 1.25  2003/09/28 15:08:07  adcockj
 // optimization fix and minor changes
 //
@@ -118,12 +121,17 @@ CInputPin::CInputPin()
 	m_dwFlags = AM_GBF_PREVFRAMESKIPPED;
 	m_MyMemAlloc = new CComObject<CInputMemAlloc>;
 	m_ExpectedStartIn = 0;
-	m_ExpectedStartOut = 0;
+	m_LastStartEnd = 0;
 	m_Counter = 0;
+    m_FieldsInBuffer = 0;
+    m_NextFieldNumber = 0;
+    m_SourceType = SOURCE_DEFAULT;
+    m_FieldTiming = 0;
 }
 
 CInputPin::~CInputPin()
 {
+    ClearAll();
     LOG(DBGLOG_FLOW, ("CInputPin::~CInputPin\n"));
     ClearMediaType(&m_InputMediaType);
     ClearMediaType(&m_InternalMediaType);
@@ -146,6 +154,16 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         return E_POINTER;
     }
 	
+    // find out who the pin belongs to
+    // we will process differently depending on 
+    // the filter at the other end
+    // if this fumction returns TRUE we are talking to 
+    // ourself then error
+	if(WorkOutWhoWeAreTalkingTo(pConnector) == TRUE)
+	{
+        return VFW_E_TYPE_NOT_ACCEPTED;
+	}
+
 	FixupMediaType((AM_MEDIA_TYPE *)pmt);
 
     if(QueryAccept(pmt) != S_OK)
@@ -360,20 +378,7 @@ STDMETHODIMP CInputPin::EndOfStream(void)
         // a format renegoatiation
         if(m_NotifyEvent == NULL)
         {
-			hr = m_Filter->m_CurrentDeinterlacingMethod->Discontinuity(0);
-            CHECK(hr);
-
-            IMediaSample* OutSample = NULL;
-            hr = GetOutputSample(&OutSample);
-            CHECK(hr);
-
-			hr = InternalProcessOutput(&OutSample, FALSE);
-
-            if(OutSample != NULL)
-            {
-                OutSample->Release();
-            }
-
+			hr = InternalProcessOutput(FALSE);
             CHECK(hr);
 
             hr = m_OutputPin->m_ConnectedPin->EndOfStream();
@@ -434,9 +439,10 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
         // may block so be careful
         CProtectCode WhileVarInScope(this);
 		m_ExpectedStartIn = tStart;
-		m_ExpectedStartOut = tStart;
+		m_LastStartEnd = tStart;
         hr = m_OutputPin->m_ConnectedPin->NewSegment(tStart, tStop, dRate);
         CHECK(hr);
+        m_FieldTiming = 0;
     }
     return hr;
 }
@@ -506,9 +512,6 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *InSample)
     // functions with this line
     CProtectCode WhileVarInScope(this);
     
-    //HRESULT hr = m_Filter->CheckProcessingLine();
-    //CHECK(hr);
-
     return InternalReceive(InSample);
 }
 
@@ -568,16 +571,18 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         // need to check this before we get each sample
         CheckForBlocking();
 
+        // reconfigure the filters if the input format has changed
         hr = m_Filter->CheckProcessingLine();
         CHECK(hr);
-
-		hr = GetOutputSample(&OutSample);
-        CHECK(hr);
-
-		if(OutSample == NULL)
-		{
-			return S_FALSE;
-		}
+        
+        // if CheckProcessingLine returns S_FALSE
+        // then we need to reset the output format
+        // need to do this before we get first output sample
+        if(hr == S_FALSE)
+        {
+            hr = m_OutputPin->ChangeOutputFormat(&m_InputMediaType);
+            CHECK(hr);
+        }
 
         // if there was a discontinuity then we need to ask for the buffer
         // differently 
@@ -586,11 +591,8 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 			if(m_ExpectedStartIn != 0)
 			{
 				LOG(DBGLOG_FLOW, ("Discontinuity\n"));
-				hr = m_Filter->m_CurrentDeinterlacingMethod->Discontinuity(0);
+				hr = ClearAll();
 				CHECK(hr);
-
-				hr = InternalProcessOutput(&OutSample, FALSE);
-				
 				m_ExpectedStartIn = 0;
 			}
 			else
@@ -605,61 +607,25 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 			LOG(DBGLOG_FLOW, ("Skipped Frames expected %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
 
 			GuessInterlaceFlags(&InSampleProperties);
-			hr = m_Filter->m_CurrentDeinterlacingMethod->Flush();
-			//CHECK(hr);
+			hr = ClearAll();
+			CHECK(hr);
 
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         }
 
-		LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.dwTypeSpecificFlags));
+		//LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.dwTypeSpecificFlags));
 		
 		m_ExpectedStartIn = InSampleProperties.tStop;
 
-		// pass input buffer to DMO
-		IMediaBuffer* InBuffer = CMediaBufferWrapper::CreateBuffer(InSample);
+        hr = PushSample(InSample, &InSampleProperties);
+        CHECK(hr);
 
-		if((InSampleProperties.tStop - InSampleProperties.tStart) != 400000 &&
-			(InSampleProperties.tStop - InSampleProperties.tStart) != 333333)
-		{
-			LOG(DBGLOG_FLOW, ("Odd Time %d\n", (long)(InSampleProperties.tStop - InSampleProperties.tStart)));
-		}
-
-		switch((long)(InSampleProperties.tStop - InSampleProperties.tStart))
-		{
-		case 0:
-			// cope with End entries from Sonic
-		case 1:
-			// cope with rubbish periods from WinDVD
-			
-		case 400000:
-		case 333333:
-			// it's video so off we go
-		default:
-			// may need to detect film here don't know yet
-			hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessInput(
-																		0, 
-																		InBuffer, 
-																		DMO_INPUT_DATA_BUFFERF_TIME | DMO_INPUT_DATA_BUFFERF_TIMELENGTH, 
-																		InSampleProperties.tStart,
-																		InSampleProperties.tStop - InSampleProperties.tStart
-   																	);
-			break;
-		}
-
-		InBuffer->Release();
-
-		if(hr == DMO_E_NOTACCEPTING)
-		{
-			return S_FALSE;
-		}
-		CHECK(hr);
-
-		hr = InternalProcessOutput(&OutSample, FALSE);
+		hr = InternalProcessOutput(FALSE);
 
 		if(FAILED(hr) || hr == S_FALSE)
 		{
-			hr = m_Filter->m_CurrentDeinterlacingMethod->Flush();
-			//CHECK(hr);
+			hr = ClearAll();
+			CHECK(hr);
 
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
 			return S_FALSE;
@@ -673,10 +639,6 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         if(InSampleProperties.pMediaType != NULL)
         {
             FreeMediaType(InSampleProperties.pMediaType);
-        }
-        if(OutSample != NULL)
-        {
-            OutSample->Release();
         }
     }
     return hr;
@@ -716,86 +678,117 @@ HRESULT CInputPin::GetOutputSample(IMediaSample** OutSample)
     return S_OK;
 }
 
-HRESULT CInputPin::InternalProcessOutput(IMediaSample** OutSample, BOOL HurryUp)
+HRESULT CInputPin::InternalProcessOutput(BOOL HurryUp)
 {
-	DMO_OUTPUT_DATA_BUFFER OutDataBuffer;
+    REFERENCE_TIME FrameEndTime;
 	HRESULT hr = S_OK;
 	
-	OutDataBuffer.dwStatus = DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE;
-
-	while(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
+	while(hr == S_OK && m_FieldsInBuffer > m_Filter->m_NumberOfFieldsToBuffer)
 	{
-		IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(*OutSample);
+        switch(WorkOutHowToProcess(FrameEndTime))
+        {
+        case PROCESS_IGNORE:
+            break;
+        case PROCESS_WEAVE:
+            hr = WeaveOutput(FrameEndTime);
+            break;
+        case PROCESS_DEINTERLACE:
+            hr = DeinterlaceOutput(FrameEndTime);
+            break;
+        }
 
-		OutDataBuffer.pBuffer = OutBuffer;
-		OutDataBuffer.rtTimelength = 0;
-		OutDataBuffer.rtTimestamp = 0;
-
-		DWORD Status(0);
-
-		hr = m_Filter->m_CurrentDeinterlacingMethod->ProcessOutput(
-																	0, 
-																	1,
-																	&OutDataBuffer, 
-																	&Status
-																	);
-
-	
-		if(hr == S_OK && m_Flushing == FALSE)
-		{
-			if(m_ExpectedStartOut == 0 || OutDataBuffer.rtTimestamp != m_ExpectedStartOut)
-			{
-				(*OutSample)->SetDiscontinuity(TRUE);		
-			}
-			OutDataBuffer.rtTimelength += OutDataBuffer.rtTimestamp;
-			m_ExpectedStartOut = OutDataBuffer.rtTimelength;
-
-            //OutDataBuffer.rtTimestamp += 400000;
-            //OutDataBuffer.rtTimelength += 400000;
-
-			(*OutSample)->SetTime(&OutDataBuffer.rtTimestamp, &OutDataBuffer.rtTimelength);
-			// finally send the processed sample on it's way
-			hr = m_OutputPin->m_MemInputPin->Receive(*OutSample);
-
-			if(m_Filter->m_RefClock)
-			{
-				REFERENCE_TIME Now;
-				HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
-				Now -= m_Filter->m_StartTime;
-				CHECK(hr);
-				//LOG(DBGLOG_FLOW, ("Output %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
-			}
-		}
-		// if we are at the start then we might need to send 
-		// a couple of frames in before getting a response
-		else if(hr == S_FALSE)
-		{
-			if(m_Filter->m_RefClock)
-			{
-				REFERENCE_TIME Now;
-				HRESULT hr = m_Filter->m_RefClock->GetTime(&Now);
-				Now -= m_Filter->m_StartTime;
-				CHECK(hr);
-				LOG(DBGLOG_FLOW, ("Skipped %d at %d\n", (long)OutDataBuffer.rtTimestamp, (long)Now));
-			}
-			hr = S_OK;
-		}
-
-		OutBuffer->Release();
-
-		if(hr == S_OK && OutDataBuffer.dwStatus == DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE)
-		{
-			if(*OutSample != NULL)
-			{
-				(*OutSample)->Release();
-				*OutSample = NULL;
-			}
-
-			hr = GetOutputSample(OutSample);
-			CHECK(hr);
-		}
+        PopStack();
 	}
 	return hr;
+}
+
+HRESULT CInputPin::WeaveOutput(REFERENCE_TIME& FrameEndTime)
+{
+	HRESULT hr = S_OK;
+    IMediaSample* OutSample = NULL;
+
+    hr = GetOutputSample(&OutSample);
+    if(OutSample == NULL)
+    {
+        return S_FALSE;
+    }
+    CHECK(hr);
+
+
+	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+
+	DWORD Status(0);
+
+    hr = Weave((IInterlacedBufferStack*)this, OutBuffer);
+
+	if(hr == S_OK && m_Flushing == FALSE)
+	{
+		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
+		CHECK(hr);
+        
+        LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
+		
+        // finally send the processed sample on it's way
+		hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+	}
+	// if we are at the start then we might need to send 
+	// a couple of frames in before getting a response
+	else if(hr == S_FALSE)
+	{
+		LOG(DBGLOG_FLOW, ("Skipped\n"));
+		hr = S_OK;
+	}
+
+	OutBuffer->Release();
+	OutSample->Release();
+
+    m_LastStartEnd = FrameEndTime;
+
+    return hr;
+}
+
+
+HRESULT CInputPin::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
+{
+	HRESULT hr = S_OK;
+    IMediaSample* OutSample = NULL;
+
+    hr = GetOutputSample(&OutSample);
+    if(OutSample == NULL)
+    {
+        return S_FALSE;
+    }
+    CHECK(hr);
+
+
+	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+
+	DWORD Status(0);
+
+    hr = m_Filter->m_CurrentDeinterlacingMethod->Process((IInterlacedBufferStack*)this, OutBuffer);
+
+	if(hr == S_OK && m_Flushing == FALSE)
+	{
+		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
+		CHECK(hr);
+		
+        // finally send the processed sample on it's way
+		hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+	}
+	// if we are at the start then we might need to send 
+	// a couple of frames in before getting a response
+	else if(hr == S_FALSE)
+	{
+		LOG(DBGLOG_FLOW, ("Skipped\n"));
+		hr = S_OK;
+	}
+
+	OutBuffer->Release();
+	OutSample->Release();
+
+    m_LastStartEnd = FrameEndTime;
+
+    return hr;
 }
 
 STDMETHODIMP CInputPin::ReceiveMultiple(IMediaSample **InSamples, long nSamples, long *nSamplesProcessed)
@@ -1145,7 +1138,7 @@ HRESULT CInputPin::FinishProcessing()
     }
 
     // \todo free any buffers
-	m_Filter->m_CurrentDeinterlacingMethod->Flush();
+	ClearAll();
     return S_OK;   
 }
 
@@ -1283,4 +1276,383 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
 	
     NewType->lSampleSize = BitmapInfo->biSizeImage;
     return S_OK;
+}
+
+class DECLSPEC_UUID("F50B3F13-19C4-11CF-AA9A-02608C9BABA2") ElecardVideoDecoder;
+
+BOOL CInputPin::WorkOutWhoWeAreTalkingTo(IPin* pConnector)
+{
+	PIN_INFO PinInfo;
+	BOOL RetVal = TRUE;
+
+    m_SourceType = SOURCE_DEFAULT;
+
+	HRESULT hr = pConnector->QueryPinInfo(&PinInfo);
+	if(SUCCEEDED(hr))
+	{
+		CLSID ClassId;
+		hr = PinInfo.pFilter->GetClassID(&ClassId);
+		if(SUCCEEDED(hr))
+		{
+			if(ClassId != __uuidof(CDScaler))
+			{
+                if(ClassId == __uuidof(ElecardVideoDecoder))
+                {
+                    m_SourceType = SOURCE_ELECARD;
+                }
+				RetVal = FALSE;
+			}
+		}
+		if(PinInfo.pFilter != NULL)
+		{
+			PinInfo.pFilter->Release();
+		}
+	}
+
+	return RetVal;
+}
+
+HRESULT CInputPin::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    HRESULT hr = S_OK;
+    switch(m_SourceType)
+    {
+    case SOURCE_ELECARD:
+        hr = PushSampleElecard(InputSample, InSampleProperties);
+        break;
+    case SOURCE_SONIC:
+        hr = PushSampleSonic(InputSample, InSampleProperties);
+        break;
+    case SOURCE_NVDVD:
+        hr = PushSampleNVDVD(InputSample, InSampleProperties);
+        break;
+    case SOURCE_WINDVD:
+        hr = PushSampleWinDVD(InputSample, InSampleProperties);
+        break;
+    case SOURCE_DV:
+        hr = PushSampleDefault(InputSample, InSampleProperties);
+        break;
+    case SOURCE_DEFAULT:
+    default:
+        hr = PushSampleDefault(InputSample, InSampleProperties);
+        break;
+    }
+    return hr;
+}
+
+void CInputPin::ShiftUpSamples(int NumberToShift, IMediaSample* InputSample)
+{
+    if(m_FieldsInBuffer > 0)
+    {
+        for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
+		{
+			m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
+		}
+    }
+    m_FieldsInBuffer += NumberToShift;
+    while(NumberToShift--)
+    {
+        m_IncomingFields[NumberToShift].Clear();
+        m_IncomingFields[NumberToShift].m_Sample = InputSample;
+        m_IncomingFields[NumberToShift].m_FieldNumber = m_NextFieldNumber++;
+    }
+}
+
+HRESULT CInputPin::PushSampleDefault(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    ShiftUpSamples(2, InputSample);
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMediaType.pbFormat);
+    if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+    {
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    else
+    {
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    return S_OK;
+}
+
+HRESULT CInputPin::PushSampleElecard(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    switch(InSampleProperties->dwTypeSpecificFlags & (AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD))
+    {
+    // 2 fields field 2 first
+    case 0:
+        ShiftUpSamples(2, InputSample);
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        break;
+    // 2 fields field 2 first
+    case AM_VIDEO_FLAG_FIELD1FIRST:
+        ShiftUpSamples(2, InputSample);
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+        break;
+    // 3 fields field 2 first
+    case AM_VIDEO_FLAG_REPEAT_FIELD:
+        ShiftUpSamples(3, InputSample);
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        m_IncomingFields[2].IsTopLine = FALSE;
+        m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        break;
+    // 3 fields field 1 first
+    case (AM_VIDEO_FLAG_REPEAT_FIELD | AM_VIDEO_FLAG_FIELD1FIRST):
+        ShiftUpSamples(3, InputSample);
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        m_IncomingFields[2].IsTopLine = TRUE;
+        m_IncomingFields[2].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
+        break;
+    }
+
+    if(m_FieldTiming == 0)
+    {
+        m_FieldTiming = (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    return S_OK;
+}
+
+HRESULT CInputPin::PushSampleSonic(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    ShiftUpSamples(2, InputSample);
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMediaType.pbFormat);
+    if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+    {
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    else
+    {
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    // \todo work out best way of getting this 
+    if(m_FieldTiming == 0)
+    {
+        m_FieldTiming = (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    return S_OK;
+}
+
+HRESULT CInputPin::PushSampleWinDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    ShiftUpSamples(2, InputSample);
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMediaType.pbFormat);
+    if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+    {
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    else
+    {
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    // \todo work out best way of getting this 
+    if(m_FieldTiming == 0)
+    {
+        m_FieldTiming = (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    return S_OK;
+}
+
+HRESULT CInputPin::PushSampleNVDVD(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
+{
+    ShiftUpSamples(2, InputSample);
+
+    VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMediaType.pbFormat);
+    if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+    {
+        m_IncomingFields[0].IsTopLine = FALSE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = TRUE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+    else
+    {
+        m_IncomingFields[0].IsTopLine = TRUE;
+        m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
+        m_IncomingFields[1].IsTopLine = FALSE;
+        m_IncomingFields[1].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    // \todo work out best way of getting this 
+    if(m_FieldTiming == 0)
+    {
+        m_FieldTiming = (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
+    }
+
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::get_NumFields(DWORD* Count)
+{
+    *Count = m_FieldsInBuffer;
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::GetField(DWORD Index, IInterlacedField** Field)
+{
+    if(*Field != NULL)
+    {
+        (*Field)->Release();
+    }
+    if(Index < m_FieldsInBuffer)
+    {
+        *Field = &(m_IncomingFields[m_FieldsInBuffer - Index - 1]);
+        (*Field)->AddRef();
+    }
+    else
+    {
+        *Field = NULL;
+    }
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::PopStack()
+{
+    ATLASSERT(m_FieldsInBuffer > 0);
+    m_IncomingFields[m_FieldsInBuffer - 1].Clear();
+    --m_FieldsInBuffer;
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::ClearAll()
+{
+    while(m_FieldsInBuffer)
+    {
+        PopStack();
+    }
+    m_NextFieldNumber = 0;
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::CField::GetBufferAndLength(BYTE** ppBuffer, DWORD* pcbLength)
+{
+    *pcbLength = m_Sample->GetActualDataLength();
+    return  m_Sample->GetPointer(ppBuffer);
+}
+
+STDMETHODIMP CInputPin::CField::GetMaxLength(DWORD* pcbMaxLength)
+{
+    *pcbMaxLength = m_Sample->GetSize();
+    return S_OK;
+}
+
+STDMETHODIMP CInputPin::CField::SetLength(DWORD cbLength)
+{
+    return m_Sample->SetActualDataLength(cbLength);
+}
+
+STDMETHODIMP CInputPin::CField::get_TopFieldFirst(BOOLEAN* TopFieldFirst)
+{
+    if(IsTopLine)
+    {
+        *TopFieldFirst = TRUE;
+    }
+    else
+    {
+        *TopFieldFirst = FALSE;
+    }
+    return S_OK;
+}
+
+CInputPin::eHowToProcess CInputPin::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTime)
+{
+    eHowToProcess HowToProcess = PROCESS_DEINTERLACE;
+
+    //\todo make delay adjustable
+    DWORD Delay = 1;
+
+    if(m_FieldsInBuffer > Delay)
+    {
+        int FrameNum = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_FieldNumber;
+        FrameEndTime = m_IncomingFields[m_FieldsInBuffer - Delay - 1].m_EndTime;
+        if(m_Filter->GetParamBool(CDScaler::MANUALPULLDOWN))
+        {
+            DWORD Index = m_Filter->GetParamInt(CDScaler::PULLDOWNINDEX);
+
+            switch(m_Filter->GetParamEnum(CDScaler::PULLDOWNMODE))
+            {
+            case PULLDOWN_32:
+                switch((FrameNum + Index) % 5)
+                {
+                case 1:
+                    HowToProcess = PROCESS_WEAVE;
+                    FrameEndTime += m_FieldTiming / 2;
+                    break;
+                case 4:
+                    HowToProcess = PROCESS_WEAVE;
+                    break;
+                default:
+                    HowToProcess = PROCESS_IGNORE;
+                    break;
+                }
+                break;
+            case PULLDOWN_22:
+                if(((FrameNum + Index) & 1) == 1)
+                {
+                    HowToProcess = PROCESS_WEAVE;
+                }
+                else
+                {
+                    HowToProcess = PROCESS_IGNORE;
+                }
+                break;
+            case FULLRATEVIDEO:
+                break;
+            case HALFRATEVIDEO:
+                if((FrameNum & 1) == 0)
+                {
+                    HowToProcess = PROCESS_WEAVE;
+                }
+                else
+                {
+                    HowToProcess = PROCESS_IGNORE;
+                }
+                break;
+            }
+        }
+        else
+        {
+            HowToProcess = PROCESS_DEINTERLACE;
+        }
+    }
+    else
+    {
+        HowToProcess = PROCESS_IGNORE;
+    }
+
+    return HowToProcess;
 }

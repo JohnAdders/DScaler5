@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: CPUID.asm,v 1.1 2003-07-28 08:35:52 adcockj Exp $
+;// $Id: CPUID.asm,v 1.2 2003-10-31 17:19:36 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.1  2003/07/28 08:35:52  adcockj
+;// Added missing files
+;//
 ;//////////////////////////////////////////////////////////////////////////////
 
 USE32
@@ -65,8 +68,7 @@ segment .text
 
 ;---------------------------------------------------------------------------
 ; Get features of our CPU - modified from sample code from AMD & Intel
-proc _CPU_SetupFeatureFlag
-    sub     esp, 12                 ; 12 bytes of local stack space 
+proc _CPU_SetupFeatureFlag, 12
     mov     [esp], dword 0           ; Signiture
 
     xor    eax, eax

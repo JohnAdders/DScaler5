@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.21 2003-09-30 16:59:26 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.22 2003-10-31 17:19:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2003/09/30 16:59:26  adcockj
+// Improved handling of small format changes
+//
 // Revision 1.20  2003/09/28 15:08:07  adcockj
 // optimization fix and minor changes
 //
@@ -815,12 +818,6 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     NewFormat->dwPictAspectRatioX *= m_Filter->GetParamInt(CDScaler::ASPECTINCREASEX);
     NewFormat->dwPictAspectRatioY *= m_Filter->GetParamInt(CDScaler::ASPECTINCREASEY);
 
-    if(m_Filter->GetParamBool(CDScaler::INPUTISANAMORPHIC) != 0)
-    {
-        NewFormat->dwPictAspectRatioX *= 4;
-        NewFormat->dwPictAspectRatioY *= 3;
-    }
-
     // we want to use the new height but we'll work with a normal stride
     // if it's within 32 of the new width
     long Height = BitmapInfo->biHeight; 
@@ -846,6 +843,13 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
         NewFormat->dwPictAspectRatioX = 4 * 44;
         NewFormat->dwPictAspectRatioY = 3 * 45;
     }
+
+    if(m_Filter->GetParamBool(CDScaler::INPUTISANAMORPHIC) != 0)
+    {
+        NewFormat->dwPictAspectRatioX *= 4;
+        NewFormat->dwPictAspectRatioY *= 3;
+    }
+
 
     DWORD Size = Height * Width * BitmapInfo->biBitCount / 8;
 
