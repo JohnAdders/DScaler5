@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.13 2004-12-06 18:05:01 adcockj Exp $
+// $Id: DScaler.cpp,v 1.14 2004-12-07 08:44:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/12/06 18:05:01  adcockj
+// Major improvements to deinterlacing
+//
 // Revision 1.12  2004/11/25 21:55:54  adcockj
 // fix issue with interlaced flags on output
 //
@@ -793,8 +796,10 @@ HRESULT CDScaler::UpdateMovementMap()
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
             pMovementMap += InputInfo->bmiHeader.biWidth;
         }
+        
+        int i;
 
-        for(int i(0); i < InputInfo->bmiHeader.biHeight/2; ++i)
+        for(i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
         {
             for(int j(0); j < InputInfo->bmiHeader.biWidth; ++j)
             {
@@ -831,7 +836,7 @@ HRESULT CDScaler::UpdateMovementMap()
             pMovementMap += InputInfo->bmiHeader.biWidth / 2;
         }
 
-        for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        for(i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
         {
             for(int j(0); j < InputInfo->bmiHeader.biWidth / 2; ++j)
             {
@@ -1419,12 +1424,13 @@ void CDScaler::DumpField(IInterlacedField* Field, LPCSTR FileName)
             pInputData += InputInfo->bmiHeader.biWidth;
         }
 
-        for(int i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        int i;
+        for(i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
         {
             DumpLine(hFile, pInputData, InputInfo->bmiHeader.biWidth, 1);
             pInputData += InputInfo->bmiHeader.biWidth * 2;
         }
-        for(int i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
+        for(i = 0; i < InputInfo->bmiHeader.biHeight / 2; ++i)
         {
             DumpLine(hFile, pInputData, InputInfo->bmiHeader.biWidth / 2, 1);
             pInputData += InputInfo->bmiHeader.biWidth;
@@ -1452,17 +1458,18 @@ void CDScaler::DumpMap(LPCSTR FileName)
     }
     else
     {
-        for(int i = 0; i < InputInfo->bmiHeader.biHeight; ++i)
+        int i;
+        for(i = 0; i < InputInfo->bmiHeader.biHeight; ++i)
         {
             DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth, 1);
             pMapData += InputInfo->bmiHeader.biWidth;
         }
-        for(int i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
+        for(i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
         {
             DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth/2, 1);
             pMapData += InputInfo->bmiHeader.biWidth/2;
         }
-        for(int i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
+        for(i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
         {
             DumpLine(hFile, pMapData, InputInfo->bmiHeader.biWidth/2, 1);
             pMapData += InputInfo->bmiHeader.biWidth/2;
