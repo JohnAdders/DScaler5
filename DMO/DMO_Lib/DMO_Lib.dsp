@@ -165,9 +165,5 @@ SOURCE=.\StdAfx.h
 SOURCE=.\validate.h
 # End Source File
 # End Group
-# Begin Source File
-
-SOURCE=.\Readme.txt
-# End Source File
 # End Target
 # End Project

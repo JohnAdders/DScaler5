@@ -35,11 +35,53 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name DMO_Lib
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Diag
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name Deint_Weave
+    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "Deint_Bob"=..\DMO\Deinterlace\Deint_Bob\Deint_Bob.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Diag"=..\DMO\Deinterlace\Deint_Diag\Deint_Diag.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Weave"=..\DMO\Deinterlace\Deint_Weave\Deint_Weave.dsp - Package Owner=<4>
 
 Package=<5>
 {{{
