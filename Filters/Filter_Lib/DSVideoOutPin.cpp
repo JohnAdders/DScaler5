@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.5 2004-11-06 14:07:01 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.6 2004-11-18 07:40:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/11/06 14:07:01  adcockj
+// Fixes for WM10 and seeking
+//
 // Revision 1.4  2004/11/02 16:57:24  adcockj
 // fix for crashing problem on exit
 //
@@ -542,7 +545,7 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
 			hr = ReconnectWM10();
 			break;
         case DEFAULT_OUTFILTER:
-            hr = ReconnectOverlay();
+            hr = ReconnectOther();
             break;
         }
 
@@ -1079,7 +1082,21 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 
 void CDSVideoOutPin::SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame)
 {
-    m_AvgTimePerFrame = AvgTimePerFrame;
+	if(AvgTimePerFrame != 0)
+	{
+	    m_AvgTimePerFrame = AvgTimePerFrame;
+	}
+	else
+	{
+		if(m_Height == 576)
+		{
+		    m_AvgTimePerFrame = 400000;
+		}
+		else
+		{
+		    m_AvgTimePerFrame = 333667;
+		}
+	}
 }
 
 CDSVideoOutPin::OUT_TYPE CDSVideoOutPin::GetConnectedType()

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.54 2004-11-09 17:20:38 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.55 2004-11-18 07:40:56 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.54  2004/11/09 17:20:38  adcockj
+// Stutter fix
+//
 // Revision 1.53  2004/11/06 14:36:09  adcockj
 // VS6 project update
 //
@@ -518,7 +521,25 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
 
 HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
-	                return E_FAIL;
+	// temporary quality control
+	// basically let the renderer do quality control
+	// except when we are showing stills (normally these
+	// only occur in DVD menus) in which case
+	// we eat the quality control messages
+	// and just say we have coped, this should
+	// make the renderer dispaly all our updates
+	// to stills which should reduce the problems
+	// you can get with quality control interfering
+	// with updates to subpicture frames on still pages
+	if(m_LastPictureWasStill)
+	{
+		return S_OK;
+	}
+	else
+	{
+		return E_FAIL;
+	}
+
     if(pPin == m_VideoOutPin)
     {
         if(q.Type == Famine)
