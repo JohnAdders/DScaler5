@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.4 2004-02-27 17:08:16 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.5 2004-02-29 13:47:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ public:
     BITMAPINFOHEADER* GetBitmapInfo();
     HRESULT NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
     /// returns S_FALSE if the format has changed
-    HRESULT GetOutputSample(IMediaSample** OutSample, bool PrevFrameSkipped);
+    HRESULT GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* rtStart, REFERENCE_TIME* rtStop, bool PrevFrameSkipped);
     HRESULT SendSample(IMediaSample* OutSample);
         
 public:

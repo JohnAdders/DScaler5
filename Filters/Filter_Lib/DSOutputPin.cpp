@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.5 2004-02-27 17:08:16 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.6 2004-02-29 13:47:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/27 17:08:16  adcockj
+// Improved locking at state changes
+// Better error handling at state changes
+//
 // Revision 1.4  2004/02/25 17:14:03  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -343,14 +347,14 @@ STDMETHODIMP CDSOutputPin::GetPreroll(LONGLONG *pllPreroll)
 }
 
 
-HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, bool PrevFrameSkipped)
+HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* rtStart, REFERENCE_TIME* rtStop, bool PrevFrameSkipped)
 {
     *OutSample = NULL;
 
     DWORD dwFlags = PrevFrameSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
 
 	// get a sample to output to
-	HRESULT hr = m_Allocator->GetBuffer(OutSample, NULL, NULL, dwFlags);
+	HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
 	if(FAILED(hr))
 	{
 		return hr;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.1 2004-02-25 17:14:02 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.2 2004-02-29 13:47:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -37,7 +41,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
 		&& m_CCOutPin->IsConnected())
 	{
 		SI(IMediaSample) pSample;
-		hr = m_CCOutPin->GetOutputSample(pSample.GetReleasedInterfaceReference(), false);
+		hr = m_CCOutPin->GetOutputSample(pSample.GetReleasedInterfaceReference(), NULL, NULL, false);
         CHECK(hr);
 		BYTE* pData = NULL;
 		

@@ -30,26 +30,16 @@
 
 uint32_t mm_accel (void);
 
-#ifndef sample_t
-    #if defined(LIBDTS_FIXED)
-    typedef int32_t sample_t;
-    #elif defined(LIBDTS_DOUBLE)
-    typedef double sample_t;
-    #else
-    typedef float sample_t;
-    #endif
+#if defined(LIBDTS_FIXED)
+typedef int32_t sample_t;
+typedef int32_t level_t;
+#elif defined(LIBDTS_DOUBLE)
+typedef double sample_t;
+typedef double level_t;
+#else
+typedef float sample_t;
+typedef float level_t;
 #endif
-
-#ifndef level_t
-    #if defined(LIBDTS_FIXED)
-    typedef int32_t level_t;
-    #elif defined(LIBDTS_DOUBLE)
-    typedef double level_t;
-    #else
-    typedef float level_t;
-    #endif
-#endif
-
 
 typedef struct dts_state_s dts_state_t;
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.2 2004-02-27 17:04:38 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.3 2004-02-29 13:47:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/27 17:04:38  adcockj
+// Added support for fixed point libraries
+// Added dither to 16 conversions
+// Changes to support library fixes
+//
 // Revision 1.1  2004/02/25 17:14:02  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -89,22 +94,12 @@ HRESULT CAudioDecoder::ProcessMPA()
         
         DWORD len = m_synth.pcm.length*m_synth.pcm.channels*m_SampleSize;
 
-        hr = ReconnectOutput(len);
-        CHECK(hr);
 
 	    SI(IMediaSample) pOut;
 	    BYTE* pDataOut = NULL;
 
-        hr = m_AudioOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false);
-        if(FAILED(hr) || !pOut)
-            return E_FAIL;
-
-        hr = pOut->GetPointer(&pDataOut);
+        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
         CHECK(hr);
-        
-    	hr = pOut->SetActualDataLength(len);
-        CHECK(hr);
-
 
         unsigned short i;
 

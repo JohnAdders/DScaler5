@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.8 2004-02-27 17:07:01 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.9 2004-02-29 13:47:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/02/27 17:07:01  adcockj
+// Fixes for improved handling of two way dynamic format changes
+// Support for library fixes
+//
 // Revision 1.7  2004/02/25 17:14:02  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -862,7 +866,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	SI(IMediaSample) pOut;
 	BYTE* pDataOut = NULL;
     
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), m_IsDiscontinuity);
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
     if(FAILED(hr))
 	{
         LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -1066,9 +1070,16 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 			vih->dwPictAspectRatioY = m_aryin;
 		}
 
-		bmi->biWidth = m_win;
-		bmi->biHeight = m_hin;
-		bmi->biSizeImage = m_win*m_hin*bmi->biBitCount>>3;
+		bmi->biWidth = max(m_win,bmi->biWidth);
+        if(bmi->biHeight > 0)
+        {
+    		bmi->biHeight = m_hin;
+        }
+        else
+        {
+    		bmi->biHeight = -m_hin;
+        }
+		bmi->biSizeImage = m_hin*bmi->biWidth*bmi->biBitCount>>3;
         
         hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
         if(hr != S_OK)

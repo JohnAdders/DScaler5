@@ -42,6 +42,7 @@
 #include "gettimeofday.h"
 
 #define BUFFER_SIZE 24576
+#define HEADER_SIZE 14
 static uint8_t buffer[BUFFER_SIZE];
 static FILE * in_file;
 static int demux_track = 0;
@@ -241,7 +242,7 @@ void dts_decode_data (uint8_t * start, uint8_t * end)
 {
     static uint8_t buf[BUFFER_SIZE];
     static uint8_t * bufptr = buf;
-    static uint8_t * bufpos = buf + 10;
+    static uint8_t * bufpos = buf + HEADER_SIZE;
 
     /*
      * sample_rate and flags are static because this routine could
@@ -265,14 +266,14 @@ void dts_decode_data (uint8_t * start, uint8_t * end)
 	bufptr += len;
 	start += len;
 	if (bufptr == bufpos) {
-	    if (bufpos == buf + 10) {
+	    if (bufpos == buf + HEADER_SIZE) {
 		int length;
 
 		length = dts_syncinfo (state, buf, &flags, &sample_rate,
                                        &bit_rate, &frame_length);
 		if (!length) {
 		    fprintf (stderr, "skip\n");
-		    for (bufptr = buf; bufptr < buf + 9; bufptr++)
+		    for (bufptr = buf; bufptr < buf + HEADER_SIZE-1; bufptr++)
 			bufptr[0] = bufptr[1];
 		    continue;
 		}
@@ -298,13 +299,13 @@ void dts_decode_data (uint8_t * start, uint8_t * end)
 			goto error;
 		}
 		bufptr = buf;
-		bufpos = buf + 10;
+		bufpos = buf + HEADER_SIZE;
 		print_fps (0);
 		continue;
 	    error:
 		fprintf (stderr, "error\n");
 		bufptr = buf;
-		bufpos = buf + 10;
+		bufpos = buf + HEADER_SIZE;
 	    }
 	}
     }

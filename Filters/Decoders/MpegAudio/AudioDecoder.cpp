@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.5 2004-02-27 17:04:38 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.6 2004-02-29 13:47:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/02/27 17:04:38  adcockj
+// Added support for fixed point libraries
+// Added dither to 16 conversions
+// Changes to support library fixes
+//
 // Revision 1.4  2004/02/25 17:14:01  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -522,7 +527,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
     
     m_rtNextFrameStart = _I64_MIN;
 
-    LOG(DBGLOG_ALL, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
+    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
 
 	if(m_NeedToAttachFormat)
 	{
@@ -708,7 +713,7 @@ HRESULT CAudioDecoder::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppD
 
     *ppDataOut = NULL;
 
-    hr = m_AudioOutPin->GetOutputSample(pOut, m_IsDiscontinuity);
+    hr = m_AudioOutPin->GetOutputSample(pOut, NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
 
     hr = (*pOut)->GetPointer(ppDataOut);

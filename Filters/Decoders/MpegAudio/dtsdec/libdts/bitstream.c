@@ -35,9 +35,9 @@
 void dts_bitstream_init (dts_state_t * state, uint8_t * buf, int word_mode,
                          int bigendian_mode)
 {
-    int align;
+    intptr_t align;
 
-    align = (long)buf & 3;
+    align = (uintptr_t)buf & 3;
     state->buffer_start = (uint32_t *) (buf - align);
     state->bits_left = 0;
     state->current_word = 0;

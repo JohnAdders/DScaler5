@@ -146,3 +146,6 @@
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
+
+/* Stop expected compiler warnings from appearing */
+#pragma warning(disable: 4244 4305 4098)

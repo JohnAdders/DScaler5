@@ -21,6 +21,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define STATE_INTERNAL_NORETURN ((mpeg2_state_t)-1)
+
 /* macroblock modes */
 #define MACROBLOCK_INTRA 1
 #define MACROBLOCK_PATTERN 2
@@ -55,9 +57,9 @@ typedef struct {
     int f_code[2];
 } motion_t;
 
-typedef void motion_parser_t (mpeg2_decoder_t * const decoder,
-			      motion_t * const motion,
-			      mpeg2_mc_fct * const * const table);
+typedef void motion_parser_t (mpeg2_decoder_t * decoder,
+			      motion_t * motion,
+			      mpeg2_mc_fct * const * table);
 
 struct mpeg2_decoder_s {
     /* first, state that carries information from one macroblock to the */
@@ -224,7 +226,7 @@ typedef struct {
 } cpu_state_t;
 
 /* cpu_accel.c */
-uint32_t mpeg2_detect_accel (void);
+uint32_t mpeg2_detect_accel (uint32_t accel);
 
 /* cpu_state.c */
 void mpeg2_cpu_state_init (uint32_t accel);

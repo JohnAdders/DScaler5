@@ -189,7 +189,6 @@ typedef int16_t quantizer_t;
 #define MUL(a,b) ((int)(((int64_t)(a) * (b) + (1 << 29)) >> 30))
 #define MUL_L(a,b) ((int)(((int64_t)(a) * (b) + (1 << 25)) >> 26))
 #elif 1
-
 #   pragma warning(push)
 #   pragma warning(disable: 4035)  /* no return value */
 static __forceinline

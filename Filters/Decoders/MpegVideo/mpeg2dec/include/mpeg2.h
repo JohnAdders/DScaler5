@@ -25,7 +25,7 @@
 #define MPEG2_H
 
 #define MPEG2_VERSION(a,b,c) (((a)<<16)|((b)<<8)|(c))
-#define MPEG2_RELEASE MPEG2_VERSION (0, 4, 0)	/* 0.4.0 */
+#define MPEG2_RELEASE MPEG2_VERSION (0, 4, 1)	/* 0.4.1 */
 
 #define SEQ_FLAG_MPEG2 1
 #define SEQ_FLAG_CONSTRAINED_PARAMETERS 2
@@ -120,14 +120,15 @@ typedef enum {
     STATE_BUFFER = 0,
     STATE_SEQUENCE = 1,
     STATE_SEQUENCE_REPEATED = 2,
-    STATE_GOP = 3,
-    STATE_PICTURE = 4,
-    STATE_SLICE_1ST = 5,
-    STATE_PICTURE_2ND = 6,
-    STATE_SLICE = 7,
-    STATE_END = 8,
-    STATE_INVALID = 9,
-    STATE_INVALID_END = 10
+    STATE_SEQUENCE_MODIFIED = 3,
+    STATE_GOP = 4,
+    STATE_PICTURE = 5,
+    STATE_SLICE_1ST = 6,
+    STATE_PICTURE_2ND = 7,
+    STATE_SLICE = 8,
+    STATE_END = 9,
+    STATE_INVALID = 10,
+    STATE_INVALID_END = 11
 } mpeg2_state_t;
 
 typedef struct mpeg2_convert_init_s {
@@ -178,8 +179,10 @@ void mpeg2_tag_picture (mpeg2dec_t * mpeg2dec, uint32_t tag, uint32_t tag2);
 
 void mpeg2_init_fbuf (mpeg2_decoder_t * decoder, uint8_t * current_fbuf[3],
 		      uint8_t * forward_fbuf[3], uint8_t * backward_fbuf[3]);
-void mpeg2_slice (mpeg2_decoder_t * decoder, int code,
-		  uint8_t * buffer);
+void mpeg2_slice (mpeg2_decoder_t * decoder, int code, const uint8_t * buffer);
+int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
+			unsigned int * pixel_width,
+			unsigned int * pixel_height);
 
 typedef enum {
     MPEG2_ALLOC_MPEG2DEC = 0,
