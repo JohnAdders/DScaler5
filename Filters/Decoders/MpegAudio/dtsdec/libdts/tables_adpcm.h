@@ -1,5 +1,5 @@
 /*
- * adpcm.h
+ * tables_adpcm.h
  * Copyright (C) 2004 Gildas Bazin <gbazin@videolan.org>
  *
  * This file is part of dtsdec, a free DTS Coherent Acoustics stream decoder.
@@ -20,7 +20,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-signed int adpcm_vb[4096][4] =
+/* 16bits signed fractional Q13 binary codes */
+static int16_t adpcm_vb[4096][4] =
 {
   { 9928, -2618, -1093, -1263 },
   { 11077, -2876, -1747, -308 },

@@ -103,7 +103,7 @@ struct dts_state_s {
     int dynrange_coef;
 
     /* VQ encoded high frequency subbands */
-    int high_freq_vq[DTS_PRIM_CHANNELS_MAX][DTS_SUBSUBFAMES_MAX];
+    int high_freq_vq[DTS_PRIM_CHANNELS_MAX][DTS_SUBBANDS];
 
     /* Low frequency effect data */
     double lfe_data[2*DTS_SUBSUBFAMES_MAX*DTS_LFE_MAX * 2 /*history*/];

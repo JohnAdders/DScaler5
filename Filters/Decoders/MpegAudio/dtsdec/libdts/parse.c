@@ -43,6 +43,7 @@
 #include "tables_quantization.h"
 #include "tables_adpcm.h"
 #include "tables_fir.h"
+#include "tables_vq.h"
 
 /* #define DEBUG */
 
@@ -711,15 +712,9 @@ int dts_subframe_header (dts_state_t * state)
             /* 1 vector -> 32 samples */
             state->high_freq_vq[j][k] = bitstream_get (state, 10);
 
-            if (!state->debug_flag & 0x01)
-            {
-                fprintf (stderr, "High frequencies VQ coding not supported\n");
-                state->debug_flag |= 0x01;
-            }
 #ifdef DEBUG
             fprintf( stderr, "VQ index: %i\n", state->high_freq_vq[j][k] );
 #endif
-            /* WE DON'T HAVE THE VQ TABLE!!!! */
         }
     }
 
@@ -939,10 +934,17 @@ int dts_subsubframe (dts_state_t * state)
              * for this subsubframe. */
             int m;
 
+            if (!state->debug_flag & 0x01)
+            {
+                fprintf (stderr, "Stream with high frequencies VQ coding\n");
+                state->debug_flag |= 0x01;
+            }
+
             for (m=0; m<8; m++)
             {
-                subband_samples[k][l][m] = 0;
-                //state->high_freq_vq[j][k] * state->scale_factor[k][l][0];
+                subband_samples[k][l][m] = 
+                    high_freq_vq[state->high_freq_vq[k][l]][subsubframe*8+m]
+                        * (double)state->scale_factor[k][l][0] / 16.0;
             }
         }
     }
@@ -1009,6 +1011,7 @@ int dts_subsubframe (dts_state_t * state)
                                2 * state->lfe * subsubframe,
                                &state->samples[256*i_channels],
                                8388608.0, state->bias);
+        /* Outputs 20bits pcm samples */
     }
 
     return 0;
