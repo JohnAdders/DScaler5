@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.2 2004-02-16 17:25:00 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.3 2004-02-17 16:39:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/16 17:25:00  adcockj
+// Fix build errors, locking problems and DVD compatability
+//
 // Revision 1.1  2004/02/13 12:22:17  adcockj
 // Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
 //
@@ -61,155 +64,58 @@ static struct scmap_t
 	WORD nChannels;
 	BYTE ch[6];
 	DWORD dwChannelMask;
-    LPCWSTR pwszDesc;
 }
-s_scmap[2*11] =
+s_scmap_ac3[2*11] =
 {
-	// A52_CHANNEL
-    {
-        2, 
-        {0, 1,-1,-1,-1,-1}, 
-        0,
-        L"Dual Mono",
-    },
-	// A52_MONO
-    {
-        1, 
-        {0,-1,-1,-1,-1,-1}, 
-        0,
-        L"Mono",
-    },
-	// A52_STEREO
-    {
-        2, 
-        {0, 1,-1,-1,-1,-1}, 
-        0,
-        L"Stereo",
-    },
-	// A52_3F
-    {
-        3, 
-        {0, 2, 1,-1,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER,
-        L"Left, Right and Center",
-    },
-	// A52_2F1R
-    {
-        3, 
-        {0, 1, 2,-1,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER,
-        L"Left, Right and 1 Rear",
-    },
-	// A52_3F1R
-    {
-        4, 
-        {0, 2, 1, 3,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER,
-        L"Left, Right, Center and 1 Rear",
-    },
-	// A52_2F2R
-    {
-        4, 
-        {0, 1, 2, 3,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT,
-        L"Left, Right and 2 Rears",
-    },
-	// A52_3F2R
-    {
-        5, 
-        {0, 2, 1, 3, 4,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT,
-        L"3 Fronts and 2 Rears",
-    },
-	// A52_CHANNEL1
-    {
-        1, 
-        {0,-1,-1,-1,-1,-1}, 
-        0,
-        L"Channel 1",
-    },
-	// A52_CHANNEL2
-    {
-        1, 
-        {0,-1,-1,-1,-1,-1}, 
-        0,
-        L"Channel 2",
-    },
-	// A52_DOLBY
-    {
-        2, 
-        {0, 1,-1,-1,-1,-1}, 
-        0,
-        L"Dolby Pro-logic Stereo",
-    },
+	{2, {0, 1,-1,-1,-1,-1}, 0},	// A52_CHANNEL
+	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_MONO
+	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_STEREO
+	{3, {0, 2, 1,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER}, // A52_3F
+	{3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER}, // A52_2F1R
+	{4, {0, 2, 1, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER}, // A52_3F1R
+	{4, {0, 1, 2, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_2F2R
+	{5, {0, 2, 1, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_3F2R
+	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL1
+	{1, {0,-1,-1,-1,-1,-1}, 0}, // A52_CHANNEL2
+	{2, {0, 1,-1,-1,-1,-1}, 0}, // A52_DOLBY
 
-	// A52_CHANNEL|A52_LFE
-    {
-        3, 
-        {1, 2, 0,-1,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY
-    },	
-	// A52_MONO|A52_LFE
-    {
-        2, 
-        {1, 0,-1,-1,-1,-1}, 
-        SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY
-    }, 
-	// A52_STEREO|A52_LFE
-    {
-        3, 
-        {1, 2, 0,-1,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY
-    }, 
-	// A52_3F|A52_LFE
-    {
-        4, 
-        {1, 3, 2, 0,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY
-    }, 
-	// A52_2F1R|A52_LFE
-    {
-        4, 
-        {1, 2, 0, 3,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER
-    }, 
-	// A52_3F1R|A52_LFE
-    {
-        5, 
-        {1, 3, 2, 0, 4,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER
-    }, 
-	// A52_2F2R|A52_LFE
-    {
-        5, 
-        {1, 2, 0, 3, 4,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT
-    }, 
-	// A52_3F2R|A52_LFE
-    {
-        6, 
-        {1, 3, 2, 0, 4, 5}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT
-    }, 
-	// A52_CHANNEL1|A52_LFE
-    {
-        2, 
-        {1, 0,-1,-1,-1,-1}, 
-        SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY
-    }, 
-	// A52_CHANNEL2|A52_LFE
-    {
-        2, 
-        {1, 0,-1,-1,-1,-1}, 
-        SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY
-    }, 
-	// A52_DOLBY|A52_LFE
-    {
-        3, 
-        {1, 2, 0,-1,-1,-1}, 
-        SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY
-    }, 
-};
+	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY},	// A52_CHANNEL|A52_LFE
+	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_MONO|A52_LFE
+	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_STEREO|A52_LFE
+	{4, {1, 3, 2, 0,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_3F|A52_LFE
+	{4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // A52_2F1R|A52_LFE
+	{5, {1, 3, 2, 0, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // A52_3F1R|A52_LFE
+	{5, {1, 2, 0, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_2F2R|A52_LFE
+	{6, {1, 3, 2, 0, 4, 5}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // A52_3F2R|A52_LFE
+	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_CHANNEL1|A52_LFE
+	{2, {1, 0,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // A52_CHANNEL2|A52_LFE
+	{3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // A52_DOLBY|A52_LFE
+},
+s_scmap_dts[2*10] = 
+{ 
+           {1, {0,-1,-1,-1,-1,-1}, 0}, // DTS_MONO 
+           {2, {0, 1,-1,-1,-1,-1}, 0},     // DTS_CHANNEL 
+           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO 
+           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO_SUMDIFF 
+           {2, {0, 1,-1,-1,-1,-1}, 0}, // DTS_STEREO_TOTAL 
+           {3, {1, 2, 0,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER}, // DTS_3F 
+           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_CENTER}, // DTS_2F1R 
+           {4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_CENTER}, // DTS_3F1R 
+           {4, {0, 1, 2, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_2F2R 
+           {5, {1, 2, 0, 3, 4,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R 
+    
+           {2, {0, 1,-1,-1,-1,-1}, SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // DTS_MONO|DTS_LFE 
+           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY},  // DTS_CHANNEL|DTS_LFE 
+           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO|DTS_LFE 
+           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO_SUMDIFF|DTS_LFE 
+           {3, {0, 1, 2,-1,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY}, // DTS_STEREO_TOTAL|DTS_LFE 
+           {4, {1, 2, 0, 3,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY}, // DTS_3F|DTS_LFE 
+           {4, {0, 1, 3, 2,-1,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // DTS_2F1R|DTS_LFE 
+           {5, {1, 2, 0, 4, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_CENTER}, // DTS_3F1R|DTS_LFE 
+           {5, {0, 1, 4, 2, 3,-1}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_2F2R|DTS_LFE 
+           {6, {1, 2, 0, 5, 3, 4}, SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT}, // DTS_3F2R|DTS_LFE 
+ };
+
 
 CAudioDecoder::CAudioDecoder() :
     CDSBaseFilter(L"Mpeg Audio Filter", 1, 1)
@@ -345,8 +251,9 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     }
     else if(pPin == m_AudioOutPin)
     {
-	    pProperties->cBuffers = 8;
-	    pProperties->cbBuffer = 0x1800;
+	    pProperties->cBuffers = 6;
+        // request buffer large enough for 100ms of 6 channel 32 bit audio
+	    pProperties->cbBuffer = 48000*6*(32/8)/10; 
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
     }
@@ -570,8 +477,6 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 			if(fEnoughData)
 			{
-				int iSpeakerConfig = GetParamEnum(SPEAKERCONFIG) + GetParamBool(SPEAKERCONFIG)?A52_DOLBY:0;
-
 				if(GetParamBool(USESPDIF))
 				{
                     CreateInternalSPDIFMediaType(sample_rate, 16);
@@ -598,8 +503,24 @@ HRESULT CAudioDecoder::ProcessAC3()
 				}
 				else
 				{
-					flags = iSpeakerConfig&(A52_CHANNEL_MASK|A52_LFE);
-					flags |= A52_ADJUST_LEVEL;
+                    switch(GetParamEnum(SPEAKERCONFIG))
+                    {
+                    case SPCFG_STEREO:
+                        flags = A52_STEREO;
+                        break;
+                    case SPCFG_DOLBY:
+                        flags = A52_DOLBY;
+                        break;
+                    case SPCFG_2F2R:
+                        flags = A52_2F2R;
+                        break;
+                    case SPCFG_3F2R:
+                        flags = A52_3F2R;
+                        break;
+                    }
+				    
+                    flags += GetParamBool(DECODE_LFE)?A52_LFE:0;
+                    flags += A52_ADJUST_LEVEL;
 
 					sample_t level = 1, gain = 1, bias = 0;
 					level *= gain;
@@ -609,8 +530,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 						if(!GetParamBool(DYNAMICRANGECONTROL))
 							a52_dynrng(m_a52_state, NULL, NULL);
 
-						int scmapidx = min(flags&A52_CHANNEL_MASK, sizeof(s_scmap)/sizeof(s_scmap[0])/2);
-                        scmap_t& scmap = s_scmap[scmapidx + ((flags&A52_LFE)?(sizeof(s_scmap)/sizeof(s_scmap[0])/2):0)];
+						int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
+                        scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
 
                         CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
 
@@ -641,11 +562,11 @@ HRESULT CAudioDecoder::ProcessAC3()
 						if(i == 6)
 						{
 					        REFERENCE_TIME rtDur = 10000000i64 * len / (sizeof(float) * sample_rate * scmap.nChannels); // should be 320000 * 100ns
-                        hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-						if(S_OK != hr)
-							return hr;
-					}
-				}
+                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+						    if(S_OK != hr)
+							    return hr;
+    					}
+    				}
 				}
 
 				p += size;
@@ -669,87 +590,117 @@ HRESULT CAudioDecoder::ProcessAC3()
 	return S_OK;
 }
 
-static int dts_syncinfo(BYTE* p, int* sample_rate, int* bit_rate)
-{
-	if(*(DWORD*)p != 0x0180FE7F)
-		return 0;
-
-	p += 4;
-
-	int frametype = (p[0]>>7); // 1
-	int deficitsamplecount = (p[0]>>2)&31; // 5
-	int crcpresent = (p[0]>>1)&1; // 1
-	int npcmsampleblocks = ((p[0]&1)<<6)|(p[1]>>2); // 7
-	int framebytes = (((p[1]&3)<<12)|(p[2]<<4)|(p[3]>>4)) + 1; // 14
-	int audiochannelarrangement = (p[3]&15)<<2|(p[4]>>6); // 6
-	int freq = (p[4]>>2)&15; // 4
-	int transbitrate = ((p[4]&3)<<3)|(p[5]>>5); // 5
-
-	int freqtbl[] = 
-	{
-		0,8000,16000,32000,
-		0,0,
-		11025,22050,44100,
-		0,0,
-		12000,24000,48000,
-		0,0
-	};
-
-	int bitratetbl[] = 
-	{
-		32000,56000,64000,96000,112000,128000,192000,224000,
-		256000,320000,384000,448000,512000,576000,640000,754500,
-		960000,1024000,1152000,1280000,1344000,1408000,1411200,1472000,
-		1509750,1920000,2048000,3072000,3840000,0,0,0
-	};
-
-	*sample_rate = freqtbl[freq];
-	*bit_rate = bitratetbl[transbitrate];
-
-	return framebytes;
-}
-
 HRESULT CAudioDecoder::ProcessDTS()
 {
 	BYTE* p = &m_buff[0];
 	BYTE* base = p;
 	BYTE* end = p + m_buff.size();
 
-	while(end - p >= 10) // ?
+	while(end - p >= 14)
 	{
-		int size = 0, sample_rate, bit_rate;
+       int size = 0, flags, sample_rate, bit_rate, frame_length; 
 
-		if((size = dts_syncinfo(p, &sample_rate, &bit_rate)) > 0)
+		if((size = dts_syncinfo(m_dts_state, p, &flags, &sample_rate, &bit_rate, &frame_length)) > 0) 
 		{
-			LOG(DBGLOG_FLOW, ("size=%d, sample_rate=%d, bit_rate=%d\n", size, sample_rate, bit_rate));
-
+			LOG(DBGLOG_FLOW, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
+    
 			bool fEnoughData = p + size <= end;
 
 			if(fEnoughData)
 			{
-                CreateInternalSPDIFMediaType(sample_rate, 16);
+				if(GetParamBool(USESPDIF))
+				{
+                    CreateInternalSPDIFMediaType(sample_rate, 16);
                 
-                DWORD len = 0x800; 
+                    DWORD len = 0x800; 
 
-                SI(IMediaSample) pOut;
-                WORD* pDataOut = NULL;
+                    SI(IMediaSample) pOut;
+                    WORD* pDataOut = NULL;
 
-                HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
-                CHECK(hr);
+                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                    CHECK(hr);
 
+				    pDataOut[0] = 0xf872;
+				    pDataOut[1] = 0x4e1f;
+				    pDataOut[2] = 0x000b;
+				    pDataOut[3] = size*8;
+				    _swab((char*)p, (char*)&pDataOut[4], size);
 
-				pDataOut[0] = 0xf872;
-				pDataOut[1] = 0x4e1f;
-				pDataOut[2] = 0x000b;
-				pDataOut[3] = size*8;
-				_swab((char*)p, (char*)&pDataOut[4], size);
+				    REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 106667 * 100 ns
 
-				REFERENCE_TIME rtDur = 10000000i64 * size*8 / bit_rate; // should be 106667 * 100 ns
+                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+				    if(S_OK != hr)
+					    return hr;
+                }
+                else
+                {
+                    switch(GetParamEnum(SPEAKERCONFIG))
+                    {
+                    case SPCFG_STEREO:
+                        flags = DTS_STEREO;
+                        break;
+                    case SPCFG_DOLBY:
+                        flags = DTS_STEREO;
+                        break;
+                    case SPCFG_2F2R:
+                        flags = DTS_2F2R;
+                        break;
+                    case SPCFG_3F2R:
+                        flags = DTS_3F2R;
+                        break;
+                    }
+				    
+                    flags += GetParamBool(DECODE_LFE)?DTS_LFE:0;
+                    flags += DTS_ADJUST_LEVEL;
 
-                hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
-				if(S_OK != hr)
-					return hr;
+					sample_t level = 1, gain = 1, bias = 0;
+					level *= gain;
 
+					if(dts_frame(m_dts_state, p, &flags, &level, bias) == 0)
+					{
+						if(!GetParamBool(DYNAMICRANGECONTROL))
+							dts_dynrng(m_dts_state, NULL, NULL);
+
+                        int scmapidx = min(flags&DTS_CHANNEL_MASK, countof(s_scmap_dts)/2); 
+                        scmap_t& scmap = s_scmap_dts[scmapidx + ((flags&DTS_LFE)?(countof(s_scmap_dts)/2):0)]; 
+    
+                        int blocks = dts_blocks_num(m_dts_state); 
+
+                        CreateInternalIEEEMediaType(sample_rate, scmap.nChannels, scmap.dwChannelMask);
+
+                        SI(IMediaSample) pOut;
+                        float* pDataOut = NULL;
+                        DWORD len = blocks*256*scmap.nChannels*sizeof(float);
+
+                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                        CHECK(hr);
+                    
+
+						int i = 0;
+
+						for(; i < blocks && dts_block(m_dts_state) == 0; i++)
+						{
+							sample_t* samples = dts_samples(m_dts_state);
+
+							for(int j = 0; j < 256; j++, samples++)
+							{
+								for(int ch = 0; ch < scmap.nChannels; ch++)
+								{
+									ASSERT(scmap.ch[ch] != -1);
+									*pDataOut++ = (float)(*(samples + 256*scmap.ch[ch]) / level);
+								}
+							}
+						}
+
+						if(i == blocks)
+						{
+					        REFERENCE_TIME rtDur = 10000000i64 * len / (sizeof(float) * sample_rate * scmap.nChannels); // should be 320000 * 100ns
+                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+						    if(S_OK != hr)
+							    return hr;
+    					}
+    				}
+                }
 				p += size;
 			}
 
@@ -1071,6 +1022,8 @@ HRESULT CAudioDecoder::Activate()
 {
 	m_a52_state = a52_init(MM_ACCEL_DJBFFT);
 
+    m_dts_state = dts_init(0);
+
 	mad_stream_init(&m_stream);
 	mad_frame_init(&m_frame);
 	mad_synth_init(&m_synth);
@@ -1081,6 +1034,8 @@ HRESULT CAudioDecoder::Activate()
 HRESULT CAudioDecoder::Deactivate()
 {
 	a52_free(m_a52_state);
+
+    dts_free(m_dts_state);
 
 	mad_synth_finish(&m_synth);
 	mad_frame_finish(&m_frame);
@@ -1138,26 +1093,10 @@ HRESULT CAudioDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
 
 HRESULT CAudioDecoder::GetEnumTextSpeakerConfig(WCHAR **ppwchText)
 {
-    int i;
-    int ExtraTextLen(0);
-
-    for(i = 0; i <= A52_DOLBY; ++i)
-    {
-        ExtraTextLen += wcslen(s_scmap[i].pwszDesc) + 1;
-    }
-    *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * ExtraTextLen + 2 + 20 * 2);
+    wchar_t SpeakerText[] = L"Speaker Config\0" L"None\0" L"Stereo\0" L"Dolby Stereo\0" L"2 Front 2 Rear\0" L"3 Front 2 Rear\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(SpeakerText));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-	memcpy(*ppwchText, L"Speaker Config\0None\0", 20 * 2);
-
-    LPWSTR pNext = *ppwchText + 20;
-    for(i = 0; i <= A52_DOLBY; ++i)
-    {
-        wcscpy(pNext, s_scmap[i].pwszDesc);
-        pNext += wcslen(s_scmap[i].pwszDesc);
-        pNext[0] = '\0';
-        ++pNext;
-    }
-    pNext[0] = '\0';
+    memcpy(*ppwchText, SpeakerText, sizeof(SpeakerText));
     return S_OK;
 }
 

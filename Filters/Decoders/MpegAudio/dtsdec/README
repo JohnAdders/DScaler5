@@ -1,0 +1,103 @@
+ABOUT LIBDTS
+
+libdts is a free library for decoding DTS Coherent Acoustics streams. It is
+released under the terms of the GPL license. The DTS Coherent Acoustics
+standard is used in a variety of applications, including DVD, DTS audio CD and
+radio broadcasting.
+
+The main goals in libdts development are:
+
+      *	Portability - currently all of the code is written in C, and
+	when we write platform-specific optimizations we will always
+	keep a generic C routine to fall back on.
+
+      *	Reuseability - we do not want libdts to include any
+	project-specific code, but it should still include enough
+	features to be used by very diverse projects.
+
+      *	Precision - we do not yet fully support all the core specification of
+        the DTS Coherent Acoustics standard (see TODO) so do not expect too
+        much of this library for now.
+
+      *	Speed - current code is not optimised at all.
+
+The project homepage is at http://www.videolan.org/dtsdec.html
+
+
+DTSDEC
+
+dtsdec is a test program for libdts. It decodes DTS Coherent Acoustics streams,
+and also includes a demultiplexer for mpeg-1 and mpeg-2 program streams.
+
+The libdts source code is always distributed in the dtsdec package, to
+make sure it easier for people to test it.
+
+The basic usage is to just type "dtsdec file" where file is a DTS Coherent
+Acoustics file.
+
+The "-s" option must be used for multiplexed (audio and video) mpeg-2
+files. These files are usualy found on the internet or on unencrypted
+DVDs.
+
+The "-o" option is used to select a given output layer. By default
+dtsdec does a stereo downmix and outputs to your speakers, but you can
+try other choices using this option. This is also used for performance
+testing and conformance testing.
+
+The "-c" option is used to disable all optimizations (currently only djbfft).
+
+The "-r" option is used to disable the dynamic range compression.
+
+
+OTHER PROJECTS USING LIBDTS
+
+right now libdts is only being used by VLC media player
+(http://www.videolan.org/) a cross-platform video player and streaming
+solution.
+
+If you use libdts in another project, let us know !
+
+
+TASKS
+
+There are several places where we could easily use some help:
+
+      *	Testing: If you find any stream that does not decode right
+	with libdts, let us know ! The best thing would be to mail to
+	the libdts-devel mailing list. Also if you have access to
+	encoders, we'd love to get test streams that would be free of
+	rights - so that we can put them on this server.
+
+      *	Coding: you can have a look in the TODO file first ! The most
+	important items are probably to finish implementing the full
+        specification and to make sure of the accuracy of the audio output.
+
+      *	Porting: If you're porting to a new architecture, you might
+	want to experiment with the compile flags defined in
+	configure.in . When you figure out whats fastest on your
+	platform, send us a patch !
+
+
+REFERENCES
+
+The DTS Coherent Acoustics standard (ETSI 102 114 v1.2.1), as published by the
+ETSI, is available at http://pda.etsi.org/pda/queryform.asp (look for DTS
+Coherent Acoustics)
+
+
+SVN REPOSITORY
+
+The latest libdts and dtsdec source code can always be found by anonymous
+SVN repository:
+
+# svn co svn://svn.zoy.org/dtsdec
+
+SUPPORT / MAILING LISTS
+
+See the support information at http://www.videolan.org/support/
+
+libdts-devel
+
+This is the main mailing list for technical discussion about
+libdts. Anyone wanting to work on libdts, or maybe just stay informed
+about the development process, should probably subscribe to this list.

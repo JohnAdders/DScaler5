@@ -75,8 +75,8 @@ BEGIN
             VALUE "FileDescription", "MpegAudio Module\0"
             VALUE "FileVersion", "1, 0, 0, 1\0"
             VALUE "InternalName", "MpegAudio\0"
-            VALUE "LegalCopyright", "Copyright 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gabest, John Adcock et al\0"
-            VALUE "LegalTrademarks", "(c) 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gabest, John Adcock et al\0"
+            VALUE "LegalCopyright", "Copyright 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gildas Bazin, Gabest, John Adcock et al\0"
+            VALUE "LegalTrademarks", "(c) 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gildas Bazin, Gabest, John Adcock et al\0"
             VALUE "OLESelfRegister", "\0"
             VALUE "OriginalFilename", "MpegAudio.DLL\0"
             VALUE "PrivateBuild", "\0"
@@ -102,7 +102,7 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_PROJNAME            "Mpeg Audio"
-    IDS_AUTHORS             "Copyright (c) 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gabest, John Adcock"
+    IDS_AUTHORS             "Copyright (c) 2004 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gildas Bazin, Gabest, John Adcock"
     IDS_NAME                "Mpeg Audio Decoder"
 END
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.2 2004-02-16 17:25:00 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.3 2004-02-17 16:39:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -31,6 +31,7 @@ extern "C"
 {
 #include "a52dec\include\a52.h"
 #include "a52dec\include\mm_accel.h"
+#include "dtsdec\include\dts.h"
 }
 
 
@@ -58,12 +59,20 @@ public:
     ~CAudioDecoder();
 
 BEGIN_PARAM_LIST()
-    DEFINE_PARAM_ENUM(A52_DOLBY, A52_DOLBY, L"Speaker Config")
+    DEFINE_PARAM_ENUM(SPCFG_3F2R, SPCFG_DOLBY, L"Speaker Config")
     DEFINE_PARAM_BOOL(1, L"Dynamic Range Control")
     DEFINE_PARAM_BOOL(1, L"Normalize")
     DEFINE_PARAM_BOOL(0, L"Decode LFE Channel")
     DEFINE_PARAM_BOOL(0, L"Use SPDIF")
 END_PARAM_LIST()
+
+    enum eSpeakerConfig
+    {
+        SPCFG_STEREO,
+        SPCFG_DOLBY,
+        SPCFG_2F2R,
+        SPCFG_3F2R,
+    };
 
     enum eMpegAudioParams
     {
@@ -106,6 +115,7 @@ protected:
 
 protected:
 	a52_state_t* m_a52_state;
+    dts_state_t* m_dts_state;
 
 	struct mad_stream m_stream;
 	struct mad_frame m_frame;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.1 2004-02-13 12:22:17 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.2 2004-02-17 16:39:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/13 12:22:17  adcockj
+// Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -106,8 +109,8 @@ STDAPI DllRegisterServer(void)
     	{&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM},
     };
     
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, sizeof(InputTypes)/sizeof(REGPINTYPES), InputTypes, 0, NULL, &GUID_NULL}, 
-                              { REG_PINFLAG_B_OUTPUT , 1, sizeof(OutputTypes)/sizeof(REGPINTYPES), OutputTypes, 0, NULL, &GUID_NULL}};
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
+                              { REG_PINFLAG_B_OUTPUT , 1, countof(OutputTypes), OutputTypes, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
    
