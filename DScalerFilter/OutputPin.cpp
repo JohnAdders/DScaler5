@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.cpp,v 1.19 2003-09-19 16:12:14 adcockj Exp $
+// $Id: OutputPin.cpp,v 1.20 2003-09-28 15:08:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2003/09/19 16:12:14  adcockj
+// Further improvements
+//
 // Revision 1.17  2003/08/21 16:17:58  adcockj
 // Changed filter to wrap the deinterlacing DMO, fixed many bugs
 //
@@ -455,38 +458,43 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
     // in the mean time just pass the messages upstream
 	if(q.Type == Famine)
 	{
-		if(q.Late > 400000)
+		//if(q.Late > 400000)
 		{
 			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
 			if(QualityControl != NULL)
 			{
+                LOG(DBGLOG_FLOW, ("Coped With Famine - %d\n", q.Late));
 				return QualityControl->Notify(pSelf, q);
 			}
 			else
 			{
+                LOG(DBGLOG_FLOW, ("Ignored Famine - %d\n", q.Late));
 				return E_NOTIMPL;
 			}
 		}
-		else
+		//else
 		{
 			return S_OK;
 		}
 	}
 	if(q.Type == Flood)
 	{
-		if(q.Late > 400000)
+		//if(q.Late > 400000)
 		{
+            LOG(DBGLOG_FLOW, ("Flood - %d\n", q.Late));
 			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
 			if(QualityControl != NULL)
 			{
+                LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
 				return QualityControl->Notify(pSelf, q);
 			}
 			else
 			{
+                LOG(DBGLOG_FLOW, ("Ignored Flood - %d\n", q.Late));
 				return E_NOTIMPL;
 			}
 		}
-		else
+		//else
 		{
 			return S_OK;
 		}

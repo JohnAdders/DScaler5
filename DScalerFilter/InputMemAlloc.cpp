@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputMemAlloc.cpp,v 1.3 2003-09-19 16:12:14 adcockj Exp $
+// $Id: InputMemAlloc.cpp,v 1.4 2003-09-28 15:08:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/09/19 16:12:14  adcockj
+// Further improvements
+//
 // Revision 1.1  2003/08/21 16:17:58  adcockj
 // Changed filter to wrap the deinterlacing DMO, fixed many bugs
 //
@@ -51,10 +54,10 @@ STDMETHODIMP CInputMemAlloc::SetProperties(ALLOCATOR_PROPERTIES *pRequest, ALLOC
 	switch(pRequest->cbBuffer)
 	{
 	case 720*480*2:
-		pRequest->cbBuffer = 720*576*2;
+		//pRequest->cbBuffer = 720*576*2;
 		break;
 	case 704*480*2:
-		pRequest->cbBuffer = 704*576*2;
+		//pRequest->cbBuffer = 704*576*2;
 		break;
 	default:
 		break;

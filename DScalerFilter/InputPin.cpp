@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.24 2003-09-24 16:33:00 adcockj Exp $
+// $Id: InputPin.cpp,v 1.25 2003-09-28 15:08:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.24  2003/09/24 16:33:00  adcockj
+// Bug fixes - starting to work now..
+//
 // Revision 1.23  2003/09/19 16:12:14  adcockj
 // Further improvements
 //
@@ -595,7 +598,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
 			m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
 		}
 		// if we get a later sample then flush the buffers
-		else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn < InSampleProperties.tStart)
+		else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn + 100000 < InSampleProperties.tStart)
         {
 			LOG(DBGLOG_FLOW, ("Skipped Frames expected %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
 
@@ -744,6 +747,9 @@ HRESULT CInputPin::InternalProcessOutput(IMediaSample** OutSample, BOOL HurryUp)
 			}
 			OutDataBuffer.rtTimelength += OutDataBuffer.rtTimestamp;
 			m_ExpectedStartOut = OutDataBuffer.rtTimelength;
+
+            //OutDataBuffer.rtTimestamp += 400000;
+            //OutDataBuffer.rtTimelength += 400000;
 
 			(*OutSample)->SetTime(&OutDataBuffer.rtTimestamp, &OutDataBuffer.rtTimelength);
 			// finally send the processed sample on it's way
