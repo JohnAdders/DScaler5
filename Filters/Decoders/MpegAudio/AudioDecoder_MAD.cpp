@@ -1,8 +1,8 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.10 2004-07-01 21:16:55 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.11 2004-07-07 14:08:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (C) 2004 John Adcock
+//  Copyright (C) 2004 John Adcock
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/07/01 21:16:55  adcockj
+// Another load of fixes to recent changes
+//
 // Revision 1.9  2004/07/01 20:03:08  adcockj
 // Silly bugs fixed
 //
@@ -71,8 +74,8 @@
 #include "DSOutputPin.h"
 #include "Convert.h"
 
-#define	BLOCK_SIZE_LAYER1	1536
-#define	BLOCK_SIZE_LAYER23	4608
+#define BLOCK_SIZE_LAYER1   1536
+#define BLOCK_SIZE_LAYER23  4608
 
 using namespace libmad;
 
@@ -94,27 +97,26 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 HRESULT CAudioDecoder::ProcessMPA()
 {
-	mad_stream_buffer(&m_stream, &m_buff[0], m_buff.size());
+    mad_stream_buffer(&m_stream, &m_buff[0], m_buff.size());
 
-	while(1)
-	{
-		if(mad_frame_decode(&m_frame, &m_stream) == -1)
-		{
-			if(m_stream.error == MAD_ERROR_BUFLEN)
-			{
-				memmove(&m_buff[0], m_stream.this_frame, m_stream.bufend - m_stream.this_frame);
-				m_buff.resize(m_stream.bufend - m_stream.this_frame);
-				break;
-			}
+    while(1)
+    {
+        if(mad_frame_decode(&m_frame, &m_stream) == -1)
+        {
+            if(m_stream.error == MAD_ERROR_BUFLEN)
+            {
+                memmove(&m_buff[0], m_stream.this_frame, m_stream.bufend - m_stream.this_frame);
+                m_buff.resize(m_stream.bufend - m_stream.this_frame);
+                break;
+            }
 
-			LOG(DBGLOG_FLOW, ("*m_stream.error == %d\n", m_stream.error));
+            LOG(DBGLOG_FLOW, ("*m_stream.error == %d\n", m_stream.error));
 
-			if(!MAD_RECOVERABLE(m_stream.error))
-				return E_FAIL;
+            if(!MAD_RECOVERABLE(m_stream.error))
+                return E_FAIL;
             
             continue;
-		}
-		WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
+        }
 
         if(GetParamBool(MPEGOVERSPDIF) && m_ConnectedAsSpdif)
         {
@@ -122,65 +124,63 @@ HRESULT CAudioDecoder::ProcessMPA()
             // Code was inspired by mpegspdif by Ilkka Karvinen <ik@iki.fi>
             // the source for mpegspdif can be found at 
             // http://www.cs.tut.fi/~ik/mpegspdif.html
-		    if(wfein->nSamplesPerSec > m_frame.header.samplerate)
-			    continue;
+            if(m_InputSampleRate > m_frame.header.samplerate)
+                continue;
 
             DWORD len = m_stream.next_frame - m_stream.this_frame;
 
-	        SI(IMediaSample) pOut;
-	        WORD* pDataOut = NULL;
+            SI(IMediaSample) pOut;
+            WORD* pDataOut = NULL;
 
-			DWORD block_size = (m_frame.header.layer == MAD_LAYER_I) ? BLOCK_SIZE_LAYER1 : BLOCK_SIZE_LAYER23;
+            DWORD block_size = (m_frame.header.layer == MAD_LAYER_I) ? BLOCK_SIZE_LAYER1 : BLOCK_SIZE_LAYER23;
 
             HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, block_size);
             CHECK(hr);
             
-			memset((char*)pDataOut, 0, block_size);
-			pDataOut[0] = 0xf872;
-			pDataOut[1] = 0x4e1f;
+            memset((char*)pDataOut, 0, block_size);
+            pDataOut[0] = 0xf872;
+            pDataOut[1] = 0x4e1f;
             if(m_frame.header.layer == MAD_LAYER_I)
             {
-			    pDataOut[2] = 0x0004;
+                pDataOut[2] = 0x0004;
             }
             else
             {
-			    pDataOut[2] = 0x0005;
+                pDataOut[2] = 0x0005;
             }
-			pDataOut[3] = len*8;
-			_swab((char*)m_stream.this_frame, (char*)&pDataOut[4], len);
+            pDataOut[3] = len*8;
+            _swab((char*)m_stream.this_frame, (char*)&pDataOut[4], len);
             
             REFERENCE_TIME rtDur = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;
 
             hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-			if(S_OK != hr)
-				return hr;
+            if(S_OK != hr)
+                return hr;
         }
         else
         {
-			mad_synth_frame(&m_synth, &m_frame);
+            mad_synth_frame(&m_synth, &m_frame);
 
             // check that the incoming format is reasonable
             // sometimes we get told we have a lower format than we
             // actually get
-		    if(wfein->nSamplesPerSec > m_synth.pcm.samplerate)
-			    continue;
+            if(m_InputSampleRate > m_synth.pcm.samplerate)
+                continue;
 
-		    const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
-		    const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
+            const mad_fixed_t* left_ch   = m_synth.pcm.samples[0];
+            const mad_fixed_t* right_ch  = m_synth.pcm.samples[1];
 
-			if(m_CanReconnect && m_ConnectedAsSpdif)
-			{
-				HRESULT hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, 2, 0, 32);
-				m_NeedToAttachFormat = true;
-				m_ConnectedAsSpdif = false;
-				CHECK(hr);
-			}
-
-
+            if(m_CanReconnect && m_synth.pcm.samplerate != m_InputSampleRate)
+            {
+                HRESULT hr = CreateInternalPCMMediaType(m_synth.pcm.samplerate, 2, 0, 32);
+                m_NeedToAttachFormat = true;
+                m_ConnectedAsSpdif = false;
+                CHECK(hr);
+            }
             DWORD len = m_synth.pcm.length*m_ChannelsRequested*m_SampleSize;
 
-	        SI(IMediaSample) pOut;
-	        BYTE* pDataOut = NULL;
+            SI(IMediaSample) pOut;
+            BYTE* pDataOut = NULL;
 
             HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
             CHECK(hr);
@@ -188,84 +188,65 @@ HRESULT CAudioDecoder::ProcessMPA()
             unsigned short i;
             CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
 
-			if(m_synth.pcm.channels == 2)
+            if(m_synth.pcm.channels == 2)
             {
-				if(m_ChannelsRequested == 2)
-				{
-					for(i = 0; i < m_synth.pcm.length; i++)
-					{
-						pConvFunc(pDataOut, *left_ch++);
-						pConvFunc(pDataOut, *right_ch++);
-					}
-				}
-				else
-				{
-					for(i = 0; i < m_synth.pcm.length; i++)
-					{
-						pConvFunc(pDataOut, *left_ch++);
-						pConvFunc(pDataOut, *right_ch++);
-						for(int j = 0; j < (m_ChannelsRequested - 2); ++j)
-						{
-							pConvFunc(pDataOut, 0);
-						}
-					}
-				}
-
+                int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
+                for(i = 0; i < m_synth.pcm.length; i++)
+                {
+                    pConvFunc(pDataOut, *left_ch++);
+                    pConvFunc(pDataOut, *right_ch++);
+                    if(Padding > 0)
+                    {
+                        memset(pDataOut, 0, Padding);
+                        pDataOut += Padding;
+                    }
+                }
             }
-			// else upconvert mono to stereo
-			// TODO: note that the volume is halved in a very simplistic way
-			// it may be worth improving this if people notice
+            // else upconvert mono to stereo
+            // TODO: note that the volume is halved in a very simplistic way
+            // it may be worth improving this if people notice
             else if((m_ChannelMask & SPEAKER_FRONT_CENTER) == 0)
             {
-				if(m_ChannelsRequested == 2)
-				{
-					for(i = 0; i < m_synth.pcm.length; i++)
-					{
-						pConvFunc(pDataOut, *left_ch>>1);
-						pConvFunc(pDataOut, *left_ch++>>1);
-					}
-				}
-				else
-				{
-					for(i = 0; i < m_synth.pcm.length; i++)
-					{
-						pConvFunc(pDataOut, *left_ch>>1);
-						pConvFunc(pDataOut, *left_ch++>>1);
-						for(int j = 0; j < (m_ChannelsRequested - 2); ++j)
-						{
-							pConvFunc(pDataOut, 0);
-						}
-					}
-				}
+                int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
+                for(i = 0; i < m_synth.pcm.length; i++)
+                {
+                    pConvFunc(pDataOut, *left_ch>>1);
+                    pConvFunc(pDataOut, *left_ch++>>1);
+                    if(Padding > 0)
+                    {
+                        memset(pDataOut, 0, Padding);
+                        pDataOut += Padding;
+                    }
+                }
             }
-			// otherwise send mono to centre speaker always third
-			else
-			{
-				for(i = 0; i < m_synth.pcm.length; i++)
-				{
-					for(int j = 0; j < m_ChannelsRequested; ++j)
-					{
-						if(j == 2)
-						{
-							pConvFunc(pDataOut, *left_ch++);
-						}
-						else
-						{
-							pConvFunc(pDataOut, 0);
-						}
-					}
-				}
-			}
+            // otherwise send mono to centre speaker always third
+            else
+            {
+                for(i = 0; i < m_synth.pcm.length; i++)
+                {
+                    for(int j = 0; j < m_ChannelsRequested; ++j)
+                    {
+                        if(j == 2)
+                        {
+                            pConvFunc(pDataOut, *left_ch++);
+                        }
+                        else
+                        {
+                            pConvFunc(pDataOut, 0);
+                        }
+                    }
+                }
+            }
     
-    	    REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_ChannelsRequested*m_SampleSize);
+            REFERENCE_TIME rtDur = 10000000i64*len/(m_synth.pcm.samplerate*m_ChannelsRequested*m_SampleSize);
             REFERENCE_TIME rtDur2 = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;
 
             hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur2);
-		    if(S_OK != hr)
-			    return hr;
+            if(S_OK != hr)
+                return hr;
         }
-	}
+    }
 
-	return S_OK;
+    return S_OK;
 }
 

@@ -231,7 +231,7 @@ static __inline void ConvertDoubleToFloat(BYTE*& pOutput, double Sample)
 
 static __inline void Convert16ToFloat(BYTE*& pOutput, short Sample)
 {
-    *(float*)pOutput = Sample / double(1 << 15);
+    *(float*)pOutput = (double)Sample / double(1 << 15);
     pOutput += 4;
 }
 
@@ -257,7 +257,7 @@ static __inline void Convert16To16(BYTE*& pOutput, short Sample)
 
 static __inline void Convert24ToFloat(BYTE*& pOutput, long Sample)
 {
-    *(float*)pOutput = Sample / double(1 << 23);
+    *(float*)pOutput = (double)Sample / double(1 << 23);
     pOutput += 4;
 }
 

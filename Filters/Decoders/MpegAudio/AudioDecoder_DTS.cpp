@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.5 2004-07-01 16:12:47 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.6 2004-07-07 14:08:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (C) 2003 Gabest
-//	http://www.gabest.org
+//  Copyright (C) 2003 Gabest
+//  http://www.gabest.org
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -40,6 +40,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.4  2004/04/06 16:46:11  adcockj
 // DVD Test Annex Compatability fixes
 //
@@ -76,9 +80,9 @@ using namespace libdts;
 
 static struct scmap_t
 {
-	WORD nChannels;
-	BYTE ch[6];
-	DWORD dwChannelMask;
+    WORD nChannels;
+    BYTE ch[6];
+    DWORD dwChannelMask;
 }
 s_scmap_dts[2*10] = 
 { 
@@ -178,32 +182,24 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 HRESULT CAudioDecoder::ProcessDTS()
 {
-	BYTE* p = &m_buff[0];
-	BYTE* base = p;
-	BYTE* end = p + m_buff.size();
+    BYTE* p = &m_buff[0];
+    BYTE* base = p;
+    BYTE* end = p + m_buff.size();
 
-	while(end - p >= 14)
-	{
+    while(end - p >= 14)
+    {
        int size = 0, flags, sample_rate, bit_rate, frame_length; 
 
-		if((size = dts_syncinfo(m_dts_state, p, &flags, &sample_rate, &bit_rate, &frame_length)) > 0) 
-		{
-			LOG(DBGLOG_FLOW, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
+        if((size = dts_syncinfo(m_dts_state, p, &flags, &sample_rate, &bit_rate, &frame_length)) > 0) 
+        {
+            LOG(DBGLOG_FLOW, ("dts: size=%d, flags=%08x, sample_rate=%d, bit_rate=%d, frame_length=%d\n", size, flags, sample_rate, bit_rate, frame_length)); 
     
-			bool fEnoughData = p + size <= end;
+            bool fEnoughData = p + size <= end;
 
-			if(fEnoughData)
-			{
-				if(GetParamBool(USESPDIF))
-				{
-					// go back to SPDIF if we need to
-					if(m_CanReconnect && !m_ConnectedAsSpdif)
-					{
-						HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
-						m_NeedToAttachFormat = true;
-						m_ConnectedAsSpdif = true;
-						CHECK(hr);
-					}
+            if(fEnoughData)
+            {
+                if(m_ConnectedAsSpdif)
+                {
                     DWORD len = 0x800; 
 
                     SI(IMediaSample) pOut;
@@ -212,17 +208,17 @@ HRESULT CAudioDecoder::ProcessDTS()
                     HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
                     CHECK(hr);
 
-				    pDataOut[0] = 0xf872;
-				    pDataOut[1] = 0x4e1f;
-				    pDataOut[2] = 0x000b;
-				    pDataOut[3] = size*8;
-				    _swab((char*)p, (char*)&pDataOut[4], size);
+                    pDataOut[0] = 0xf872;
+                    pDataOut[1] = 0x4e1f;
+                    pDataOut[2] = 0x000b;
+                    pDataOut[3] = size*8;
+                    _swab((char*)p, (char*)&pDataOut[4], size);
 
                     REFERENCE_TIME rtDur = 10000000i64 * size * 8 / bit_rate; // should be 106667 * 100 ns
 
                     hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-				    if(S_OK != hr)
-					    return hr;
+                    if(S_OK != hr)
+                        return hr;
                 }
                 else
                 {
@@ -248,16 +244,16 @@ HRESULT CAudioDecoder::ProcessDTS()
                         flags = DTS_3F2R | DTS_LFE;
                         break;
                     }
-				    
+                    
                     flags += DTS_ADJUST_LEVEL;
 
-					sample_t level = 1, gain = 1, bias = 0;
-					level *= gain;
+                    sample_t level = 1, gain = 1, bias = 0;
+                    level *= gain;
 
-					if(dts_frame(m_dts_state, p, &flags, &level, bias) == 0)
-					{
-						if(!GetParamBool(DYNAMICRANGECONTROL))
-							dts_dynrng(m_dts_state, NULL, NULL);
+                    if(dts_frame(m_dts_state, p, &flags, &level, bias) == 0)
+                    {
+                        if(!GetParamBool(DYNAMICRANGECONTROL))
+                            dts_dynrng(m_dts_state, NULL, NULL);
 
                         int scmapidx = min(flags&DTS_CHANNEL_MASK, countof(s_scmap_dts)/2); 
                         scmap_t& scmap = s_scmap_dts[scmapidx + ((flags&DTS_LFE)?(countof(s_scmap_dts)/2):0)]; 
@@ -271,15 +267,15 @@ HRESULT CAudioDecoder::ProcessDTS()
                         HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
                         CHECK(hr);
 
-						int i = 0;
+                        int i = 0;
                         CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
 
-						for(; i < blocks && dts_block(m_dts_state) == 0; i++)
-						{
-							sample_t* samples = dts_samples(m_dts_state);
+                        for(; i < blocks && dts_block(m_dts_state) == 0; i++)
+                        {
+                            sample_t* samples = dts_samples(m_dts_state);
                             sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
                             int ch = 0;
-							int outch = 0;
+                            int outch = 0;
 
                             for(int SpkFlag = 0; SpkFlag < 6; SpkFlag++)
                             {
@@ -288,51 +284,51 @@ HRESULT CAudioDecoder::ProcessDTS()
                                     Channels[outch] = samples + 256*scmap.ch[ch];
                                     ch++;
                                 }
-								if((m_ChannelMask & (1 << SpkFlag) ) != 0)
-								{
-									outch++;
-								}
+                                if((m_ChannelMask & (1 << SpkFlag) ) != 0)
+                                {
+                                    outch++;
+                                }
                             }
 
                             ASSERT(outch == m_ChannelsRequested);
-							ASSERT(ch == scmap.nChannels);
+                            ASSERT(ch == scmap.nChannels);
 
-							for(int j = 0; j < 256; j++, samples++)
-							{
-								for(int ch = 0; ch < scmap.nChannels; ch++)
-								{
-									pConvFunc(pDataOut, Channels[ch][j]);
-								}
-							}
-						}
+                            for(int j = 0; j < 256; j++, samples++)
+                            {
+                                for(int ch = 0; ch < m_ChannelsRequested; ch++)
+                                {
+                                    pConvFunc(pDataOut, Channels[ch][j]);
+                                }
+                            }
+                        }
 
-						if(i == blocks)
-						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested);
+                        if(i == blocks)
+                        {
+                            REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested);
                             hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
-						    if(S_OK != hr)
-							    return hr;
-    					}
-    				}
+                            if(S_OK != hr)
+                                return hr;
+                        }
+                    }
                 }
-				p += size;
-			}
+                p += size;
+            }
 
-			memmove(base, p, end - p);
-			end = base + (end - p);
-			p = base;
+            memmove(base, p, end - p);
+            end = base + (end - p);
+            p = base;
 
-			if(!fEnoughData)
-				break;
-		}
-		else
-		{
-			p++;
-		}
-	}
+            if(!fEnoughData)
+                break;
+        }
+        else
+        {
+            p++;
+        }
+    }
 
-	m_buff.resize(end - p);
+    m_buff.resize(end - p);
 
-	return S_OK;
+    return S_OK;
 }
 

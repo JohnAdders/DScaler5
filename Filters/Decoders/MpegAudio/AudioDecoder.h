@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.12 2004-07-01 16:12:47 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.13 2004-07-07 14:08:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -55,25 +55,25 @@ DEFINE_GUID(CLSID_CAudioDecoder, 0xd2ca75c2, 0x5a1, 0x4915, 0x88, 0xa8, 0xd4, 0x
 class CAudioDecoder : 
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed,
-	public IAMFilterMiscFlags
+    public IAMFilterMiscFlags
 {
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CAudioDecoder, "{D2CA75C2-05A1-4915-88A8-D433F876D186}", "MpegAudio Filter", "Filter.MpegAudio.1", "Filter.MpegAudio", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(ISaveDefaults)
-	//IMPLEMENTS_INTERFACE(IAMFilterMiscFlags)
+    //IMPLEMENTS_INTERFACE(IAMFilterMiscFlags)
 END_INTERFACE_TABLE()
 
 public:
-	CAudioDecoder();
+    CAudioDecoder();
     ~CAudioDecoder();
 
 BEGIN_PARAM_LIST()
@@ -117,15 +117,15 @@ public:
     // IBaseFilter
     STDMETHOD(GetClassID)(CLSID __RPC_FAR *pClassID);
 
-	ULONG __stdcall GetMiscFlags()
-	{
-		return AM_FILTER_MISC_FLAGS_IS_SOURCE;
-	}
+    ULONG __stdcall GetMiscFlags()
+    {
+        return AM_FILTER_MISC_FLAGS_IS_SOURCE;
+    }
 
 public:
     // IAmFreeSoftwareLicensed
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 public:
@@ -145,31 +145,31 @@ public:
     HRESULT Activate();
     HRESULT Deactivate();
 
-	
+    
 
 protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
 
 protected:
-	liba52::a52_state_t* m_a52_state;
+    liba52::a52_state_t* m_a52_state;
     libdts::dts_state_t* m_dts_state;
 
-	struct libmad::mad_stream m_stream;
-	struct libmad::mad_frame m_frame;
-	struct libmad::mad_synth m_synth;
+    struct libmad::mad_stream m_stream;
+    struct libmad::mad_frame m_frame;
+    struct libmad::mad_synth m_synth;
 
-	std::vector<BYTE> m_buff;
-	REFERENCE_TIME m_rtNextFrameStart;
-	REFERENCE_TIME m_rtOutputStart;
+    std::vector<BYTE> m_buff;
+    REFERENCE_TIME m_rtNextFrameStart;
+    REFERENCE_TIME m_rtOutputStart;
     DWORD m_OutputBufferSize;
 
-	double m_sample_max;
+    double m_sample_max;
 
-	HRESULT ProcessLPCM();
-	HRESULT ProcessAC3();
-	HRESULT ProcessDTS();
-	HRESULT ProcessMPA();
+    HRESULT ProcessLPCM();
+    HRESULT ProcessAC3();
+    HRESULT ProcessDTS();
+    HRESULT ProcessMPA();
     HRESULT Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFERENCE_TIME rtDur2);
     HRESULT ReconnectOutput(DWORD Len);
 
@@ -182,16 +182,17 @@ protected:
 
 private:
     AM_MEDIA_TYPE m_InternalMT;
-	WAVEFORMATEXTENSIBLE m_InternalWFE;
+    WAVEFORMATEXTENSIBLE m_InternalWFE;
     bool m_NeedToAttachFormat;
     eOutputSampleType m_OutputSampleType;
     int m_SampleSize;
-	int m_InputSampleRate;
-	int m_OutputSampleRate;
-	bool m_ConnectedAsSpdif;
-	DWORD m_ChannelMask;
-	int m_ChannelsRequested;
-	bool m_CanReconnect;
+    int m_InputSampleRate;
+    int m_OutputSampleRate;
+    bool m_ConnectedAsSpdif;
+    DWORD m_ChannelMask;
+    int m_ChannelsRequested;
+    bool m_CanReconnect;
+    bool m_DownSample;
 };
 
 #define m_AudioInPin m_InputPins[0]

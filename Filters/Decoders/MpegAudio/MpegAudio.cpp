@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.3 2004-03-05 15:56:14 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.4 2004-07-07 14:08:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/03/05 15:56:14  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.2  2004/02/17 16:39:59  adcockj
 // Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
 //
@@ -55,7 +58,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
+        DisableThreadLibraryCalls(hInstance);
         CPU_SetupFeatureFlag();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
@@ -83,33 +86,33 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer(void)
 {
 
-	REGPINTYPES InputTypes[] = {	
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MP3},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1AudioPayload},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Payload},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Packet},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MPEG2_AUDIO},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_AUDIO},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_AUDIO},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG2_AUDIO},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DOLBY_AC3},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DOLBY_AC3},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DOLBY_AC3},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_DOLBY_AC3},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_WAVE_DOLBY_AC3},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DTS},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DTS},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DTS},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_DTS},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_WAVE_DTS},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
+    REGPINTYPES InputTypes[] = {    
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MP3},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1AudioPayload},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Payload},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG1Packet},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MPEG2_AUDIO},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_AUDIO},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_AUDIO},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MPEG2_AUDIO},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DOLBY_AC3},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DOLBY_AC3},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DOLBY_AC3},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_DOLBY_AC3},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_WAVE_DOLBY_AC3},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DTS},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DTS},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DTS},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_DTS},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_WAVE_DTS},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
     };
 
-	REGPINTYPES OutputTypes[] = {	
-    	{&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM},
+    REGPINTYPES OutputTypes[] = {   
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM},
     };
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
