@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.18 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.19 2004-07-16 15:58:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -176,6 +176,7 @@ private:
     {
         DEFAULT_OUTFILTER,
         FFDSHOW_OUTFILTER,
+        GABEST_OUTFILTER,
         VR_OUTFILTER,
         VMR7_OUTFILTER,
         VMR9_OUTFILTER
@@ -296,7 +297,8 @@ private:
     void CorrectOutputSize();
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
     void PillarBox(long YAdjust, long XAdjust);
-
+	void OnConnectToVMR7();
+	void OnConnectToVMR9();
 };
 
 #define m_VideoInPin m_InputPins[0]
@@ -304,4 +306,7 @@ private:
 #define m_VideoOutPin m_OutputPins[0]
 #define m_CCOutPin m_OutputPins[1]
 
-DEFINE_GUID(CLSID_FFDShow, 0x0B390488, 0xd80f, 0x4a68, 0x84, 0x08, 0x48, 0xdc, 0x19, 0x9f, 0x0e, 0x97);
+DEFINE_GUID(CLSID_FFDShow, 0x04FE9017, 0xf873, 0x410e, 0x87, 0x1e, 0xab, 0x91, 0x66, 0x1a, 0x4e, 0xf7);
+DEFINE_GUID(CLSID_FFDShowRaw, 0x0B390488, 0xd80f, 0x4a68, 0x84, 0x08, 0x48, 0xdc, 0x19, 0x9f, 0x0e, 0x97);
+DEFINE_GUID(CLSID_DirectVobSubFilter, 0x93a22e7a, 0x5091, 0x45ef, 0xba, 0x61, 0x6d, 0xa2, 0x61, 0x56, 0xa5, 0xd0);
+DEFINE_GUID(CLSID_DirectVobSubFilter2, 0x9852a670, 0xf845, 0x491b, 0x9b, 0xe6, 0xeb, 0xd8, 0x41, 0xb8, 0xa6, 0x13);

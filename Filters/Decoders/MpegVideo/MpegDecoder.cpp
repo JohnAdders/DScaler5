@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.30 2004-07-11 14:36:00 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.31 2004-07-16 15:58:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.30  2004/07/11 14:36:00  adcockj
+// Improved performance under debug
+//
 // Revision 1.29  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -255,6 +258,8 @@ CMpegDecoder::CMpegDecoder() :
     m_NeedToAttachFormat = false;
 
     ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
+
+    //mpeg2_accel(31);
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -264,7 +269,7 @@ CMpegDecoder::~CMpegDecoder()
 
 STDMETHODIMP CMpegDecoder::GetClassID(CLSID __RPC_FAR *pClassID)
 {
-    LOG(DBGLOG_FLOW, ("CMpegDecoder::GetClassID\n"));
+    LOG(DBGLOG_ALL, ("CMpegDecoder::GetClassID\n"));
     if(pClassID == NULL)
     {
         return E_POINTER;
@@ -907,15 +912,23 @@ HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
         if(Clsid == CLSID_VideoMixingRenderer9)
         {
             m_ConnectedToOut = VMR9_OUTFILTER;
+			OnConnectToVMR9();
         }
         else if(Clsid == CLSID_VideoMixingRenderer ||
                 Clsid == CLSID_VideoRendererDefault)
         {
             m_ConnectedToOut = VMR7_OUTFILTER;
+			OnConnectToVMR7();
         }
-        else if(Clsid == CLSID_FFDShow)
+        else if(Clsid == CLSID_FFDShow ||
+                Clsid == CLSID_FFDShowRaw)
         {
             m_ConnectedToOut = FFDSHOW_OUTFILTER;
+        }
+        else if(Clsid == CLSID_DirectVobSubFilter ||
+            Clsid == CLSID_DirectVobSubFilter2)
+        {
+            m_ConnectedToOut = GABEST_OUTFILTER;
         }
         else
         {
@@ -1548,6 +1561,24 @@ HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
             }
             m_NeedToAttachFormat = true; 
         }
+        else if(m_ConnectedToOut == GABEST_OUTFILTER)
+        {
+            if(!ForceReconnect)
+            {   
+                ALLOCATOR_PROPERTIES AllocatorProps;
+                hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+                CHECK(hr);
+
+                // if the new type would be greater than the old one then
+                // we need to reconnect otherwise just attach the type to the next sample
+                if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+                {
+                    hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+                    CHECK(hr);
+                }
+                m_NeedToAttachFormat = true; 
+            }
+        }
         else
         {
             if(!ForceReconnect)
@@ -1838,7 +1869,24 @@ HRESULT CMpegDecoder::ProcessNewSequence()
     int ChromaSizeDivider;
 
     m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
-    if(m_AvgTimePerFrame == 0) m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
+    // if the sequence draws a blank try the header
+    if(m_AvgTimePerFrame == 0)
+    {
+        m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
+    }
+    // if that doesn't work guess based on height
+    // this is so that ffdshow and possibly reclock don't go wierd on us
+    if(m_AvgTimePerFrame == 0)
+    {
+        if(m_CurrentSequence.picture_height == 576 || m_CurrentSequence.picture_height == 288)
+        {
+            m_AvgTimePerFrame = 400000;
+        }
+        else
+        {
+            m_AvgTimePerFrame = 333333;
+        }
+    }
     if(mpeg2_info(m_dec)->sequence->chroma_width <= mpeg2_info(m_dec)->sequence->width / 2)
     {
         if(mpeg2_info(m_dec)->sequence->chroma_height <= mpeg2_info(m_dec)->sequence->height / 2)
@@ -1906,7 +1954,7 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 HRESULT CMpegDecoder::ProcessModifiedSequence()
 {
     // On some channels we get notification of aspect ratio change
-    // via this mechinism however we need to ensure  that we handle the case
+    // via this mechinism however we need to ensure that we handle the case
     // where nothing really has changed
     if(m_CurrentSequence.pixel_height != mpeg2_info(m_dec)->sequence->pixel_height ||
         m_CurrentSequence.pixel_width != mpeg2_info(m_dec)->sequence->pixel_width ||
@@ -2150,7 +2198,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
         // start - end
         m_CurrentPicture->m_rtStop = m_CurrentPicture->m_rtStart + m_AvgTimePerFrame * m_CurrentPicture->m_NumFields / 2;
 
-        if(/*m_CurrentPicture->m_rtStart >= 0 &&*/ !m_fWaitForKeyFrame)
+        if(!m_fWaitForKeyFrame)
         {
             hr = Deliver(false);
         }
@@ -2420,3 +2468,21 @@ void CMpegDecoder::CorrectOutputSize()
 
 }
 
+
+void CMpegDecoder::OnConnectToVMR7()
+{
+	SI(IVMRAspectRatioControl) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+	if(AspectRatioControl)
+	{
+		AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+	}
+}
+
+void CMpegDecoder::OnConnectToVMR9()
+{
+	SI(IVMRAspectRatioControl9) AspectRatioControl = m_VideoOutPin->GetConnectedFilter();
+	if(AspectRatioControl)
+	{
+		AspectRatioControl->SetAspectRatioMode(VMR_ARMODE_LETTER_BOX);
+	}
+}

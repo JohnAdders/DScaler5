@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.6 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.7 2004-07-16 15:58:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.5  2004/03/05 15:56:29  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -119,7 +124,7 @@ STDAPI DllRegisterServer(void)
     RegInfo.rgPins2 = Pins;
     
   
-    HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"Mpeg2 Video Decoder", &RegInfo);
+    HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"DScaler Mpeg2 Video Decoder", &RegInfo);
     CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }

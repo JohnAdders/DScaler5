@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /Ob1 /I "." /I "../include" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "." /I "../include" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
 # ADD RSC /l 0x409 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -98,6 +98,14 @@ SOURCE=..\libmpeg2\header.c
 # Begin Source File
 
 SOURCE=..\libmpeg2\idct.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmpeg2\idct_sse2.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\libmpeg2\mc_sse2.c
 # End Source File
 # Begin Source File
 

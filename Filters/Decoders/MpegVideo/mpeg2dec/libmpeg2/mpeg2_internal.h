@@ -94,7 +94,7 @@ struct mpeg2_decoder_s {
     int16_t dc_dct_pred[3];
 
     /* DCT coefficients */
-    int16_t DCTblock[64] ATTR_ALIGN(64);
+    ATTR_ALIGN(int16_t DCTblock[64], 64);
 
     uint8_t * picture_dest[3];
     void (* convert) (void * convert_id, uint8_t * const * src,
@@ -262,6 +262,12 @@ void mpeg2_idct_copy_mmx (int16_t * block, uint8_t * dest, int stride);
 void mpeg2_idct_add_mmx (int last, int16_t * block,
 			 uint8_t * dest, int stride);
 void mpeg2_idct_mmx_init (void);
+
+/* idct_mmx.c */
+void mpeg2_idct_copy_sse2 (int16_t * block, uint8_t * dest, int stride);
+void mpeg2_idct_add_sse2 (int last, int16_t * block,
+			    uint8_t * dest, int stride);
+
 
 /* idct_altivec.c */
 void mpeg2_idct_copy_altivec (int16_t * block, uint8_t * dest, int stride);

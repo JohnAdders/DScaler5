@@ -23,10 +23,14 @@
 
 /* use gcc attribs to align critical data structures */
 #ifdef ATTRIBUTE_ALIGNED_MAX
-#define ATTR_ALIGN(align) __attribute__ ((__aligned__ ((ATTRIBUTE_ALIGNED_MAX < align) ? ATTRIBUTE_ALIGNED_MAX : align)))
+#define ATTR_ALIGN(var, align) var __attribute__ ((__aligned__ ((ATTRIBUTE_ALIGNED_MAX < align) ? ATTRIBUTE_ALIGNED_MAX : align)))
+#elif _MSC_VER >= 1300
+#define ATTR_ALIGN(_var, _align) __declspec(align(_align)) _var
 #else
-#define ATTR_ALIGN(align)
+#define ATTR_ALIGN(var, align) 
+
 #endif
+
 
 #ifdef HAVE_BUILTIN_EXPECT
 #define likely(x) __builtin_expect ((x) != 0, 1)

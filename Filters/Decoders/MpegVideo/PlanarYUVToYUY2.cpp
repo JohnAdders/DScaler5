@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.5 2004-07-07 14:07:07 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.6 2004-07-16 15:58:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.4  2004/03/08 17:04:02  adcockj
 // Removed all inline assembler to remove dependence on MS compilers
 //
@@ -303,7 +308,7 @@ bool BitBltFromI420ToYUY2_Int(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy,
     dst += dstpitch;
     srcy += srcpitch;
 
-    // copy second chroma row an second luma row for second row
+    // copy second chroma row and second luma row for second row
     yuvtoyuy2row(dst, srcy, srcu + srcpitch/2, srcv + srcpitch/2, w);
     dst += dstpitch;
     srcy += srcpitch;
