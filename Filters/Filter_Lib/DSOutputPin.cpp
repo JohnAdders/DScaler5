@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.21 2004-11-06 14:07:01 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.22 2004-11-07 09:12:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2004/11/06 14:07:01  adcockj
+// Fixes for WM10 and seeking
+//
 // Revision 1.20  2004/11/02 17:59:56  adcockj
 // fix for vmr9 issues
 //
@@ -618,14 +621,6 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     hr = SetType(pmt);
     CHECK(hr);
 
-    hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
-    if(FAILED(hr))
-    {
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-		m_Allocator.Detach();
-        return VFW_E_NO_TRANSPORT;
-    }
-
     ALLOCATOR_PROPERTIES PropsWeWant;
     ZeroMemory(&PropsWeWant, sizeof(PropsWeWant));
 
@@ -664,6 +659,14 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     }
     
     LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+
+	hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
+    if(FAILED(hr))
+    {
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+		m_Allocator.Detach();
+        return VFW_E_NO_TRANSPORT;
+    }
 
     if(pReceivePin != NULL)
     {
