@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.1 2004-10-28 16:00:48 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.2 2004-10-31 14:20:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/10/28 16:00:48  adcockj
+// added new files
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -269,12 +272,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
         memset(vih, 0, sizeof(VIDEOINFOHEADER));
         vih->bmiHeader = bihOut;
-        if(mt->pbFormat)
-        {
-            vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
-            vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
-            vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
-        }
+        vih->AvgTimePerFrame = m_AvgTimePerFrame;
         pmt->pbFormat = (BYTE*)vih;
         pmt->cbFormat = sizeof(VIDEOINFOHEADER);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
@@ -293,12 +291,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         {
             vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
         }
-        if(mt->pbFormat)
-        {
-            vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
-            vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
-            vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
-        }
+        vih->AvgTimePerFrame = m_AvgTimePerFrame;
         vih->dwControlFlags = ControlFlags;
         pmt->pbFormat = (BYTE*)vih;
         pmt->cbFormat = sizeof(VIDEOINFOHEADER2);       

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.17 2004-10-29 11:49:23 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.18 2004-10-31 14:20:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2004/10/29 11:49:23  adcockj
+// Added load from registry button
+//
 // Revision 1.16  2004/10/29 11:39:34  adcockj
 // Added  restore defaults button
 //
@@ -127,6 +130,7 @@ STDMETHODIMP CGenDMOPropPage::Deactivate()
     m_Scrollbar.Detach();
     m_Combo.Detach();
     m_DefaultsBtn.Detach();
+	m_BoolDesc.Detach();
 
     return IPropertyPageImpl<CGenDMOPropPage>::Deactivate();
 }
@@ -255,12 +259,14 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
         m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
         m_Combo.Attach(GetDlgItem(IDC_COMBO));
         m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
+		m_BoolDesc.Attach(GetDlgItem(IDC_BOOLDESC));
 
         m_EditBox.ShowWindow(SW_HIDE);
         m_CheckBox.ShowWindow(SW_HIDE);
         m_Slider.ShowWindow(SW_HIDE);
         m_Scrollbar.ShowWindow(SW_HIDE);
         m_Combo.ShowWindow(SW_HIDE);
+		m_BoolDesc.ShowWindow(SW_HIDE);
 
         if(!m_SaveDefaults)
         {
@@ -319,6 +325,7 @@ void CGenDMOPropPage::SetupControls()
     m_Slider.ShowWindow(SW_HIDE);
     m_Scrollbar.ShowWindow(SW_HIDE);
     m_Combo.ShowWindow(SW_HIDE);
+	m_BoolDesc.ShowWindow(SW_HIDE);
 
     if(m_CurrentParam > m_NumParams)
     {
@@ -345,7 +352,8 @@ void CGenDMOPropPage::SetupControls()
         break;
     case MPT_BOOL:
         m_CheckBox.ShowWindow(SW_SHOW);
-        SendMessageW(m_CheckBox.m_hWnd, WM_SETTEXT, 0, (LPARAM)CurParamText);
+		m_BoolDesc.ShowWindow(SW_SHOW);
+		SendMessageW(m_BoolDesc.m_hWnd, WM_SETTEXT, 0, (LPARAM)CurParamText);
         SetupBoolValue();
         break;
     case MPT_ENUM:
@@ -578,9 +586,10 @@ LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*w
     {
         m_Params[i] = m_ParamInfos[i].mpdNeutralValue;
     }
-    SetDirty(HasAnythingChanged());
+
     SetupControls();
-    return 0;
+    SetDirty(HasAnythingChanged());
+	return 0;
 }
 
 LRESULT CGenDMOPropPage::OnBnClickedLoaddefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)

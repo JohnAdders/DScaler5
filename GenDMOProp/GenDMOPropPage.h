@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.9 2004-10-29 11:49:23 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.10 2004-10-31 14:20:39 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -97,6 +97,7 @@ private:
     CWindow m_Scrollbar;
     CWindow m_Combo;
     CWindow m_DefaultsBtn;
+	CWindow m_BoolDesc;
     MP_DATA* m_Params;
     MP_PARAMINFO* m_ParamInfos;
     WCHAR** m_ParamTexts;

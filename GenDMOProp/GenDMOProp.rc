@@ -138,20 +138,22 @@ BEGIN
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     CONTROL         "Slider1",IDC_SLIDER,"msctls_trackbar32",TBS_BOTH | 
                     TBS_NOTICKS | WS_TABSTOP,121,45,150,16
-    CONTROL         "Check1",IDC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
-                    100,6,149,15
+    CONTROL         "",IDC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,100,6,
+                    18,15
     EDITTEXT        IDC_EDIT,99,7,126,13,ES_AUTOHSCROLL
     LTEXT           "Units:",IDC_STATIC,100,22,22,10
     SCROLLBAR       IDC_SCROLLBAR,105,41,9,17,SBS_VERT
     COMBOBOX        IDC_COMBO,100,7,141,54,CBS_DROPDOWN | WS_VSCROLL | 
                     WS_TABSTOP
-    LTEXT           "Static",IDC_UNITS,128,23,98,11
+    LTEXT           "",IDC_UNITS,128,23,98,11
     PUSHBUTTON      "Save Settings To Registry",IDC_SAVEDEFAULTS,161,83,105,
                     11
     PUSHBUTTON      "Reset to Neutral Values",IDC_RESETDEFAULTS,161,95,105,
                     11
     PUSHBUTTON      "Load Settings From Registry",IDC_LOADDEFAULTS,161,71,
                     105,11
+    LTEXT           "",IDC_BOOLDESC,112,9,131,13,SS_NOPREFIX | NOT 
+                    WS_VISIBLE
 END
 
 IDD_LICENSEPROPPAGE DIALOG  0, 0, 271, 105
