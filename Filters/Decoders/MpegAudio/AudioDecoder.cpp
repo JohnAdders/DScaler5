@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.7 2004-03-11 16:51:20 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.8 2004-03-15 17:15:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/03/11 16:51:20  adcockj
+// Improve LPCM support
+//
 // Revision 1.6  2004/02/29 13:47:47  adcockj
 // Format change fixes
 // Minor library updates
@@ -329,49 +332,115 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
 	if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xC0010000 || *(DWORD*)pDataIn == 0xBD010000)
 	{
-		if(subtype == MEDIASUBTYPE_MPEG1Packet)
-		{
-			len -= 4+2+7; pDataIn += 4+2+7; // is it always ..+7 ?
-		}
-		else if(subtype == MEDIASUBTYPE_MPEG2_AUDIO) // can this be after 0x000001BD too?
-		{
-			len -= 8; pDataIn += 8;
-			len -= *pDataIn+1; pDataIn += *pDataIn+1;
-		}
-		else if(subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
-		{
-			len -= 8; pDataIn += 8;
-			len -= *pDataIn+1; pDataIn += *pDataIn+1;
-			len -= 7; pDataIn += 7;
+		BYTE StreamId = pDataIn[3];
 
-            // LPCM packets seem to sometimes have variable 
-            // padding on the end
-            // just need to strip this off
-            // see http://members.freemail.absa.co.za/ginggs/dvd/mpeg2_lpcm.txt
-            // for a description of the format of the packets
-			if(pDataIn[len - 1] == 0xFF)
+		// skip past the PES header annd Id
+		len -= 4;
+		pDataIn += 4;
+
+		int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
+		
+		// Skip past the packet length
+		len -= 2;
+		pDataIn += 2;
+
+		BYTE* EndOfPacketLength = pDataIn;
+
+		// skip past MPEG1 PES Packet stuffing
+		for(int i(0); i < 16 && *pDataIn == 0xff; ++i)
+		{
+			len--;
+			pDataIn++;
+		}
+
+		if((*pDataIn & 0xC0) == 0x80)
+		{
+			// MPEG2 PES Format
+
+			// Skip to the header data length
+			len -= 2;
+			pDataIn += 2;
+	
+			// skip past all the optional headers and the llength byte itself
+			len -= *pDataIn + 1;
+			pDataIn += *pDataIn + 1;
+		}
+		else
+		{
+			// MPEG1 PES format
+
+			// skip STD bits if present
+			if((*pDataIn & 0xC0) == 0x40)
 			{
-				int PadCount = 1;
-				while(pDataIn[len - 1 - PadCount] == 0xFF)
-				{
-					++PadCount;
-				}
-				if(PadCount == ((pDataIn[len - 1 - PadCount - 1] << 8) + pDataIn[len - 1 - PadCount]) &&
-					pDataIn[len - 1 - PadCount - 2] == 0xbe &&
-					pDataIn[len - 1 - PadCount - 3] == 0x01 && 
-					pDataIn[len - 1 - PadCount - 4] == 0x00 && 
-					pDataIn[len - 1 - PadCount - 5] == 0x00)
-				{
-					len -= PadCount + 6;
-				}
+				len -= 2;
+				pDataIn += 2;
+			}
+
+			if((*pDataIn  & 0xF0) == 0x30)
+			{
+				// Skip DTS and PTS
+				len -= 10;
+				pDataIn += 10;
+			}
+			else if((*pDataIn & 0xF0) == 0x20)
+			{
+				// Skip PTS
+				len -= 5;
+				pDataIn += 5;
+			}
+			else
+			{
+				// Skip Non DTS PTS byte
+				len -= 1;
+				pDataIn += 1;
 			}
 		}
-		else if(subtype == MEDIASUBTYPE_DOLBY_AC3 || subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3
-			|| subtype == MEDIASUBTYPE_DTS || subtype == MEDIASUBTYPE_WAVE_DTS)
+
+		if(StreamId == 0xBD)
 		{
-			len -= 8; pDataIn += 8;
-			len -= *pDataIn+1; pDataIn += *pDataIn+1;
-			len -= 4; pDataIn += 4;
+			if(subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO)
+			{
+				len -= 7; 
+				pDataIn += 7;
+
+				// LPCM packets seem to sometimes have variable 
+				// padding on the end
+				// just need to strip this off
+				// see http://members.freemail.absa.co.za/ginggs/dvd/mpeg2_lpcm.txt
+				// for a description of the format of the packets
+				if(pDataIn[len - 1] == 0xFF)
+				{
+					int PadCount = 1;
+					while(pDataIn[len - 1 - PadCount] == 0xFF)
+					{
+						++PadCount;
+					}
+					if(PadCount == ((pDataIn[len - 1 - PadCount - 1] << 8) + pDataIn[len - 1 - PadCount]) &&
+						pDataIn[len - 1 - PadCount - 2] == 0xbe &&
+						pDataIn[len - 1 - PadCount - 3] == 0x01 && 
+						pDataIn[len - 1 - PadCount - 4] == 0x00 && 
+						pDataIn[len - 1 - PadCount - 5] == 0x00)
+					{
+						len -= PadCount + 6;
+					}
+				}
+			}
+			else if(subtype == MEDIASUBTYPE_DOLBY_AC3 || subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3
+				|| subtype == MEDIASUBTYPE_DTS || subtype == MEDIASUBTYPE_WAVE_DTS)
+			{
+				len -= 4; 
+				pDataIn += 4;
+			}
+			else
+			{
+				len -= 1; 
+				pDataIn += 1;
+			}
+		}
+		if(ExpectedLength > 0)
+		{
+			ExpectedLength -= pDataIn - EndOfPacketLength;
+			len = min(len, ExpectedLength); 
 		}
 	}
 

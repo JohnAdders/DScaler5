@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.13 2004-03-11 16:52:21 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.14 2004-03-15 17:16:02 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/03/11 16:52:21  adcockj
+// Improved subpicture drawing with different video widths/heights
+//
 // Revision 1.12  2004/03/08 17:04:01  adcockj
 // Removed all inline assembler to remove dependence on MS compilers
 //
@@ -727,17 +730,72 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
 	if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xE0010000)
 	{
-		if(m_VideoInPin->GetMediaType()->subtype == MEDIASUBTYPE_MPEG1Packet)
+		// skip past the PES header annd Id
+		len -= 4;
+		pDataIn += 4;
+
+		int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
+		
+		// Skip past the packet length
+		len -= 2;
+		pDataIn += 2;
+
+		BYTE* EndOfPacketLength = pDataIn;
+
+		// skip past MPEG1 PES Packet stuffing
+		for(int i(0); i < 16 && *pDataIn == 0xff; ++i)
 		{
-			len -= 4+2+12; 
-            pDataIn += 4+2+12;
+			len--;
+			pDataIn++;
 		}
-		else if(m_VideoInPin->GetMediaType()->subtype == MEDIASUBTYPE_MPEG2_VIDEO)
+
+		if((*pDataIn & 0xC0) == 0x80)
 		{
-			len -= 8; 
-            pDataIn += 8;
-			len -= *pDataIn+1; 
-            pDataIn += *pDataIn+1;
+			// MPEG2 PES Format
+
+			// Skip to the header data length
+			len -= 2;
+			pDataIn += 2;
+	
+			// skip past all the optional headers and the llength byte itself
+			len -= *pDataIn + 1;
+			pDataIn += *pDataIn + 1;
+		}
+		else
+		{
+			// MPEG1 PES format
+
+			// skip STD bits if present
+			if((*pDataIn & 0xC0) == 0x40)
+			{
+				len -= 2;
+				pDataIn += 2;
+			}
+
+			if((*pDataIn  & 0xF0) == 0x30)
+			{
+				// Skip DTS and PTS
+				len -= 10;
+				pDataIn += 10;
+			}
+			else if((*pDataIn & 0xF0) == 0x20)
+			{
+				// Skip PTS
+				len -= 5;
+				pDataIn += 5;
+			}
+			else
+			{
+				// Skip Non DTS PTS byte
+				len -= 1;
+				pDataIn += 1;
+			}
+		}
+
+		if(ExpectedLength > 0)
+		{
+			ExpectedLength -= pDataIn - EndOfPacketLength;
+			len = min(len, ExpectedLength); 
 		}
 	}
 
