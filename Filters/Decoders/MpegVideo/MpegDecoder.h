@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.6 2004-02-25 17:14:02 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.7 2004-02-27 17:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -110,12 +110,13 @@ protected:
 
 private:
 	mpeg2dec_t* m_dec;
+    AM_MEDIA_TYPE m_InternalMT;
+    bool m_NeedToAttachFormat;
 	REFERENCE_TIME m_AvgTimePerFrame;
 	REFERENCE_TIME m_LastOutputTime;
 	bool m_fWaitForKeyFrame;
 	bool m_fFilm;
 	bool m_ProgressiveChroma;
-	bool m_Discont;
 	CCanLock m_DeliverLock;
     int m_InternalWidth;
     int m_InternalHeight;

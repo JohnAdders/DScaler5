@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.7 2004-02-25 17:14:02 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.8 2004-02-27 17:07:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/02/25 17:14:02  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.6  2004/02/16 17:25:01  adcockj
 // Fix build errors, locking problems and DVD compatability
 //
@@ -141,7 +145,6 @@ CMpegDecoder::CMpegDecoder() :
     m_NextFrameDeint = DIBob;
 	m_dec = NULL;
 	m_ChromaType = CHROMA_420;
-	m_Discont = true;
 
 	m_ratechange.Rate = 10000;
 	m_ratechange.StartTime = -1;
@@ -152,6 +155,9 @@ CMpegDecoder::CMpegDecoder() :
     m_InternalHeight = 0;
     m_InternalPitch = 0;
     m_CurrentPicture = NULL;
+
+    InitMediaType(&m_InternalMT);
+    m_NeedToAttachFormat = false;
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -362,7 +368,8 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
 	    ExtractBIH(pPin->GetMediaType(), &bih);
 
 	    pProperties->cBuffers = 3;
-	    pProperties->cbBuffer = bih.biSizeImage;
+        // make sure we've always got enough for standard definition TV YUY2
+	    pProperties->cbBuffer = max(bih.biSizeImage, 768*576*2);
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
     }
@@ -488,7 +495,7 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
 	    m_LastOutputTime = 0;
         m_rate.Rate = (LONG)(10000 / dRate);
 	    m_rate.StartTime = 0;
-	    m_Discont = true;
+	    m_IsDiscontinuity = true;
         return S_OK;
 	}
     else if(pPin == m_SubpictureInPin)
@@ -664,6 +671,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
+	CProtectCode WhileVarInScope(&m_DeliverLock);
+
 	HRESULT hr;
 
     if(pSampleProperties->dwStreamId != AM_STREAM_MEDIA)
@@ -720,7 +729,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
 	{
-		m_Discont = true;
+		m_IsDiscontinuity = true;
 	}
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
@@ -809,7 +818,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 			// as the time past originally seems like a best guess only
 			m_rate.StartTime = m_CurrentPicture->m_rtStart;
 			m_LastOutputTime = m_CurrentPicture->m_rtStart;
-			m_Discont = true;
+			m_IsDiscontinuity = true;
 			LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
 		}
 	}
@@ -841,18 +850,65 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 	HRESULT hr;
 
+	// cope with dynamic format changes from our side
+	// will possibly call NegotiateAllocator on the output pins
+	// which flushes so we shouldn't have any samples outstanding here
 	if(FAILED(hr = ReconnectOutput(m_InternalWidth, m_InternalHeight)))
+	{
+        LogBadHRESULT(hr, __FILE__, __LINE__);
 		return hr;
+	}
 
 	SI(IMediaSample) pOut;
 	BYTE* pDataOut = NULL;
     
-    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), false);
-    if(FAILED(hr) || !pOut)
+    hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), m_IsDiscontinuity);
+    if(FAILED(hr))
+	{
+        LogBadHRESULT(hr, __FILE__, __LINE__);
         return hr;
+	}
+
+
+
+
+
+
+
+	// cope with dynamic format changes from the renderer
+	// we care about this we think we need to change the format too
+	// and the video renderer sends up a new format
+	// calling ReconnectOutput again will merge the two 
+	// formats properly and should never call NegotiateAllocator
+	if(hr == S_FALSE && m_NeedToAttachFormat)
+	{
+		if(FAILED(hr = ReconnectOutput(m_InternalWidth, m_InternalHeight)))
+		{
+			LogBadHRESULT(hr, __FILE__, __LINE__);
+			return hr;
+		}
+	}
+
+
+	if(m_NeedToAttachFormat)
+	{
+		m_VideoOutPin->SetType(&m_InternalMT);
+		pOut->SetMediaType(&m_InternalMT);
+
+        SI(IMediaEventSink) pMES = m_Graph;
+        if(pMES)
+        {
+		    // some renderers don't send this
+
+		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_win, m_hin), 0);
+        }
+	}
 
     if(FAILED(hr = pOut->GetPointer(&pDataOut)))
+	{
+        LogBadHRESULT(hr, __FILE__, __LINE__);
 		return hr;
+	}
 	
 	m_LastOutputTime = rtStop;
 
@@ -863,12 +919,15 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     {
         AM_SAMPLE2_PROPERTIES Props;
         if(FAILED(hr = pOut2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+		{
+			LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
+		}
         Props.tStart = rtStart;
         Props.tStop = rtStop;
         // FIXME: hell knows why but without this the overlay mixer starts very skippy
     	// (don't enable this for other renderers, the old for example will go crazy if you do)
-		if(m_Discont)
+		if(m_IsDiscontinuity)
 		{
 		    Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
 		}
@@ -898,7 +957,10 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
 
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
+		{
+			LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
+    }
     }
     else
     {
@@ -907,15 +969,12 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 		// FIXME: hell knows why but without this the overlay mixer starts very skippy
 		// (don't enable this for other renderers, the old for example will go crazy if you do)
-		if(m_Discont)
+		if(m_IsDiscontinuity)
 			pOut->SetDiscontinuity(TRUE);
         else
     	    pOut->SetDiscontinuity(FALSE);
 	    pOut->SetSyncPoint(TRUE);
     }
-
-	// reset discontinuity flag
-	m_Discont = false;
 
 	BYTE** buf = &m_CurrentPicture->m_Buf[0];
 
@@ -948,6 +1007,13 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	}
 
 	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
+	if(FAILED(hr))
+	{
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+	}
+
+	// reset discontinuity flag
+	m_IsDiscontinuity = false;
 
 	return hr;
 }
@@ -958,16 +1024,12 @@ void CMpegDecoder::FlushMPEG()
     	
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
-	m_Discont = true;
+	m_IsDiscontinuity = true;
 	ResetMpeg2Decoder();
 }
 
 HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 {
-	AM_MEDIA_TYPE mt;
-    InitMediaType(&mt);
-    CopyMediaType(&mt, m_VideoOutPin->GetMediaType());
-
 	bool fForceReconnection = false;
 	if(w != m_win || h != m_hin)
 	{
@@ -981,20 +1043,22 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 
 	if(fForceReconnection || m_win > m_wout || m_hin != m_hout || ((m_arxin != m_arxout) && m_arxout) || ((m_aryin != m_aryout) && m_aryout))
 	{
-		BITMAPINFOHEADER* bmi = NULL;
+        CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
+	
+    	BITMAPINFOHEADER* bmi = NULL;
 
-		if(mt.formattype == FORMAT_VideoInfo)
+		if(m_InternalMT.formattype == FORMAT_VideoInfo)
 		{
-			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)mt.pbFormat;
+			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
 			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
 			SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
 			bmi = &vih->bmiHeader;
 			bmi->biXPelsPerMeter = m_win * m_aryin;
 			bmi->biYPelsPerMeter = m_hin * m_arxin;
 		}
-		else if(mt.formattype == FORMAT_VideoInfo2)
+		else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
 		{
-			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)mt.pbFormat;
+			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
 			SetRect(&vih->rcSource, 0, 0, m_win, m_hin);
 			SetRect(&vih->rcTarget, 0, 0, m_win, m_hin);
 			bmi = &vih->bmiHeader;
@@ -1006,48 +1070,51 @@ HRESULT CMpegDecoder::ReconnectOutput(int w, int h)
 		bmi->biHeight = m_hin;
 		bmi->biSizeImage = m_win*m_hin*bmi->biBitCount>>3;
         
-        hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&mt);
+        hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
         if(hr != S_OK)
         {
     		LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
 
-		if(FAILED(hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &mt)))
-        {
-            ClearMediaType(&mt);
-			return hr;
-        }
+    	if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
 
-        if(FAILED(hr = m_VideoOutPin->NegotiateAllocator(NULL, &mt)))
+	    ALLOCATOR_PROPERTIES AllocatorProps;
+	    hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+        CHECK(hr);
+
+        if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
         {
-            ClearMediaType(&mt);
-			return hr;
+            hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+            if(FAILED(hr))
+            {
+                LogBadHRESULT(hr, __FILE__, __LINE__);
+                return hr;
+            }
         }
+        
+        m_NeedToAttachFormat = true;
 
         m_wout = m_win; 
         m_hout = m_hin; 
         m_arxout = m_arxin; 
         m_aryout = m_aryin; 
 
-        SI(IMediaEventSink) pMES = m_Graph;
-        if(pMES)
-        {
-		    // some renderers don't send this
-
-		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_win, m_hin), 0);
-        }
-        ClearMediaType(&mt);
-        
         return S_OK;
 	}
+    else
+    {
+        m_NeedToAttachFormat = false;
+    }
 
-	return S_FALSE;
+	return S_OK;
 }
 
 void CMpegDecoder::ResetMpeg2Decoder()
 {
 	LOG(DBGLOG_FLOW, ("ResetMpeg2Decoder()\n"));
+
+	CProtectCode WhileVarInScope(&m_DeliverLock);
 
 	BYTE* pSequenceHeader = NULL;
 	DWORD cbSequenceHeader = 0;
@@ -1221,8 +1288,9 @@ HRESULT CMpegDecoder::Activate()
     m_CurrentPicture = NULL;
 
     m_fWaitForKeyFrame = true;
-	m_Discont = true;
+	m_IsDiscontinuity = true;
     m_fFilm = false;
+	m_LastOutputTime = 0;
 
     return S_OK;
 }
@@ -1316,7 +1384,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
 	{
 		LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
 		mpeg2_skip(m_dec,0);
-		m_Discont = true;
+		m_IsDiscontinuity = true;
 	}
 
     // set up the memory want to receive the buffers into
@@ -1333,8 +1401,6 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
 
 HRESULT CMpegDecoder::ProcessPictureDisplay()
 {
-	CProtectCode WhileVarInScope(&m_DeliverLock);
-
     HRESULT hr = S_OK;
 
 	const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
