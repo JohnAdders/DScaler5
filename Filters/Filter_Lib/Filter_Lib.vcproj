@@ -186,6 +186,9 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\DSBufferedInputPin.cpp">
+			</File>
+			<File
 				RelativePath="DSInputPin.cpp">
 				<FileConfiguration
 					Name="Debug|Win32">
@@ -364,6 +367,9 @@
 			</File>
 			<File
 				RelativePath="DSBasePin.h">
+			</File>
+			<File
+				RelativePath=".\DSBufferedInputPin.h">
 			</File>
 			<File
 				RelativePath="DSInputPin.h">

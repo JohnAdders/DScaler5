@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.6 2004-04-16 16:19:43 adcockj Exp $
+// $Id: Params.h,v 1.7 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -96,6 +96,7 @@ public:
     STDMETHOD(SetParam)(DWORD dwParamIndex,MP_DATA value)
     {
         DWORD ParamCount(0);
+		HRESULT hr = S_OK;
         ParamInfo* Params = _GetParamList(&ParamCount);
         if(dwParamIndex != DWORD_ALLPARAMS)
         {
@@ -103,6 +104,7 @@ public:
             if(dwParamIndex < ParamCount)
             {
                 CProtectCode WhileVarInScope(this);
+				MP_DATA OldValue = Params[dwParamIndex].Value;
                 if(value < Params[dwParamIndex].MParamInfo.mpdMinValue)
                 {
                     Params[dwParamIndex].Value = Params[dwParamIndex].MParamInfo.mpdMinValue;
@@ -118,8 +120,12 @@ public:
                     Params[dwParamIndex].Value = value;
                 }
                 m_fDirty = TRUE;
-                ParamChanged(dwParamIndex);
-                return S_OK;
+                hr = ParamChanged(dwParamIndex);
+				if(FAILED(hr))
+				{
+					Params[dwParamIndex].Value = OldValue;
+				}
+                return hr;
             }
             else
             {
@@ -132,22 +138,14 @@ public:
             for(DWORD i(0); i < ParamCount; ++i)
             {
                 CProtectCode WhileVarInScope(this);
-                if(value < Params[i].MParamInfo.mpdMinValue)
-                {
-                    return E_INVALIDARG;
-                }
-                else if(value > Params[i].MParamInfo.mpdMaxValue)
-                {
-                    return E_INVALIDARG;
-                }
-                else
-                {
-                    Params[i].Value = value;
-                    m_fDirty = TRUE;
-                    ParamChanged(i);
-                }
+				HRESULT hr2 = SetParam(i, value);
+				if(FAILED(hr2))
+				{
+					hr = hr2;
+				}
+
             }
-            return S_OK;
+            return hr;
         }
     }
     STDMETHOD(AddEnvelope)(DWORD dwParamIndex,DWORD cPoints,MP_ENVELOPE_SEGMENT *ppEnvelope)

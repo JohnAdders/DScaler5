@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.9 2004-05-25 16:59:30 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.10 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/05/25 16:59:30  adcockj
+// fixed issues with new buffered pin
+//
 // Revision 1.8  2004/04/29 16:16:46  adcockj
 // Yet more reconnection fixes
 //
@@ -352,6 +355,9 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     // a NULL means the type is the same as last time
     if(InSampleProperties.pMediaType != NULL)
     {
+
+		LOG(DBGLOG_FLOW, ("Got new media type\n"));
+
 		FixupMediaType(InSampleProperties.pMediaType);
 
         // this shouldn't ever fail as a good filter will have

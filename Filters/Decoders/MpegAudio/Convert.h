@@ -228,3 +228,50 @@ static __inline void ConvertDoubleToFloat(BYTE*& pOutput, double Sample)
     *(float*)pOutput = Sample;
     pOutput += 4;
 }
+
+static __inline void Convert16ToFloat(BYTE*& pOutput, short Sample)
+{
+    *(float*)pOutput = Sample / double(1 << 15);
+    pOutput += 4;
+}
+
+
+static __inline void Convert16To32(BYTE*& pOutput, short Sample)
+{
+    *(long*)pOutput = (long)Sample << 16;
+    pOutput += 4;
+}
+
+static __inline void Convert16To24(BYTE*& pOutput, short Sample)
+{
+    *pOutput++ = 0;
+    *pOutput++ = (BYTE)(Sample);
+    *pOutput++ = (BYTE)(Sample>>8);
+}
+
+static __inline void Convert16To16(BYTE*& pOutput, short Sample)
+{
+    *pOutput++ = (BYTE)(Sample);
+    *pOutput++ = (BYTE)(Sample>>8);
+}
+
+static __inline void Convert24ToFloat(BYTE*& pOutput, long Sample)
+{
+    *(float*)pOutput = Sample / double(1 << 23);
+    pOutput += 4;
+}
+
+static __inline void Convert24To32(BYTE*& pOutput, long Sample)
+{
+    *pOutput++ = 0;
+    *pOutput++ = (BYTE)(Sample);
+    *pOutput++ = (BYTE)(Sample>>8);
+    *pOutput++ = (BYTE)(Sample>>16);
+}
+
+static __inline void Convert24To24(BYTE*& pOutput, long Sample)
+{
+    *pOutput++ = (BYTE)(Sample);
+    *pOutput++ = (BYTE)(Sample>>8);
+    *pOutput++ = (BYTE)(Sample>>16);
+}

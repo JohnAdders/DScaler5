@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.13 2004-05-12 15:55:06 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.14 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/05/12 15:55:06  adcockj
+// Foxed issue with format changes during preroll
+//
 // Revision 1.12  2004/05/06 06:38:06  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -85,11 +88,12 @@
 #include "stdafx.h"
 #include "AudioDecoder.h"
 #include "EnumPins.h"
-#include "DSInputPin.h"
+#include "DSBufferedInputPin.h"
 #include "DSOutputPin.h"
 #include "MediaBufferWrapper.h"
 #include "MoreUuids.h"
 #include "CPUID.h"
+#include "mmreg.h"
 
 extern HINSTANCE g_hInstance;
 
@@ -99,7 +103,7 @@ CAudioDecoder::CAudioDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CAudioDecoder::CreatePins\n"));
     
-    m_AudioInPin = new CDSInputPin;
+    m_AudioInPin = new CDSBufferedInputPin;
     if(m_AudioInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
@@ -120,6 +124,13 @@ CAudioDecoder::CAudioDecoder() :
     m_sample_max = 0.1;
     m_OutputSampleType = OUTSAMPLE_16BIT;
     m_SampleSize = 2;
+	m_NeedToAttachFormat = false;
+	m_InputSampleRate = 48000;
+	m_OutputSampleRate = 0;
+	m_ConnectedAsSpdif = false;
+	m_ChannelMask = 0;
+	m_ChannelsRequested = 2;
+	m_CanReconnect = false;
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
@@ -198,6 +209,15 @@ STDMETHODIMP CAudioDecoder::get_Authors(BSTR* Authors)
 
 HRESULT CAudioDecoder::ParamChanged(DWORD dwParamIndex)
 {
+	switch(dwParamIndex)
+	{
+	case SPEAKERCONFIG:
+    case USESPDIF:
+    case MPEGOVERSPDIF:
+		return VFW_E_ALREADY_CONNECTED;
+	default:
+		break;
+	}
     return S_OK;
 }
 
@@ -228,11 +248,14 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
 {
     if(pPin == m_AudioInPin)
     {
-        return E_NOTIMPL;
+	    pProperties->cBuffers = 6;
+	    pProperties->cbBuffer = 8192; 
+	    pProperties->cbAlign = 1;
+	    pProperties->cbPrefix = 0;
     }
     else if(pPin == m_AudioOutPin)
     {
-	    pProperties->cBuffers = 6;
+	    pProperties->cBuffers = 1;
 	    pProperties->cbBuffer = m_OutputBufferSize; 
 	    pProperties->cbAlign = 1;
 	    pProperties->cbPrefix = 0;
@@ -293,6 +316,11 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
 			    (pmt->majortype == MEDIATYPE_Audio && 
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
+		if(pmt->formattype == FORMAT_WaveFormatEx)
+		{
+			MPEG1WAVEFORMAT* wfe = (MPEG1WAVEFORMAT*)pmt->pbFormat;
+			int i= 0;
+		}
     }
     else if(pPin == m_AudioOutPin)
     {
@@ -618,7 +646,7 @@ HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nC
 
 }
 
-HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
+HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFERENCE_TIME rtDur2)
 {
 	HRESULT hr = S_OK;
 
@@ -626,21 +654,34 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
     {
         if(!GetParamBool(JITTERREMOVER) || abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > rtDur || m_IsDiscontinuity)
         {
-            if(abs((long)(m_rtNextFrameStart - m_rtOutputStart)) > 0)
+            if(abs((long)(m_rtNextFrameStart - m_rtOutputStart )) > 0)
             {
-                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", m_rtOutputStart, m_rtNextFrameStart));
+                LOG(DBGLOG_FLOW, ("Time Diff: %I64d - %I64d\n", m_rtOutputStart , m_rtNextFrameStart));
             }
-            m_rtOutputStart = m_rtNextFrameStart;
+			if(m_rtOutputStart < m_rtNextFrameStart)
+			{
+				m_rtOutputStart = m_rtNextFrameStart;
+			}
+			else
+			{
+				m_rtOutputStart = m_rtNextFrameStart;
+				m_IsDiscontinuity = TRUE;
+			}
         }
-    }
+   }
     
     m_rtNextFrameStart = _I64_MIN;
 
-    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, m_rtOutputStart + rtDur));
+	REFERENCE_TIME Timenow;
 
+	hr = m_RefClock->GetTime(&Timenow);
+	Timenow -= m_rtStartTime;
+    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d - %I64d\n", m_rtOutputStart, rtDur, Timenow));
 
-	pOut->SetTime(&m_rtOutputStart, NULL);
-	pOut->SetMediaTime(NULL, NULL);
+	rtDur += m_rtOutputStart;
+
+	pOut->SetTime(&m_rtOutputStart, &rtDur);
+	//pOut->SetMediaTime(NULL, NULL);
 
 	pOut->SetPreroll(FALSE);
 	pOut->SetSyncPoint(TRUE);
@@ -666,7 +707,7 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur)
 		m_NeedToAttachFormat = false;
     }
 
-    m_rtOutputStart += rtDur;
+    m_rtOutputStart += rtDur2;
     return hr;
 }
 
@@ -675,7 +716,7 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
 {
 	HRESULT hr;
 
-	if(!AreMediaTypesIdentical(&m_InternalMT, m_AudioOutPin->GetMediaType()) || Len > m_OutputBufferSize)
+	if(Len > m_OutputBufferSize)
 	{
         // should have already done a QueryAccept when deciding types
         // so no need to do again here
@@ -687,7 +728,6 @@ HRESULT CAudioDecoder::ReconnectOutput(DWORD Len)
             hr = m_AudioOutPin->NegotiateAllocator(NULL, &m_InternalMT);
             CHECK(hr);
         }
-        m_NeedToAttachFormat = true;
 	}
     return S_OK;
 }
@@ -699,30 +739,121 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
     {
         if(!m_AudioInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
-	    if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum > 0) return VFW_S_NO_MORE_ITEMS;
+		if(TypeNum < 0) return E_INVALIDARG;
+		BOOL UseSpdif = GetParamBool(USESPDIF);
+
+		if(UseSpdif)
+		{
+			if(m_InputSampleRate == 48000)
+			{
+				if(TypeNum > 0) return VFW_S_NO_MORE_ITEMS;
+			}
+			else
+			{
+				if(TypeNum > 1) return VFW_S_NO_MORE_ITEMS;
+				if(TypeNum == 1)
+				{
+					UseSpdif = 0;
+				}
+			}
+			TypeNum = 2;
+		}
+		else
+		{
+			// we need to cope with the compilation option for integer
+			// calculation 
+			// so after this -1 will be used to indeicate that we 
+			// want floating point
+			// then 0 = 32 bit 1 = 24bit and 2 = 16 bit
+			#if defined(LIBDTS_FIXED)
+			if(TypeNum > 2) return VFW_S_NO_MORE_ITEMS;
+			#else
+			if(TypeNum > 3) return VFW_S_NO_MORE_ITEMS;
+			TypeNum--;
+			#endif
+		}
 
 	    pmt->majortype = MEDIATYPE_Audio;
-	    pmt->subtype = MEDIASUBTYPE_PCM;
+		if(TypeNum > -1)
+		{
+			pmt->subtype = MEDIASUBTYPE_PCM;
+		}
+		else
+		{
+			pmt->subtype = MEDIASUBTYPE_IEEE_FLOAT;
+		}
 	    pmt->formattype = FORMAT_WaveFormatEx;
-        pmt->cbFormat = sizeof(WAVEFORMATEX);
-	    WAVEFORMATEX* wfe = (WAVEFORMATEX*)CoTaskMemAlloc(pmt->cbFormat);
-	    memset(wfe, 0, sizeof(WAVEFORMATEX));
-	    wfe->cbSize = 0;
-        if(GetParamBool(USESPDIF))
-        {
-	        wfe->wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
-        }
-        else
-        {
-	        wfe->wFormatTag = WAVE_FORMAT_PCM;
+        pmt->cbFormat = sizeof(WAVEFORMATEXTENSIBLE);
+	    WAVEFORMATEXTENSIBLE* wfe = (WAVEFORMATEXTENSIBLE*)CoTaskMemAlloc(pmt->cbFormat);
+	    memset(wfe, 0, sizeof(WAVEFORMATEXTENSIBLE));
 
+        int ChannelsRequested = 2;
+		DWORD ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
+
+        switch(GetParamEnum(SPEAKERCONFIG))
+        {
+        case SPCFG_STEREO:
+            break;
+        case SPCFG_DOLBY:
+            break;
+        case SPCFG_2F2R:
+			ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+            ChannelsRequested = 4;
+            break;
+        case SPCFG_2F2R1S:
+			ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+            ChannelsRequested = 5;
+            break;
+        case SPCFG_3F2R:
+			ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+            ChannelsRequested = 5;
+            break;
+        case SPCFG_3F2R1S:
+			ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
+            ChannelsRequested = 6;
+            break;
         }
-	    wfe->nChannels = 2;
-	    wfe->wBitsPerSample = 16;
-	    wfe->nSamplesPerSec = 48000;
-	    wfe->nBlockAlign = wfe->nChannels*wfe->wBitsPerSample/8;
-	    wfe->nAvgBytesPerSec = wfe->nSamplesPerSec*wfe->nBlockAlign;
+	    wfe->Format.nChannels = ChannelsRequested;
+		wfe->Format.cbSize = sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX);
+		wfe->dwChannelMask = ChannelMask;
+
+		switch(TypeNum)
+		{
+		case -1:
+		    wfe->Format.wBitsPerSample = 32;
+	        wfe->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+			break;
+		case 0:
+		    wfe->Format.wBitsPerSample = 32;
+	        wfe->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+			break;
+		case 1:
+		    wfe->Format.wBitsPerSample = 24;
+	        wfe->Format.wFormatTag = WAVE_FORMAT_EXTENSIBLE;
+			break;
+		case 2:
+		    wfe->Format.wBitsPerSample = 16;
+			if(UseSpdif)
+			{
+				wfe->Format.wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
+				wfe->Format.cbSize = 0;
+				pmt->cbFormat = sizeof(WAVEFORMATEX);
+			}
+			else if(ChannelsRequested != 2)
+			{
+				wfe->Format.wFormatTag = WAVE_FORMAT_PCM;
+			}
+			else
+			{
+				wfe->Format.wFormatTag = WAVE_FORMAT_PCM;
+				wfe->Format.cbSize = 0;
+				pmt->cbFormat = sizeof(WAVEFORMATEX);
+			}
+			break;
+		}
+	    wfe->Format.nSamplesPerSec = m_InputSampleRate;
+	    wfe->Format.nBlockAlign = wfe->Format.nChannels*wfe->Format.wBitsPerSample/8;
+	    wfe->Format.nAvgBytesPerSec = wfe->Format.nSamplesPerSec*wfe->Format.nBlockAlign;
         pmt->pbFormat = (BYTE*)wfe;
         return S_OK;
     }
@@ -793,11 +924,86 @@ HRESULT CAudioDecoder::SendOutLastSamples(CDSBasePin* pPin)
 
 HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin)
 {
+	if(pPin == m_AudioInPin)
+	{
+		if(pMediaType->formattype == FORMAT_WaveFormatEx)
+		{
+			WAVEFORMATEX* wfe = (WAVEFORMATEX*)(pMediaType->pbFormat);
+			m_InputSampleRate = wfe->nSamplesPerSec;
+		}
+	}
+	else if(pPin == m_AudioOutPin)
+	{
+		if(pMediaType->formattype == FORMAT_WaveFormatEx)
+		{
+			WAVEFORMATEXTENSIBLE* wfe = (WAVEFORMATEXTENSIBLE*)(pMediaType->pbFormat);
+			m_OutputSampleRate = wfe->Format.nSamplesPerSec;
+			if(pMediaType->subtype == MEDIASUBTYPE_IEEE_FLOAT)
+			{
+				m_OutputSampleType = OUTSAMPLE_FLOAT;
+				m_SampleSize = 4;
+			}
+			else
+			{
+				switch(wfe->Format.wBitsPerSample)
+				{
+				case 32:
+					m_OutputSampleType = OUTSAMPLE_32BIT;
+					m_SampleSize = 4;
+					break;
+				case 24:
+					m_OutputSampleType = OUTSAMPLE_24BIT;
+					m_SampleSize = 3;
+					break;
+				default:
+					m_OutputSampleType = OUTSAMPLE_16BIT;
+					m_SampleSize = 2;
+					break;
+				}
+			}
+			m_ChannelsRequested = wfe->Format.nChannels;
+			m_ChannelMask = 0;
+			if(wfe->Format.cbSize != 0)
+			{
+				m_ChannelMask = wfe->dwChannelMask;
+			}
+			if(m_ChannelMask == 0)
+			{
+				m_ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
+			}
+
+			m_ConnectedAsSpdif = (wfe->Format.wFormatTag == MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1);
+		}
+	}
     return S_OK;
 }
 
 HRESULT CAudioDecoder::NotifyConnected(CDSBasePin* pPin)
 {
+	if(pPin == m_AudioOutPin)
+	{
+		SI(IPinConnection) PinConnection = pPin->m_ConnectedPin;
+		if(PinConnection)
+		{
+			m_CanReconnect = true;
+		}
+		else
+		{
+			CLSID ConnectedClsid;
+			HRESULT hr = pPin->GetConnectedFilterCLSID(&ConnectedClsid);
+			CHECK(hr);
+			if(ConnectedClsid == CLSID_AudioRender)
+			{
+				m_CanReconnect = true;
+			}
+			else
+			{
+				m_CanReconnect = false;
+			}
+		}
+
+	}
+
     return S_OK;
 }
 

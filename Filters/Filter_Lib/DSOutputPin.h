@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.7 2004-05-06 06:38:07 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.8 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,6 +23,7 @@
 #include "EnumMediaTypes.h"
 #include "InputMemAlloc.h"
 #include "DSBasePin.h"
+#include "control.h"
 
 
 class CDSBaseFilter;
@@ -33,7 +34,8 @@ class CDSOutputPin :
 	public CDSBasePin,
     public IPinFlowControl,
     public IMediaSeeking,
-    public IQualityControl
+    public IQualityControl,
+	public IAMPushSource
 {
 public:
 
@@ -45,6 +47,8 @@ BEGIN_INTERFACE_TABLE(CDSOutputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
 	IMPLEMENTS_INTERFACE(IMediaSeeking)
 	IMPLEMENTS_INTERFACE(IKsPropertySet)
+	IMPLEMENTS_INTERFACE(IAMPushSource)
+	IMPLEMENTS_INTERFACE(IAMLatency)
 END_INTERFACE_TABLE()
 
 public:
@@ -104,6 +108,20 @@ public:
     STDMETHOD(SetRate)(double dRate);
     STDMETHOD(GetRate)(double *pdRate);
     STDMETHOD(GetPreroll)(LONGLONG *pllPreroll);
+
+// IAMLatency
+public:
+    STDMETHOD(GetLatency)(REFERENCE_TIME *prtLatency);
+
+
+// IAMPushSource
+public:
+    STDMETHOD(GetPushSourceFlags)(ULONG *pFlags);
+    STDMETHOD(SetPushSourceFlags)(ULONG Flags);
+    STDMETHOD(SetStreamOffset)(REFERENCE_TIME rtOffset);
+    STDMETHOD(GetStreamOffset)(REFERENCE_TIME *prtOffset);
+    STDMETHOD(GetMaxStreamOffset)(REFERENCE_TIME *prtMaxOffset);
+    STDMETHOD(SetMaxStreamOffset)(REFERENCE_TIME rtMaxOffset);
 
 public:
     BITMAPINFOHEADER* GetBitmapInfo();

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.12 2004-05-06 06:38:07 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.13 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2004/05/06 06:38:07  adcockj
+// Interim fixes for connection and PES streams
+//
 // Revision 1.11  2004/04/29 16:16:46  adcockj
 // Yet more reconnection fixes
 //
@@ -249,6 +252,61 @@ void CDSOutputPin::InternalDisconnect()
     m_PinConnection.Detach();
     m_MemInputPin.Detach();
 }
+
+STDMETHODIMP CDSOutputPin::GetLatency(REFERENCE_TIME *prtLatency)
+{
+	*prtLatency = 400000;
+	return S_OK;
+}
+
+
+#define GETPUSHSOURCE \
+    CDSBasePin* pPin = m_Filter->GetPin(0); \
+    SI(IAMPushSource) PushSource; \
+    if(pPin->m_Direction == PINDIR_INPUT) \
+        PushSource = pPin->m_ConnectedPin;
+
+STDMETHODIMP CDSOutputPin::GetPushSourceFlags(ULONG *pFlags)
+{
+	HRESULT hr =  S_OK;
+	GETPUSHSOURCE
+	if(PushSource)
+	{
+		*pFlags = 0;
+	}
+	else
+	{
+		*pFlags = AM_PUSHSOURCECAPS_NOT_LIVE;
+	}
+	return hr;
+}
+
+STDMETHODIMP CDSOutputPin::SetPushSourceFlags(ULONG Flags)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CDSOutputPin::SetStreamOffset(REFERENCE_TIME rtOffset)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CDSOutputPin::GetStreamOffset(REFERENCE_TIME *prtOffset)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CDSOutputPin::GetMaxStreamOffset(REFERENCE_TIME *prtMaxOffset)
+{
+	return E_NOTIMPL;
+}
+
+STDMETHODIMP CDSOutputPin::SetMaxStreamOffset(REFERENCE_TIME rtMaxOffset)
+{
+	return E_NOTIMPL;
+}
+
+
 
 // we just pass all seeking calls downsteam
 // if they accept but then we fall back to asking the filter

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.5 2004-04-08 19:02:44 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.6 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/04/08 19:02:44  adcockj
+// Zero out unused memory when using spdif
+//
 // Revision 1.4  2004/04/06 16:46:11  adcockj
 // DVD Test Annex Compatability fixes
 //
@@ -185,15 +188,21 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 				if(GetParamBool(USESPDIF))
 				{
-                    HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
-                    CHECK(hr);
-                    
+					// go back to SPDIF if we need to
+					if(m_CanReconnect && !m_ConnectedAsSpdif)
+					{
+						HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
+						m_NeedToAttachFormat = true;
+						m_ConnectedAsSpdif = true;
+						CHECK(hr);
+					}
+
                     DWORD len = 0x1800; 
 
                     SI(IMediaSample) pOut;
                     WORD* pDataOut = NULL;
 
-                    hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
                     CHECK(hr);
 
 					pDataOut[0] = 0xf872;
@@ -210,14 +219,12 @@ HRESULT CAudioDecoder::ProcessAC3()
                     // each frame contains 6 * 256 samples
 					REFERENCE_TIME rtDur = 10000000i64 * 6 * 256 / sample_rate;
 
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
 					if(S_OK != hr)
 						return hr;
 				}
 				else
 				{
-                    int ChannelsRequested = 2;
-					DWORD ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
 
                     switch(GetParamEnum(SPEAKERCONFIG))
                     {
@@ -229,23 +236,15 @@ HRESULT CAudioDecoder::ProcessAC3()
                         break;
                     case SPCFG_2F2R:
                         flags = A52_2F2R;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 4;
                         break;
                     case SPCFG_2F2R1S:
                         flags = A52_2F2R | A52_LFE;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R:
                         flags = A52_3F2R;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R1S:
                         flags = A52_3F2R | A52_LFE;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 6;
                         break;
                     }
 				    
@@ -262,14 +261,11 @@ HRESULT CAudioDecoder::ProcessAC3()
 						int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
 
-                        HRESULT hr = CreateInternalIEEEMediaType(sample_rate, ChannelsRequested, ChannelMask);
-                        CHECK(hr);
-
                         SI(IMediaSample) pOut;
-                        DWORD len = 6*256*ChannelsRequested*m_SampleSize; 
+                        DWORD len = 6*256*m_ChannelsRequested*m_SampleSize; 
                         BYTE* pDataOut = NULL;
 
-                        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
+                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
                         CHECK(hr);
                     
 						int i = 0;
@@ -289,18 +285,18 @@ HRESULT CAudioDecoder::ProcessAC3()
                                     Channels[outch] = samples + 256*scmap.ch[ch];
                                     ch++;
                                 }
-								if((ChannelMask & (1 << SpkFlag) ) != 0)
+								if((m_ChannelMask & (1 << SpkFlag) ) != 0)
 								{
 									outch++;
 								}
                             }
 
-                            ASSERT(outch == ChannelsRequested);
+                            ASSERT(outch == m_ChannelsRequested);
 							ASSERT(ch == scmap.nChannels);
                         
 							for(int j = 0; j < 256; j++, samples++)
 							{
-								for(int ch = 0; ch < ChannelsRequested; ch++)
+								for(int ch = 0; ch < m_ChannelsRequested; ch++)
 								{
 									pConvFunc(pDataOut, Channels[ch][j]);
 								}
@@ -309,8 +305,8 @@ HRESULT CAudioDecoder::ProcessAC3()
 
 						if(i == 6)
 						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * ChannelsRequested); // should be 320000 * 100ns
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested); // should be 320000 * 100ns
+                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
 						    if(S_OK != hr)
 							    return hr;
     					}

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.4 2004-04-06 16:46:11 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.5 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/04/06 16:46:11  adcockj
+// DVD Test Annex Compatability fixes
+//
 // Revision 1.3  2004/03/25 18:01:30  adcockj
 // Fixed issues with downmixing
 //
@@ -193,15 +196,20 @@ HRESULT CAudioDecoder::ProcessDTS()
 			{
 				if(GetParamBool(USESPDIF))
 				{
-                    HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
-                    CHECK(hr);
-                
+					// go back to SPDIF if we need to
+					if(m_CanReconnect && !m_ConnectedAsSpdif)
+					{
+						HRESULT hr = CreateInternalSPDIFMediaType(sample_rate, 16);
+						m_NeedToAttachFormat = true;
+						m_ConnectedAsSpdif = true;
+						CHECK(hr);
+					}
                     DWORD len = 0x800; 
 
                     SI(IMediaSample) pOut;
                     WORD* pDataOut = NULL;
 
-                    hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
+                    HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), (BYTE**)&pDataOut, len);
                     CHECK(hr);
 
 				    pDataOut[0] = 0xf872;
@@ -212,14 +220,12 @@ HRESULT CAudioDecoder::ProcessDTS()
 
                     REFERENCE_TIME rtDur = 10000000i64 * size * 8 / bit_rate; // should be 106667 * 100 ns
 
-                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+                    hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
 				    if(S_OK != hr)
 					    return hr;
                 }
                 else
                 {
-                    int ChannelsRequested = 2;
-					DWORD ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT;
 
                     switch(GetParamEnum(SPEAKERCONFIG))
                     {
@@ -231,23 +237,15 @@ HRESULT CAudioDecoder::ProcessDTS()
                         break;
                     case SPCFG_2F2R:
                         flags = DTS_2F2R;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 4;
                         break;
                     case SPCFG_2F2R1S:
                         flags = DTS_2F2R | DTS_LFE;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R:
                         flags = DTS_3F2R;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 5;
                         break;
                     case SPCFG_3F2R1S:
                         flags = DTS_3F2R | DTS_LFE;
-						ChannelMask = SPEAKER_FRONT_LEFT|SPEAKER_FRONT_RIGHT|SPEAKER_FRONT_CENTER|SPEAKER_LOW_FREQUENCY|SPEAKER_BACK_LEFT|SPEAKER_BACK_RIGHT;
-                        ChannelsRequested = 6;
                         break;
                     }
 				    
@@ -266,14 +264,11 @@ HRESULT CAudioDecoder::ProcessDTS()
     
                         int blocks = dts_blocks_num(m_dts_state); 
 
-                        HRESULT hr = CreateInternalIEEEMediaType(sample_rate, ChannelsRequested, ChannelMask);
-                        CHECK(hr);
-
                         SI(IMediaSample) pOut;
                         BYTE* pDataOut = NULL;
-                        DWORD len = blocks*256*ChannelsRequested*m_SampleSize;
+                        DWORD len = blocks*256*m_ChannelsRequested*m_SampleSize;
 
-                        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
+                        HRESULT hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, len);
                         CHECK(hr);
 
 						int i = 0;
@@ -293,13 +288,13 @@ HRESULT CAudioDecoder::ProcessDTS()
                                     Channels[outch] = samples + 256*scmap.ch[ch];
                                     ch++;
                                 }
-								if((ChannelMask & (1 << SpkFlag) ) != 0)
+								if((m_ChannelMask & (1 << SpkFlag) ) != 0)
 								{
 									outch++;
 								}
                             }
 
-                            ASSERT(outch == ChannelsRequested);
+                            ASSERT(outch == m_ChannelsRequested);
 							ASSERT(ch == scmap.nChannels);
 
 							for(int j = 0; j < 256; j++, samples++)
@@ -313,8 +308,8 @@ HRESULT CAudioDecoder::ProcessDTS()
 
 						if(i == blocks)
 						{
-					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * ChannelsRequested);
-                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur);
+					        REFERENCE_TIME rtDur = 10000000i64 * len / (m_SampleSize * sample_rate * m_ChannelsRequested);
+                            hr = Deliver(pOut.GetNonAddRefedInterface(), rtDur, rtDur);
 						    if(S_OK != hr)
 							    return hr;
     					}

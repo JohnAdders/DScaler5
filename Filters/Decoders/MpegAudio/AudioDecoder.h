@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.11 2004-04-20 16:30:15 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.12 2004-07-01 16:12:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -54,7 +54,8 @@ DEFINE_GUID(CLSID_CAudioDecoder, 0xd2ca75c2, 0x5a1, 0x4915, 0x88, 0xa8, 0xd4, 0x
 
 class CAudioDecoder : 
     public CDSBaseFilter,
-    public IAmFreeSoftwareLicensed
+    public IAmFreeSoftwareLicensed,
+	public IAMFilterMiscFlags
 {
 public:
 
@@ -68,6 +69,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CAudioDecoder, "{D2CA75C2-05A1-4915-88A8-D433F876
     IMPLEMENTS_INTERFACE(IPersistStream)
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(ISaveDefaults)
+	//IMPLEMENTS_INTERFACE(IAMFilterMiscFlags)
 END_INTERFACE_TABLE()
 
 public:
@@ -115,6 +117,11 @@ public:
     // IBaseFilter
     STDMETHOD(GetClassID)(CLSID __RPC_FAR *pClassID);
 
+	ULONG __stdcall GetMiscFlags()
+	{
+		return AM_FILTER_MISC_FLAGS_IS_SOURCE;
+	}
+
 public:
     // IAmFreeSoftwareLicensed
     STDMETHOD(get_Name)(BSTR* Name);
@@ -137,6 +144,8 @@ public:
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
     HRESULT Activate();
     HRESULT Deactivate();
+
+	
 
 protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
@@ -161,7 +170,7 @@ protected:
 	HRESULT ProcessAC3();
 	HRESULT ProcessDTS();
 	HRESULT ProcessMPA();
-    HRESULT Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur);
+    HRESULT Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFERENCE_TIME rtDur2);
     HRESULT ReconnectOutput(DWORD Len);
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
@@ -177,7 +186,12 @@ private:
     bool m_NeedToAttachFormat;
     eOutputSampleType m_OutputSampleType;
     int m_SampleSize;
-
+	int m_InputSampleRate;
+	int m_OutputSampleRate;
+	bool m_ConnectedAsSpdif;
+	DWORD m_ChannelMask;
+	int m_ChannelsRequested;
+	bool m_CanReconnect;
 };
 
 #define m_AudioInPin m_InputPins[0]

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.10 2004-05-10 16:50:26 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.11 2004-07-01 16:12:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/05/10 16:50:26  adcockj
+// Added apply before save defaults to make UI a bit more intuituve
+//
 // Revision 1.9  2004/03/15 17:17:06  adcockj
 // Basic registry saving support
 //
@@ -114,10 +117,17 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
         if(CurrentValue != m_Params[i])
         {
             hr = m_MediaParams->SetParam(i, m_Params[i]);
-            if(FAILED(hr)) return hr;
+            if(FAILED(hr))
+			{
+				MessageBox("Can't save data, maybe the filter doesn't suport change while connwcted", "Error", MB_OK); 
+				return hr;
+			}
         }
     }
     m_bDirty = FALSE;
+
+	SetupControls();
+
     return S_OK;
 }
 
