@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.h,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSBaseFilter.h,v 1.3 2004-02-27 17:08:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,6 @@ public:
     HRESULT CheckProcessingLine();
     long GetNumPins() {return m_NumInputPins + m_NumOutputPins;};
     CDSBasePin* GetPin(int PinIndex);
-    HRESULT GetOutputSample(IMediaSample** OutSample, int PinIndex);
     virtual HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin) = 0;
     virtual HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin) = 0;
     /// return VFW_S_NO_MORE_ITEMS when you have no more types you can generate, TypeNum = 0 is the first
@@ -91,6 +90,8 @@ protected:
     int m_NumInputPins;
     int m_NumOutputPins;
     bool m_IsDiscontinuity;
+	void LockAllPins();
+	void UnlockAllPins();
 };
 
 

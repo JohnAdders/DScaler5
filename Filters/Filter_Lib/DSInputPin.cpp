@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.4 2004-02-25 17:14:03 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.5 2004-02-27 17:08:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/25 17:14:03  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.3  2004/02/12 17:06:45  adcockj
 // Libary Tidy up
 // Fix for stopping problems
@@ -131,7 +135,8 @@ STDMETHODIMP CDSInputPin::EndOfStream(void)
 {
     LOG(DBGLOG_ALL, ("CDSInputPin::EndOfStream\n"));
     HRESULT hr = S_OK;
-    // synchronize with Recieve
+
+	// synchronize with Recieve
     CProtectCode WhileVarInScope(this);
 
     bool Connected(false);
@@ -175,7 +180,7 @@ STDMETHODIMP CDSInputPin::EndOfStream(void)
 
 STDMETHODIMP CDSInputPin::BeginFlush(void)
 {
-    LOG(DBGLOG_ALL, ("CDSInputPin::BeginFlush\n"));
+    LOG(DBGLOG_FLOW, ("CDSInputPin::BeginFlush\n"));
 
 	CProtectCode WhileVarInScope(m_Filter);
 
@@ -198,7 +203,7 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
 
 STDMETHODIMP CDSInputPin::EndFlush(void)
 {
-    LOG(DBGLOG_ALL, ("CDSInputPin::EndFlush\n"));
+    LOG(DBGLOG_FLOW, ("CDSInputPin::EndFlush\n"));
 
 	CProtectCode WhileVarInScope(m_Filter);
 
@@ -662,7 +667,6 @@ HRESULT CDSInputPin::Activate()
 HRESULT CDSInputPin::Deactivate()
 {
     LOG(DBGLOG_ALL, ("CDSOutputPin::Deactivate\n"));
-	CProtectCode WhileVarInScope(m_Filter);
 
     if(m_Block == TRUE)
     {

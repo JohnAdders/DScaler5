@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.4 2004-02-25 17:14:03 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.5 2004-02-27 17:08:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/02/25 17:14:03  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.3  2004/02/16 17:25:02  adcockj
 // Fix build errors, locking problems and DVD compatability
 //
@@ -347,9 +351,14 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, bool PrevFrameSk
 
 	// get a sample to output to
 	HRESULT hr = m_Allocator->GetBuffer(OutSample, NULL, NULL, dwFlags);
-	if(FAILED(hr) || *OutSample == NULL)
+	if(FAILED(hr))
 	{
-		return S_FALSE;
+		return hr;
+	}
+
+	if(*OutSample == NULL)
+	{
+		return VFW_E_WRONG_STATE;
 	}
 
 	// check for media type changes on the output side
@@ -368,8 +377,12 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, bool PrevFrameSk
 		CHECK(hr);
 
         FreeMediaType(pMediaType);
+		return S_FALSE;
 	}
-    return hr;
+	else
+	{
+		return S_OK;
+	}
 }
 
 HRESULT CDSOutputPin::Activate()

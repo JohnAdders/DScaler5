@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.2 2004-02-12 17:06:45 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.3 2004-02-27 17:08:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/12 17:06:45  adcockj
+// Libary Tidy up
+// Fix for stopping problems
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -191,16 +195,18 @@ STDMETHODIMP CDSBaseFilter::QueryVendorInfo(LPWSTR *pVendorInfo)
 
 STDMETHODIMP CDSBaseFilter::Stop(void)
 {
-    LOG(DBGLOG_ALL, ("CDSBaseFilter::Stop\n"));
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Stop\n"));
 
     CProtectCode WhileVarInScope(this);
     
     int i;
     
-    // putting this first should amke all the receives fail
+	FILTER_STATE OldState = m_State;
     m_State = State_Stopped;
 
-    if(m_State != State_Stopped)
+	LockAllPins();
+
+	if(OldState != State_Stopped)
     {
         for(i = 0; i < m_NumInputPins; ++i)
         {
@@ -215,19 +221,23 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
         Deactivate();
     }
 
-	LOG(DBGLOG_ALL, ("CDSBaseFilter::End Stop\n"));
+	UnlockAllPins();
+	LOG(DBGLOG_FLOW, ("CDSBaseFilter::End Stop\n"));
 
     return S_OK;
 }
 
 STDMETHODIMP CDSBaseFilter::Pause(void)
 {
-    LOG(DBGLOG_ALL, ("CDSBaseFilter::Pause\n"));
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Pause\n"));
 
     CProtectCode WhileVarInScope(this);
 
+
     if(m_State == State_Stopped)
     {
+		LockAllPins();
+    
         int i;
         for(i = 0; i < m_NumInputPins; ++i)
         {
@@ -238,17 +248,24 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
             m_OutputPins[i]->Activate();
         }
         Activate();
+
+		UnlockAllPins();
     }
 
     m_State = State_Paused;
+
+
+	LOG(DBGLOG_FLOW, ("CDSBaseFilter::Pause end\n"));
     return S_OK;
 }
 
 STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
 {
-    LOG(DBGLOG_ALL, ("CDSBaseFilter::Run\n"));
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run\n"));
 
     CProtectCode WhileVarInScope(this);
+
+	LockAllPins();
 
     if(m_State == State_Stopped)
     {
@@ -265,6 +282,10 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
     }
 
     m_State = State_Running;
+
+	UnlockAllPins();
+
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run end\n"));
     return S_OK;
 }
 
@@ -304,36 +325,28 @@ STDMETHODIMP CDSBaseFilter::GetPages(CAUUID* pPages)
     return S_OK;
 }
 
-HRESULT CDSBaseFilter::GetOutputSample(IMediaSample** OutSample, int PinIndex)
+void CDSBaseFilter::LockAllPins()
 {
-    *OutSample = NULL;
+        int i;
+        for(i = 0; i < m_NumInputPins; ++i)
+        {
+            m_InputPins[i]->Lock();
+        }
+        for(i = 0; i < m_NumOutputPins; ++i)
+        {
+            m_OutputPins[i]->Lock();
+        }
+}
 
-	// get a sample to output to
-	DWORD dwFlags = (m_IsDiscontinuity?AM_GBF_PREVFRAMESKIPPED:0);
-	HRESULT hr = m_OutputPins[PinIndex]->m_Allocator->GetBuffer(OutSample, NULL, NULL, dwFlags);
-	if(FAILED(hr) || *OutSample == NULL)
-	{
-		//LOG(DBGLOG_ALL, ("Frame Skipped\n"));
-		m_IsDiscontinuity = true;
-		return S_FALSE;
-	}
-	else
-	{
-		m_IsDiscontinuity = false;
-	}
-
-	// check for media type changes on the output side
-	// a NULL means the type is the same as last time
-    AM_MEDIA_TYPE* pMediaType = NULL;
-
-    hr = (*OutSample)->GetMediaType(&pMediaType);
-	CHECK(hr);
-
-	if(hr == S_OK && pMediaType != NULL)
-	{
-		hr = m_OutputPins[PinIndex]->SetType(pMediaType);
-		CHECK(hr);
-        FreeMediaType(pMediaType);
-	}
-    return S_OK;
+void CDSBaseFilter::UnlockAllPins()
+{
+        int i;
+        for(i = 0; i < m_NumInputPins; ++i)
+        {
+            m_InputPins[i]->Unlock();
+        }
+        for(i = 0; i < m_NumOutputPins; ++i)
+        {
+            m_OutputPins[i]->Unlock();
+        }
 }
