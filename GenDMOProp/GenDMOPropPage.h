@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.3 2003-05-02 15:52:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -36,6 +36,7 @@ class ATL_NO_VTABLE CGenDMOPropPage :
 {
 public:
 	CGenDMOPropPage();
+    ~CGenDMOPropPage();
 
 	enum {IDD = IDD_GENDMOPROPPAGE};
 
@@ -48,21 +49,52 @@ BEGIN_COM_MAP(CGenDMOPropPage)
 END_COM_MAP()
 
 BEGIN_MSG_MAP(CGenDMOPropPage)
-	CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
+	COMMAND_HANDLER(IDC_PARAMETERLIST, LBN_SELCHANGE, OnListSelChange)
+    COMMAND_HANDLER(IDC_EDIT, EN_CHANGE, OnEditChange);
+    COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
+    COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
+    CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
 END_MSG_MAP()
 // Handler prototypes:
-//  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-//  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-//  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+    LRESULT OnListSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnComboChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+    LRESULT OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
+	STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 	STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
+    STDMETHOD(Deactivate)();
+    BOOL HasAnythingChanged();
+    void SetDirty(BOOL bDirty);
+
+private:
+    void GetValueFromControls();
+    void GetIntValue();
+    void GetFloatValue();
+    void GetBoolValue();
+    void GetEnumValue();
+    void SetupControls();
+    void SetupIntValue();
+    void SetupFloatValue();
+    void SetupBoolValue();
+    void SetupEnumValue();
+    void SetupEnumCombo();
 
 private:
     CComQIPtr<IMediaParamInfo> m_MediaParamInfo;
     CComQIPtr<IMediaParams> m_MediaParams;
-    long m_CountParams;
-    float* m_Values;
+    CWindow m_EditBox;
+    CWindow m_ListBox;
+    CWindow m_CheckBox;
+    CWindow m_Slider;
+    CWindow m_Scrollbar;
+    CWindow m_Combo;
+    MP_DATA* m_Params;
+    MP_PARAMINFO* m_ParamInfos;
+    WCHAR** m_ParamTexts;
+    DWORD m_NumParams;
+    DWORD m_CurrentParam;
 };
 
 #endif //__GENDMOPROPPAGE_H_

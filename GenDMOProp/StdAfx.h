@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.2 2003-05-01 12:34:41 adcockj Exp $
+// $Id: StdAfx.h,v 1.3 2003-05-02 15:52:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -40,6 +40,8 @@ extern CComModule _Module;
 #include <atlctl.h>
 
 #include <medparam.h>
+#include <windowsx.h>
+#include "slider.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
