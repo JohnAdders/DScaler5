@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.h,v 1.2 2004-05-25 16:59:30 adcockj Exp $
+// $Id: DSBufferedInputPin.h,v 1.3 2004-09-23 14:27:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,7 @@ IMPLEMENT_UNKNOWN(CDSBufferedInputPin)
 BEGIN_INTERFACE_TABLE(CDSBufferedInputPin)
 	IMPLEMENTS_INTERFACE(IPin)
 	IMPLEMENTS_INTERFACE(IMemInputPin)
+    IMPLEMENTS_INTERFACE(IQualityControl)
 	IMPLEMENTS_INTERFACE(IPinConnection)
 	IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()

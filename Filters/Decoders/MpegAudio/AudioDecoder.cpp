@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.36 2004-08-31 16:33:40 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.37 2004-09-23 14:27:57 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.36  2004/08/31 16:33:40  adcockj
+// Minor improvements to quality control
+// Preparation for next version
+// Start on integrating film detect
+//
 // Revision 1.35  2004/08/16 16:08:44  adcockj
 // timestamp fixes
 //
@@ -350,7 +355,7 @@ HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             }
         }
     }
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 

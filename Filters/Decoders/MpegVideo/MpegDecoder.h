@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.24 2004-09-10 15:35:57 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.25 2004-09-23 14:27:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -241,7 +241,14 @@ private:
     HRESULT ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
-    HRESULT ReconnectOutput(bool ForceReconnect);
+    HRESULT CheckForReconnection();
+    HRESULT ReconnectVMR9();
+    HRESULT ReconnectVMR7();
+    HRESULT ReconnectGabest();
+    HRESULT ReconnectOverlay();
+    HRESULT ReconnectOther();
+
+    HRESULT AdjustRenderersMediaType();
     void ResetMpeg2Decoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
     HRESULT GetEnumTextIDCTToUse(WCHAR **ppwchText);
@@ -315,7 +322,6 @@ private:
     void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void Simplify(long& u, long& v);
     void Simplify(unsigned long& u, unsigned long& v);
-    void CorrectSourceTarget(RECT& rcSource, RECT& rcTarget);
     void CorrectOutputSize();
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
     void PillarBox(long YAdjust, long XAdjust);
