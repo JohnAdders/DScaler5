@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.33 2004-07-21 15:05:24 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.34 2004-07-23 21:00:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.33  2004/07/21 15:05:24  adcockj
+// Fixed some issues with ff & rew
+//
 // Revision 1.32  2004/07/20 16:37:48  adcockj
 // Fixes for main issues raised in testing of 0.0.1
 //  - Improved parameter handling
@@ -177,6 +180,8 @@
 #include "PlanarYUVToYUY2.h"
 
 extern HINSTANCE g_hInstance;
+
+const long CMpegDecoder::MAX_SPEED = 2;
 
 CMpegDecoder::CMpegDecoder() :
     CDSBaseFilter(L"MpegVideo Filter", 2, 2)
