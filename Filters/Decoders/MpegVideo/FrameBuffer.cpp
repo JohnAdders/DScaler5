@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: FrameBuffer.cpp,v 1.2 2004-02-29 19:05:44 adcockj Exp $
+// $Id: FrameBuffer.cpp,v 1.3 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/29 19:05:44  adcockj
+// Fix release build crash
+//
 // Revision 1.1  2004/02/25 17:17:25  adcockj
 // New class to support buffer management
 //
@@ -68,7 +71,7 @@ HRESULT CMpegDecoder::CFrameBuffer::AllocMem(int YSize, int UVSize)
     m_Buf[1] = (BYTE*)(((DWORD)(m_ActualBuf) + YSize + 15) & ~15);
     m_Buf[2] = (BYTE*)(((DWORD)(m_ActualBuf) + YSize + UVSize + 15) & ~15);
 
-	Clear();
+    Clear();
 
     return S_OK;
 }

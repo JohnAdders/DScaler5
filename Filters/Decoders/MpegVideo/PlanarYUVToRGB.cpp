@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToRGB.cpp,v 1.2 2004-03-08 17:04:02 adcockj Exp $
+// $Id: PlanarYUVToRGB.cpp,v 1.3 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  This file based on code taken from vd.cpp in the guliverkli project
 //  which in turn took it from
-//	VirtualDub - Video processing and capture application
-//	Copyright (C) 1998-2001 Avery Lee
+//  VirtualDub - Video processing and capture application
+//  Copyright (C) 1998-2001 Avery Lee
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/03/08 17:04:02  adcockj
+// Removed all inline assembler to remove dependence on MS compilers
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -57,116 +60,116 @@ extern "C" void asm_YUVtoRGB16_row_ISSE(void* ARGB1, void* ARGB2, BYTE* Y1, BYTE
 
 bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	if(w<=0 || h<=0 || (w&1) || (h&1))
-		return(false);
+    if(w<=0 || h<=0 || (w&1) || (h&1))
+        return(false);
 
-	void (*asm_YUVtoRGB_row)(void* ARGB1, void* ARGB2, BYTE* Y1, BYTE* Y2, BYTE* U, BYTE* V, long width) = NULL;;
+    void (*asm_YUVtoRGB_row)(void* ARGB1, void* ARGB2, BYTE* Y1, BYTE* Y2, BYTE* U, BYTE* V, long width) = NULL;;
 
-	if((CpuFeatureFlags & FEATURE_SSE) && !(w&7))
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_ISSE*/; break; // TODO: fix _ISSE (555->565)
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_ISSE; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_ISSE; break;
-		}
-	}
-	else if((CpuFeatureFlags & FEATURE_MMX) && !(w&7))
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_MMX*/; break; // TODO: fix _MMX (555->565)
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_MMX; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_MMX; break;
-		}
-	}
-	else
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row; break;
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row; break;
-		}
-	}
+    if((CpuFeatureFlags & FEATURE_SSE) && !(w&7))
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_ISSE*/; break; // TODO: fix _ISSE (555->565)
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_ISSE; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_ISSE; break;
+        }
+    }
+    else if((CpuFeatureFlags & FEATURE_MMX) && !(w&7))
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_MMX*/; break; // TODO: fix _MMX (555->565)
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_MMX; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_MMX; break;
+        }
+    }
+    else
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row; break;
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row; break;
+        }
+    }
 
-	if(!asm_YUVtoRGB_row) 
-		return(false);
+    if(!asm_YUVtoRGB_row) 
+        return(false);
 
-	do
-	{
-		asm_YUVtoRGB_row(dst + dstpitch, dst, srcy + srcpitch, srcy, srcu, srcv, w/2);
+    do
+    {
+        asm_YUVtoRGB_row(dst + dstpitch, dst, srcy + srcpitch, srcy, srcu, srcv, w/2);
 
-		dst += 2*dstpitch;
-		srcy += srcpitch*2;
-		srcu += srcpitch/2;
-		srcv += srcpitch/2;
-	}
-	while(h -= 2);
+        dst += 2*dstpitch;
+        srcy += srcpitch*2;
+        srcu += srcpitch/2;
+        srcv += srcpitch/2;
+    }
+    while(h -= 2);
 
-	if(CpuFeatureFlags & FEATURE_SSE)
-		EndSSE();
-	else if(CpuFeatureFlags & FEATURE_MMX)
-		EndMMX();
+    if(CpuFeatureFlags & FEATURE_SSE)
+        EndSSE();
+    else if(CpuFeatureFlags & FEATURE_MMX)
+        EndMMX();
 
 
-	return true;
+    return true;
 }
 
 bool BitBltFromI422ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
-	if(w<=0 || h<=0 || (w&1) || (h&1))
-		return(false);
+    if(w<=0 || h<=0 || (w&1) || (h&1))
+        return(false);
 
-	void (*asm_YUVtoRGB_row)(void* ARGB1, void* ARGB2, BYTE* Y1, BYTE* Y2, BYTE* U, BYTE* V, long width) = NULL;;
+    void (*asm_YUVtoRGB_row)(void* ARGB1, void* ARGB2, BYTE* Y1, BYTE* Y2, BYTE* U, BYTE* V, long width) = NULL;;
 
-	if((CpuFeatureFlags & FEATURE_SSE) && !(w&7))
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_ISSE*/; break; // TODO: fix _ISSE (555->565)
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_ISSE; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_ISSE; break;
-		}
-	}
-	else if((CpuFeatureFlags & FEATURE_MMX) && !(w&7))
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_MMX*/; break; // TODO: fix _MMX (555->565)
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_MMX; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_MMX; break;
-		}
-	}
-	else
-	{
-		switch(dbpp)
-		{
-		case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row; break;
-		case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
-		case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row; break;
-		}
-	}
+    if((CpuFeatureFlags & FEATURE_SSE) && !(w&7))
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_ISSE*/; break; // TODO: fix _ISSE (555->565)
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_ISSE; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_ISSE; break;
+        }
+    }
+    else if((CpuFeatureFlags & FEATURE_MMX) && !(w&7))
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_MMX*/; break; // TODO: fix _MMX (555->565)
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_MMX; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_MMX; break;
+        }
+    }
+    else
+    {
+        switch(dbpp)
+        {
+        case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row; break;
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
+        case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row; break;
+        }
+    }
 
-	if(!asm_YUVtoRGB_row) 
-		return(false);
+    if(!asm_YUVtoRGB_row) 
+        return(false);
 
-	do
-	{
-		asm_YUVtoRGB_row(dst + dstpitch, dst, srcy + srcpitch, srcy, srcu, srcv, w/2);
+    do
+    {
+        asm_YUVtoRGB_row(dst + dstpitch, dst, srcy + srcpitch, srcy, srcu, srcv, w/2);
 
-		dst += 2*dstpitch;
-		srcy += srcpitch*2;
-		srcu += srcpitch/2;
-		srcv += srcpitch/2;
-	}
-	while(h -= 2);
+        dst += 2*dstpitch;
+        srcy += srcpitch*2;
+        srcu += srcpitch/2;
+        srcv += srcpitch/2;
+    }
+    while(h -= 2);
 
-	if(CpuFeatureFlags & FEATURE_SSE)
-		EndSSE();
-	else if(CpuFeatureFlags & FEATURE_MMX)
-		EndMMX();
+    if(CpuFeatureFlags & FEATURE_SSE)
+        EndSSE();
+    else if(CpuFeatureFlags & FEATURE_MMX)
+        EndMMX();
 
-	return true;
+    return true;
 }
 

@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_Rate.cpp,v 1.4 2004-05-25 16:59:29 adcockj Exp $
+// $Id: MpegDecoder_Rate.cpp,v 1.5 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (C) 2003 Gabest
-//	http://www.gabest.org
+//  Copyright (C) 2003 Gabest
+//  http://www.gabest.org
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -37,6 +37,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/05/25 16:59:29  adcockj
+// fixed issues with new buffered pin
+//
 // Revision 1.3  2004/04/08 16:41:57  adcockj
 // Tidy up subpicture support
 //
@@ -56,75 +59,75 @@
 
 HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData)
 {
-	bool fRefresh = false;
+    bool fRefresh = false;
 
-	switch(dwPropID)
-	{
-	case AM_RATE_SimpleRateChange:
-		{
-			AM_SimpleRateChange* p = (AM_SimpleRateChange*)pPropertyData;
-			if(!m_CorrectTS) return E_PROP_ID_UNSUPPORTED;
-			m_ratechange.Rate = p->Rate;
-			m_ratechange.StartTime = p->StartTime;
-			LOG(DBGLOG_FLOW, ("Simple Rate Change StartTime=%I64d, Rate=%d\n", p->StartTime, p->Rate));
-		}
-		break;
-	case AM_RATE_CorrectTS:
-		{
-			LONG* p = (LONG*)pPropertyData;
-			m_CorrectTS = (*p != 0);
-			LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
-		}
-		break;
-	default:
-		return E_PROP_ID_UNSUPPORTED;
-	}
+    switch(dwPropID)
+    {
+    case AM_RATE_SimpleRateChange:
+        {
+            AM_SimpleRateChange* p = (AM_SimpleRateChange*)pPropertyData;
+            if(!m_CorrectTS) return E_PROP_ID_UNSUPPORTED;
+            m_ratechange.Rate = p->Rate;
+            m_ratechange.StartTime = p->StartTime;
+            LOG(DBGLOG_FLOW, ("Simple Rate Change StartTime=%I64d, Rate=%d\n", p->StartTime, p->Rate));
+        }
+        break;
+    case AM_RATE_CorrectTS:
+        {
+            LONG* p = (LONG*)pPropertyData;
+            m_CorrectTS = (*p != 0);
+            LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
+        }
+        break;
+    default:
+        return E_PROP_ID_UNSUPPORTED;
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned)
 {
-	switch(dwPropID)
-	{
-	case AM_RATE_MaxFullDataRate:
-		{
-			AM_MaxFullDataRate* p = (AM_MaxFullDataRate*)pPropertyData;
-			*p = 10000 / 4;
-			*pcbReturned = sizeof(AM_MaxFullDataRate);
-		}
-		break;
-	case AM_RATE_QueryFullFrameRate:
-		{
-			AM_QueryRate* p = (AM_QueryRate*)pPropertyData;
-			p->lMaxForwardFullFrame = 10000 / 4;
-			p->lMaxReverseFullFrame = 0;
-			*pcbReturned = sizeof(AM_QueryRate);
-		}
-		break;
-	default:
-		return E_PROP_ID_UNSUPPORTED;
+    switch(dwPropID)
+    {
+    case AM_RATE_MaxFullDataRate:
+        {
+            AM_MaxFullDataRate* p = (AM_MaxFullDataRate*)pPropertyData;
+            *p = 10000 / 4;
+            *pcbReturned = sizeof(AM_MaxFullDataRate);
+        }
+        break;
+    case AM_RATE_QueryFullFrameRate:
+        {
+            AM_QueryRate* p = (AM_QueryRate*)pPropertyData;
+            p->lMaxForwardFullFrame = 10000 / 4;
+            p->lMaxReverseFullFrame = 0;
+            *pcbReturned = sizeof(AM_QueryRate);
+        }
+        break;
+    default:
+        return E_PROP_ID_UNSUPPORTED;
     }
     return S_OK;
 }
 
 HRESULT CMpegDecoder::SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport)
 {
-	switch(dwPropID)
-	{
-	case AM_RATE_SimpleRateChange:
-		*pTypeSupport = KSPROPERTY_SUPPORT_SET;
-		break;
-	case AM_RATE_MaxFullDataRate:
-		*pTypeSupport = KSPROPERTY_SUPPORT_GET;
-		break;
-	case AM_RATE_QueryFullFrameRate:
-		*pTypeSupport = KSPROPERTY_SUPPORT_GET;
-		break;
-	case AM_RATE_CorrectTS:
-		*pTypeSupport = KSPROPERTY_SUPPORT_SET;
-		break;
-	}
+    switch(dwPropID)
+    {
+    case AM_RATE_SimpleRateChange:
+        *pTypeSupport = KSPROPERTY_SUPPORT_SET;
+        break;
+    case AM_RATE_MaxFullDataRate:
+        *pTypeSupport = KSPROPERTY_SUPPORT_GET;
+        break;
+    case AM_RATE_QueryFullFrameRate:
+        *pTypeSupport = KSPROPERTY_SUPPORT_GET;
+        break;
+    case AM_RATE_CorrectTS:
+        *pTypeSupport = KSPROPERTY_SUPPORT_SET;
+        break;
+    }
     return S_OK;
 }
 

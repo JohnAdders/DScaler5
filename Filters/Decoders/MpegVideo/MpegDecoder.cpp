@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.28 2004-05-25 16:59:29 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.29 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (C) 2003 Gabest
-//	http://www.gabest.org
+//  Copyright (C) 2003 Gabest
+//  http://www.gabest.org
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.28  2004/05/25 16:59:29  adcockj
+// fixed issues with new buffered pin
+//
 // Revision 1.27  2004/05/24 06:29:26  adcockj
 // Interim buffer fix
 //
@@ -187,66 +190,66 @@ CMpegDecoder::CMpegDecoder() :
     m_CCOutPin->SetupObject(this, L"~CC");
 
     AM_MEDIA_TYPE MT;
-	InitMediaType(&MT);
-	MT.majortype = MEDIATYPE_AUXLine21Data;
-	MT.subtype = MEDIASUBTYPE_Line21_GOPPacket;
-	MT.formattype = GUID_NULL;
+    InitMediaType(&MT);
+    MT.majortype = MEDIATYPE_AUXLine21Data;
+    MT.subtype = MEDIASUBTYPE_Line21_GOPPacket;
+    MT.formattype = GUID_NULL;
     
     m_CCOutPin->SetType(&MT);
     
     ClearMediaType(&MT);
 
-	m_spon = TRUE;
+    m_spon = TRUE;
 
-	m_rate.Rate = 10000;
-	m_rate.StartTime = 0;
+    m_rate.Rate = 10000;
+    m_rate.StartTime = 0;
 
-	m_LastOutputTime = 0;
-	m_PicturesSinceSequence = 0;
+    m_LastOutputTime = 0;
+    m_PicturesSinceSequence = 0;
 
-	m_ProgressiveChroma = false;
+    m_ProgressiveChroma = false;
     m_NextFrameDeint = DIBob;
-	m_dec = NULL;
-	m_ChromaType = CHROMA_420;
+    m_dec = NULL;
+    m_ChromaType = CHROMA_420;
 
-	m_ratechange.Rate = 10000;
-	m_ratechange.StartTime = -1;
+    m_ratechange.Rate = 10000;
+    m_ratechange.StartTime = -1;
     m_CorrectTS = false;
     m_dec = NULL;
 
-	m_MpegWidth = 0;
-	m_MpegHeight = 0;
-	m_CurrentWidth = 0;
-	m_CurrentHeight = 0;
+    m_MpegWidth = 0;
+    m_MpegHeight = 0;
+    m_CurrentWidth = 0;
+    m_CurrentHeight = 0;
 
     m_OutputWidth = 0;
     m_OutputHeight = 0;
     m_InternalPitch = 0;
     m_CurrentPicture = NULL;
 
-	m_ControlFlags = 0;
-	m_DoPanAndScan = false;
-	m_FilmCameraModeHint = false;
-	m_LetterBoxed = false;
-	m_PanScanOffsetX = 0;
-	m_PanScanOffsetY = 0;
+    m_ControlFlags = 0;
+    m_DoPanAndScan = false;
+    m_FilmCameraModeHint = false;
+    m_LetterBoxed = false;
+    m_PanScanOffsetX = 0;
+    m_PanScanOffsetY = 0;
 
-	m_ARMpegX = 4;
-	m_ARMpegY = 3;
-	m_ARCurrentOutX = 0;
-	m_ARCurrentOutY = 0;
-	m_ARAdjustX = 1;
-	m_ARAdjustY = 1;
-	m_AFD = 0;
+    m_ARMpegX = 4;
+    m_ARMpegY = 3;
+    m_ARCurrentOutX = 0;
+    m_ARCurrentOutY = 0;
+    m_ARAdjustX = 1;
+    m_ARAdjustY = 1;
+    m_AFD = 0;
 
-	m_InsideReconnect = false;
-	m_ConnectedToIn = DEFAULT_INFILTER;
-	m_ConnectedToOut = DEFAULT_OUTFILTER;
+    m_InsideReconnect = false;
+    m_ConnectedToIn = DEFAULT_INFILTER;
+    m_ConnectedToOut = DEFAULT_OUTFILTER;
 
     InitMediaType(&m_InternalMT);
     m_NeedToAttachFormat = false;
 
-	ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
+    ZeroMemory(&m_CurrentSequence, sizeof(mpeg2_sequence_t));
 }
 
 CMpegDecoder::~CMpegDecoder()
@@ -332,19 +335,19 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
     case VIDEODELAY:
         // don't care when this changes
         break;
-	case DOACCURATEASPECT:
+    case DOACCURATEASPECT:
         // \todo we should care when this changes
-		// but we would need to store the sequence
+        // but we would need to store the sequence
         break;
-	case DVBASPECTPREFS:
-		{
-			// reset the sizes when these param change
-			// ensure we don't do this while we'rte in the middle of
-			// processing
-			CProtectCode WhileVarInScope(&m_DeliverLock);
-			CorrectOutputSize();
-		}
-		break;
+    case DVBASPECTPREFS:
+        {
+            // reset the sizes when these param change
+            // ensure we don't do this while we'rte in the middle of
+            // processing
+            CProtectCode WhileVarInScope(&m_DeliverLock);
+            CorrectOutputSize();
+        }
+        break;
     }
     return S_OK;
 }
@@ -356,7 +359,7 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
     {
         return SupportPropSetSubPic(dwPropID, pTypeSupport);
     }
-	else if(guidPropSet == AM_KSPROPSETID_TSRateChange && pPin == m_VideoInPin)
+    else if(guidPropSet == AM_KSPROPSETID_TSRateChange && pPin == m_VideoInPin)
     {
         return SupportPropSetSubPic(dwPropID, pTypeSupport);
     }
@@ -365,62 +368,62 @@ HRESULT CMpegDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD 
 
 HRESULT CMpegDecoder::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, CDSBasePin* pPin)
 {
-	if(guidPropSet == AM_KSPROPSETID_DvdSubPic)
+    if(guidPropSet == AM_KSPROPSETID_DvdSubPic)
     {
         return SetPropSetSubPic(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
-	else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return SetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData);
     }
     else
     {
-		return E_NOTIMPL;
+        return E_NOTIMPL;
     }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned, CDSBasePin* pPin)
 {
-	if(guidPropSet == AM_KSPROPSETID_DvdSubPic)
+    if(guidPropSet == AM_KSPROPSETID_DvdSubPic)
     {
         return GetPropSetSubPic(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
-	else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
+    else if(guidPropSet == AM_KSPROPSETID_TSRateChange)
     {
         return GetPropSetRate(dwPropID, pInstanceData, cbInstanceData, pPropertyData, cbPropData, pcbReturned);
     }
     else
     {
-		return E_NOTIMPL;
+        return E_NOTIMPL;
     }
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
     if(pPin == m_VideoOutPin)
     {
-	    if(q.Type == Famine)
-	    {
-		    SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
-		    if(QualityControl && q.Late < 5000000)
-		    {
+        if(q.Type == Famine)
+        {
+            SI(IQualityControl) QualityControl = m_VideoInPin->m_ConnectedPin;
+            if(QualityControl && q.Late < 5000000)
+            {
                 LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
-			    return QualityControl->Notify(pSelf, q);
-		    }
-		    else
-		    {
+                return QualityControl->Notify(pSelf, q);
+            }
+            else
+            {
                 LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
-			    return E_NOTIMPL;
-		    }
-	    }
-	    if(q.Type == Flood)
-	    {
+                return E_NOTIMPL;
+            }
+        }
+        if(q.Type == Flood)
+        {
             LOG(DBGLOG_ALL, ("Ignored Flood - %d\n", q.Late));
-			return E_NOTIMPL;
+            return E_NOTIMPL;
         }
     }
     return E_NOTIMPL;
@@ -428,71 +431,71 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 
 STDMETHODIMP CMpegDecoder::GetDecoderCaps(DWORD dwCapIndex,DWORD* lpdwCap)
 {
-	switch(dwCapIndex)
-	{
-	case AM_QUERY_DECODER_VMR_SUPPORT:
-	case AM_QUERY_DECODER_DVD_SUPPORT:
-	case AM_QUERY_DECODER_ATSC_SD_SUPPORT:   
-	case AM_QUERY_DECODER_ATSC_HD_SUPPORT:
-	case AM_GETDECODERCAP_QUERY_VMR9_SUPPORT:
-		*lpdwCap = DECODER_CAP_SUPPORTED;
-		break;
-	// lie so that Media centre will use us
-	case AM_QUERY_DECODER_DXVA_1_SUPPORT:
-		*lpdwCap = DECODER_CAP_SUPPORTED;
-		break;
-	default:
-		*lpdwCap = DECODER_CAP_NOTSUPPORTED;
-		break;
-	}
-	return S_OK;
+    switch(dwCapIndex)
+    {
+    case AM_QUERY_DECODER_VMR_SUPPORT:
+    case AM_QUERY_DECODER_DVD_SUPPORT:
+    case AM_QUERY_DECODER_ATSC_SD_SUPPORT:   
+    case AM_QUERY_DECODER_ATSC_HD_SUPPORT:
+    case AM_GETDECODERCAP_QUERY_VMR9_SUPPORT:
+        *lpdwCap = DECODER_CAP_SUPPORTED;
+        break;
+    // lie so that Media centre will use us
+    case AM_QUERY_DECODER_DXVA_1_SUPPORT:
+        *lpdwCap = DECODER_CAP_SUPPORTED;
+        break;
+    default:
+        *lpdwCap = DECODER_CAP_NOTSUPPORTED;
+        break;
+    }
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties, CDSBasePin* pPin)
 {
     if(pPin == m_VideoInPin)
     {
-	    pProperties->cBuffers = 200;
-	    pProperties->cbBuffer = 2048;
-	    pProperties->cbAlign = 1;
-	    pProperties->cbPrefix = 0;
+        pProperties->cBuffers = 200;
+        pProperties->cbBuffer = 2048;
+        pProperties->cbAlign = 1;
+        pProperties->cbPrefix = 0;
     }
     else if(pPin == m_SubpictureInPin)
     {
-	    pProperties->cBuffers = 1;
-	    pProperties->cbBuffer = 2048;
-	    pProperties->cbAlign = 1;
-	    pProperties->cbPrefix = 0;
+        pProperties->cBuffers = 1;
+        pProperties->cbBuffer = 2048;
+        pProperties->cbAlign = 1;
+        pProperties->cbPrefix = 0;
     }
     else if(pPin == m_VideoOutPin)
     {
-	    BITMAPINFOHEADER bih;
-	    ExtractBIH(pPin->GetMediaType(), &bih);
+        BITMAPINFOHEADER bih;
+        ExtractBIH(pPin->GetMediaType(), &bih);
 
-	    pProperties->cBuffers = 3;
-		if(m_InsideReconnect)
-		{
-			pProperties->cbBuffer = m_InternalMT.lSampleSize;
-		}
-		else
-		{
-			pProperties->cbBuffer = bih.biSizeImage;
-		}
-	    pProperties->cbAlign = 1;
-	    pProperties->cbPrefix = 0;
+        pProperties->cBuffers = 3;
+        if(m_InsideReconnect)
+        {
+            pProperties->cbBuffer = m_InternalMT.lSampleSize;
+        }
+        else
+        {
+            pProperties->cbBuffer = bih.biSizeImage;
+        }
+        pProperties->cbAlign = 1;
+        pProperties->cbPrefix = 0;
     }
     else if(pPin == m_CCOutPin)
     {
-	    pProperties->cBuffers = 1;
-	    pProperties->cbBuffer = 2048;
-	    pProperties->cbAlign = 1;
-	    pProperties->cbPrefix = 0;
+        pProperties->cBuffers = 1;
+        pProperties->cbBuffer = 2048;
+        pProperties->cbAlign = 1;
+        pProperties->cbPrefix = 0;
     }
     else
     {
         return E_UNEXPECTED;
     }
-	return S_OK;
+    return S_OK;
 }
 
 bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin)
@@ -500,52 +503,52 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     bool Result = false;
     if(pPin == m_VideoInPin)
     {
-		Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
-			      pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-					(pmt->majortype == MEDIATYPE_MPEG2_PACK &&
-					 pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-					(pmt->majortype == MEDIATYPE_MPEG2_PES && 
-					 pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-					(pmt->majortype == MEDIATYPE_Video && 
-					 pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-					(pmt->majortype == MEDIATYPE_Video && 
-					 pmt->subtype == MEDIASUBTYPE_MPEG1Packet) || 
-					(pmt->majortype == MEDIATYPE_Video && 
-					 pmt->subtype == MEDIASUBTYPE_MPEG1Payload);
+        Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                  pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
+                    (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
+                    (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
+                    (pmt->majortype == MEDIATYPE_Video && 
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
+                    (pmt->majortype == MEDIATYPE_Video && 
+                     pmt->subtype == MEDIASUBTYPE_MPEG1Packet) || 
+                    (pmt->majortype == MEDIATYPE_Video && 
+                     pmt->subtype == MEDIASUBTYPE_MPEG1Payload);
     }
     else if(pPin == m_SubpictureInPin)
     {
         Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
                     pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE) || 
-		         (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                 (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
                     pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE) ||
-		         (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                 (pmt->majortype == MEDIATYPE_MPEG2_PES && 
                     pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE);
     }
     else if(pPin == m_VideoOutPin)
     {
-    	int wout = 0, hout = 0;
-		long arxout = 0, aryout = 0;
-    	Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
+        int wout = 0, hout = 0;
+        long arxout = 0, aryout = 0;
+        Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
-				    pmt->subtype == MEDIASUBTYPE_ARGB32 ||
+                    pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
                     pmt->subtype == MEDIASUBTYPE_RGB565 ||
                     pmt->subtype == MEDIASUBTYPE_RGB555));
-		if(m_InsideReconnect)
-		{
-			m_Pitch = wout;
-			m_Height = hout;
-		}
+        if(m_InsideReconnect)
+        {
+            m_Pitch = wout;
+            m_Height = hout;
+        }
     }
     else if(pPin == m_CCOutPin)
     {
-    	Result = (pmt->majortype == MEDIATYPE_AUXLine21Data) && 
+        Result = (pmt->majortype == MEDIATYPE_AUXLine21Data) && 
                  (pmt->subtype == MEDIASUBTYPE_Line21_GOPPacket);
     }
-	return Result;
+    return Result;
 }
 
 HRESULT CMpegDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin)
@@ -553,7 +556,7 @@ HRESULT CMpegDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     if(pPin == m_VideoInPin)
     {
         return ProcessMPEGSample(InSample, pSampleProperties);
-	}
+    }
     else if(pPin == m_SubpictureInPin)
     {
         return ProcessSubPicSample(InSample, pSampleProperties);
@@ -605,7 +608,7 @@ HRESULT CMpegDecoder::Flush(CDSBasePin* pPin)
     if(pPin == m_VideoInPin)
     {
         FlushMPEG();
-	}
+    }
     else if(pPin == m_SubpictureInPin)
     {
         FlushSubPic();
@@ -617,13 +620,13 @@ HRESULT CMpegDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
 {
     if(pPin == m_VideoInPin)
     {
-	    LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
-	    m_LastOutputTime = 0;
+        LOG(DBGLOG_FLOW, ("New Segment %010I64d - %010I64d  @ %f\n", tStart, tStop, dRate));
+        m_LastOutputTime = 0;
         m_rate.Rate = (LONG)(10000 / dRate);
-	    m_rate.StartTime = 0;
-	    m_IsDiscontinuity = true;
+        m_rate.StartTime = 0;
+        m_IsDiscontinuity = true;
         return S_OK;
-	}
+    }
     else if(pPin == m_SubpictureInPin)
     {
         return S_FALSE;
@@ -641,31 +644,31 @@ HRESULT CMpegDecoder::SendOutLastSamples(CDSBasePin* pPin)
 
 void CMpegDecoder::CorrectSourceTarget(RECT& rcSource, RECT& rcTarget)
 {
-	SetRect(&rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
-	if(m_ConnectedToIn == DVD_INFILTER && m_ConnectedToOut != DEFAULT_OUTFILTER)
-	{
-		if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
-		{
-			SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
-		}
-		else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-		{
-			SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
-		}
-		else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
-		{
-			SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
-		}
-		else
-		{
-			SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
-		}
-	}
-	else
-	{
-		SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
-	}
-	SetRect(&rcTarget, 0, 0, 0, 0);
+    SetRect(&rcSource, 0, 0, m_OutputWidth, m_OutputHeight);
+    if(m_ConnectedToIn == DVD_INFILTER && m_ConnectedToOut != DEFAULT_OUTFILTER)
+    {
+        if(m_OutputWidth == 352 && (m_OutputHeight == 240 || m_OutputHeight == 288))
+        {
+            SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight * 2);
+        }
+        else if(m_OutputWidth == 352 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+        {
+            SetRect(&rcTarget, 8, 0, m_OutputWidth * 2, m_OutputHeight);
+        }
+        else if(m_OutputWidth == 704 && (m_OutputHeight == 480 || m_OutputHeight == 576))
+        {
+            SetRect(&rcTarget, 8, 0, m_OutputWidth, m_OutputHeight);
+        }
+        else
+        {
+            SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
+        }
+    }
+    else
+    {
+        SetRect(&rcTarget, 0, 0, m_OutputWidth, m_OutputHeight);
+    }
+    SetRect(&rcTarget, 0, 0, 0, 0);
 }
 
 
@@ -676,88 +679,88 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
-	    struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
-	    {
-		    {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
-		    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
-		    {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
-		    {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
-		    {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
-		    {&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
-		    {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
-		    {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
-		    {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
-		    {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
-		    {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
-	    };
+        struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
+        {
+            {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
+            {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
+            {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
+            {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
+            {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
+            {&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
+            {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
+            {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
+            {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
+            {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
+            {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
+        };
 
-	    // this will make sure we won't connect to the old renderer in dvd mode
-	    // that renderer can't switch the format dynamically
-	    if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 3*sizeof(fmts)/sizeof(fmts[0])) return VFW_S_NO_MORE_ITEMS;
+        // this will make sure we won't connect to the old renderer in dvd mode
+        // that renderer can't switch the format dynamically
+        if(TypeNum < 0) return E_INVALIDARG;
+        if(TypeNum >= 3*sizeof(fmts)/sizeof(fmts[0])) return VFW_S_NO_MORE_ITEMS;
 
 
         int FormatNum = TypeNum/3;
-	    const AM_MEDIA_TYPE* mt = m_VideoInPin->GetMediaType();
+        const AM_MEDIA_TYPE* mt = m_VideoInPin->GetMediaType();
 
-	    pmt->majortype = MEDIATYPE_Video;
-	    pmt->subtype = *fmts[FormatNum].subtype;
+        pmt->majortype = MEDIATYPE_Video;
+        pmt->subtype = *fmts[FormatNum].subtype;
 
-	    BITMAPINFOHEADER bihOut;
-	    memset(&bihOut, 0, sizeof(bihOut));
-	    bihOut.biSize = sizeof(bihOut);
-	    bihOut.biWidth = m_OutputWidth;
-	    bihOut.biHeight = m_OutputHeight;
-	    bihOut.biPlanes = fmts[FormatNum].biPlanes;
-	    bihOut.biBitCount = fmts[FormatNum].biBitCount;
-	    bihOut.biCompression = fmts[FormatNum].biCompression;
-	    bihOut.biSizeImage = bihOut.biWidth * bihOut.biHeight * bihOut.biBitCount>>3;
+        BITMAPINFOHEADER bihOut;
+        memset(&bihOut, 0, sizeof(bihOut));
+        bihOut.biSize = sizeof(bihOut);
+        bihOut.biWidth = m_OutputWidth;
+        bihOut.biHeight = m_OutputHeight;
+        bihOut.biPlanes = fmts[FormatNum].biPlanes;
+        bihOut.biBitCount = fmts[FormatNum].biBitCount;
+        bihOut.biCompression = fmts[FormatNum].biCompression;
+        bihOut.biSizeImage = bihOut.biWidth * bihOut.biHeight * bihOut.biBitCount>>3;
 
-	    if(TypeNum%3 == 2)
-	    {
-		    pmt->formattype = FORMAT_VideoInfo;
-		    VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
-		    memset(vih, 0, sizeof(VIDEOINFOHEADER));
-		    vih->bmiHeader = bihOut;
-		    vih->bmiHeader.biXPelsPerMeter = vih->bmiHeader.biWidth * m_ARMpegX * m_ARAdjustX;
-		    vih->bmiHeader.biYPelsPerMeter = vih->bmiHeader.biHeight * m_ARMpegY * m_ARAdjustY;
-			Simplify(vih->bmiHeader.biXPelsPerMeter, vih->bmiHeader.biYPelsPerMeter);
+        if(TypeNum%3 == 2)
+        {
+            pmt->formattype = FORMAT_VideoInfo;
+            VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER));
+            memset(vih, 0, sizeof(VIDEOINFOHEADER));
+            vih->bmiHeader = bihOut;
+            vih->bmiHeader.biXPelsPerMeter = vih->bmiHeader.biWidth * m_ARMpegX * m_ARAdjustX;
+            vih->bmiHeader.biYPelsPerMeter = vih->bmiHeader.biHeight * m_ARMpegY * m_ARAdjustY;
+            Simplify(vih->bmiHeader.biXPelsPerMeter, vih->bmiHeader.biYPelsPerMeter);
             if(mt->pbFormat)
             {
-	            vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
-	            vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
-	            vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
+                vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
+                vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
+                vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
             }
             pmt->pbFormat = (BYTE*)vih;
             pmt->cbFormat = sizeof(VIDEOINFOHEADER);
-			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
+            CorrectSourceTarget(vih->rcSource, vih->rcTarget);
         }
-	    else
-	    {
-		    pmt->formattype = FORMAT_VideoInfo2;
-		    VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
-		    memset(vih, 0, sizeof(VIDEOINFOHEADER2));
-		    vih->bmiHeader = bihOut;
-		    vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
-		    vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
-			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
+        else
+        {
+            pmt->formattype = FORMAT_VideoInfo2;
+            VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)CoTaskMemAlloc(sizeof(VIDEOINFOHEADER2));
+            memset(vih, 0, sizeof(VIDEOINFOHEADER2));
+            vih->bmiHeader = bihOut;
+            vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
+            vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
+            Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
             if(TypeNum%3 == 0)
             {
-    		    vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
+                vih->dwInterlaceFlags = AMINTERLACE_IsInterlaced | AMINTERLACE_DisplayModeBobOrWeave | AMINTERLACE_FieldPatBothRegular;
             }
             if(mt->pbFormat)
             {
-    	        vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
-	            vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
-	            vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
+                vih->AvgTimePerFrame = ((VIDEOINFOHEADER*)mt->pbFormat)->AvgTimePerFrame;
+                vih->dwBitRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitRate;
+                vih->dwBitErrorRate = ((VIDEOINFOHEADER*)mt->pbFormat)->dwBitErrorRate;
             }
-			vih->dwControlFlags = m_ControlFlags;
+            vih->dwControlFlags = m_ControlFlags;
             pmt->pbFormat = (BYTE*)vih;
-            pmt->cbFormat = sizeof(VIDEOINFOHEADER2);	    
-			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
-	    }
-		
-	    CorrectMediaType(pmt);
+            pmt->cbFormat = sizeof(VIDEOINFOHEADER2);       
+            CorrectSourceTarget(vih->rcSource, vih->rcTarget);
+        }
+        
+        CorrectMediaType(pmt);
         return S_OK;
     }
     else if(pPin == m_SubpictureInPin)
@@ -768,21 +771,21 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
             pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
             pmt->formattype = GUID_NULL;
             return S_OK;
-		}
-		else if(TypeNum == 1)
-		{
+        }
+        else if(TypeNum == 1)
+        {
             pmt->majortype = MEDIATYPE_MPEG2_PACK;
             pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
             pmt->formattype = GUID_NULL;
             return S_OK;
-		}
-		else if(TypeNum == 2)
-		{
+        }
+        else if(TypeNum == 2)
+        {
             pmt->majortype = MEDIASUBTYPE_DVD_SUBPICTURE;
             pmt->subtype = MEDIASUBTYPE_DVD_SUBPICTURE;
             pmt->formattype = GUID_NULL;
             return S_OK;
-		}
+        }
         else
         {
             return VFW_S_NO_MORE_ITEMS;
@@ -811,238 +814,238 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 
 HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     if(pPin == m_VideoInPin)
     {
-		m_MpegWidth = m_MpegHeight = 0;
-		m_ARMpegX = 4; 
+        m_MpegWidth = m_MpegHeight = 0;
+        m_ARMpegX = 4; 
         m_ARMpegY = 3;
-		m_ARAdjustX = m_ARAdjustY = 1;
-		ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY);
-		m_ControlFlags = 0;
-		m_DoPanAndScan = false;
-		m_FilmCameraModeHint = false;
-		m_LetterBoxed = false;
-		m_AFD = 0;
+        m_ARAdjustX = m_ARAdjustY = 1;
+        ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY);
+        m_ControlFlags = 0;
+        m_DoPanAndScan = false;
+        m_FilmCameraModeHint = false;
+        m_LetterBoxed = false;
+        m_AFD = 0;
 
-		if(pMediaType->formattype == FORMAT_VideoInfo2)
-		{
-			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
-			m_ControlFlags = vih->dwControlFlags;
-		}
-		else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
-		{
-			MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
-			m_ControlFlags = mvih->hdr.dwControlFlags;
-			if(mvih->dwFlags & AMMPEG2_DoPanScan)
-			{
-			    LOG(DBGLOG_FLOW, ("Pan & Scan Sent\n"));
-				m_DoPanAndScan = true;
-			}
-			if(mvih->dwFlags & AMMPEG2_FilmCameraMode)
-			{
-			    LOG(DBGLOG_FLOW, ("Film Hint Sent\n"));
-				m_FilmCameraModeHint = true;
-			}
-			if(mvih->dwFlags & AMMPEG2_SourceIsLetterboxed)
-			{
-			    LOG(DBGLOG_FLOW, ("L Sent\n"));
-				m_LetterBoxed = true;
-			}
-		}
+        if(pMediaType->formattype == FORMAT_VideoInfo2)
+        {
+            VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
+            m_ControlFlags = vih->dwControlFlags;
+        }
+        else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
+        {
+            MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
+            m_ControlFlags = mvih->hdr.dwControlFlags;
+            if(mvih->dwFlags & AMMPEG2_DoPanScan)
+            {
+                LOG(DBGLOG_FLOW, ("Pan & Scan Sent\n"));
+                m_DoPanAndScan = true;
+            }
+            if(mvih->dwFlags & AMMPEG2_FilmCameraMode)
+            {
+                LOG(DBGLOG_FLOW, ("Film Hint Sent\n"));
+                m_FilmCameraModeHint = true;
+            }
+            if(mvih->dwFlags & AMMPEG2_SourceIsLetterboxed)
+            {
+                LOG(DBGLOG_FLOW, ("L Sent\n"));
+                m_LetterBoxed = true;
+            }
+        }
 
-		CorrectOutputSize();
+        CorrectOutputSize();
     }
     else if(pPin == m_VideoOutPin)
     {
         int wout = 0, hout = 0;
-		long arxout = 0, aryout = 0; 
+        long arxout = 0, aryout = 0; 
         ExtractDim(pMediaType, wout, hout, arxout, aryout); 
 
-		if(wout == m_OutputWidth && hout == m_OutputHeight &&
-			arxout == m_ARAdjustX * m_ARMpegX &&
-			aryout == m_ARAdjustY * m_ARMpegY)
-		{
-			m_CurrentWidth = wout; 
-			m_CurrentHeight = hout; 
-			m_ARCurrentOutX = arxout; 
-			m_ARCurrentOutY = aryout; 
+        if(wout == m_OutputWidth && hout == m_OutputHeight &&
+            arxout == m_ARAdjustX * m_ARMpegX &&
+            aryout == m_ARAdjustY * m_ARMpegY)
+        {
+            m_CurrentWidth = wout; 
+            m_CurrentHeight = hout; 
+            m_ARCurrentOutX = arxout; 
+            m_ARCurrentOutY = aryout; 
 
-		}
+        }
     }
     return S_OK;
 }
 
 HRESULT CMpegDecoder::NotifyConnected(CDSBasePin* pPin)
 {
-	HRESULT hr = S_OK;
-	if(pPin == m_VideoInPin)
-	{
-		CLSID Clsid;
+    HRESULT hr = S_OK;
+    if(pPin == m_VideoInPin)
+    {
+        CLSID Clsid;
 
-		HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
-		if(Clsid == CLSID_DVDNavigator)
-		{
-			m_ConnectedToIn = DVD_INFILTER;
-		}
-		else
-		{
-			m_ConnectedToIn = DEFAULT_INFILTER;
-		}
-	}
-	if(pPin == m_VideoOutPin)
-	{
-		CLSID Clsid;
+        HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
+        if(Clsid == CLSID_DVDNavigator)
+        {
+            m_ConnectedToIn = DVD_INFILTER;
+        }
+        else
+        {
+            m_ConnectedToIn = DEFAULT_INFILTER;
+        }
+    }
+    if(pPin == m_VideoOutPin)
+    {
+        CLSID Clsid;
 
-		HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
-		if(Clsid == CLSID_VideoMixingRenderer9)
-		{
-			m_ConnectedToOut = VMR9_OUTFILTER;
-		}
-		else if(Clsid == CLSID_VideoMixingRenderer ||
-				Clsid == CLSID_VideoRendererDefault)
-		{
-			m_ConnectedToOut = VMR7_OUTFILTER;
-		}
+        HRESULT hr = m_VideoOutPin->GetConnectedFilterCLSID(&Clsid);
+        if(Clsid == CLSID_VideoMixingRenderer9)
+        {
+            m_ConnectedToOut = VMR9_OUTFILTER;
+        }
+        else if(Clsid == CLSID_VideoMixingRenderer ||
+                Clsid == CLSID_VideoRendererDefault)
+        {
+            m_ConnectedToOut = VMR7_OUTFILTER;
+        }
         else if(Clsid == CLSID_FFDShow)
         {
-			m_ConnectedToOut = FFDSHOW_OUTFILTER;
+            m_ConnectedToOut = FFDSHOW_OUTFILTER;
         }
-		else
-		{
+        else
+        {
             SI(IPinConnection) PinConnection = pPin->m_ConnectedPin;
             if(!PinConnection)
             {
                 return VFW_E_NO_TRANSPORT;
             }
-			m_ConnectedToOut = DEFAULT_OUTFILTER;
-		}
-	}
-	return S_OK;
+            m_ConnectedToOut = DEFAULT_OUTFILTER;
+        }
+    }
+    return S_OK;
 }
 
 
 HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
-	CProtectCode WhileVarInScope(&m_DeliverLock);
+    CProtectCode WhileVarInScope(&m_DeliverLock);
 
-	HRESULT hr;
+    HRESULT hr;
 
     if(pSampleProperties->dwStreamId != AM_STREAM_MEDIA)
-		return m_VideoOutPin->SendSample(InSample);
+        return m_VideoOutPin->SendSample(InSample);
 
-	BYTE* pDataIn = pSampleProperties->pbBuffer;
+    BYTE* pDataIn = pSampleProperties->pbBuffer;
 
-	long len = pSampleProperties->lActual;
+    long len = pSampleProperties->lActual;
 
-	if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
-	{
-		len -= 14; 
+    if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
+    {
+        len -= 14; 
         pDataIn += 14;
-		if(int stuffing = (pDataIn[-1]&7))
+        if(int stuffing = (pDataIn[-1]&7))
         {
             len -= stuffing; 
             pDataIn += stuffing;
         }
-	}
+    }
 
-	if(len <= 0) 
+    if(len <= 0) 
         return S_OK;
 
-	if(*(DWORD*)pDataIn == 0xBB010000)
-	{
-		len -= 4; 
+    if(*(DWORD*)pDataIn == 0xBB010000)
+    {
+        len -= 4; 
         pDataIn += 4;
-		int hdrlen = ((pDataIn[0]<<8)|pDataIn[1]) + 2;
-		len -= hdrlen; 
+        int hdrlen = ((pDataIn[0]<<8)|pDataIn[1]) + 2;
+        len -= hdrlen; 
         pDataIn += hdrlen;
-	}
+    }
 
-	if(len <= 0) 
+    if(len <= 0) 
         return S_OK;
 
-	if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xE0010000)
-	{
-		// skip past the PES header and Id
-		len -= 4;
-		pDataIn += 4;
+    if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xE0010000)
+    {
+        // skip past the PES header and Id
+        len -= 4;
+        pDataIn += 4;
 
-		int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
-		
-		// Skip past the packet length
-		len -= 2;
-		pDataIn += 2;
+        int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
+        
+        // Skip past the packet length
+        len -= 2;
+        pDataIn += 2;
 
-		BYTE* EndOfPacketLength = pDataIn;
+        BYTE* EndOfPacketLength = pDataIn;
 
-		// skip past MPEG1 PES Packet stuffing
-		for(int i(0); i < 16 && *pDataIn == 0xff; ++i)
-		{
-			len--;
-			pDataIn++;
-		}
+        // skip past MPEG1 PES Packet stuffing
+        for(int i(0); i < 16 && *pDataIn == 0xff; ++i)
+        {
+            len--;
+            pDataIn++;
+        }
 
-		if((*pDataIn & 0xC0) == 0x80)
-		{
-			// MPEG2 PES Format
+        if((*pDataIn & 0xC0) == 0x80)
+        {
+            // MPEG2 PES Format
 
-			// Skip to the header data length
-			len -= 2;
-			pDataIn += 2;
-	
-			// skip past all the optional headers and the length byte itself
-			len -= *pDataIn + 1;
-			pDataIn += *pDataIn + 1;
-		}
-		else
-		{
-			// MPEG1 PES format
+            // Skip to the header data length
+            len -= 2;
+            pDataIn += 2;
+    
+            // skip past all the optional headers and the length byte itself
+            len -= *pDataIn + 1;
+            pDataIn += *pDataIn + 1;
+        }
+        else
+        {
+            // MPEG1 PES format
 
-			// skip STD bits if present
-			if((*pDataIn & 0xC0) == 0x40)
-			{
-				len -= 2;
-				pDataIn += 2;
-			}
+            // skip STD bits if present
+            if((*pDataIn & 0xC0) == 0x40)
+            {
+                len -= 2;
+                pDataIn += 2;
+            }
 
-			if((*pDataIn  & 0xF0) == 0x30)
-			{
-				// Skip DTS and PTS
-				len -= 10;
-				pDataIn += 10;
-			}
-			else if((*pDataIn & 0xF0) == 0x20)
-			{
-				// Skip PTS
-				len -= 5;
-				pDataIn += 5;
-			}
-			else
-			{
-				// Skip Non DTS PTS byte
-				len -= 1;
-				pDataIn += 1;
-			}
-		}
+            if((*pDataIn  & 0xF0) == 0x30)
+            {
+                // Skip DTS and PTS
+                len -= 10;
+                pDataIn += 10;
+            }
+            else if((*pDataIn & 0xF0) == 0x20)
+            {
+                // Skip PTS
+                len -= 5;
+                pDataIn += 5;
+            }
+            else
+            {
+                // Skip Non DTS PTS byte
+                len -= 1;
+                pDataIn += 1;
+            }
+        }
 
-		if(ExpectedLength > 0)
-		{
-			ExpectedLength -= pDataIn - EndOfPacketLength;
-			len = min(len, ExpectedLength); 
-		}
-	}
+        if(ExpectedLength > 0)
+        {
+            ExpectedLength -= pDataIn - EndOfPacketLength;
+            len = min(len, ExpectedLength); 
+        }
+    }
 
-	if(len <= 0) 
+    if(len <= 0) 
         return S_OK;
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	{
-		m_IsDiscontinuity = true;
-	}
+    {
+        m_IsDiscontinuity = true;
+    }
 
-	mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
-	while(1)
+    mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
+    while(1)
     {
         mpeg2_state_t state = mpeg2_parse(m_dec);
 
@@ -1052,48 +1055,48 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
             CHECK(hr);
         }
 
-		switch(state)
-		{
-		case STATE_BUFFER:
-			return S_OK;
-			break;
- 		case STATE_INVALID:
-			// the decoder seems to recover OK now
-			// so we are just going to ignore these
- 			LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
- 			break;
-		case STATE_SEQUENCE:
+        switch(state)
+        {
+        case STATE_BUFFER:
+            return S_OK;
+            break;
+        case STATE_INVALID:
+            // the decoder seems to recover OK now
+            // so we are just going to ignore these
+            LOG(DBGLOG_FLOW, ("STATE_INVALID\n"));
+            break;
+        case STATE_SEQUENCE:
             hr = ProcessNewSequence();
             CHECK(hr);
-			break;
-		case STATE_SEQUENCE_MODIFIED:
+            break;
+        case STATE_SEQUENCE_MODIFIED:
             hr = ProcessModifiedSequence();
             CHECK(hr);
-			break;
-		case STATE_PICTURE:
+            break;
+        case STATE_PICTURE:
             hr = ProcessPictureStart(pSampleProperties);
             CHECK(hr);
-			break;
-		case STATE_SLICE:
-		case STATE_END:
-		case STATE_INVALID_END:
+            break;
+        case STATE_SLICE:
+        case STATE_END:
+        case STATE_INVALID_END:
             hr = ProcessPictureDisplay((state == STATE_END) && (m_PicturesSinceSequence == 0));
             CHECK(hr);
-			break;
-		case STATE_GOP:
-		case STATE_SEQUENCE_REPEATED:
-		case STATE_SLICE_1ST:
-		case STATE_PICTURE_2ND:
-			// don't care about these
-			break;
-		default:
- 			LOG(DBGLOG_FLOW, ("Unexpected State in stream %d\n", state));
-		    break;
-		}
+            break;
+        case STATE_GOP:
+        case STATE_SEQUENCE_REPEATED:
+        case STATE_SLICE_1ST:
+        case STATE_PICTURE_2ND:
+            // don't care about these
+            break;
+        default:
+            LOG(DBGLOG_FLOW, ("Unexpected State in stream %d\n", state));
+            break;
+        }
     }
 
     // should never get here
-	return E_UNEXPECTED;
+    return E_UNEXPECTED;
 }
 
 HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
@@ -1101,49 +1104,49 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     if(m_CurrentPicture == NULL)
         return S_OK;
 
-	// sometimes we get given a repeat frame request
-	// when we're not really ready
+    // sometimes we get given a repeat frame request
+    // when we're not really ready
 
-	TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-	LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
-		m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
-		frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
-		m_CurrentPicture->m_NumFields,
-		!!(m_CurrentPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME),
-		!!(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST),
-		!!(m_CurrentPicture->m_NumFields == 3),
-		m_OutputWidth, m_OutputHeight, m_InternalPitch,
-		!!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
-		!!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
+    TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+        m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
+        frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
+        m_CurrentPicture->m_NumFields,
+        !!(m_CurrentPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME),
+        !!(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST),
+        !!(m_CurrentPicture->m_NumFields == 3),
+        m_OutputWidth, m_OutputHeight, m_InternalPitch,
+        !!(m_CurrentPicture->m_rtStop < 0 || m_fWaitForKeyFrame),
+        !!(HasSubpicsToRender(m_CurrentPicture->m_rtStart))));
 
-	{
-		// cope with a change in rate		
-		if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
-		{
-			m_rate.Rate = m_ratechange.Rate;
-			// looks like we need to do this ourselves
-			// as the time past originally seems like a best guess only
-			m_rate.StartTime = m_CurrentPicture->m_rtStart;
-			m_LastOutputTime = m_CurrentPicture->m_rtStart;
-			m_IsDiscontinuity = true;
-			LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
-		}
-	}
+    {
+        // cope with a change in rate       
+        if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
+        {
+            m_rate.Rate = m_ratechange.Rate;
+            // looks like we need to do this ourselves
+            // as the time past originally seems like a best guess only
+            m_rate.StartTime = m_CurrentPicture->m_rtStart;
+            m_LastOutputTime = m_CurrentPicture->m_rtStart;
+            m_IsDiscontinuity = true;
+            LOG(DBGLOG_FLOW, ("Got Rate %010I64d %d\n", m_rate.StartTime, m_rate.Rate));
+        }
+    }
 
 
-	REFERENCE_TIME rtStart;
-	REFERENCE_TIME rtStop;
+    REFERENCE_TIME rtStart;
+    REFERENCE_TIME rtStop;
     
     if(m_IsDiscontinuity)
     {
         // if we're at a Discontinuity use the times we're being sent in
-	    rtStart = m_rate.StartTime + (m_CurrentPicture->m_rtStart - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+        rtStart = m_rate.StartTime + (m_CurrentPicture->m_rtStart - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
     }
     else
     {
         // if we're not at a Discontinuity
         // make sure that time are contiguous
-	    rtStart = m_LastOutputTime;
+        rtStart = m_LastOutputTime;
     }
 
     // if we want smooth frames then we simply adjust the stop time by half
@@ -1152,11 +1155,11 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // frame will mean that we only have to worry about adjusting the 3 field parts.
     if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_CurrentPicture->m_NumFields == 3)
     {
-    	rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
+        rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
     }
     else
     {
-    	rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
+        rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
     }
 
     rtStop += GetParamInt(VIDEODELAY) * 10000;
@@ -1168,90 +1171,90 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         rtStart = m_LastOutputTime;
     }
 
-	if(fRepeatLast)
-	{
-		// if we are being called to refresh the subpicture
-		// and the proposed start time is in the past then
-		// we need to pass an up to date media time
-		// otherwise the renderer may drop the sample
-		// which means the user can't see the new subpicture
-		REFERENCE_TIME CurTime;
-		m_RefClock->GetTime(&CurTime);
-		if(rtStart < CurTime)
-		{
-			rtStart = CurTime - m_rtStartTime;
-			rtStop = rtStart + 10000;
-		}
-	}
-	
-	if(rtStop <= rtStart)
-	{
-		rtStop = rtStart + 100;
-	}
+    if(fRepeatLast)
+    {
+        // if we are being called to refresh the subpicture
+        // and the proposed start time is in the past then
+        // we need to pass an up to date media time
+        // otherwise the renderer may drop the sample
+        // which means the user can't see the new subpicture
+        REFERENCE_TIME CurTime;
+        m_RefClock->GetTime(&CurTime);
+        if(rtStart < CurTime)
+        {
+            rtStart = CurTime - m_rtStartTime;
+            rtStop = rtStart + 10000;
+        }
+    }
+    
+    if(rtStop <= rtStart)
+    {
+        rtStop = rtStart + 100;
+    }
 
     m_LastOutputTime = rtStop;
 
-	HRESULT hr;
+    HRESULT hr;
 
-	// cope with dynamic format changes from our side
-	// will possibly call NegotiateAllocator on the output pins
-	// which flushes so we shouldn't have any samples outstanding here
-	if(FAILED(hr = ReconnectOutput(false)))
-	{
+    // cope with dynamic format changes from our side
+    // will possibly call NegotiateAllocator on the output pins
+    // which flushes so we shouldn't have any samples outstanding here
+    if(FAILED(hr = ReconnectOutput(false)))
+    {
         LogBadHRESULT(hr, __FILE__, __LINE__);
-		return hr;
-	}
+        return hr;
+    }
 
-	SI(IMediaSample) pOut;
-	BYTE* pDataOut = NULL;
+    SI(IMediaSample) pOut;
+    BYTE* pDataOut = NULL;
     
     hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
     if(FAILED(hr))
-	{
+    {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return hr;
-	}
+    }
 
-	// cope with dynamic format changes from the renderer
-	// we care about this when we think we need to change the format
-	// and the video renderer sends up a new format too
-	// calling ReconnectOutput again will merge the two 
-	// formats properly and should never call NegotiateAllocator
-	if(hr == S_FALSE && m_NeedToAttachFormat)
-	{
-		if(FAILED(hr = ReconnectOutput(true)))
-		{
-			LogBadHRESULT(hr, __FILE__, __LINE__);
-			return hr;
-		}
-	}
+    // cope with dynamic format changes from the renderer
+    // we care about this when we think we need to change the format
+    // and the video renderer sends up a new format too
+    // calling ReconnectOutput again will merge the two 
+    // formats properly and should never call NegotiateAllocator
+    if(hr == S_FALSE && m_NeedToAttachFormat)
+    {
+        if(FAILED(hr = ReconnectOutput(true)))
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
+            return hr;
+        }
+    }
 
-	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
+    LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
 
-	SI(IMediaSample2) pOut2 = pOut;
+    SI(IMediaSample2) pOut2 = pOut;
     if(pOut2)
     {
         AM_SAMPLE2_PROPERTIES Props;
         if(FAILED(hr = pOut2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
-		{
-			LogBadHRESULT(hr, __FILE__, __LINE__);
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
-		}
+        }
         Props.tStart = rtStart;
         Props.tStop = rtStop;
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
-		{
-		    Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
-		}
-		else
-		{
-		    Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
-		}
+        {
+            Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
+        }
+        else
+        {
+            Props.dwSampleFlags &= ~AM_SAMPLE_DATADISCONTINUITY;
+        }
         if(fRepeatLast)
-		{
-			Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
-		}
+        {
+            Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
+        }
         Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
         Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
@@ -1273,477 +1276,477 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
 
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
-		{
-			LogBadHRESULT(hr, __FILE__, __LINE__);
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
     }
     else
     {
-		pOut->SetTime(&rtStart, &rtStop);
-		pOut->SetMediaTime(NULL, NULL);
+        pOut->SetTime(&rtStart, &rtStop);
+        pOut->SetMediaTime(NULL, NULL);
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
-			pOut->SetDiscontinuity(TRUE);
+            pOut->SetDiscontinuity(TRUE);
         else
-    	    pOut->SetDiscontinuity(FALSE);
-	    pOut->SetSyncPoint(TRUE);
+            pOut->SetDiscontinuity(FALSE);
+        pOut->SetSyncPoint(TRUE);
     }
 
-	if(m_NeedToAttachFormat)
-	{
-		m_VideoOutPin->SetType(&m_InternalMT);
-		pOut->SetMediaType(&m_InternalMT);
-	    LogMediaType(&m_InternalMT, "AttachFormat", DBGLOG_FLOW);
-		m_NeedToAttachFormat = false;
-	}
+    if(m_NeedToAttachFormat)
+    {
+        m_VideoOutPin->SetType(&m_InternalMT);
+        pOut->SetMediaType(&m_InternalMT);
+        LogMediaType(&m_InternalMT, "AttachFormat", DBGLOG_FLOW);
+        m_NeedToAttachFormat = false;
+    }
 
 
     SI(IMediaEventSink) pMES = m_Graph;
     if(pMES)
     {
-		// some renderers don't send this
-		pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
+        // some renderers don't send this
+        pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
     }
 
 
-	BYTE** buf = &m_CurrentPicture->m_Buf[0];
+    BYTE** buf = &m_CurrentPicture->m_Buf[0];
 
     if(FAILED(hr = pOut->GetPointer(&pDataOut)))
-	{
+    {
         LogBadHRESULT(hr, __FILE__, __LINE__);
-		return hr;
-	}
+        return hr;
+    }
 
-	if(m_ChromaType == CHROMA_420)
-	{
-	    if(HasSubpicsToRender(m_CurrentPicture->m_rtStart))
-	    {
+    if(m_ChromaType == CHROMA_420)
+    {
+        if(HasSubpicsToRender(m_CurrentPicture->m_rtStart))
+        {
             // take a copy of the current picture
             // as we need to keep the decoder's copy clean
             // so that it can be used in predictions
             m_SubPicBuffer = *m_CurrentPicture;
-		    
-		    buf = &m_SubPicBuffer.m_Buf[0];
+            
+            buf = &m_SubPicBuffer.m_Buf[0];
 
-		    RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_OutputHeight);
-	    }
-	    else
-	    {
-		    ClearOldSubpics(m_CurrentPicture->m_rtStart);
-	    }
-		Copy420(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
-	}
-	else if(m_ChromaType == CHROMA_422)
-	{
-		Copy422(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
-	}
-	else
-	{
-		Copy444(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
-	}
+            RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_OutputHeight);
+        }
+        else
+        {
+            ClearOldSubpics(m_CurrentPicture->m_rtStart);
+        }
+        Copy420(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+    }
+    else if(m_ChromaType == CHROMA_422)
+    {
+        Copy422(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+    }
+    else
+    {
+        Copy444(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+    }
 
-	hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
-	if(FAILED(hr))
-	{
+    hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
+    if(FAILED(hr))
+    {
         if(hr == E_FAIL)
         {
             // sometime happens with overlay
             // supress the error and  set
             // discontinuity flag so that the
             // overlay will do a mini reset
-        	LOG(DBGLOG_FLOW, ("SendSample failed\n"));
-    	    m_IsDiscontinuity = true;
+            LOG(DBGLOG_FLOW, ("SendSample failed\n"));
+            m_IsDiscontinuity = true;
             hr = S_OK;
         }
         else
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
         }
-	}
+    }
     else
     {
-	    // reset discontinuity flag
-	    m_IsDiscontinuity = false;
+        // reset discontinuity flag
+        m_IsDiscontinuity = false;
     }
 
-	return hr;
+    return hr;
 }
 
 void CMpegDecoder::FlushMPEG()
 {
-	CProtectCode WhileVarInScope(m_VideoInPin);
-    	
+    CProtectCode WhileVarInScope(m_VideoInPin);
+        
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
-	m_IsDiscontinuity = true;
-	m_ratechange.StartTime = 0;
-	ResetMpeg2Decoder();
+    m_IsDiscontinuity = true;
+    m_ratechange.StartTime = 0;
+    ResetMpeg2Decoder();
 }
 
 HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	if(m_ConnectedToOut == DEFAULT_OUTFILTER && ForceReconnect == TRUE)
-	{
-		return S_OK;
-	}
+    if(m_ConnectedToOut == DEFAULT_OUTFILTER && ForceReconnect == TRUE)
+    {
+        return S_OK;
+    }
 
-	if((m_OutputWidth != m_CurrentWidth) || 
-		(m_OutputHeight != m_CurrentHeight) || 
-		(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
-		(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY) ||
-		ForceReconnect)
-	{
+    if((m_OutputWidth != m_CurrentWidth) || 
+        (m_OutputHeight != m_CurrentHeight) || 
+        (m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
+        (m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY) ||
+        ForceReconnect)
+    {
         CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
-	
-    	BITMAPINFOHEADER* bmi = NULL;
+    
+        BITMAPINFOHEADER* bmi = NULL;
 
-		if(m_InternalMT.formattype == FORMAT_VideoInfo)
-		{
-			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
-			bmi = &vih->bmiHeader;
+        if(m_InternalMT.formattype == FORMAT_VideoInfo)
+        {
+            VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)m_InternalMT.pbFormat;
+            bmi = &vih->bmiHeader;
             vih->AvgTimePerFrame = m_AvgTimePerFrame;
-			bmi->biXPelsPerMeter = m_MpegWidth * m_ARMpegX * m_ARAdjustX;
-			bmi->biYPelsPerMeter = m_MpegHeight * m_ARMpegY * m_ARAdjustY;
-			Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
-			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
-		}
-		else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
-		{
-			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
-			bmi = &vih->bmiHeader;
+            bmi->biXPelsPerMeter = m_MpegWidth * m_ARMpegX * m_ARAdjustX;
+            bmi->biYPelsPerMeter = m_MpegHeight * m_ARMpegY * m_ARAdjustY;
+            Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
+            CorrectSourceTarget(vih->rcSource, vih->rcTarget);
+        }
+        else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
+        {
+            VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)m_InternalMT.pbFormat;
+            bmi = &vih->bmiHeader;
             vih->AvgTimePerFrame = m_AvgTimePerFrame;
-		    vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
-		    vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
-			Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
-			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
-		}
+            vih->dwPictAspectRatioX = m_ARMpegX * m_ARAdjustX;
+            vih->dwPictAspectRatioY = m_ARMpegY * m_ARAdjustY;
+            Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
+            CorrectSourceTarget(vih->rcSource, vih->rcTarget);
+        }
 
-		if(!ForceReconnect)
-		{
+        if(!ForceReconnect)
+        {
             if(m_ConnectedToOut == VMR9_OUTFILTER)
             {
-				if(!ForceReconnect)
-				{
-					bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
-				}
+                if(!ForceReconnect)
+                {
+                    bmi->biWidth = max(m_OutputWidth, bmi->biWidth);
+                }
             }
             else if(m_ConnectedToOut != DEFAULT_OUTFILTER)
-			{
-				if(!ForceReconnect)
-				{
-					bmi->biWidth = m_OutputWidth;
-				}
-			}
-			else
-			{
-				bmi->biWidth = m_OutputWidth;
-			}
+            {
+                if(!ForceReconnect)
+                {
+                    bmi->biWidth = m_OutputWidth;
+                }
+            }
+            else
+            {
+                bmi->biWidth = m_OutputWidth;
+            }
 
             if(bmi->biHeight > 0)
-			{
-    			bmi->biHeight = m_OutputHeight;
-			}
-			else
-			{
-    			bmi->biHeight = -m_OutputHeight;
-			}
+            {
+                bmi->biHeight = m_OutputHeight;
+            }
+            else
+            {
+                bmi->biHeight = -m_OutputHeight;
+            }
 
-			bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+            bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
 
-		}
+        }
         
-		m_InternalMT.bFixedSizeSamples = 1;
-		m_InternalMT.lSampleSize = bmi->biSizeImage;
+        m_InternalMT.bFixedSizeSamples = 1;
+        m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-		m_InsideReconnect = true;
-		m_Pitch = 0;
-		m_Height = 0;
+        m_InsideReconnect = true;
+        m_Pitch = 0;
+        m_Height = 0;
 
 
-		SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
-		if(m_PinConnection)
-		{
-
-			hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
-			if(hr != S_OK)
-			{
-    			LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
-				return VFW_E_TYPE_NOT_ACCEPTED;
-			}
-		}
-		else
-		{
-			hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
-			if(hr != S_OK)
-			{
-    			LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-				return VFW_E_TYPE_NOT_ACCEPTED;
-			}
-		}
-
-		if(m_ConnectedToOut == DEFAULT_OUTFILTER)
-		{
-			if(!ForceReconnect)
-			{
-				if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
-
-				SI(IGraphConfig) GraphConfig = m_Graph;
-
-				if(GraphConfig)
-				{
-					hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-					CHECK(hr);
-
-					if(m_Pitch != 0)
-					{
-						bmi->biWidth = m_Pitch;
-						bmi->biHeight = m_Height;
-						bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-						m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-						hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-						CHECK(hr);
-					}
-					m_NeedToAttachFormat = true; 
-				}
-			}
-		}
-		else if(m_ConnectedToOut == VMR9_OUTFILTER)
+        SI(IPinConnection) m_PinConnection = m_VideoOutPin->m_ConnectedPin;
+        if(m_PinConnection)
         {
-			ALLOCATOR_PROPERTIES AllocatorProps;
-			hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-			CHECK(hr);
 
-			// if the new type would be greater than the old one then
-			// we need to reconnect otherwise just attach the type to the next sample
+            hr = m_PinConnection->DynamicQueryAccept(&m_InternalMT);
+            if(hr != S_OK)
+            {
+                LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
+        else
+        {
+            hr = m_VideoOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
+            if(hr != S_OK)
+            {
+                LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
+                return VFW_E_TYPE_NOT_ACCEPTED;
+            }
+        }
+
+        if(m_ConnectedToOut == DEFAULT_OUTFILTER)
+        {
+            if(!ForceReconnect)
+            {
+                if(!m_VideoOutPin->m_Allocator) return E_NOINTERFACE;
+
+                SI(IGraphConfig) GraphConfig = m_Graph;
+
+                if(GraphConfig)
+                {
+                    hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+                    CHECK(hr);
+
+                    if(m_Pitch != 0)
+                    {
+                        bmi->biWidth = m_Pitch;
+                        bmi->biHeight = m_Height;
+                        bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+                        m_InternalMT.lSampleSize = bmi->biSizeImage;
+
+                        hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+                        CHECK(hr);
+                    }
+                    m_NeedToAttachFormat = true; 
+                }
+            }
+        }
+        else if(m_ConnectedToOut == VMR9_OUTFILTER)
+        {
+            ALLOCATOR_PROPERTIES AllocatorProps;
+            hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+            CHECK(hr);
+
+            // if the new type would be greater than the old one then
+            // we need to reconnect otherwise just attach the type to the next sample
             // for the VMR9 the ReceiveConnection only works when 
             // you haven't displayed anything but at least 
             // attaching new formats seems to work properly
-			if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-			{
+            if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+            {
                 hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
                 CHECK(hr);
 
                 if(m_Pitch != 0)
                 {
-	                bmi->biWidth = m_Pitch;
-	                bmi->biHeight = m_Height;
-	                bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
-	                m_InternalMT.lSampleSize = bmi->biSizeImage;
+                    bmi->biWidth = m_Pitch;
+                    bmi->biHeight = m_Height;
+                    bmi->biSizeImage = m_OutputHeight*bmi->biWidth*bmi->biBitCount>>3;
+                    m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-	                hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-	                CHECK(hr);
+                    hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+                    CHECK(hr);
                 }
             }
-    		m_NeedToAttachFormat = true; 
+            m_NeedToAttachFormat = true; 
         }
         else
-		{
-			if(!ForceReconnect)
-			{	
-				hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
-				CHECK(hr);
+        {
+            if(!ForceReconnect)
+            {   
+                hr = m_VideoOutPin->m_ConnectedPin->ReceiveConnection(m_VideoOutPin, &m_InternalMT);
+                CHECK(hr);
 
-				ALLOCATOR_PROPERTIES AllocatorProps;
-				hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
-				CHECK(hr);
+                ALLOCATOR_PROPERTIES AllocatorProps;
+                hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
+                CHECK(hr);
 
-				// if the new type would be greater than the old one then
-				// we need to reconnect otherwise just attach the type to the next sample
-				if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-				{
-					hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-					CHECK(hr);
-				}
-				else
-				{
-					hr = m_VideoOutPin->m_Allocator->Commit();
-					CHECK(hr);
-				}
-			}
-			m_NeedToAttachFormat = true; 
-		}
-		
-		m_InsideReconnect = false;
+                // if the new type would be greater than the old one then
+                // we need to reconnect otherwise just attach the type to the next sample
+                if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+                {
+                    hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+                    CHECK(hr);
+                }
+                else
+                {
+                    hr = m_VideoOutPin->m_Allocator->Commit();
+                    CHECK(hr);
+                }
+            }
+            m_NeedToAttachFormat = true; 
+        }
+        
+        m_InsideReconnect = false;
 
 
-		m_CurrentWidth = m_OutputWidth;
-		m_CurrentHeight = m_OutputHeight;
+        m_CurrentWidth = m_OutputWidth;
+        m_CurrentHeight = m_OutputHeight;
         m_ARCurrentOutX = m_ARMpegX * m_ARAdjustX; 
         m_ARCurrentOutY = m_ARMpegY * m_ARAdjustY; 
-	}
-	else
-	{
-		m_NeedToAttachFormat = false; 
-	}
+    }
+    else
+    {
+        m_NeedToAttachFormat = false; 
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 void CMpegDecoder::ResetMpeg2Decoder()
 {
-	LOG(DBGLOG_FLOW, ("ResetMpeg2Decoder()\n"));
+    LOG(DBGLOG_FLOW, ("ResetMpeg2Decoder()\n"));
 
-	CProtectCode WhileVarInScope(&m_DeliverLock);
+    CProtectCode WhileVarInScope(&m_DeliverLock);
 
-	BYTE* pSequenceHeader = NULL;
-	DWORD cbSequenceHeader = 0;
+    BYTE* pSequenceHeader = NULL;
+    DWORD cbSequenceHeader = 0;
 
-	if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEGVideo)
-	{
-		pSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->bSequenceHeader;
-		cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
-	}
-	else if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEG2_VIDEO)
-	{
-		pSequenceHeader = (BYTE*)((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->dwSequenceHeader;
-		cbSequenceHeader = ((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
-	}
+    if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEGVideo)
+    {
+        pSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->bSequenceHeader;
+        cbSequenceHeader = ((MPEG1VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
+    }
+    else if(m_VideoInPin->GetMediaType()->formattype == FORMAT_MPEG2_VIDEO)
+    {
+        pSequenceHeader = (BYTE*)((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->dwSequenceHeader;
+        cbSequenceHeader = ((MPEG2VIDEOINFO*)m_VideoInPin->GetMediaType()->pbFormat)->cbSequenceHeader;
+    }
 
     if(m_dec != NULL)
     {
-    	mpeg2_free(m_dec);
+        mpeg2_free(m_dec);
         m_dec = mpeg2_init();
         if(cbSequenceHeader > 0)
         {
-    	    mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
+            mpeg2_buffer(m_dec, pSequenceHeader, pSequenceHeader + cbSequenceHeader);
         }
     }
 
-	if(m_CurrentPicture != NULL)
-	{
+    if(m_CurrentPicture != NULL)
+    {
         m_CurrentPicture->Release();
         m_CurrentPicture = NULL;
-	}
+    }
 
-	m_fWaitForKeyFrame = true;
-	m_fFilm = false;
+    m_fWaitForKeyFrame = true;
+    m_fFilm = false;
 }
 
 void CMpegDecoder::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-	BITMAPINFOHEADER bihOut;
-	ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    BITMAPINFOHEADER bihOut;
+    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
 
-	BYTE* pIn = ppIn[0];
-	BYTE* pInU = ppIn[1];
-	BYTE* pInV = ppIn[2];
+    BYTE* pIn = ppIn[0];
+    BYTE* pInU = ppIn[1];
+    BYTE* pInV = ppIn[2];
 
-	w = (w+7)&~7;
-	ASSERT(w <= pitchIn);
+    w = (w+7)&~7;
+    ASSERT(w <= pitchIn);
 
-	if(m_DoPanAndScan)
-	{
-		pIn += m_PanScanOffsetX + pitchIn*m_PanScanOffsetY;
-		pInU += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
-		pInV += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
-	}
+    if(m_DoPanAndScan)
+    {
+        pIn += m_PanScanOffsetX + pitchIn*m_PanScanOffsetY;
+        pInU += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
+        pInV += m_PanScanOffsetX / 2 + pitchIn*m_PanScanOffsetY/4;
+    }
 
 
-	if(bihOut.biCompression == '2YUY')
-	{
-		if(m_ProgressiveChroma)
-		{
-			BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
-		}
-		else
-		{
-			if(m_NextFrameDeint == DIWeave)
-			{
-				BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
-			}
-			else
-			{
-				BitBltFromI420ToYUY2_Int(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
-			}
-		}
-	}
-	else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
-	{
-		int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+    if(bihOut.biCompression == '2YUY')
+    {
+        if(m_ProgressiveChroma)
+        {
+            BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+        }
+        else
+        {
+            if(m_NextFrameDeint == DIWeave)
+            {
+                BitBltFromI420ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+            }
+            else
+            {
+                BitBltFromI420ToYUY2_Int(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+            }
+        }
+    }
+    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
 
-		if(bihOut.biHeight > 0)
-		{
-			pOut += pitchOut*(h-1);
-			pitchOut = -pitchOut;
-		}
+        if(bihOut.biHeight > 0)
+        {
+            pOut += pitchOut*(h-1);
+            pitchOut = -pitchOut;
+        }
 
-		if(!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
-		{
-			for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
-				memset(pOut, 0, pitchOut);
-		}
-	}
+        if(!BitBltFromI420ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
+        {
+            for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
+                memset(pOut, 0, pitchOut);
+        }
+    }
 }
 
 void CMpegDecoder::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-	BITMAPINFOHEADER bihOut;
-	ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    BITMAPINFOHEADER bihOut;
+    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
 
-	BYTE* pIn = ppIn[0];
-	BYTE* pInU = ppIn[1];
-	BYTE* pInV = ppIn[2];
+    BYTE* pIn = ppIn[0];
+    BYTE* pInU = ppIn[1];
+    BYTE* pInV = ppIn[2];
 
-	w = (w+7)&~7;
-	ASSERT(w <= pitchIn);
+    w = (w+7)&~7;
+    ASSERT(w <= pitchIn);
 
-	if(bihOut.biCompression == '2YUY')
-	{
-		BitBltFromI422ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
-	}
-	else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
-	{
-		int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+    if(bihOut.biCompression == '2YUY')
+    {
+        BitBltFromI422ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
 
-		if(bihOut.biHeight > 0)
-		{
-			pOut += pitchOut*(h-1);
-			pitchOut = -pitchOut;
-		}
+        if(bihOut.biHeight > 0)
+        {
+            pOut += pitchOut*(h-1);
+            pitchOut = -pitchOut;
+        }
 
-		if(!BitBltFromI422ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
-		{
-			for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
-				memset(pOut, 0, pitchOut);
-		}
-	}
+        if(!BitBltFromI422ToRGB(w, h, pOut, pitchOut, bihOut.biBitCount, pIn, pInU, pInV, pitchIn))
+        {
+            for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
+                memset(pOut, 0, pitchOut);
+        }
+    }
 }
 
 void CMpegDecoder::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn)
 {
-	BITMAPINFOHEADER bihOut;
-	ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
+    BITMAPINFOHEADER bihOut;
+    ExtractBIH(m_VideoOutPin->GetMediaType(), &bihOut);
 
-	BYTE* pIn = ppIn[0];
-	BYTE* pInU = ppIn[1];
-	BYTE* pInV = ppIn[2];
+    BYTE* pIn = ppIn[0];
+    BYTE* pInU = ppIn[1];
+    BYTE* pInV = ppIn[2];
 
-	w = (w+7)&~7;
-	ASSERT(w <= pitchIn);
+    w = (w+7)&~7;
+    ASSERT(w <= pitchIn);
 
-	if(bihOut.biCompression == '2YUY')
-	{
-		BitBltFromI444ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
-	}
-	else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
-	{
-		int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
+    if(bihOut.biCompression == '2YUY')
+    {
+        BitBltFromI444ToYUY2(w, h, pOut, bihOut.biWidth*2, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut.biCompression == BI_RGB || bihOut.biCompression == BI_BITFIELDS)
+    {
+        int pitchOut = bihOut.biWidth*bihOut.biBitCount>>3;
 
-		if(bihOut.biHeight > 0)
-		{
-			pOut += pitchOut*(h-1);
-			pitchOut = -pitchOut;
-		}
+        if(bihOut.biHeight > 0)
+        {
+            pOut += pitchOut*(h-1);
+            pitchOut = -pitchOut;
+        }
 
         // \todo Since 4:4:4 isn't really all that common I haven't bothered
         // implementing the RGB conversion
-		for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
-			memset(pOut, 0, pitchOut);
-	}
+        for(DWORD y = 0; y < h; y++, pIn += pitchIn, pOut += pitchOut)
+            memset(pOut, 0, pitchOut);
+    }
 }
 
 
@@ -1762,9 +1765,9 @@ HRESULT CMpegDecoder::Activate()
     m_CurrentPicture = NULL;
 
     m_fWaitForKeyFrame = true;
-	m_IsDiscontinuity = true;
+    m_IsDiscontinuity = true;
     m_fFilm = false;
-	m_LastOutputTime = 0;
+    m_LastOutputTime = 0;
 
     return S_OK;
 }
@@ -1791,14 +1794,14 @@ void CMpegDecoder::Simplify(long& u, long& v)
 {
     long a, b, tmp;
 
-    a = u;	
+    a = u;  
     b = v;
     
     while (a) 
-    {	
+    {   
         /* find greatest common divisor */
-	    tmp = a;	
-        a = b % tmp;	
+        tmp = a;    
+        a = b % tmp;    
         b = tmp;
     }
     u /= b;
@@ -1809,14 +1812,14 @@ void CMpegDecoder::Simplify(unsigned long& u, unsigned long& v)
 {
     unsigned long a, b, tmp;
 
-    a = u;	
+    a = u;  
     b = v;
     
     while (a) 
-    {	
+    {   
         /* find greatest common divisor */
-	    tmp = a;	
-        a = b % tmp;	
+        tmp = a;    
+        a = b % tmp;    
         b = tmp;
     }
     u /= b;
@@ -1829,37 +1832,37 @@ HRESULT CMpegDecoder::ProcessNewSequence()
     HRESULT hr = S_OK;
     int ChromaSizeDivider;
 
-	m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
-	if(m_AvgTimePerFrame == 0) m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
-	if(mpeg2_info(m_dec)->sequence->chroma_width <= mpeg2_info(m_dec)->sequence->width / 2)
-	{
-		if(mpeg2_info(m_dec)->sequence->chroma_height <= mpeg2_info(m_dec)->sequence->height / 2)
-		{
-			m_ChromaType = CHROMA_420;
-			LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 420\n"));
+    m_AvgTimePerFrame = 10i64 * mpeg2_info(m_dec)->sequence->frame_period / 27;
+    if(m_AvgTimePerFrame == 0) m_AvgTimePerFrame = ((VIDEOINFOHEADER*)m_VideoInPin->GetMediaType()->pbFormat)->AvgTimePerFrame;
+    if(mpeg2_info(m_dec)->sequence->chroma_width <= mpeg2_info(m_dec)->sequence->width / 2)
+    {
+        if(mpeg2_info(m_dec)->sequence->chroma_height <= mpeg2_info(m_dec)->sequence->height / 2)
+        {
+            m_ChromaType = CHROMA_420;
+            LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 420\n"));
             ChromaSizeDivider = 4;
-		}
-		else
-		{
-			m_ChromaType = CHROMA_422;
-			LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 422\n"));
+        }
+        else
+        {
+            m_ChromaType = CHROMA_422;
+            LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 422\n"));
             ChromaSizeDivider = 2;
-		}
-	}
-	else
-	{
-		m_ChromaType = CHROMA_444;
-		LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 444\n"));
+        }
+    }
+    else
+    {
+        m_ChromaType = CHROMA_444;
+        LOG(DBGLOG_FLOW, ("STATE_SEQUENCE 444\n"));
         ChromaSizeDivider = 1;
-	}
+    }
 
-	memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
+    memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
 
 
-	// frame buffer
-	m_MpegWidth = m_CurrentSequence.picture_width;
-	m_MpegHeight = m_CurrentSequence.picture_height;
-	m_InternalPitch = m_CurrentSequence.width;
+    // frame buffer
+    m_MpegWidth = m_CurrentSequence.picture_width;
+    m_MpegHeight = m_CurrentSequence.picture_height;
+    m_InternalPitch = m_CurrentSequence.width;
 
     mpeg2_custom_fbuf(m_dec, 1);
 
@@ -1876,70 +1879,70 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
     m_Buffers[0].AddRef();
     m_Buffers[1].AddRef();
-	mpeg2_set_buf(m_dec, m_Buffers[0].m_Buf, &m_Buffers[0]);
-	mpeg2_set_buf(m_dec, m_Buffers[1].m_Buf, &m_Buffers[1]);
+    mpeg2_set_buf(m_dec, m_Buffers[0].m_Buf, &m_Buffers[0]);
+    mpeg2_set_buf(m_dec, m_Buffers[1].m_Buf, &m_Buffers[1]);
 
-	m_fWaitForKeyFrame = true;
-	m_fFilm = false;
-	m_PicturesSinceSequence = 0;
+    m_fWaitForKeyFrame = true;
+    m_fFilm = false;
+    m_PicturesSinceSequence = 0;
 
 
     // todo move out to helper function so that we can
     // cope with dynamically changes to sequence without
     // breaking the flow
-	m_OutputWidth = m_MpegWidth;
-	m_OutputHeight = m_MpegHeight;
+    m_OutputWidth = m_MpegWidth;
+    m_OutputHeight = m_MpegHeight;
 
     UpdateAspectRatio();
 
-	return S_OK;
+    return S_OK;
 }
 
 HRESULT CMpegDecoder::ProcessModifiedSequence()
 {
-	// On some channels we get notification of aspect ratio change
-	// via this mechinism however we need to ensure  that we handle the case
-	// where nothing really has changed
-	if(m_CurrentSequence.pixel_height != mpeg2_info(m_dec)->sequence->pixel_height ||
-		m_CurrentSequence.pixel_width != mpeg2_info(m_dec)->sequence->pixel_width ||
-		m_CurrentSequence.display_height != mpeg2_info(m_dec)->sequence->display_height ||
-		m_CurrentSequence.display_width != mpeg2_info(m_dec)->sequence->display_width)
-	{
-		memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
-		UpdateAspectRatio();
-	}
-	return S_OK;
+    // On some channels we get notification of aspect ratio change
+    // via this mechinism however we need to ensure  that we handle the case
+    // where nothing really has changed
+    if(m_CurrentSequence.pixel_height != mpeg2_info(m_dec)->sequence->pixel_height ||
+        m_CurrentSequence.pixel_width != mpeg2_info(m_dec)->sequence->pixel_width ||
+        m_CurrentSequence.display_height != mpeg2_info(m_dec)->sequence->display_height ||
+        m_CurrentSequence.display_width != mpeg2_info(m_dec)->sequence->display_width)
+    {
+        memcpy(&m_CurrentSequence, mpeg2_info(m_dec)->sequence, sizeof(mpeg2_sequence_t));
+        UpdateAspectRatio();
+    }
+    return S_OK;
 }
 
 
 void CMpegDecoder::UpdateAspectRatio()
 {
     // reset AFD to show all on new sequence
-	if(m_AFD)
-	{
-		m_AFD = 8;
-	}
+    if(m_AFD)
+    {
+        m_AFD = 8;
+    }
     
-	// optionally use accurate aspect ratio
-	if(GetParamBool(DOACCURATEASPECT))
-	{
-		unsigned int PixelX, PixelY;
-		mpeg2_guess_aspect(mpeg2_info(m_dec)->sequence, &PixelX, &PixelY);
-		m_ARMpegX = PixelX;
-		m_ARMpegY = PixelY;
-	}
-	else
-	{
-		m_ARMpegX = m_CurrentSequence.pixel_width;
-		m_ARMpegY = m_CurrentSequence.pixel_height;
-	}
+    // optionally use accurate aspect ratio
+    if(GetParamBool(DOACCURATEASPECT))
+    {
+        unsigned int PixelX, PixelY;
+        mpeg2_guess_aspect(mpeg2_info(m_dec)->sequence, &PixelX, &PixelY);
+        m_ARMpegX = PixelX;
+        m_ARMpegY = PixelY;
+    }
+    else
+    {
+        m_ARMpegX = m_CurrentSequence.pixel_width;
+        m_ARMpegY = m_CurrentSequence.pixel_height;
+    }
 
-	m_ARMpegX *= m_CurrentSequence.display_width;
-	m_ARMpegY *= m_CurrentSequence.display_height;
+    m_ARMpegX *= m_CurrentSequence.display_width;
+    m_ARMpegY *= m_CurrentSequence.display_height;
 
     Simplify(m_ARMpegX, m_ARMpegY);
 
-	LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", m_CurrentSequence.pixel_width,
+    LOG(DBGLOG_FLOW, ("New Sequence %d %d %d %d %d %d\n", m_CurrentSequence.pixel_width,
                                                     m_CurrentSequence.pixel_height,
                                                     m_CurrentSequence.display_width,
                                                     m_CurrentSequence.display_height,
@@ -1947,7 +1950,7 @@ void CMpegDecoder::UpdateAspectRatio()
                                                     m_OutputHeight));
 
 
-	CorrectOutputSize();
+    CorrectOutputSize();
 }
 
 CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
@@ -1966,28 +1969,28 @@ CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
 HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
     // skip preroll pictures
-	if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
-	{
-		LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
-		mpeg2_skip(m_dec,0);
-		m_IsDiscontinuity = true;
-	}
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
+    {
+        LOG(DBGLOG_FLOW, ("Skip preroll frame\n"));
+        mpeg2_skip(m_dec,0);
+        m_IsDiscontinuity = true;
+    }
 
-	// naughty but the mpeg2_tag_picture function doesn't let us only tag I frames
-	// which is what we need in the bda case when we get 
-	// loads of timestamps
-	mpeg2_picture_t* CurrentPicture = (mpeg2_picture_t*)mpeg2_info(m_dec)->current_picture;
+    // naughty but the mpeg2_tag_picture function doesn't let us only tag I frames
+    // which is what we need in the bda case when we get 
+    // loads of timestamps
+    mpeg2_picture_t* CurrentPicture = (mpeg2_picture_t*)mpeg2_info(m_dec)->current_picture;
 
     if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
-		LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
-		LARGE_INTEGER temp;
-		temp.QuadPart = pSampleProperties->tStart;
-		CurrentPicture->tag = temp.HighPart;
-		CurrentPicture->tag2 = temp.LowPart;
-		CurrentPicture->flags |= PIC_FLAG_TAGS;
-		// make sure we only tag one i-frame per timestamp
-		pSampleProperties->dwSampleFlags &=  ~AM_SAMPLE_TIMEVALID;
+        LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
+        LARGE_INTEGER temp;
+        temp.QuadPart = pSampleProperties->tStart;
+        CurrentPicture->tag = temp.HighPart;
+        CurrentPicture->tag2 = temp.LowPart;
+        CurrentPicture->flags |= PIC_FLAG_TAGS;
+        // make sure we only tag one i-frame per timestamp
+        pSampleProperties->dwSampleFlags &=  ~AM_SAMPLE_TIMEVALID;
     }
 
     // set up the memory want to receive the buffers into
@@ -1997,7 +2000,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
         return E_UNEXPECTED;
     }
 
-	mpeg2_set_buf(m_dec, Buffer->m_Buf, Buffer);
+    mpeg2_set_buf(m_dec, Buffer->m_Buf, Buffer);
 
     return S_OK;
 }
@@ -2006,146 +2009,149 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
 {
     HRESULT hr = S_OK;
 
-	const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
-	const mpeg2_picture_t* picture_2nd = mpeg2_info(m_dec)->display_picture_2nd;
-	const mpeg2_fbuf_t* fbuf = mpeg2_info(m_dec)->display_fbuf;
+    const mpeg2_picture_t* picture = mpeg2_info(m_dec)->display_picture;
+    const mpeg2_picture_t* picture_2nd = mpeg2_info(m_dec)->display_picture_2nd;
+    const mpeg2_fbuf_t* fbuf = mpeg2_info(m_dec)->display_fbuf;
 
-	if(picture && fbuf && !(picture->flags & PIC_FLAG_SKIP))
-	{
-	    if((picture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
+    if(picture && fbuf && !(picture->flags & PIC_FLAG_SKIP))
+    {
+        if((picture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I)
         {
-		    m_fWaitForKeyFrame = false;
+            m_fWaitForKeyFrame = false;
         }
 
-		CFrameBuffer* LastPicture = m_CurrentPicture;
-		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
-			((ProgressiveHint == true) && (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)))
-		{
-			// we are being told this frame is progressive
-			// either because the MPEG is encoded as progressive
-			// which happens rarely (except MPEG1) or we get passed a 
-			// sequence with a single progressive frame which is how DVD menus are encoded
-			m_fFilm = true;
-			LOG(DBGLOG_FLOW, ("Progressive mode m_fFilm = true\n"));
-		}
-		else
-		{
-			if(LastPicture != NULL)
-			{
-				// Otherwise we start looking for 3:2 patterns
-				// and switch to film where we get a proper pattern
-				// we also switch out if anything odd happens to the
-				// pattern
-				if(picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
-				{
-					if(!m_fFilm
-						&& (picture->nb_fields == 3)
-						&& !(LastPicture->m_NumFields == 3))
-					{
-						LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
-						m_fFilm = true;
-					}
-					else if(m_fFilm
-						&& !(picture->nb_fields == 3)
-						&& !(LastPicture->m_NumFields == 3))
-					{
-						LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
-						m_fFilm = false;
-					}
-				}
-				else
-				{
-					if(m_fFilm)
-					{
-						if(!(LastPicture->m_NumFields == 3) || 
-							!(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
-							(picture->nb_fields > 2))
-						{
-							LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", LastPicture->m_NumFields, LastPicture->m_Flags, picture->nb_fields));
-							m_fFilm = false;
-						}
-					}
-				}
-			}
+        CFrameBuffer* LastPicture = m_CurrentPicture;
+        if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
+            ((ProgressiveHint == true) && (picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)))
+        {
+            if(m_fFilm == false)
+            {
+                // we are being told this frame is progressive
+                // either because the MPEG is encoded as progressive
+                // which happens rarely (except MPEG1) or we get passed a 
+                // sequence with a single progressive frame which is how DVD menus are encoded
+                m_fFilm = true;
+                LOG(DBGLOG_FLOW, ("Progressive mode m_fFilm = true\n"));
+            }
+        }
+        else
+        {
+            if(LastPicture != NULL)
+            {
+                // Otherwise we start looking for 3:2 patterns
+                // and switch to film where we get a proper pattern
+                // we also switch out if anything odd happens to the
+                // pattern
+                if(picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
+                {
+                    if(!m_fFilm
+                        && (picture->nb_fields == 3)
+                        && !(LastPicture->m_NumFields == 3))
+                    {
+                        LOG(DBGLOG_FLOW, ("m_fFilm = true\n"));
+                        m_fFilm = true;
+                    }
+                    else if(m_fFilm
+                        && !(picture->nb_fields == 3)
+                        && !(LastPicture->m_NumFields == 3))
+                    {
+                        LOG(DBGLOG_FLOW, ("m_fFilm = false\n"));
+                        m_fFilm = false;
+                    }
+                }
+                else
+                {
+                    if(m_fFilm)
+                    {
+                        if(!(LastPicture->m_NumFields == 3) || 
+                            !(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
+                            (picture->nb_fields > 2))
+                        {
+                            LOG(DBGLOG_FLOW, ("m_fFilm = false %d %d %d\n", LastPicture->m_NumFields, LastPicture->m_Flags, picture->nb_fields));
+                            m_fFilm = false;
+                        }
+                    }
+                }
+            }
         }
 
         m_CurrentPicture = (CFrameBuffer*)fbuf->id;
         m_CurrentPicture->AddRef();
         m_CurrentPicture->m_Flags = picture->flags;
 
-		m_CurrentPicture->m_NumFields = picture->nb_fields;
+        m_CurrentPicture->m_NumFields = picture->nb_fields;
         if(picture_2nd != NULL)
         {
-		    m_CurrentPicture->m_NumFields += picture_2nd->nb_fields;
+            m_CurrentPicture->m_NumFields += picture_2nd->nb_fields;
         }
 
-		// if the 
-		if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
-			ProgressiveHint == true)
-		{
-			m_ProgressiveChroma = true;
-		}
-		else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
-		{
-			m_ProgressiveChroma = true;
-		}
-		else
-		{
-			m_ProgressiveChroma = false;
-		}
-
-
-		// deinterlace
-        switch(GetParamEnum(DEINTMODE))
+        // if the 
+        if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
+            ProgressiveHint == true)
         {
-        case DIAuto:
-			if(m_ProgressiveChroma)
-			{
-				m_NextFrameDeint = DIWeave;
-			}
-			else
-			{
-				m_NextFrameDeint = DIBob;
-			}
-            break;
-        case DIWeave:
-			m_NextFrameDeint = DIWeave;
-            break;
-        case DIBob:
-        default:
-			m_NextFrameDeint = DIBob;
-            break;
+            m_ProgressiveChroma = true;
         }
-
-		if(picture->flags & PIC_FLAG_TAGS)
-		{
-			LARGE_INTEGER temp;
-			temp.HighPart = picture->tag;
-			temp.LowPart = picture->tag2;
-
-			m_CurrentPicture->m_rtStart = temp.QuadPart;
-		}
-		else
-		{
-            if(LastPicture != NULL)
-            {
-			    m_CurrentPicture->m_rtStart = LastPicture->m_rtStop;
-            }
-            else
-            {
-			    m_CurrentPicture->m_rtStart = 0;
-            }
-		}
-		// start - end
-    	m_CurrentPicture->m_rtStop = m_CurrentPicture->m_rtStart + m_AvgTimePerFrame * m_CurrentPicture->m_NumFields / 2;
-
-        if(/*m_CurrentPicture->m_rtStart >= 0 &&*/ !m_fWaitForKeyFrame)
-	    {
-    		hr = Deliver(false);
+        else if(m_fFilm || picture->flags&PIC_FLAG_PROGRESSIVE_FRAME)
+        {
+            m_ProgressiveChroma = true;
         }
         else
         {
-		    LOG(DBGLOG_FLOW, ("Preroll Skipped\n"));
+            m_ProgressiveChroma = false;
+        }
+
+
+        // deinterlace
+        switch(GetParamEnum(DEINTMODE))
+        {
+        case DIAuto:
+            if(m_ProgressiveChroma)
+            {
+                m_NextFrameDeint = DIWeave;
+            }
+            else
+            {
+                m_NextFrameDeint = DIBob;
+            }
+            break;
+        case DIWeave:
+            m_NextFrameDeint = DIWeave;
+            break;
+        case DIBob:
+        default:
+            m_NextFrameDeint = DIBob;
+            break;
+        }
+
+        if(picture->flags & PIC_FLAG_TAGS)
+        {
+            LARGE_INTEGER temp;
+            temp.HighPart = picture->tag;
+            temp.LowPart = picture->tag2;
+
+            m_CurrentPicture->m_rtStart = temp.QuadPart;
+        }
+        else
+        {
+            if(LastPicture != NULL)
+            {
+                m_CurrentPicture->m_rtStart = LastPicture->m_rtStop;
+            }
+            else
+            {
+                m_CurrentPicture->m_rtStart = 0;
+            }
+        }
+        // start - end
+        m_CurrentPicture->m_rtStop = m_CurrentPicture->m_rtStart + m_AvgTimePerFrame * m_CurrentPicture->m_NumFields / 2;
+
+        if(/*m_CurrentPicture->m_rtStart >= 0 &&*/ !m_fWaitForKeyFrame)
+        {
+            hr = Deliver(false);
+        }
+        else
+        {
+            LOG(DBGLOG_FLOW, ("Preroll Skipped\n"));
             //m_CurrentPicture->Release();
             //m_CurrentPicture = NULL;
         }
@@ -2155,10 +2161,10 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
             LastPicture->Release();
         }
 
-		++m_PicturesSinceSequence;
-	}
+        ++m_PicturesSinceSequence;
+    }
 
-	if (mpeg2_info(m_dec)->discard_fbuf)
+    if (mpeg2_info(m_dec)->discard_fbuf)
     {
         CFrameBuffer* m_Discard = (CFrameBuffer*)mpeg2_info(m_dec)->discard_fbuf->id;
         m_Discard->Release();
@@ -2169,243 +2175,243 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
 
 void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
 {
-	long OriginalHeight = m_OutputHeight;
-	m_OutputHeight = m_OutputHeight * XAdjust;
-	m_OutputHeight /= YAdjust;
-	m_ARAdjustX = YAdjust;
-	m_ARAdjustY = XAdjust;
-	
-	if(!IsTop)
-	{
-		m_PanScanOffsetY += (OriginalHeight - m_OutputHeight) / 2;
-		m_DoPanAndScan = true;
-	}
+    long OriginalHeight = m_OutputHeight;
+    m_OutputHeight = m_OutputHeight * XAdjust;
+    m_OutputHeight /= YAdjust;
+    m_ARAdjustX = YAdjust;
+    m_ARAdjustY = XAdjust;
+    
+    if(!IsTop)
+    {
+        m_PanScanOffsetY += (OriginalHeight - m_OutputHeight) / 2;
+        m_DoPanAndScan = true;
+    }
 }
 
 void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
 {
-	long OriginalWidth = m_OutputWidth;
-	m_OutputWidth = m_OutputWidth * XAdjust;
-	m_OutputWidth /= YAdjust;
-	m_ARAdjustX = XAdjust;
-	m_ARAdjustY = YAdjust;
-	
-	m_PanScanOffsetX += (OriginalWidth - m_OutputWidth) / 2;
-	m_DoPanAndScan = true;
+    long OriginalWidth = m_OutputWidth;
+    m_OutputWidth = m_OutputWidth * XAdjust;
+    m_OutputWidth /= YAdjust;
+    m_ARAdjustX = XAdjust;
+    m_ARAdjustY = YAdjust;
+    
+    m_PanScanOffsetX += (OriginalWidth - m_OutputWidth) / 2;
+    m_DoPanAndScan = true;
 }
 
 void CMpegDecoder::CorrectOutputSize()
 {
 
-	if(m_MpegHeight == 1088)
-	{
-		m_OutputHeight = 1080;
-	}
-	else
-	{
-		m_OutputHeight = m_MpegHeight;
-	}
+    if(m_MpegHeight == 1088)
+    {
+        m_OutputHeight = 1080;
+    }
+    else
+    {
+        m_OutputHeight = m_MpegHeight;
+    }
 
-	m_OutputWidth = m_MpegWidth;
+    m_OutputWidth = m_MpegWidth;
 
-	m_ARAdjustX = 1;
-	m_ARAdjustY = 1;
-	m_PanScanOffsetX = 0;
-	m_PanScanOffsetY = 0;
+    m_ARAdjustX = 1;
+    m_ARAdjustY = 1;
+    m_PanScanOffsetX = 0;
+    m_PanScanOffsetY = 0;
 
-	if(m_AFD)
-	{
-		// reset all the adjustments
-		m_DoPanAndScan = false;
-		eDVBAspectPrefs AspectPrefs = (eDVBAspectPrefs)GetParamEnum(DVBASPECTPREFS);
+    if(m_AFD)
+    {
+        // reset all the adjustments
+        m_DoPanAndScan = false;
+        eDVBAspectPrefs AspectPrefs = (eDVBAspectPrefs)GetParamEnum(DVBASPECTPREFS);
 
-		if(m_ARMpegX * 100 / m_ARMpegY  < 144)
-		{
-			// if we are in a 4:3 type mode
-			switch(m_AFD)
-			{
-			// box 16:9 top
-			case 2:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(4,3, true);
-				}
-				break;
-			// box 14:9 top
-			case 3:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(7,6, true);
-				}
-				break;
-			// box >16:9 centre
-			case 4:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(4,3);
-				}
-				break;
-			// same as coded
-			case 8:
-				// do nothing;
-				break;
-			// 4:3 centre
-			case 9:
-				break;
-			// 16:9 centre
-			case 10:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(4,3);
-				}
-				break;
-			// 14:9 centre
-			case 11:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(7,6);
-				}
-				break;
-			// 4:3 with shoot and protect 14:9
-			case 13:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(7,6);
-				}
-				break;
-			// 16:9 with shoot and protect 14:9
-			case 14:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(4,3);
-				}
-				else
-				{
-					//LetterBox(4,3);
-					//PillarBox(7,6);
-				}
-				break;
-			// 16:9 with shoot and protect 4:3
-			case 15:
-				if(AspectPrefs == DVB169)
-				{
-					LetterBox(4,3);
-				}
-				else
-				{
-					//LetterBox(4,3);
-					//PillarBox(4,3);
-				}
-				break;
-			// reserved
-			default:
-				break;
-			}
-		}
-		else
-		{
-			// otherwise we must be in a 16:9 type mode
-			switch(m_AFD)
-			{
-			// box 16:9 top
-			case 2:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// box 14:9 top
-			case 3:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				else if(AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(7, 6);
-				}
-				break;
-			// box >16:9 centre
-			case 4:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// same as coded
-			case 8:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// 4:3 centre
-			case 9:
-				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// 16:9 centre
-			case 10:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// 14:9 centre
-			case 11:
-				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(7, 6);
-				}
-				break;
-			// 4:3 with shoot and protect 14:9
-			case 13:
-				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(4, 3);
-				}
-				else if(AspectPrefs == DVB169)
-				{
-					PillarBox(4, 3);
-					LetterBox(7, 6);
-				}
-				break;
-			// 16:9 with shoot and protect 14:9
-			case 14:
-				if(AspectPrefs == DVBCCO)
-				{
-					PillarBox(4, 3);
-				}
-				else if(AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(7, 6);
-				}
-				break;
-			// 16:9 with shoot and protect 4:3
-			case 15:
-				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
-				{
-					PillarBox(4, 3);
-				}
-				break;
-			// reserved
-			default:
-				break;
-			}
-		}
-	}
-	else if(m_DoPanAndScan)
-	{
-		if(m_MpegWidth >= 704)
-		{
-			m_PanScanOffsetX = (m_MpegWidth - 540) / 2;
-			m_OutputWidth = 540;
-			m_ARMpegX = 4;
-			m_ARMpegY = 3;
-		}
-	}
+        if(m_ARMpegX * 100 / m_ARMpegY  < 144)
+        {
+            // if we are in a 4:3 type mode
+            switch(m_AFD)
+            {
+            // box 16:9 top
+            case 2:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(4,3, true);
+                }
+                break;
+            // box 14:9 top
+            case 3:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(7,6, true);
+                }
+                break;
+            // box >16:9 centre
+            case 4:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(4,3);
+                }
+                break;
+            // same as coded
+            case 8:
+                // do nothing;
+                break;
+            // 4:3 centre
+            case 9:
+                break;
+            // 16:9 centre
+            case 10:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(4,3);
+                }
+                break;
+            // 14:9 centre
+            case 11:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(7,6);
+                }
+                break;
+            // 4:3 with shoot and protect 14:9
+            case 13:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(7,6);
+                }
+                break;
+            // 16:9 with shoot and protect 14:9
+            case 14:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(4,3);
+                }
+                else
+                {
+                    //LetterBox(4,3);
+                    //PillarBox(7,6);
+                }
+                break;
+            // 16:9 with shoot and protect 4:3
+            case 15:
+                if(AspectPrefs == DVB169)
+                {
+                    LetterBox(4,3);
+                }
+                else
+                {
+                    //LetterBox(4,3);
+                    //PillarBox(4,3);
+                }
+                break;
+            // reserved
+            default:
+                break;
+            }
+        }
+        else
+        {
+            // otherwise we must be in a 16:9 type mode
+            switch(m_AFD)
+            {
+            // box 16:9 top
+            case 2:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // box 14:9 top
+            case 3:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                else if(AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(7, 6);
+                }
+                break;
+            // box >16:9 centre
+            case 4:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // same as coded
+            case 8:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // 4:3 centre
+            case 9:
+                if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // 16:9 centre
+            case 10:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // 14:9 centre
+            case 11:
+                if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(7, 6);
+                }
+                break;
+            // 4:3 with shoot and protect 14:9
+            case 13:
+                if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(4, 3);
+                }
+                else if(AspectPrefs == DVB169)
+                {
+                    PillarBox(4, 3);
+                    LetterBox(7, 6);
+                }
+                break;
+            // 16:9 with shoot and protect 14:9
+            case 14:
+                if(AspectPrefs == DVBCCO)
+                {
+                    PillarBox(4, 3);
+                }
+                else if(AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(7, 6);
+                }
+                break;
+            // 16:9 with shoot and protect 4:3
+            case 15:
+                if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+                {
+                    PillarBox(4, 3);
+                }
+                break;
+            // reserved
+            default:
+                break;
+            }
+        }
+    }
+    else if(m_DoPanAndScan)
+    {
+        if(m_MpegWidth >= 704)
+        {
+            m_PanScanOffsetX = (m_MpegWidth - 540) / 2;
+            m_OutputWidth = 540;
+            m_ARMpegX = 4;
+            m_ARMpegY = 3;
+        }
+    }
 
 }
 

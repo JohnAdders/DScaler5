@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MediaTypes.cpp,v 1.2 2004-02-08 19:09:17 adcockj Exp $
+// $Id: MediaTypes.cpp,v 1.3 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
-//	Copyright (C) 2003 Gabest
-//	http://www.gabest.org
+//  Copyright (C) 2003 Gabest
+//  http://www.gabest.org
 //
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/08 19:09:17  adcockj
+// Fixed VIH2 bug
+//
 // Revision 1.1  2004/02/06 12:17:16  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -41,17 +44,17 @@
 #pragma pack(1)
 struct VIH
 {
-	VIDEOINFOHEADER vih;
-	UINT mask[3];
-	int size;
-	const GUID* subtype;
+    VIDEOINFOHEADER vih;
+    UINT mask[3];
+    int size;
+    const GUID* subtype;
 };
 struct VIH2
 {
-	VIDEOINFOHEADER2 vih;
-	UINT mask[3];
-	int size;
-	const GUID* subtype;
+    VIDEOINFOHEADER2 vih;
+    UINT mask[3];
+    int size;
+    const GUID* subtype;
 };
 #pragma pack()
 
@@ -63,315 +66,315 @@ struct VIH2
 
 VIH vihs[] =
 {
-	// YUY2
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, mmioFOURCC('Y','U','Y','2'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_YUY2												// subtype
-	},
-	// YV12
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('Y','V','1','2'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_YV12												// subtype
-	},
-	// IYUV
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('I','Y','U','V'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_IYUV												// subtype
-	},
-	// 8888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_RGB32												// subtype
-	},
-	// 8888 bitf 
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB32												// subtype
-	},
-	// A888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_ARGB32											// subtype
-	},
-	// A888 bitf (I'm not sure if this exist...)
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH_BITFIELDS,													// size
-		&MEDIASUBTYPE_ARGB32											// subtype
-	},
-	// 888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 24, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_RGB24												// subtype
-	},
-	// 888 bitf 
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 24, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB24												// subtype
-	},
-	// 565 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_RGB565											// subtype
-	},
-	// 565 bitf
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xF800, 0x07E0, 0x001F},										// mask[3]
-		VIH_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB565											// subtype
-	},
-	// 555 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH_NORMAL,														// size
-		&MEDIASUBTYPE_RGB555											// subtype
-	},
-	// 555 bitf
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0x7C00, 0x03E0, 0x001F},										// mask[3]
-		VIH_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB555											// subtype
-	},
+    // YUY2
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, mmioFOURCC('Y','U','Y','2'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_YUY2                                              // subtype
+    },
+    // YV12
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('Y','V','1','2'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_YV12                                              // subtype
+    },
+    // IYUV
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('I','Y','U','V'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_IYUV                                              // subtype
+    },
+    // 8888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_RGB32                                             // subtype
+    },
+    // 8888 bitf 
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH_BITFIELDS,                                                  // size
+        &MEDIASUBTYPE_RGB32                                             // subtype
+    },
+    // A888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_ARGB32                                            // subtype
+    },
+    // A888 bitf (I'm not sure if this exist...)
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH_BITFIELDS,                                                  // size
+        &MEDIASUBTYPE_ARGB32                                            // subtype
+    },
+    // 888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 24, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_RGB24                                             // subtype
+    },
+    // 888 bitf 
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 24, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH_BITFIELDS,                                                  // size
+        &MEDIASUBTYPE_RGB24                                             // subtype
+    },
+    // 565 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_RGB565                                            // subtype
+    },
+    // 565 bitf
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xF800, 0x07E0, 0x001F},                                       // mask[3]
+        VIH_BITFIELDS,                                                  // size
+        &MEDIASUBTYPE_RGB565                                            // subtype
+    },
+    // 555 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_RGB555                                            // subtype
+    },
+    // 555 bitf
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0x7C00, 0x03E0, 0x001F},                                       // mask[3]
+        VIH_BITFIELDS,                                                  // size
+        &MEDIASUBTYPE_RGB555                                            // subtype
+    },
 };
 
 VIH2 vih2s[] =
 {
-	// YUY2
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, mmioFOURCC('Y','U','Y','2'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_YUY2												// subtype
-	},
-	// YV12
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('Y','V','1','2'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_YV12												// subtype
-	},
-	// IYUV
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('I','Y','U','V'), 0, 0, 0, 0, 0}		// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_IYUV												// subtype
-	},
-	// 8888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_RGB32												// subtype
-	},
-	// 8888 bitf 
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH2_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB32												// subtype
-	},
-	// A888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_ARGB32											// subtype
-	},
-	// A888 bitf (I'm not sure if this exist...)
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH2_BITFIELDS,													// size
-		&MEDIASUBTYPE_ARGB32											// subtype
-	},
-	// 888 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 24, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_RGB24												// subtype
-	},
-	// 888 bitf 
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 24, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xFF0000, 0x00FF00, 0x0000FF},									// mask[3]
-		VIH2_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB24												// subtype
-	},
-	// 565 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_RGB565											// subtype
-	},
-	// 565 bitf
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0xF800, 0x07E0, 0x001F},										// mask[3]
-		VIH2_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB565											// subtype
-	},
-	// 555 normal
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}			// bmiHeader
-		}, 
-		{0, 0, 0},														// mask[3]
-		VIH2_NORMAL,													// size
-		&MEDIASUBTYPE_RGB555											// subtype
-	},
-	// 555 bitf
-	{
-		{					
-			{0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-			{BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}	// bmiHeader
-		}, 
-		{0x7C00, 0x03E0, 0x001F},										// mask[3]
-		VIH2_BITFIELDS,													// size
-		&MEDIASUBTYPE_RGB555											// subtype
-	},
+    // YUY2
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, mmioFOURCC('Y','U','Y','2'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_YUY2                                              // subtype
+    },
+    // YV12
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('Y','V','1','2'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_YV12                                              // subtype
+    },
+    // IYUV
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('I','Y','U','V'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_IYUV                                              // subtype
+    },
+    // 8888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_RGB32                                             // subtype
+    },
+    // 8888 bitf 
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH2_BITFIELDS,                                                 // size
+        &MEDIASUBTYPE_RGB32                                             // subtype
+    },
+    // A888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_ARGB32                                            // subtype
+    },
+    // A888 bitf (I'm not sure if this exist...)
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 32, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH2_BITFIELDS,                                                 // size
+        &MEDIASUBTYPE_ARGB32                                            // subtype
+    },
+    // 888 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 24, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_RGB24                                             // subtype
+    },
+    // 888 bitf 
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 24, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xFF0000, 0x00FF00, 0x0000FF},                                 // mask[3]
+        VIH2_BITFIELDS,                                                 // size
+        &MEDIASUBTYPE_RGB24                                             // subtype
+    },
+    // 565 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_RGB565                                            // subtype
+    },
+    // 565 bitf
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0xF800, 0x07E0, 0x001F},                                       // mask[3]
+        VIH2_BITFIELDS,                                                 // size
+        &MEDIASUBTYPE_RGB565                                            // subtype
+    },
+    // 555 normal
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_RGB, 0, 0, 0, 0, 0}          // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_RGB555                                            // subtype
+    },
+    // 555 bitf
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 16, BI_BITFIELDS, 0, 0, 0, 0, 0}    // bmiHeader
+        }, 
+        {0x7C00, 0x03E0, 0x001F},                                       // mask[3]
+        VIH2_BITFIELDS,                                                 // size
+        &MEDIASUBTYPE_RGB555                                            // subtype
+    },
 };
 
 int VIHSIZE = (sizeof(vihs) / sizeof(vihs[0]));
 
 void CorrectMediaType(AM_MEDIA_TYPE* pmt)
 {
-	if(!pmt) return;
+    if(!pmt) return;
 
-	if(pmt->formattype == FORMAT_VideoInfo)
-	{
+    if(pmt->formattype == FORMAT_VideoInfo)
+    {
 
-    	VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
+        VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
 
-		for(int i = 0; i < VIHSIZE; i++)
-		{
-			if(pmt->subtype == *vihs[i].subtype
-			&& vih->bmiHeader.biCompression == vihs[i].vih.bmiHeader.biCompression)
-			{
-				BYTE* NewFormat = (BYTE*)CoTaskMemAlloc(vihs[i].size);
-				memcpy(NewFormat, &vihs[i], vihs[i].size);
-				memcpy(NewFormat, pmt->pbFormat, sizeof(VIDEOINFOHEADER));
+        for(int i = 0; i < VIHSIZE; i++)
+        {
+            if(pmt->subtype == *vihs[i].subtype
+            && vih->bmiHeader.biCompression == vihs[i].vih.bmiHeader.biCompression)
+            {
+                BYTE* NewFormat = (BYTE*)CoTaskMemAlloc(vihs[i].size);
+                memcpy(NewFormat, &vihs[i], vihs[i].size);
+                memcpy(NewFormat, pmt->pbFormat, sizeof(VIDEOINFOHEADER));
                 CoTaskMemFree(pmt->pbFormat);
                 pmt->pbFormat = NewFormat;
-				pmt->cbFormat = vihs[i].size;
+                pmt->cbFormat = vihs[i].size;
                 break;
-			}   
-		}
-	}
-	else if(pmt->formattype == FORMAT_VideoInfo2)
-	{
-		VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
+            }   
+        }
+    }
+    else if(pmt->formattype == FORMAT_VideoInfo2)
+    {
+        VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)pmt->pbFormat;
 
-		for(int i = 0; i < VIHSIZE; i++)
-		{
-			if(pmt->subtype == *vih2s[i].subtype
-			&& vih2->bmiHeader.biCompression == vih2s[i].vih.bmiHeader.biCompression)
-			{
-				BYTE* NewFormat = (BYTE*)CoTaskMemAlloc(vih2s[i].size);
-				memcpy(NewFormat, &vih2s[i], vih2s[i].size);
-				memcpy(NewFormat, pmt->pbFormat, sizeof(VIDEOINFOHEADER2));
+        for(int i = 0; i < VIHSIZE; i++)
+        {
+            if(pmt->subtype == *vih2s[i].subtype
+            && vih2->bmiHeader.biCompression == vih2s[i].vih.bmiHeader.biCompression)
+            {
+                BYTE* NewFormat = (BYTE*)CoTaskMemAlloc(vih2s[i].size);
+                memcpy(NewFormat, &vih2s[i], vih2s[i].size);
+                memcpy(NewFormat, pmt->pbFormat, sizeof(VIDEOINFOHEADER2));
                 CoTaskMemFree(pmt->pbFormat);
                 pmt->pbFormat = NewFormat;
-				pmt->cbFormat = vih2s[i].size;
+                pmt->cbFormat = vih2s[i].size;
                 break;
-			}
-		}
-	}
+            }
+        }
+    }
 }

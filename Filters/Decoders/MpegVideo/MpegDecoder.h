@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.17 2004-05-25 16:59:29 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.18 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -43,10 +43,10 @@ class CMpegDecoder :
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281ABDB6}", "MpegVideo Filter", "Filter.MpegVideo.1", "Filter.MpegVideo", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -56,7 +56,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281AB
 END_INTERFACE_TABLE()
 
 public:
-	CMpegDecoder();
+    CMpegDecoder();
     ~CMpegDecoder();
 
 
@@ -75,8 +75,8 @@ END_PARAM_LIST()
         FRAMESMOOTH32,
         DEINTMODE,
         VIDEODELAY,
-		DOACCURATEASPECT,
-		DVBASPECTPREFS
+        DOACCURATEASPECT,
+        DVBASPECTPREFS
     };
 
 public:
@@ -86,16 +86,16 @@ public:
 public:
     // IAmFreeSoftwareLicensed
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 public:
     // IAMDecoderCaps
-	STDMETHOD(GetDecoderCaps)(DWORD dwCapIndex, DWORD* lpdwCap);
+    STDMETHOD(GetDecoderCaps)(DWORD dwCapIndex, DWORD* lpdwCap);
 
 public:
     HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin);
-	HRESULT NotifyConnected(CDSBasePin* pPin);
+    HRESULT NotifyConnected(CDSBasePin* pPin);
     HRESULT ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin);
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin, int TypeNum);
     bool IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pPin);
@@ -115,35 +115,35 @@ protected:
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
 
 private:
-	mpeg2dec_t* m_dec;
-	mpeg2_sequence_t m_CurrentSequence;
+    mpeg2dec_t* m_dec;
+    mpeg2_sequence_t m_CurrentSequence;
     AM_MEDIA_TYPE m_InternalMT;
     bool m_NeedToAttachFormat;
-	REFERENCE_TIME m_AvgTimePerFrame;
-	REFERENCE_TIME m_LastOutputTime;
-	bool m_fWaitForKeyFrame;
-	bool m_fFilm;
-	bool m_ProgressiveChroma;
-	CCanLock m_DeliverLock;
+    REFERENCE_TIME m_AvgTimePerFrame;
+    REFERENCE_TIME m_LastOutputTime;
+    bool m_fWaitForKeyFrame;
+    bool m_fFilm;
+    bool m_ProgressiveChroma;
+    CCanLock m_DeliverLock;
     int m_OutputWidth;
     int m_OutputHeight;
     int m_InternalPitch;
-	bool m_DoPanAndScan;
-	bool m_FilmCameraModeHint;
-	bool m_LetterBoxed;
-	DWORD m_PanScanOffsetX;
-	DWORD m_PanScanOffsetY;
-	DWORD m_ControlFlags;
-	DWORD m_PicturesSinceSequence;
-	BYTE m_AFD;
-	
+    bool m_DoPanAndScan;
+    bool m_FilmCameraModeHint;
+    bool m_LetterBoxed;
+    DWORD m_PanScanOffsetX;
+    DWORD m_PanScanOffsetY;
+    DWORD m_ControlFlags;
+    DWORD m_PicturesSinceSequence;
+    BYTE m_AFD;
+    
     typedef enum 
-	{
-		CHROMA_420,
-		CHROMA_422,
-		CHROMA_444
-	} eChromaType;
-	eChromaType m_ChromaType;
+    {
+        CHROMA_420,
+        CHROMA_422,
+        CHROMA_444
+    } eChromaType;
+    eChromaType m_ChromaType;
 
     class CFrameBuffer
     {
@@ -153,69 +153,69 @@ private:
         HRESULT AllocMem(int YSize, int UVSize);
         void FreeMem();
         void Clear();
-		BYTE* m_Buf[3];
-		REFERENCE_TIME m_rtStart;
+        BYTE* m_Buf[3];
+        REFERENCE_TIME m_rtStart;
         REFERENCE_TIME m_rtStop;
-		DWORD m_Flags;
-		unsigned int m_NumFields;
-		int m_CurrentSize;
+        DWORD m_Flags;
+        unsigned int m_NumFields;
+        int m_CurrentSize;
         CFrameBuffer& operator=(CFrameBuffer& RHS);
         void AddRef() {m_UseCount++;};
         void Release() {m_UseCount--;};
         bool NotInUse() {return (m_UseCount <= 0);};
     private:
         void* m_ActualBuf;
-		int m_AllocatedSize;
+        int m_AllocatedSize;
         int m_UseCount;
     };
     CFrameBuffer m_Buffers[NUM_BUFFERS];
     CFrameBuffer* m_CurrentPicture;
     CFrameBuffer m_SubPicBuffer;
 
-	enum
-	{
-		DEFAULT_OUTFILTER,
-		FFDSHOW_OUTFILTER,
-		VR_OUTFILTER,
-		VMR7_OUTFILTER,
-		VMR9_OUTFILTER
-	} m_ConnectedToOut;
+    enum
+    {
+        DEFAULT_OUTFILTER,
+        FFDSHOW_OUTFILTER,
+        VR_OUTFILTER,
+        VMR7_OUTFILTER,
+        VMR9_OUTFILTER
+    } m_ConnectedToOut;
 
-	enum
-	{
-		DEFAULT_INFILTER,
-		DVD_INFILTER,
-	} m_ConnectedToIn;
+    enum
+    {
+        DEFAULT_INFILTER,
+        DVD_INFILTER,
+    } m_ConnectedToIn;
 
-	int m_MpegWidth;
-	int m_MpegHeight;
-	int m_CurrentWidth;
-	int m_CurrentHeight;
-	long m_ARMpegX;
-	long m_ARMpegY;
-	long m_ARAdjustX;
-	long m_ARAdjustY;
-	long m_ARCurrentOutX;
-	long m_ARCurrentOutY;
+    int m_MpegWidth;
+    int m_MpegHeight;
+    int m_CurrentWidth;
+    int m_CurrentHeight;
+    long m_ARMpegX;
+    long m_ARMpegY;
+    long m_ARAdjustX;
+    long m_ARAdjustY;
+    long m_ARCurrentOutX;
+    long m_ARCurrentOutY;
     
     typedef enum 
-	{
-		DIAuto,
-		DIWeave,
-		DIBob,
-	} eDeintType;
-	eDeintType m_NextFrameDeint;
+    {
+        DIAuto,
+        DIWeave,
+        DIBob,
+    } eDeintType;
+    eDeintType m_NextFrameDeint;
 
-	typedef enum
-	{
-		DVB169,
-		DVBCCO,
-		DVBLETTERBOX
-	} eDVBAspectPrefs;
+    typedef enum
+    {
+        DVB169,
+        DVBCCO,
+        DVBLETTERBOX
+    } eDVBAspectPrefs;
 
-	void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-	void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-	void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
+    void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
+    void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
+    void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
 
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
@@ -229,20 +229,20 @@ private:
     HRESULT ProcessPictureDisplay(bool ProgressiveHint);
     HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
     HRESULT GetEnumTextDVBAspectPrefs(WCHAR **ppwchText);
-	void UpdateAspectRatio();
+    void UpdateAspectRatio();
 
     CFrameBuffer* GetNextBuffer();
 
-	void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
-	void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
-								AM_PROPERTY_SPHLI& sphli, RECT& rc,
-								AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
-								AM_DVD_YUV* sppal);
+    void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
+    void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
+                                AM_PROPERTY_SPHLI& sphli, RECT& rc,
+                                AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
+                                AM_DVD_YUV* sppal);
 
 private:
     // Rate change Stuff
-	AM_SimpleRateChange m_rate;
-	AM_SimpleRateChange m_ratechange;
+    AM_SimpleRateChange m_rate;
+    AM_SimpleRateChange m_ratechange;
     bool m_CorrectTS;
     HRESULT SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
     HRESULT GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
@@ -250,33 +250,33 @@ private:
 
 private:
     // Subpicture Stuff
-	AM_PROPERTY_COMPOSIT_ON m_spon;
-	AM_DVD_YUV m_sppal[16];
-	class CSubPicture
-	{
-	public:
-		CSubPicture();
-		~CSubPicture();
-		REFERENCE_TIME rtStart;
-		REFERENCE_TIME rtStop; 
-		std::vector<BYTE> pData;
-		bool fForced;
-	};
-	std::list<CSubPicture*> m_SubPicureList;
-	class CHighlight
-	{
-	public:
-		CHighlight();
-		~CHighlight();
-		AM_PROPERTY_SPHLI m_Hi;
-		REFERENCE_TIME rtStart;
-		REFERENCE_TIME rtStop; 
-	};
-	std::list<CHighlight*> m_HighlightList;
-	CCanLock m_SubPictureLock;
-	bool m_InsideReconnect;
-	long m_Pitch;
-	long m_Height;
+    AM_PROPERTY_COMPOSIT_ON m_spon;
+    AM_DVD_YUV m_sppal[16];
+    class CSubPicture
+    {
+    public:
+        CSubPicture();
+        ~CSubPicture();
+        REFERENCE_TIME rtStart;
+        REFERENCE_TIME rtStop; 
+        std::vector<BYTE> pData;
+        bool fForced;
+    };
+    std::list<CSubPicture*> m_SubPicureList;
+    class CHighlight
+    {
+    public:
+        CHighlight();
+        ~CHighlight();
+        AM_PROPERTY_SPHLI m_Hi;
+        REFERENCE_TIME rtStart;
+        REFERENCE_TIME rtStop; 
+    };
+    std::list<CHighlight*> m_HighlightList;
+    CCanLock m_SubPictureLock;
+    bool m_InsideReconnect;
+    long m_Pitch;
+    long m_Height;
 
 
     HRESULT SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
@@ -290,12 +290,12 @@ private:
     bool HasSubpicsToRender(REFERENCE_TIME rt);
     void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
-	void Simplify(long& u, long& v);
-	void Simplify(unsigned long& u, unsigned long& v);
-	void CorrectSourceTarget(RECT& rcSource, RECT& rcTarget);
-	void CorrectOutputSize();
-	void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
-	void PillarBox(long YAdjust, long XAdjust);
+    void Simplify(long& u, long& v);
+    void Simplify(unsigned long& u, unsigned long& v);
+    void CorrectSourceTarget(RECT& rcSource, RECT& rcTarget);
+    void CorrectOutputSize();
+    void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
+    void PillarBox(long YAdjust, long XAdjust);
 
 };
 

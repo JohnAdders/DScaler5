@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.5 2004-03-05 15:56:29 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.6 2004-07-07 14:07:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/03/05 15:56:29  adcockj
+// Interim check in of DScalerFilter (compiles again)
+//
 // Revision 1.4  2004/02/25 17:14:02  adcockj
 // Fixed some timing bugs
 // Tidy up of code
@@ -64,7 +67,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
+        DisableThreadLibraryCalls(hInstance);
         CPU_SetupFeatureFlag();
     }
     else if (dwReason == DLL_PROCESS_DETACH)
@@ -92,17 +95,17 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer(void)
 {
 
-	REGPINTYPES InputTypes[] = {	
+    REGPINTYPES InputTypes[] = {    
         {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
-    	{&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_VIDEO},
-	    {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG2_VIDEO},
-	    {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Packet},
-	    {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Payload},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_VIDEO},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG2_VIDEO},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Packet},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Payload},
     };
 
-	REGPINTYPES OutputTypes[] = {	
-    	{&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
+    REGPINTYPES OutputTypes[] = {   
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
     };
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
