@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.5 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.6 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.4  2004/07/01 21:16:55  adcockj
 // Another load of fixes to recent changes
 //
@@ -112,7 +116,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
         {
             CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
 
-            for(int i = 0; i < lenIn; i+=8)
+            for(DWORD i = 0; i < lenIn; i+=8)
             {
                 static short lastLeft = 0;
                 static short lastRight = 0;
@@ -136,7 +140,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
         else if(wfein->wBitsPerSample == 24)
         {
             CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
-            for(int i = 0; i < lenIn; i += 12)
+            for(DWORD i = 0; i < lenIn; i += 12)
             {
                 // if it's 24 bit audio 
                 // we need to do unmangle the data
@@ -170,7 +174,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
         if(wfein->wBitsPerSample == 16)
         {
             CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
-            for(int i = 0; i < lenIn; i+=4)
+            for(DWORD i = 0; i < lenIn; i+=4)
             {
                 short left = (m_buff[i] << 8) + m_buff[i + 1];
                 short right = (m_buff[i + 2] << 8) + m_buff[i + 3];
@@ -187,7 +191,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
         else if(wfein->wBitsPerSample == 24)
         {
             CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
-            for(int i = 0; i < lenIn; i += 12)
+            for(DWORD i = 0; i < lenIn; i += 12)
             {
                 // if it's 24 bit audio 
                 // we need to do unmangle the data

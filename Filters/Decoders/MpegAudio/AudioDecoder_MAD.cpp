@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.11 2004-07-07 14:08:10 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.12 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.10  2004/07/01 21:16:55  adcockj
 // Another load of fixes to recent changes
 //
@@ -148,7 +152,7 @@ HRESULT CAudioDecoder::ProcessMPA()
             {
                 pDataOut[2] = 0x0005;
             }
-            pDataOut[3] = len*8;
+            pDataOut[3] = (WORD)len*8;
             _swab((char*)m_stream.this_frame, (char*)&pDataOut[4], len);
             
             REFERENCE_TIME rtDur = 10000000i64 * m_frame.header.duration.fraction / MAD_TIMER_RESOLUTION;

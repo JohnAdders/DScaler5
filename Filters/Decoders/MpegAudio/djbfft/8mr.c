@@ -1,5 +1,8 @@
 #include "pre8.c"
 
+extern void mulc(register complex *a,register complex *b,register unsigned int n);
+
+
 void mulr2(real *a,real *b)
 {
   register real t1, t2;

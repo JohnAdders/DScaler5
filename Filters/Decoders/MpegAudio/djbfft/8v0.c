@@ -2,7 +2,7 @@
 
 void v4(register real *a)
 {
-  register real t1, t2, t3, t4, t5, t6;
+  register real t1, t3, t5, t6;
 
   t5 = a[0] + a[1];
   t6 = a[0] - a[1];
@@ -55,7 +55,7 @@ void v8(register real *a)
 /* a[0...8n-1], w[0...2n-1]; n even, n >= 4 */
 void vpass(register real *a,register const complex *w,register unsigned int n)
 {
-  register real t1, t2, t3, t4, t5, t6, t7, t8;
+  register real t1, t2, t3, t4, t5, t6;
   register real *b;
   register unsigned int k;
 
@@ -81,7 +81,7 @@ void vpass(register real *a,register const complex *w,register unsigned int n)
 
 void v16(register real *a)
 {
-  register real t1, t2, t3, t4, t5, t6, t7, t8;
+  register real t1, t2, t3, t4, t5, t6;
 
   u4((complex *)(a + 8));
   v8(a);

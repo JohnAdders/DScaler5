@@ -12,7 +12,7 @@ void r2(register real *a)
 
 void r4(register real *a)
 {
-  register real t1, t2, t3, t4, t5, t6;
+  register real t1, t2, t3, t4, t6;
 
   t3 = a[0] + a[1];
   t4 = a[2] + a[3];
@@ -65,7 +65,7 @@ void r8(register real *a)
 /* a[0...8n-1], w[0...2n-1]; n even, n >= 4 */
 void rpass(register real *a,register const complex *w,register unsigned int n)
 {
-  register real t1, t2, t3, t4, t5, t6, t7, t8;
+  register real t1, t2, t3, t4, t5, t6;
   register real *b;
   register unsigned int k;
 
@@ -91,7 +91,7 @@ void rpass(register real *a,register const complex *w,register unsigned int n)
 
 void r16(register real *a)
 {
-  register real t1, t2, t3, t4, t5, t6, t7, t8;
+  register real t1, t2, t3, t4, t5, t6;
 
   RZERO(a[0],a[1],a[8],a[9]);
   R(a[2],a[3],a[10],a[11],d16[0].re,d16[0].im);

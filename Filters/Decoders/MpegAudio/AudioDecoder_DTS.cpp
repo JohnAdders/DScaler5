@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.7 2004-07-11 14:35:25 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.8 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/11 14:35:25  adcockj
+// Fixed spdif connections and some dts issues
+//
 // Revision 1.6  2004/07/07 14:08:10  adcockj
 // Improved format change handling to cope with more situations
 // Removed tabs
@@ -204,7 +207,7 @@ HRESULT CAudioDecoder::ProcessDTS()
             {
                 if(m_ConnectedAsSpdif)
                 {
-                    DWORD len = frame_length * 4; 
+                    int len = frame_length * 4; 
 
                     SI(IMediaSample) pOut;
                     WORD* pDataOut = NULL;

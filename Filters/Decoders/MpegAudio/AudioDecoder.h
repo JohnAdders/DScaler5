@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.15 2004-07-11 15:07:04 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.16 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -189,13 +189,14 @@ private:
     bool m_NeedToAttachFormat;
     eOutputSampleType m_OutputSampleType;
     int m_SampleSize;
-    int m_InputSampleRate;
+    DWORD m_InputSampleRate;
     int m_OutputSampleRate;
     bool m_ConnectedAsSpdif;
     DWORD m_ChannelMask;
     int m_ChannelsRequested;
     bool m_CanReconnect;
     bool m_DownSample;
+	bool m_Preroll;
 };
 
 #define m_AudioInPin m_InputPins[0]

@@ -3,7 +3,7 @@
 /* a[0...8n-1], w[0...n-1]; n even, n >= 8 */
 void rpassbig(register real *a,register const complex *w,register unsigned int n)
 {
-  register real t1, t2, t3, t4, t5, t6, t7, t8;
+  register real t1, t2, t3, t4, t5, t6;
   register real *b;
   register unsigned int k;
 

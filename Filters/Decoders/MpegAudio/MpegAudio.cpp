@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.4 2004-07-07 14:08:10 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.5 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/07/07 14:08:10  adcockj
+// Improved format change handling to cope with more situations
+// Removed tabs
+//
 // Revision 1.3  2004/03/05 15:56:14  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -126,7 +130,7 @@ STDAPI DllRegisterServer(void)
     RegInfo.rgPins2 = Pins;
     
   
-    HRESULT hr = RegisterFilter(CLSID_CAudioDecoder, L"Audio Decoder", &RegInfo);
+    HRESULT hr = RegisterFilter(CLSID_CAudioDecoder, L"DScaler Audio Decoder", &RegInfo);
     CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.19 2004-07-11 15:07:04 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.20 2004-07-16 15:45:19 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2004/07/11 15:07:04  adcockj
+// Better connection logic with spdif
+//
 // Revision 1.18  2004/07/11 14:35:25  adcockj
 // Fixed spdif connections and some dts issues
 //
@@ -58,7 +61,7 @@
 // filter that can't cope with dynamic changes.
 //
 // Revision 1.13  2004/05/12 15:55:06  adcockj
-// Foxed issue with format changes during preroll
+// Fixed issue with format changes during preroll
 //
 // Revision 1.12  2004/05/06 06:38:06  adcockj
 // Interim fixes for connection and PES streams
@@ -148,6 +151,7 @@ CAudioDecoder::CAudioDecoder() :
     m_ChannelsRequested = 2;
     m_CanReconnect = false;
     m_DownSample = false;
+	m_Preroll = false;
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
@@ -531,6 +535,8 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         LOG(DBGLOG_ALL, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
     }
 
+	m_Preroll = ((pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) == AM_SAMPLE_PREROLL);
+
     int tmp = m_buff.size();
     m_buff.resize(m_buff.size() + len);
     memcpy(&m_buff[0] + tmp, pDataIn, len);
@@ -561,7 +567,7 @@ HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD w
     m_InternalWFE.Format.nBlockAlign = 2 * wBitsPerSample / 8;
     m_InternalWFE.Format.nAvgBytesPerSec = nSamplesPerSec * m_InternalWFE.Format.nBlockAlign;
 
-    m_InternalWFE.Format.wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
+    m_InternalWFE.Format.wFormatTag = (WORD)MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
     m_InternalWFE.Format.cbSize = 0;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
@@ -692,40 +698,39 @@ HRESULT CAudioDecoder::Deliver(IMediaSample* pOut, REFERENCE_TIME rtDur, REFEREN
     
     m_rtNextFrameStart = _I64_MIN;
 
-    REFERENCE_TIME Timenow;
-
-    hr = m_RefClock->GetTime(&Timenow);
-    Timenow -= m_rtStartTime;
-    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d - %I64d\n", m_rtOutputStart, rtDur, Timenow));
-
     rtDur += m_rtOutputStart;
 
     pOut->SetTime(&m_rtOutputStart, NULL);
-    //pOut->SetMediaTime(NULL, NULL);
 
-    pOut->SetPreroll(FALSE);
-    pOut->SetSyncPoint(TRUE);
+	if(!m_Preroll)
+	{
+	    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 
-    if(m_rtOutputStart >= 0)
-    {
-        if(m_NeedToAttachFormat)
-        {
-            m_AudioOutPin->SetType(&m_InternalMT);
-            pOut->SetMediaType(&m_InternalMT);
-            pOut->SetDiscontinuity(TRUE); 
-        }
-        else
-        {
-            pOut->SetDiscontinuity(m_IsDiscontinuity); 
-        }
+		pOut->SetPreroll(FALSE);
+		pOut->SetSyncPoint(TRUE);
 
-        
-        m_IsDiscontinuity = false;
+		if(m_NeedToAttachFormat)
+		{
+			m_AudioOutPin->SetType(&m_InternalMT);
+			pOut->SetMediaType(&m_InternalMT);
+			pOut->SetDiscontinuity(TRUE); 
+		}
+		else
+		{
+			pOut->SetDiscontinuity(m_IsDiscontinuity); 
+		}
 
-        hr = m_AudioOutPin->SendSample(pOut);
+	    
+		m_IsDiscontinuity = false;
 
-        m_NeedToAttachFormat = false;
-    }
+		hr = m_AudioOutPin->SendSample(pOut);
+
+		m_NeedToAttachFormat = false;
+	}
+	else
+	{
+		LOG(DBGLOG_FLOW, ("Preroll: %I64d - %I64d\n", m_rtOutputStart, rtDur));
+	}
 
     m_rtOutputStart += rtDur2;
     return hr;
@@ -868,7 +873,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             if(UseSpdif)
             {
                 pmt->subtype = MEDIASUBTYPE_DOLBY_AC3_SPDIF;
-                wfe->Format.wFormatTag = MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
+                wfe->Format.wFormatTag = (WORD)MEDIASUBTYPE_DOLBY_AC3_SPDIF.Data1;
                 wfe->Format.cbSize = 0;
                 pmt->cbFormat = sizeof(WAVEFORMATEX);
             }
