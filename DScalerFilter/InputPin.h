@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.h,v 1.4 2003-05-09 15:51:05 adcockj Exp $
+// $Id: InputPin.h,v 1.5 2003-05-16 15:18:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -84,6 +84,7 @@ public:
     ULONG FormatVersion();
     HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
     HRESULT FinishProcessing();
+    HRESULT SetInputType(const AM_MEDIA_TYPE *pmt);
 
 public:
     BITMAPINFOHEADER* GetBitmapInfo();
@@ -94,6 +95,7 @@ public:
     BOOL m_Flushing;
     BOOL m_bReadOnly;
     AM_MEDIA_TYPE m_InputMediaType;
+    AM_MEDIA_TYPE m_InternalMediaType;
     HANDLE m_NotifyEvent;
     ULONG m_FormatVersion;
     DWORD m_VideoSampleFlag;
@@ -109,5 +111,7 @@ private:
     BOOL IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt);
     void CheckForBlocking();
     HRESULT InternalReceive(IMediaSample *InSample);
+    HRESULT WorkOutInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
+    HRESULT UpdateMediaTypeInFilters();
 };
 

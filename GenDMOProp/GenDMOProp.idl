@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOProp.idl,v 1.3 2003-05-06 16:36:27 adcockj Exp $
+// $Id: GenDMOProp.idl,v 1.4 2003-05-16 15:18:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/06 16:36:27  adcockj
+// Prelimuianry support for license page
+//
 // Revision 1.2  2003/05/01 12:34:41  adcockj
 // Added headers and new license page
 //
@@ -58,6 +61,31 @@ library GENDMOPROPLib
 		HRESULT GetLicense(eFreeLicense* License);
         HRESULT GetAuthors(BSTR* Authors);
 	};
+
+	[
+        object,
+		uuid(7F7E0B71-860E-11d7-B84E-0002A5623377),
+		helpstring("IDeinterlace Interface"),
+		pointer_default(unique)
+	]
+	interface IDeinterlace : IUnknown
+	{
+        HRESULT GetComplexityIndex(long* pComplexity);
+        HRESULT GetNumFieldsDelay(long* pFieldsDelay);
+        HRESULT GetNumFieldsBuffered(long* pFieldsBuffered);
+    }
+
+	[
+        object,
+		uuid(7F7E0B72-860E-11d7-B84E-0002A5623377),
+		helpstring("IDScalerFilterPlugin Interface"),
+		pointer_default(unique)
+	]
+	interface IDScalerFilterPlugin : IUnknown
+	{
+        HRESULT Attach(IUnknown* m_DScalerFilter);
+        HRESULT Detach();
+    }
     
     [
         uuid(0E938757-7AED-11D7-B84B-0002A5623377),

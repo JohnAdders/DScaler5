@@ -3,6 +3,21 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "DMO_Lib"=..\DMO\DMO_Lib\DMO_Lib.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "DScalerFilter"=.\DScalerFilter.dsp - Package Owner=<4>
 
 Package=<5>
@@ -11,6 +26,24 @@ Package=<5>
 
 Package=<4>
 {{{
+    Begin Project Dependency
+    Project_Dep_Name GenDMOProp
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "Deint_Bob"=..\DMO\Deinterlace\Deint_Bob\Deint_Bob.dsp - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name DMO_Lib
+    End Project Dependency
     Begin Project Dependency
     Project_Dep_Name GenDMOProp
     End Project Dependency

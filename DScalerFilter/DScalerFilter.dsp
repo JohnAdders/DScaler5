@@ -51,11 +51,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\Debug/DScalerFilter.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug
-TargetPath=.\Debug\DScalerFilter.dll
-InputPath=.\Debug\DScalerFilter.dll
+TargetPath=\Source\deinterlace\DScaler5\Debug\DScalerFilter.dll
+InputPath=\Source\deinterlace\DScaler5\Debug\DScalerFilter.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -86,11 +86,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib /nologo /subsystem:windows /dll /machine:I386
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\Release/DScalerFilter.dll"
 # Begin Custom Build - Performing registration
 OutDir=.\Release
-TargetPath=.\Release\DScalerFilter.dll
-InputPath=.\Release\DScalerFilter.dll
+TargetPath=\Source\deinterlace\DScaler5\Release\DScalerFilter.dll
+InputPath=\Source\deinterlace\DScaler5\Release\DScalerFilter.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -180,11 +180,19 @@ SOURCE=.\DScaler.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\DSSampleField.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\EnumMediaTypes.h
 # End Source File
 # Begin Source File
 
 SOURCE=.\EnumTwoPins.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Field.h
 # End Source File
 # Begin Source File
 

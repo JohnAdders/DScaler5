@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.14 2003-05-10 13:21:31 adcockj Exp $
+// $Id: InputPin.cpp,v 1.15 2003-05-16 15:18:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2003/05/10 13:21:31  adcockj
+// Bug fixes
+//
 // Revision 1.13  2003/05/09 15:51:05  adcockj
 // Code tidy up
 // Added aspect ratio parameters
@@ -77,6 +80,7 @@ CInputPin::CInputPin()
     m_bReadOnly = FALSE;
     m_NotifyEvent = NULL;
     InitMediaType(&m_InputMediaType);
+    InitMediaType(&m_InternalMediaType);
     m_FormatVersion = 0;
     m_Block = FALSE;
     m_BlockEvent = NULL;
@@ -86,6 +90,7 @@ CInputPin::~CInputPin()
 {
     LOG(DBGLOG_FLOW, ("CInputPin::~CInputPin\n"));
     ClearMediaType(&m_InputMediaType);
+    ClearMediaType(&m_InternalMediaType);
 }
 
 
@@ -137,10 +142,8 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     }
 
     m_ConnectedPin = pConnector;
-    hr = CopyMediaType(&m_InputMediaType, pmt);
+    hr = SetInputType(pmt);
     CHECK(hr);
-    LogMediaType(&m_InputMediaType, "Input Connected");
-    ++m_FormatVersion;
 
     LOG(DBGLOG_FLOW, ("CInputPin::ReceiveConnection Exit\n"));
     return hr;
@@ -501,9 +504,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
                 CHECK(hr);
                 return VFW_E_INVALIDMEDIATYPE;
             }
-            hr = CopyMediaType(&m_InputMediaType, InSampleProperties.pMediaType);
-            CHECK(hr);
-            LogMediaType(&m_InputMediaType, "Input Format Change");
+            SetInputType(InSampleProperties.pMediaType);
         }
 
         // if there was a discontinuity then we need to ask for the buffer
@@ -962,3 +963,14 @@ void CInputPin::CheckForBlocking()
         }
     }
 }
+
+HRESULT CInputPin::SetInputType(const AM_MEDIA_TYPE *pmt)
+{
+    // save the media type to local variable
+    HRESULT hr = CopyMediaType(&m_InputMediaType, pmt);
+    CHECK(hr);
+    LogMediaType(&m_InputMediaType, "Input Connected");
+    ++m_FormatVersion;
+    return hr;
+}
+
