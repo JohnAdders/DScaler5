@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""winres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -47,15 +47,14 @@ END
 #endif    // APSTUDIO_INVOKED
 
 
-#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 0,0,2,0
+ PRODUCTVERSION 0,0,2,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -70,19 +69,16 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "Comments", "This file is licensed under the GPL\0"
-            VALUE "CompanyName", "DScaler Team\0"
-            VALUE "FileDescription", "MpegVideo Module\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "MpegVideo\0"
-            VALUE "LegalCopyright", "Copyright 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al\0"
-            VALUE "LegalTrademarks", "(c) 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al\0"
-            VALUE "OLESelfRegister", "\0"
-            VALUE "OriginalFilename", "MpegVideo.DLL\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName", "MpegVideo Module\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
-            VALUE "SpecialBuild", "\0"
+            VALUE "Comments", "This file is licensed under the GPL"
+            VALUE "CompanyName", "DScaler Team"
+            VALUE "FileDescription", "MpegVideo Module"
+            VALUE "FileVersion", "0, 0, 2, 0"
+            VALUE "InternalName", "MpegVideo"
+            VALUE "LegalCopyright", "Copyright 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al"
+            VALUE "LegalTrademarks", "(c) 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock et al"
+            VALUE "OriginalFilename", "MpegVideo.DLL"
+            VALUE "ProductName", "MpegVideo Module"
+            VALUE "ProductVersion", "0, 0, 2, 0"
         END
     END
     BLOCK "VarFileInfo"
@@ -91,15 +87,13 @@ BEGIN
     END
 END
 
-#endif    // !_MAC
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE 
 BEGIN
     IDS_PROJNAME            "Mpeg Video"
     IDS_AUTHORS             "Copyright (c) 2004 Michel Lespinasse, Aaron Holtzman, Gabest, John Adcock"

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.39 2004-08-06 08:38:53 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.40 2004-08-31 16:33:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.39  2004/08/06 08:38:53  adcockj
+// Added optional YV12 output type
+//
 // Revision 1.38  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -491,16 +494,16 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             else
             {
                 LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
-                return E_NOTIMPL;
+                return E_FAIL;
             }
         }
         if(q.Type == Flood)
         {
             LOG(DBGLOG_ALL, ("Ignored Flood - %d\n", q.Late));
-            return E_NOTIMPL;
+            return E_FAIL;
         }
     }
-    return E_NOTIMPL;
+    return E_FAIL;
 }
 
 STDMETHODIMP CMpegDecoder::GetDecoderCaps(DWORD dwCapIndex,DWORD* lpdwCap)

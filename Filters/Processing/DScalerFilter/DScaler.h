@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.7 2004-04-20 16:30:41 adcockj Exp $
+// $Id: DScaler.h,v 1.8 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -59,6 +59,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(0, L"Manual Pulldown Mode")
     DEFINE_PARAM_ENUM(FULLRATEVIDEO, PULLDOWN_32, L"Pulldown Mode")
     DEFINE_PARAM_INT(0, 4, 0, L"None", L"Pulldown Mode Index")
+    DEFINE_PARAM_ENUM(0, 0, L"Film Detect Mode")
 END_PARAM_LIST()
 
     enum eDScalerFilterParams
@@ -70,6 +71,7 @@ END_PARAM_LIST()
 		MANUALPULLDOWN,
 		PULLDOWNMODE,
 		PULLDOWNINDEX,
+		FILMDETECTMODE,
         PARAMS_LASTONE,
     };
 
@@ -88,6 +90,8 @@ public:
 public:
     STDMETHOD(get_NumFields)(DWORD* Count);
     STDMETHOD(GetField)(DWORD Index, IInterlacedField** Field);
+    STDMETHOD(GetStaticMap)(IMediaBuffer** StaticMap);
+    STDMETHOD(GetFrameDiffMap)(IMediaBuffer** DiffMap);
     STDMETHOD(PopStack)();
     STDMETHOD(ClearAll)();
 
@@ -116,9 +120,12 @@ public:
     BOOL m_IsDirty;
     std::list<IMediaObject*> m_Filters;
     std::vector<IMediaObject*> m_Deinterlacers;
+    std::vector<IMediaObject*> m_FilmDetectors;
     SI(IDeinterlace) m_CurrentDeinterlacingMethod;
+    SI(IFilmDetect) m_CurrentFilmDetectMethod;
 	REFERENCE_TIME m_StartTime;
     std::wstring m_DeinterlaceNames;
+    std::wstring m_FilmDetectorNames;
     DWORD m_NumberOfFieldsToBuffer;
     
 private:
@@ -135,6 +142,7 @@ private:
 	void EmptyVector(std::vector<IMediaObject*>& Vector);
     HRESULT RebuildProcessingLine();
     HRESULT UpdateTypes();
+    HRESULT UpdateTypes(IMediaObject* pDMO);
     void ResetPullDownIndexRange();
 
     HRESULT InternalProcessOutput(BOOL HurryUp);
@@ -199,6 +207,7 @@ protected:
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText);
     HRESULT GetEnumTextDeinterlaceMode(WCHAR **ppwchText);
     HRESULT GetEnumTextPuldownMode(WCHAR **ppwchText);
+    HRESULT GetEnumTextFilmDetectMode(WCHAR **ppwchText);
 
 private:
     BOOL m_TypesChanged;

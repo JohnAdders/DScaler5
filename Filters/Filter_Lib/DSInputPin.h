@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.h,v 1.3 2004-04-20 16:30:31 adcockj Exp $
+// $Id: DSInputPin.h,v 1.4 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,6 +39,7 @@ IMPLEMENT_UNKNOWN(CDSInputPin)
 BEGIN_INTERFACE_TABLE(CDSInputPin)
 	IMPLEMENTS_INTERFACE(IPin)
 	IMPLEMENTS_INTERFACE(IMemInputPin)
+    IMPLEMENTS_INTERFACE(IQualityControl)
 	IMPLEMENTS_INTERFACE(IPinConnection)
 	IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()

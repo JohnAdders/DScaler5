@@ -1,9 +1,12 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: Deint_Diag_Core.asm,v 1.4 2003-10-31 17:19:37 adcockj Exp $
+;// $Id: Deint_Diag_Core.asm,v 1.5 2004-08-31 16:33:40 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.4  2003/10/31 17:19:37  adcockj
+;// Added support for manual pulldown selection (works with Elecard Filters)
+;//
 ;// Revision 1.3  2003/09/24 16:33:00  adcockj
 ;// Bug fixes - starting to work now..
 ;//
@@ -151,7 +154,7 @@ LoopYUY2%1:
 
     movq mm4, mm1
     movq mm6, mm3
-    psubusb mm1, mm3            ; nonzero  where (|a - f| > |c - d|)
+    psubusb mm1, mm3            ; nonzero  where (|a - f| >= |c - d|)
 	pcmpeqb mm1, mm0			; now ff where (|a - f| < |c - d|)
     movq mm7, mm1
     DS_COMBINE mm4, mm6, mm1
@@ -160,7 +163,7 @@ LoopYUY2%1:
     DS_COMBINE mm6, mm3, mm7
 
     ; so now we should have mm4 as current best diff and mm6 as best average
-    ; of the diagonals
+    ; of the diagonals`
     movq    mm1, mm2           ; save |b - e|
     psubusb mm2, mm4           ; nonzero  where (|b - e| >= Best)
 	pcmpeqb mm2, mm0		   ; now ff where (|b - e| < Best)
@@ -168,7 +171,7 @@ LoopYUY2%1:
     psubusb mm1, [_MOVE]        ; nonzero where |b - e| > MOVE is Bob is visible
 	pcmpeqb mm1, mm0		   ; now ff where (|b - e| <= MOVE)
     por mm2, mm1               ; we'll let bob through always if the diff is small
-
+ 
     DS_COMBINE mm5, mm6, mm2
     movq mm6, mm5
 
@@ -241,7 +244,7 @@ LoopYUY2%1:
     pcmpeqd mm4, mm0            ; FFFF where the luma has no movement in two pixels
     pcmpeqd mm4, mm0            ; all ff where movement in either of the two pixels
 
-    pand  mm2, mm4              ; top and bottom moving
+    por  mm2, mm4              ; top and bottom moving
     por  mm3, mm2               ; where we should bob
 
     por mm3, [UVMask]

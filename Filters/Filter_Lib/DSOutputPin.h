@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.h,v 1.11 2004-07-20 16:37:57 adcockj Exp $
+// $Id: DSOutputPin.h,v 1.12 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,7 +34,6 @@ class CDSOutputPin :
     public CDSBasePin,
     public IPinFlowControl,
     public IMediaSeeking,
-    public IQualityControl,
     public IAMPushSource
 {
 public:
@@ -69,11 +68,6 @@ public:
     HRESULT Activate();
     HRESULT Deactivate();
     HRESULT CanWeWorkWithThisInputType(const AM_MEDIA_TYPE *pmt);
-
-// IQualityControl
-public:
-    STDMETHOD(Notify)(IBaseFilter *pSelf, Quality q);
-    STDMETHOD(SetSink)(IQualityControl *piqc);
 
 // IPinFlowControl
 public:
@@ -112,7 +106,6 @@ public:
 // IAMLatency
 public:
     STDMETHOD(GetLatency)(REFERENCE_TIME *prtLatency);
-
 
 // IAMPushSource
 public:

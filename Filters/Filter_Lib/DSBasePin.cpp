@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.8 2004-07-28 16:32:35 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.9 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/07/28 16:32:35  adcockj
+// Fixes Blight's problems from the forum
+//
 // Revision 1.7  2004/07/16 16:03:20  adcockj
 // Fixed compilation issues under .NET
 //
@@ -310,3 +313,15 @@ IBaseFilter* CDSBasePin::GetConnectedFilter()
 
     return NULL;
 }
+
+STDMETHODIMP CDSBasePin::Notify(IBaseFilter *pSelf, Quality q)
+{
+    return m_Filter->Notify(pSelf, q, this);
+}
+
+STDMETHODIMP CDSBasePin::SetSink(IQualityControl *piqc)
+{
+    LOG(DBGLOG_ALL, ("*Unexpected Call* - CDSOutputPin::SetSink\n"));
+    return E_NOTIMPL;
+}
+

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.14 2004-08-04 13:34:58 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.15 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2004/08/04 13:34:58  adcockj
+// Changed order of filter flush to match docs
+//
 // Revision 1.13  2004/08/03 08:55:57  adcockj
 // Fixes for seeking issues
 //
@@ -344,11 +347,6 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     {
         return E_POINTER;
     }
-    if(m_Flushing == TRUE)
-    {
-        LOG(DBGLOG_FLOW, ("CDSInputPin::Receive flushing\n"));
-        return S_FALSE;
-    }
     if(m_Filter->m_State == State_Stopped)
     {
         return VFW_E_WRONG_STATE;
@@ -358,7 +356,13 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     // from runnning at the same time as other 
     // functions with this line
     CProtectCode WhileVarInScope(this);
-    
+
+    if(m_Flushing == TRUE)
+    {
+        LOG(DBGLOG_FLOW, ("CDSInputPin::Receive flushing\n"));
+        return S_FALSE;
+    }
+
     HRESULT hr = S_OK;
     AM_SAMPLE2_PROPERTIES InSampleProperties;
     ZeroMemory(&InSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.h,v 1.4 2004-07-16 16:03:20 adcockj Exp $
+// $Id: DSBasePin.h,v 1.5 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,6 +32,7 @@ class CDSBasePin :
 	public IPin,
     public IUpdateMediaTypes,
     public IKsPropertySet,
+    public IQualityControl,
     public CCanLock
 {
 
@@ -59,6 +60,10 @@ public:
     STDMETHOD(Set)(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData);
     STDMETHOD(Get)(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData, DWORD *pcbReturned);
     STDMETHOD(QuerySupported)(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport);
+
+    STDMETHOD(Notify)(IBaseFilter *pSelf, Quality q);
+    STDMETHOD(SetSink)(IQualityControl *piqc);
+
 
     // Required virtual functions
     virtual HRESULT Activate() = 0;

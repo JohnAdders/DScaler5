@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.35 2004-08-16 16:08:44 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.36 2004-08-31 16:33:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.35  2004/08/16 16:08:44  adcockj
+// timestamp fixes
+//
 // Revision 1.34  2004/08/03 18:47:40  adcockj
 // spdif fixes
 //
@@ -217,6 +220,10 @@ CAudioDecoder::CAudioDecoder() :
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
+
+    m_a52_state = NULL;
+    m_dts_state = NULL;
+    m_madinit = false;
 }
 
 CAudioDecoder::~CAudioDecoder()
@@ -322,6 +329,27 @@ HRESULT CAudioDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstance
 
 HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
+    if(pPin == m_AudioInPin)
+    {
+        if(q.Type == Famine)
+        {
+            SI(IQualityControl) QualityControl = m_AudioOutPin->m_ConnectedPin;
+            if(QualityControl)
+            {
+                LOG(DBGLOG_FLOW, ("Coped With Famine - %d\n", q.Late));
+                return QualityControl->Notify(pSelf, q);
+            }
+        }
+        if(q.Type == Flood)
+        {
+            SI(IQualityControl) QualityControl = m_AudioOutPin->m_ConnectedPin;
+            if(QualityControl)
+            {
+                LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
+                return QualityControl->Notify(pSelf, q);
+            }
+        }
+    }
     return E_NOTIMPL;
 }
 
@@ -951,15 +979,6 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
 
 HRESULT CAudioDecoder::Activate()
 {
-    m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
-
-    m_dts_state = libdts::dts_init(0);
-
-    libmad::mad_stream_init(&m_stream);
-    libmad::mad_frame_init(&m_frame);
-    libmad::mad_synth_init(&m_synth);
-    mad_stream_options(&m_stream, 0);
-
     m_rtNextFrameStart = _I64_MIN;
 
     if(m_ConnectedAsSpdif && IsMediaTypeAC3(m_AudioInPin->GetMediaType()))
@@ -971,24 +990,74 @@ HRESULT CAudioDecoder::Activate()
         m_AC3SilenceFrames = 0;
     }
 
+    InitLibraries();
+
     return S_OK;
 }
 
 HRESULT CAudioDecoder::Deactivate()
 {
-    liba52::a52_free(m_a52_state);
-
-    libdts::dts_free(m_dts_state);
-
-    mad_synth_finish(&m_synth);
-    libmad::mad_frame_finish(&m_frame);
-    libmad::mad_stream_finish(&m_stream);
+    FinishLibraries();
 
     m_IsDiscontinuity = false; 
 
-    Flush(m_AudioInPin);
+    m_BytesLeftInBuffer = 0;
+    m_CurrentOutputSample.Detach();
+    m_buff.resize(0);
+    m_pDataOut = NULL;
+    m_rtNextFrameStart = _I64_MIN;
+    m_BufferSizeAtFrameStart = 0;
 
     return S_OK;
+}
+
+
+void CAudioDecoder::InitLibraries()
+{
+    FinishLibraries();
+
+    switch(m_ProcessingType)
+    {
+    case PROCESS_AC3:
+        m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
+        break;
+    case PROCESS_MPA:
+        libmad::mad_stream_init(&m_stream);
+        libmad::mad_frame_init(&m_frame);
+        libmad::mad_synth_init(&m_synth);
+        mad_stream_options(&m_stream, 0);
+        m_madinit = true;
+        break;
+    case PROCESS_DTS:
+        m_dts_state = libdts::dts_init(0);
+        break;
+    default:
+    case PROCESS_PCM:
+        break;
+    }
+}
+
+void CAudioDecoder::FinishLibraries()
+{
+    if(m_a52_state != NULL)
+    {
+        liba52::a52_free(m_a52_state);
+        m_a52_state = NULL;
+    }
+
+    if(m_dts_state != NULL)
+    {
+        libdts::dts_free(m_dts_state);
+        m_dts_state = NULL;
+    }
+
+    if(m_madinit == true)
+    {
+        mad_synth_finish(&m_synth);
+        libmad::mad_frame_finish(&m_frame);
+        libmad::mad_stream_finish(&m_stream);
+        m_madinit = false;
+    }
 }
 
 HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
@@ -1008,6 +1077,8 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     {
         m_AC3SilenceFrames = 0;
     }
+    
+    InitLibraries();
 
     return S_OK;
 }
@@ -1237,6 +1308,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         {
             LOG(DBGLOG_FLOW, ("Got unexpected change format\n"));
         }
+        InitLibraries();
     }
     else if(pPin == m_AudioOutPin)
     {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.9 2004-05-06 06:38:07 adcockj Exp $
+// $Id: DScaler.cpp,v 1.10 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/05/06 06:38:07  adcockj
+// Interim fixes for connection and PES streams
+//
 // Revision 1.8  2004/04/28 16:32:37  adcockj
 // Better dynamic connection
 //
@@ -183,6 +186,9 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
         break;
     case PULLDOWNINDEX:
         break;
+	case FILMDETECTMODE:
+        m_RebuildRequired = TRUE;
+        break;  
     default:
         break;
     }
@@ -198,6 +204,9 @@ HRESULT CDScaler::GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText)
         break;
     case PULLDOWNMODE:
         return GetEnumTextPuldownMode(ppwchText);
+        break;
+    case FILMDETECTMODE:
+        return GetEnumTextFilmDetectMode(ppwchText);
         break;
     }
     return E_NOTIMPL;
@@ -222,6 +231,27 @@ HRESULT CDScaler::GetEnumTextDeinterlaceMode(WCHAR **ppwchText)
     (*ppwchText)[i + 22] = 0;
     return S_OK;
 }
+
+HRESULT CDScaler::GetEnumTextFilmDetectMode(WCHAR **ppwchText)
+{
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_FilmDetectorNames.length() + 2 + 22 * 2);
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+	memcpy(*ppwchText, L"Film Detect Mode\0None\0", 22 * 2);
+    for(size_t i(0); i < m_FilmDetectorNames.length(); ++i)
+    {
+        if(m_FilmDetectorNames[i] != L'~')
+        {
+            (*ppwchText)[i + 22] = m_FilmDetectorNames[i];
+        }
+        else
+        {
+            (*ppwchText)[i + 22] = 0;
+        }
+    }
+    (*ppwchText)[i + 22] = 0;
+    return S_OK;
+}
+
 
 HRESULT CDScaler::GetEnumTextPuldownMode(WCHAR **ppwchText)
 {
@@ -317,9 +347,19 @@ HRESULT CDScaler::LoadDMOs()
                 }
                 else
                 {
-                    // \todo need to see if these are film detection
-                    // DMO's or where in the chain they should go
-                    m_Filters.push_back(DMO.GetAddRefedInterface());
+                    SI(IFilmDetect) FilmDetectDMO = DMO;        
+                    if(FilmDetectDMO)
+                    {
+                        m_FilmDetectors.push_back(DMO.GetAddRefedInterface());
+                        m_FilmDetectorNames += wszName;
+                        m_FilmDetectorNames += L"~";
+                    }
+                    else
+                    {
+                        // \todo need to see if these are film detection
+                        // DMO's or where in the chain they should go
+                        m_Filters.push_back(DMO.GetAddRefedInterface());
+                    }
                 }
             }
             else
@@ -346,12 +386,30 @@ HRESULT CDScaler::LoadDMOs()
         // \todo better error reporting
         return E_UNEXPECTED;
     }
+
+    // and at least one deinterlacing method
+    if(m_FilmDetectors.size() > 0)
+    {
+		_GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue = (MP_DATA)(m_FilmDetectors.size() - 1);
+		if(_GetParamList()[FILMDETECTMODE].Value > _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue)
+		{
+			_GetParamList()[FILMDETECTMODE].Value = _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue;
+		}
+        return S_OK;
+    }
+    else
+    {
+        // \todo better error reporting
+        return E_UNEXPECTED;
+    }
 }
 
 void CDScaler::UnloadDMOs()
 {
     // release our hold on all the Deinterlacing DMO's
     EmptyVector(m_Deinterlacers); 
+    // release our hold on all the Film Detect DMO's
+    EmptyVector(m_FilmDetectors); 
     // release our hold on all the Filter DMO's
     EmptyList(m_Filters); 
 }
@@ -425,6 +483,17 @@ HRESULT CDScaler::RebuildProcessingLine()
     {
         m_NumberOfFieldsToBuffer = 1;
     }
+
+    m_CurrentFilmDetectMethod = m_FilmDetectors[GetParamInt(FILMDETECTMODE)];
+
+    pVPI = m_CurrentFilmDetectMethod;
+    DWORD FilmBuffersRequired = 0;
+    if(pVPI)
+    {
+	    hr = pVPI->get_NumFieldsBuffered(&FilmBuffersRequired);
+        m_NumberOfFieldsToBuffer = max(m_NumberOfFieldsToBuffer, FilmBuffersRequired);
+    }
+
 	// make sure we set the types up
 	m_TypesChanged = TRUE;
     return hr;
@@ -433,18 +502,29 @@ HRESULT CDScaler::RebuildProcessingLine()
 HRESULT CDScaler::UpdateTypes()
 {
     HRESULT hr = S_OK;
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->Flush();
+	hr = UpdateTypes(m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]);
 	CHECK(hr);
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetInputType(0, &m_InternalMTInput, 0);
-	CHECK(hr);
-	hr = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]->SetOutputType(0, &m_InternalMTOutput, 0);
+	hr = UpdateTypes(m_FilmDetectors[GetParamInt(DEINTERLACEMODE)]);
 	CHECK(hr);
     return hr;
 }
+
+HRESULT CDScaler::UpdateTypes(IMediaObject* pDMO)
+{
+    HRESULT hr = S_OK;
+	pDMO->Flush();
+	CHECK(hr);
+	pDMO->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	CHECK(hr);
+	pDMO->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+	CHECK(hr);
+	pDMO->SetInputType(0, &m_InternalMTInput, 0);
+	CHECK(hr);
+	pDMO->SetOutputType(0, &m_InternalMTOutput, 0);
+	CHECK(hr);
+    return hr;
+}
+
 
 void CDScaler::ResetPullDownIndexRange()
 {
@@ -492,6 +572,16 @@ STDMETHODIMP CDScaler::GetField(DWORD Index, IInterlacedField** Field)
         *Field = NULL;
     }
     return S_OK;
+}
+
+STDMETHODIMP CDScaler::GetStaticMap(IMediaBuffer** StaticMap)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CDScaler::GetFrameDiffMap(IMediaBuffer** DiffMap)
+{
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDScaler::PopStack()
@@ -772,9 +862,11 @@ CDScaler::eHowToProcess CDScaler::WorkOutHowToProcess(REFERENCE_TIME& FrameEndTi
 
         if(GetParamBool(CDScaler::MANUALPULLDOWN) == FALSE)
         {
-            // use the detected mode to deinterlace
-            CurrentType = m_DetectedPulldownType;
-            Index = m_DetectedPulldownIndex;
+            HRESULT hr = m_CurrentFilmDetectMethod->DetectFilm(this, &CurrentType, & Index);
+            if(FAILED(hr))
+            {
+                return PROCESS_IGNORE;
+            }
         }
         else
         {
@@ -936,6 +1028,15 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
 	{
 		m_IsDiscontinuity = true;
 	}
+
+    if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)
+    {
+        VIDEOINFOHEADER2* InputInfo = (VIDEOINFOHEADER2*)(m_InternalMTInput.pbFormat);
+        if(InputInfo->dwInterlaceFlags & AMINTERLACE_Field1First)
+        {
+            pSampleProperties->dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
+        }
+    }
 
     HRESULT hr = PushSample(InSample, pSampleProperties);
     CHECK(hr);

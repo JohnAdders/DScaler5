@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.16 2004-07-26 17:08:13 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.17 2004-08-31 16:33:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2004/07/26 17:08:13  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.15  2004/07/20 16:37:57  adcockj
 // Fixes for main issues raised in testing of 0.0.1
 //  - Improved parameter handling
@@ -239,17 +242,6 @@ STDMETHODIMP CDSOutputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tSto
 {
     LOG(DBGLOG_ALL, ("*Unexpected Call* - CDSOutputPin::NewSegment\n"));
     return E_UNEXPECTED;
-}
-
-STDMETHODIMP CDSOutputPin::Notify(IBaseFilter *pSelf, Quality q)
-{
-    return m_Filter->Notify(pSelf, q, this);
-}
-
-STDMETHODIMP CDSOutputPin::SetSink(IQualityControl *piqc)
-{
-    LOG(DBGLOG_ALL, ("*Unexpected Call* - CDSOutputPin::SetSink\n"));
-    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDSOutputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.21 2004-08-03 08:55:56 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.22 2004-08-31 16:33:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -164,6 +164,7 @@ protected:
     struct libmad::mad_stream m_stream;
     struct libmad::mad_frame m_frame;
     struct libmad::mad_synth m_synth;
+    bool m_madinit;
 
     std::vector<BYTE> m_buff;
     REFERENCE_TIME m_rtNextFrameStart;
@@ -187,6 +188,8 @@ protected:
     BOOL IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType);
     HRESULT SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData);
     HRESULT UpdateStartTime();
+    void InitLibraries();
+    void FinishLibraries();
 
 private:
     AM_MEDIA_TYPE m_InternalMT;
