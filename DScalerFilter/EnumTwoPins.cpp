@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumTwoPins.cpp,v 1.1.1.1 2003-04-30 13:01:20 adcockj Exp $
+// $Id: EnumTwoPins.cpp,v 1.2 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
+// Initial Import
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -39,7 +42,8 @@ STDMETHODIMP CEnumTwoPins::Next(ULONG cPins,IPin **ppPins, ULONG *pcFetched)
     }
     while(m_Count < 2 && cPins)
     {
-        m_Pins[m_Count].CopyTo(ppPins);
+        HRESULT hr = m_Pins[m_Count].CopyTo(ppPins);
+        CHECK(hr);
         if(pcFetched != NULL)
         {
             ++(*pcFetched);

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.h,v 1.3 2003-05-08 15:58:38 adcockj Exp $
+// $Id: Process.h,v 1.1 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -19,41 +19,14 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
+// These are just simple copy functions at the moment
+// \todo need to think about how this is going to work
+// but the main aim is to seperate out the Filter stuff from the 
+// actual processing code so that as much as possible can be made 
+// cross-platform
+void ProcessYUY2(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* OutputBMI, BYTE* pInBuffer, BYTE* pOutBuffer);
+void ProcessYV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* OutputBMI, BYTE* pInBuffer, BYTE* pOutBuffer);
+void ProcessNV12(int Lines, BITMAPINFOHEADER* InputBMI, BITMAPINFOHEADER* OutputBMI, BYTE* pInBuffer, BYTE* pOutBuffer);
 
-class IUpdateMediaTypes : public IUnknown
-{
-public:
-    virtual ULONG FormatVersion() = 0;
-    virtual HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types) = 0;
-};
-
-
-class ATL_NO_VTABLE CEnumMediaTypes : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IEnumMediaTypes
-{
-public:
-	CEnumMediaTypes();
-	~CEnumMediaTypes();
-
-BEGIN_COM_MAP(CEnumMediaTypes)
-	COM_INTERFACE_ENTRY(IEnumMediaTypes)
-END_COM_MAP()
-
-// IBaseFilter
-public:
-    STDMETHOD(Next)(ULONG cTypes,AM_MEDIA_TYPE **ppTypes, ULONG *pcFetched);
-    STDMETHOD(Skip)(ULONG cTypes);
-    STDMETHOD(Reset)(void);
-    STDMETHOD(Clone)(IEnumMediaTypes **ppEnum);
-    
-    HRESULT SetUpdate(IUpdateMediaTypes* Update);
-protected:
-    CComPtr<IUpdateMediaTypes> m_Update;
-    AM_MEDIA_TYPE m_Types[2];
-    ULONG m_NumTypes;
-    ULONG m_Count;
-    ULONG m_Version;
-};

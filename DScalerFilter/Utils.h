@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.h,v 1.4 2003-05-06 07:00:30 adcockj Exp $
+// $Id: Utils.h,v 1.5 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -31,6 +31,22 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source);
 #define DBGLOG_FLOW   2
 #define DBGLOG_ALL    3
 
+class CProtectCode
+{
+public:
+    CProtectCode(CComObjectRootEx<CComMultiThreadModel>* MasterObject)
+    {
+        m_Master = MasterObject;
+        m_Master->Lock();
+    }
+    ~CProtectCode()
+    {
+        m_Master->Unlock();
+    }
+private:
+    CComObjectRootEx<CComMultiThreadModel>* m_Master;
+};
+
 #ifndef NOLOGGING
 extern int CurrentDebugLevel;
 void _LOG(LPCSTR sFormat, ...);
@@ -38,8 +54,12 @@ void _LOG(LPCSTR sFormat, ...);
 #define TRACE(x,y) { if(x <= TRACE_LEVEL) {DbgPrint(FunctionName); DbgPrint(" - "); DbgPrint##y; DbgPrint("\n");}}
 void LogSample(IMediaSample* Sample, LPCSTR Desc);
 void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc);
+void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line);
+#define CHECK(hr) if(FAILED(hr)) { LogBadHRESULT(hr, __FILE__, (DWORD)__LINE__); DebugBreak(); return hr;}
 #else
 #define LOG
 #define LogSample
 #define LogMediaType
+#define CHECK(hr) if(FAILED(hr)) { return hr;}
+#define LogBadHRESULT;
 #endif

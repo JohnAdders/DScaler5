@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: OutputPin.h,v 1.5 2003-05-06 16:38:01 adcockj Exp $
+// $Id: OutputPin.h,v 1.6 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -108,25 +108,30 @@ public:
 
 public:
     ULONG FormatVersion();
-    void SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
+    HRESULT SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types);
     BITMAPINFOHEADER* GetBitmapInfo();
+    HRESULT ChangeOutputFormat(const AM_MEDIA_TYPE* InputType);
         
 public:
     CDScaler* m_Filter;
     CInputPin* m_InputPin;
     CComPtr<IPin> m_ConnectedPin;
     AM_MEDIA_TYPE m_CurrentMediaType;
-    AM_MEDIA_TYPE m_ConnectedMediaType;
     CComQIPtr<IPinConnection> m_PinConnection;
     CComQIPtr<IMemInputPin> m_MemInputPin;
     CComPtr<IMemAllocator> m_Allocator;
     BOOL m_FormatChanged;
     ULONG m_FormatVersion;
+    DWORD m_SampleSize;
+    long m_Direction;
+    long m_Stride;
 
-    void InternalDisconnect();
-    void WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
+    HRESULT WorkOutNewMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
 
 private:
+    BOOL AreTypesCloseEnough(const AM_MEDIA_TYPE* CurrentType, const AM_MEDIA_TYPE* ProposedType);
+    HRESULT InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* InputType);
+    void InternalDisconnect();
 };
 
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: InputPin.cpp,v 1.9 2003-05-08 07:00:59 adcockj Exp $
+// $Id: InputPin.cpp,v 1.10 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2003/05/08 07:00:59  adcockj
+// Couple of minor fixes
+//
 // Revision 1.8  2003/05/07 16:27:41  adcockj
 // Slightly better properties implementation
 //
@@ -31,7 +34,7 @@
 // Changed to fixed size output buffer and changed connection handling
 //
 // Revision 1.5  2003/05/06 07:00:29  adcockj
-// Some cahnges from Torbjorn also some other attempted fixes
+// Some changes from Torbjorn also some other attempted fixes
 //
 // Revision 1.4  2003/05/02 16:05:23  adcockj
 // Logging with file and line numbers
@@ -52,6 +55,7 @@
 #include "DScaler.h"
 #include "OutputPin.h"
 #include "EnumMediaTypes.h"
+#include "Process.h"
 
 CInputPin::CInputPin()
 {
@@ -61,6 +65,8 @@ CInputPin::CInputPin()
     m_NotifyEvent = NULL;
     InitMediaType(&m_InputMediaType);
     m_FormatVersion = 0;
+    m_Block = FALSE;
+    m_BlockEvent = NULL;
 }
 
 CInputPin::~CInputPin()
@@ -91,27 +97,35 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
         return VFW_E_TYPE_NOT_ACCEPTED;
     }
 
-    // see if we need to check with the output
-    if(m_OutputPin->m_ConnectedPin != NULL)
+    // Chcek that the format coming in is OK
+    if(m_OutputPin->m_ConnectedPin != NULL && m_Filter->m_State != State_Stopped && m_OutputPin->m_PinConnection != NULL)
     {
-        AM_MEDIA_TYPE TestType;
-        InitMediaType(&TestType);
-        m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
-        
-        // can the input pin of the filter downstream accept
-        // our version of this format
-        // \todo maybe we need to use DynamicQueryAccept if it's there
-        if(m_OutputPin->m_ConnectedPin->QueryAccept(&TestType) != S_OK)
+        if(DynamicQueryAccept(pmt) != S_OK)
         {
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
-        CopyMediaType(&m_OutputPin->m_CurrentMediaType, &TestType);
-        m_OutputPin->m_FormatChanged = TRUE;    
-        ++m_OutputPin->m_FormatVersion;
+    }
+    else
+    {
+        if(QueryAccept(pmt) != S_OK)
+        {
+            return VFW_E_TYPE_NOT_ACCEPTED;
+        }
+    }
+
+    // prevents any processing while we're doing this
+    // will wait for any pending processing to finish
+    CProtectCode WhileVarInScope(this);
+
+    if(m_OutputPin->m_ConnectedPin != NULL)
+    {
+        hr = m_OutputPin->ChangeOutputFormat(pmt);
+        CHECK(hr);
     }
 
     m_ConnectedPin = pConnector;
-    CopyMediaType(&m_InputMediaType, pmt);
+    hr = CopyMediaType(&m_InputMediaType, pmt);
+    CHECK(hr);
     LogMediaType(&m_InputMediaType, "Input Connected");
     ++m_FormatVersion;
 
@@ -151,8 +165,7 @@ STDMETHODIMP CInputPin::ConnectedTo(IPin **pPin)
     }
     else
     {
-        m_ConnectedPin.CopyTo(pPin);
-        return S_OK;
+        return m_ConnectedPin.CopyTo(pPin);;
     }
 }
 
@@ -225,54 +238,39 @@ STDMETHODIMP CInputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     LOG(DBGLOG_FLOW, ("CInputPin::QueryAccept\n"));
 
     LogMediaType(pmt, "CInputPin::QueryAccept");
-    
-    if(pmt->majortype != MEDIATYPE_Video)
+
+    if(!IsThisATypeWeWorkWith(pmt))
     {
         return S_FALSE;
     }
 
-    if(pmt->formattype != FORMAT_VIDEOINFO2 && 
-        pmt->formattype != FORMAT_VideoInfo)
-    {
-        return S_FALSE;
-    }
-
-    if(pmt->subtype != MEDIASUBTYPE_YUY2 && 
-       pmt->subtype != MEDIASUBTYPE_YV12)
-    {
-        return S_FALSE;
-    }
-    BITMAPINFOHEADER* BitmapInfo;
-    if(pmt->formattype == FORMAT_VIDEOINFO2)
-    {
-        VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
-        BitmapInfo = &Format->bmiHeader;
-    }
-    else
-    {
-        VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
-        BitmapInfo = &Format->bmiHeader;
-    }
-
-    // check that the incoming format is SDTV    
-    if(BitmapInfo->biHeight < -576 || BitmapInfo->biHeight > 576)
-    {
-        return S_FALSE;
-    }
-
-    if(BitmapInfo->biWidth > 768)
-    {
-        return S_FALSE;
-    }
-    
-    // check that the incoming type is the same as
-    // we're outputting if connected
+    // see if we need to check with the output
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
-        if(pmt->subtype != m_OutputPin->m_CurrentMediaType.subtype)
+        HRESULT hr = S_OK;
+        AM_MEDIA_TYPE TestType;
+        InitMediaType(&TestType);
+        hr = m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        CHECK(hr);
+
+        if(m_Filter->m_State != State_Stopped && m_OutputPin->m_PinConnection != NULL)
         {
+            // can the input pin of the filter downstream accept
+            // our version of this format dynamically
+            hr = m_OutputPin->m_PinConnection->DynamicQueryAccept(&TestType);
+        }
+        else
+        {
+            // can the input pin of the filter downstream accept
+            // our version of this format
+            hr = m_OutputPin->m_ConnectedPin->QueryAccept(&TestType);
+        }
+        if(hr != S_OK)
+        {
+            LogBadHRESULT(hr, __FILE__, __LINE__);
             return S_FALSE;
         }
+        ClearMediaType(&TestType);
     }
     return S_OK;
 }
@@ -281,7 +279,8 @@ STDMETHODIMP CInputPin::EnumMediaTypes(IEnumMediaTypes **ppEnum)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::EnumMediaTypes\n"));
     CComObject<CEnumMediaTypes>* NewEnum = new CComObject<CEnumMediaTypes>;
-    NewEnum->SetUpdate(this);
+    HRESULT hr = NewEnum->SetUpdate(this);
+    CHECK(hr);
     NewEnum->AddRef();
     *ppEnum = NewEnum;
     return S_OK;
@@ -297,23 +296,25 @@ STDMETHODIMP CInputPin::QueryInternalConnections(IPin **apPin, ULONG *nPin)
 STDMETHODIMP CInputPin::EndOfStream(void)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::EndOfStream\n"));
+    HRESULT hr = S_OK;
     // synchronize with Recieve
-    Lock();
+    CProtectCode WhileVarInScope(this);
+
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
         // check if we need are in the middle of
         // a format renegoatiation
         if(m_NotifyEvent == NULL)
         {
-            m_OutputPin->m_ConnectedPin->EndOfStream();
+            hr = m_OutputPin->m_ConnectedPin->EndOfStream();
+            CHECK(hr);
         }
         else
         {
             SetEvent(m_NotifyEvent);
         }
     }
-    Unlock();
-    return S_OK;
+    return hr;
 }
 
 STDMETHODIMP CInputPin::BeginFlush(void)
@@ -322,7 +323,8 @@ STDMETHODIMP CInputPin::BeginFlush(void)
     // pass the Flush downstream
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
-        m_OutputPin->m_ConnectedPin->BeginFlush();
+        HRESULT hr = m_OutputPin->m_ConnectedPin->BeginFlush();
+        CHECK(hr);
     }
     // Sets an internal flag that causes all data-streaming methods to fail
     m_Flushing = TRUE;
@@ -333,14 +335,17 @@ STDMETHODIMP CInputPin::EndFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::EndFlush\n"));
 
-    // \todo Waits for all queued samples to be discarded. 
-    // \todo Frees any buffered data, including any pending end-of-stream notifications. 
-    // \todo Clears any pending EC_COMPLETE notifications. 
+    // Will wait for all any streaming functions to finish
+    // may block so be careful
+    CProtectCode WhileVarInScope(this);
+
+    FinishProcessing();
 
     // Calls EndFlush downstream. 
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
-        m_OutputPin->m_ConnectedPin->EndFlush();
+        HRESULT hr = m_OutputPin->m_ConnectedPin->EndFlush();
+        CHECK(hr);
     }
     m_Flushing = FALSE;
     return S_OK;
@@ -353,6 +358,7 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
     if(m_OutputPin->m_ConnectedPin != NULL)
     {
         hr = m_OutputPin->m_ConnectedPin->NewSegment(tStart, tStop, dRate);
+        CHECK(hr);
     }
     return hr;
 }
@@ -371,8 +377,7 @@ STDMETHODIMP CInputPin::GetAllocator(IMemAllocator **ppAllocator)
     }
     else
     {
-        m_Allocator.CopyTo(ppAllocator);
-        return S_OK;
+        return m_Allocator.CopyTo(ppAllocator);
     }
 }
 
@@ -420,19 +425,27 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
         return VFW_E_WRONG_STATE;
     }
 
+    // all code below here is protected
+    // from runnning at the same time as other 
+    // function with this line
+    CProtectCode WhileVarInScope(this);
+
     LogSample(pSample, "New Input Sample");
     // check for media type changes on the input side
     // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* InputType = NULL;
     hr = pSample->GetMediaType(&InputType);
+    CHECK(hr);
 
     //if the input and output pins are using the same allocator, there is 
     //no way to tell if this is from the output or input pin ( i think )
     if(InputType != NULL)
     {
-        CopyMediaType(&m_InputMediaType, InputType);
+        hr = CopyMediaType(&m_InputMediaType, InputType);
+        CHECK(hr);
         LogMediaType(&m_InputMediaType, "Input Format Change");
-        m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
+        hr = m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
+        CHECK(hr);
         m_OutputPin->m_FormatChanged = TRUE;
         ++m_OutputPin->m_FormatVersion;
         ++m_FormatVersion;
@@ -446,6 +459,11 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     {
         dwFlags |= AM_GBF_PREVFRAMESKIPPED;
     }
+
+
+    // check to see if we are blocked
+    // need to check this before we get each sample
+    CheckForBlocking();
 
     // get a sample to output to
     IMediaSample* OutSample;
@@ -467,9 +485,15 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     hr = OutSample->GetMediaType(&OutputType);
     if(OutputType != NULL)
     {
-        CopyMediaType(&m_OutputPin->m_ConnectedMediaType, OutputType);
+        if(OutputType->formattype == FORMAT_VIDEOINFO2)
+        {
+            VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)OutputType->pbFormat;
+            m_OutputPin->m_Direction = Format->bmiHeader.biHeight / abs(Format->bmiHeader.biHeight);
+            m_OutputPin->m_Stride = Format->bmiHeader.biWidth;
+        }
         LogMediaType(OutputType, "Output Format Change");
-        m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
+        hr = m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, &m_OutputPin->m_CurrentMediaType);
+        CHECK(hr);
         m_OutputPin->m_FormatChanged = TRUE;
         FreeMediaType(OutputType);
     }
@@ -483,16 +507,27 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
     int Lines = abs(InputBMI->biHeight);
     
     AM_SAMPLE2_PROPERTIES OutSampleProperties;
-    GetSampleProperties(OutSample, &OutSampleProperties);
+    hr = GetSampleProperties(OutSample, &OutSampleProperties);
+    CHECK(hr);
 
     BYTE* pInBuffer = SampleProperties.pbBuffer;
     BYTE* pOutBuffer = OutSampleProperties.pbBuffer;
     
-    for(int i(0); i < Lines; ++i)
+    if(InputBMI->biCompression == MAKEFOURCC('Y', 'U', 'Y', '2'))
     {
-        memcpy(pOutBuffer, pInBuffer, InputBMI->biWidth * 2);
-        pOutBuffer += OutputBMI->biWidth * 2;
-        pInBuffer += InputBMI->biWidth * 2;
+        ProcessYUY2(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
+    }
+    else if(InputBMI->biCompression == MAKEFOURCC('Y', 'V', '1', '2'))
+    {
+        ProcessYV12(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
+    }
+    else if(InputBMI->biCompression == MAKEFOURCC('N', 'V', '1', '2'))
+    {
+        ProcessNV12(Lines, InputBMI, OutputBMI, pInBuffer, pOutBuffer);
+    }
+    else
+    {
+        return E_UNEXPECTED;
     }
     
     OutSampleProperties.dwSampleFlags = SampleProperties.dwSampleFlags;
@@ -507,16 +542,19 @@ STDMETHODIMP CInputPin::Receive(IMediaSample *pSample)
         if(OutSampleProperties.pMediaType != NULL)
         {
             InitMediaType(OutSampleProperties.pMediaType);
-            m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, OutSampleProperties.pMediaType);
-            CopyMediaType(OutSampleProperties.pMediaType, &m_OutputPin->m_CurrentMediaType);
+            hr = m_OutputPin->WorkOutNewMediaType(&m_InputMediaType, OutSampleProperties.pMediaType);
+            CHECK(hr);
+            hr = CopyMediaType(OutSampleProperties.pMediaType, &m_OutputPin->m_CurrentMediaType);
+            CHECK(hr);
             ++m_OutputPin->m_FormatVersion;
             m_OutputPin->m_FormatChanged = FALSE;
         }
     }
 
     hr = SetSampleProperties(OutSample, &OutSampleProperties);
-
+    CHECK(hr);
     hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+    CHECK(hr);
 
     if(OutSampleProperties.pMediaType != NULL)
     {
@@ -539,10 +577,7 @@ STDMETHODIMP CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, 
     for(int i(0); i < nSamples; ++i)
     {
         hr = Receive(pSamples[i]);
-        if(FAILED(hr))
-        {
-            return hr;
-        }
+        CHECK(hr);
         ++(*nSamplesProcessed);
     }
     return hr;
@@ -557,31 +592,27 @@ STDMETHODIMP CInputPin::ReceiveCanBlock(void)
 STDMETHODIMP CInputPin::DynamicQueryAccept(const AM_MEDIA_TYPE *pmt)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::DynamicQueryAccept\n"));
-
     LogMediaType(pmt, "CInputPin::DynamicQueryAccept");
-    
-    // first see if we can propogate this downstream
-    if(m_OutputPin->m_PinConnection != NULL)
+
+    HRESULT hr = S_OK;
+    // see if we need to check with the output
+    if(m_OutputPin->m_ConnectedPin != NULL && m_OutputPin->m_PinConnection != NULL)
     {
-        // then see if we understand this media type
-        HRESULT hr = QueryAccept(pmt);
-        if(hr != S_OK)
-        {
-            return VFW_E_TYPE_NOT_ACCEPTED;
-        }
-
-        // \todo do some extra checks if we are connected
-
         AM_MEDIA_TYPE TestType;
         InitMediaType(&TestType);
-        m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
-        
-        return m_OutputPin->m_PinConnection->DynamicQueryAccept(&TestType);
+        hr = m_OutputPin->WorkOutNewMediaType(pmt, &TestType);
+        CHECK(hr);
+
+        // can the input pin of the filter downstream accept
+        // our version of this format dynamically
+        hr = m_OutputPin->m_PinConnection->DynamicQueryAccept(&TestType);
+        ClearMediaType(&TestType);
     }
     else
     {
-        return VFW_E_TYPE_NOT_ACCEPTED;
+        hr = VFW_E_TYPE_NOT_ACCEPTED;
     }
+    return hr;
 }
 
 STDMETHODIMP CInputPin::NotifyEndOfStream(HANDLE hNotifyEvent)
@@ -634,12 +665,14 @@ ULONG CInputPin::FormatVersion()
     return m_FormatVersion;
 }
 
-void CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
+HRESULT CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
 {   
+    HRESULT hr = S_OK;
     if(m_ConnectedPin != NULL)
     {
         NumTypes = 1;
-        CopyMediaType(Types, &m_InputMediaType);
+        hr = CopyMediaType(Types, &m_InputMediaType);
+        CHECK(hr);
         ++Types;
         ClearMediaType(Types);
     }
@@ -650,6 +683,7 @@ void CInputPin::SetTypes(ULONG& NumTypes, AM_MEDIA_TYPE* Types)
         ++Types;
         ClearMediaType(Types);
     }
+    return hr;
 }
 
 void CInputPin::GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props)
@@ -684,12 +718,13 @@ void CInputPin::GuessInterlaceFlags(AM_SAMPLE2_PROPERTIES* Props)
     }
 }
 
-void CInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
+HRESULT CInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
 {
+    HRESULT hr = S_OK;
     CComQIPtr<IMediaSample2> Sample2 = Sample;
     if(Sample2 != NULL)
     {
-        Sample2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)SampleProperties);
+        hr = Sample2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)SampleProperties);
     }
     else
     {
@@ -700,8 +735,10 @@ void CInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES*
         {
             SampleProperties->dwSampleFlags |= AM_SAMPLE_TIMEVALID;
         }
-        Sample->GetMediaType(&SampleProperties->pMediaType);
-        Sample->GetPointer(&SampleProperties->pbBuffer);
+        hr = Sample->GetMediaType(&SampleProperties->pMediaType);
+        CHECK(hr);
+        hr = Sample->GetPointer(&SampleProperties->pbBuffer);
+        CHECK(hr);
         SampleProperties->cbBuffer = Sample->GetActualDataLength();
         if(Sample->IsDiscontinuity())
         {
@@ -715,9 +752,9 @@ void CInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES*
         {
             SampleProperties->dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
         }
-
         SampleProperties->dwStreamId = AM_STREAM_MEDIA;
     }
+    return hr;
 }
 
 HRESULT CInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
@@ -733,20 +770,20 @@ HRESULT CInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTI
         if(SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
         {
             hr = Sample->SetTime(&SampleProperties->tStart, &SampleProperties->tStop);
-            if(FAILED(hr)) return hr;
+            CHECK(hr);
         }
 
         hr = Sample->SetMediaType(SampleProperties->pMediaType);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
         
         hr = Sample->SetDiscontinuity((SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
 
         hr = Sample->SetPreroll((SampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
 
         hr = Sample->SetSyncPoint((SampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
     }
     return hr;
 }
@@ -762,5 +799,89 @@ BITMAPINFOHEADER* CInputPin::GetBitmapInfo()
     {
         VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)m_InputMediaType.pbFormat;
         return &Format->bmiHeader;
+    }
+}
+
+BOOL CInputPin::IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt)
+{
+    if(pmt->majortype != MEDIATYPE_Video)
+    {
+        return FALSE;
+    }
+
+    if(pmt->formattype != FORMAT_VIDEOINFO2 && 
+        pmt->formattype != FORMAT_VideoInfo)
+    {
+        return FALSE;
+    }
+
+    if(pmt->subtype != MEDIASUBTYPE_YUY2 && 
+       pmt->subtype != MEDIASUBTYPE_YV12 &&
+       pmt->subtype != MEDIASUBTYPE_NV12)
+    {
+        return FALSE;
+    }
+    BITMAPINFOHEADER* BitmapInfo;
+    if(pmt->formattype == FORMAT_VIDEOINFO2)
+    {
+        VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
+        BitmapInfo = &Format->bmiHeader;
+    }
+    else
+    {
+        VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
+        BitmapInfo = &Format->bmiHeader;
+    }
+
+    // check that the incoming format is SDTV    
+    if(BitmapInfo->biHeight < -576 || BitmapInfo->biHeight > 576)
+    {
+        return FALSE;
+    }
+
+    if(BitmapInfo->biWidth > 768)
+    {
+        return FALSE;
+    }
+    return TRUE;
+
+}
+
+HRESULT CInputPin::FinishProcessing()
+{
+    // Will wait for all any streaming functions to finish
+    // may block so be careful
+    m_Flushing = TRUE;
+    CProtectCode WhileVarInScope(this);
+    m_Flushing = FALSE;
+
+    if(m_Block == TRUE)
+    {
+        if(m_BlockEvent != NULL)
+        {
+            ResetEvent(m_BlockEvent);
+        }
+    }
+
+
+    // \todo free any buffers
+    return S_OK;   
+}
+
+void CInputPin::CheckForBlocking()
+{
+    if(m_Block == TRUE)
+    {
+        if(m_BlockEvent != NULL)
+        {
+            ResetEvent(m_BlockEvent);
+            m_BlockEvent = NULL;
+        }
+        // do a crude spin on the Block variable
+        // this should allow other threads in 
+        while(m_Block)
+        {
+            Sleep(1);
+        }
     }
 }

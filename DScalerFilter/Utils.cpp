@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.5 2003-05-06 07:00:30 adcockj Exp $
+// $Id: Utils.cpp,v 1.6 2003-05-08 15:58:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2003/05/06 07:00:30  adcockj
+// Some cahnges from Torbjorn also some other attempted fixes
+//
 // Revision 1.4  2003/05/02 16:05:23  adcockj
 // Logging with file and line numbers
 //
@@ -184,6 +187,10 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
     {
         LOG(DBGLOG_ALL, (" MEDIASUBTYPE_YV12\n"));
     }
+    else if(MediaType->subtype == MEDIASUBTYPE_NV12)
+    {
+        LOG(DBGLOG_ALL, (" MEDIASUBTYPE_NV12\n"));
+    }
     else if(MediaType->subtype == MEDIASUBTYPE_RGB32)
     {
         LOG(DBGLOG_ALL, (" MEDIASUBTYPE_RGB32\n"));
@@ -227,43 +234,22 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc)
         RpcStringFree(&Uuid);
     }
 }
-#endif // NOLOGGING
 
-void GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
+void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
 {
-    CComQIPtr<IMediaSample2> Sample2 = Sample;
-    if(Sample2 != NULL)
-    {
-        Sample2->GetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)SampleProperties);
+    char ErrorString[256];
+    if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, 0, hr, 0, ErrorString, 256, 0))
+    {           
+        _LOG("%s(%d) : Bad HRESULT 0x%08x  - %s", File, Line, hr, ErrorString);
     }
     else
     {
-        ZeroMemory(SampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
-        SampleProperties->cbData =  sizeof(AM_SAMPLE2_PROPERTIES);
-        SampleProperties->lActual =  Sample->GetSize();
-        if(Sample->GetTime(&SampleProperties->tStart, &SampleProperties->tStop) == S_OK)
-        {
-            SampleProperties->dwSampleFlags |= AM_SAMPLE_TIMEVALID;
-        }
-        Sample->GetMediaType(&SampleProperties->pMediaType);
-        Sample->GetPointer(&SampleProperties->pbBuffer);
-        SampleProperties->cbBuffer = Sample->GetActualDataLength();
-        if(Sample->IsDiscontinuity())
-        {
-            SampleProperties->dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
-        }
-        if(Sample->IsPreroll())
-        {
-            SampleProperties->dwSampleFlags |= AM_SAMPLE_PREROLL;
-        }
-        if(Sample->IsSyncPoint())
-        {
-            SampleProperties->dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
-        }
-
-        SampleProperties->dwStreamId = AM_STREAM_MEDIA;
+        _LOG("%s(%d) : Bad HRESULT 0x%08x\n", File, Line, hr);
     }
 }
+
+
+#endif // NOLOGGING
 
 HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
 {
@@ -278,20 +264,20 @@ HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleP
         if(SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
         {
             hr = Sample->SetTime(&SampleProperties->tStart, &SampleProperties->tStop);
-            if(FAILED(hr)) return hr;
+            CHECK(hr);
         }
 
         hr = Sample->SetMediaType(SampleProperties->pMediaType);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
         
         hr = Sample->SetDiscontinuity((SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
 
         hr = Sample->SetPreroll((SampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
 
         hr = Sample->SetSyncPoint((SampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) > 0);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
     }
     return hr;
 }

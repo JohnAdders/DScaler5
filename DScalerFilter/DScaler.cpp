@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.8 2003-05-07 16:27:41 adcockj Exp $
+// $Id: DScaler.cpp,v 1.9 2003-05-08 15:58:37 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2003/05/07 16:27:41  adcockj
+// Slightly better properties implementation
+//
 // Revision 1.7  2003/05/06 16:38:00  adcockj
 // Changed to fixed size output buffer and changed connection handling
 //
@@ -185,9 +188,17 @@ STDMETHODIMP CDScaler::QueryVendorInfo(LPWSTR *pVendorInfo)
 STDMETHODIMP CDScaler::Stop(void)
 {
     LOG(DBGLOG_FLOW, ("CDScaler::Stop\n"));
+
+    CProtectCode WhileVarInScope(this);
+
+    // make sure no more Receive come through
+    HRESULT hr = m_InputPin->FinishProcessing();
+    CHECK(hr);
+
     if(m_OutputPin->m_Allocator != NULL)
     {
-        HRESULT hr = m_OutputPin->m_Allocator->Decommit();
+        hr = m_OutputPin->m_Allocator->Decommit();
+        CHECK(hr);
     }
     m_State = State_Stopped;
     return S_OK;
@@ -196,11 +207,15 @@ STDMETHODIMP CDScaler::Stop(void)
 STDMETHODIMP CDScaler::Pause(void)
 {
     LOG(DBGLOG_FLOW, ("CDScaler::Pause\n"));
+
+    CProtectCode WhileVarInScope(this);
+
     if(m_OutputPin->m_Allocator != NULL)
     {
         if(m_State == State_Stopped)
         {
             HRESULT hr = m_OutputPin->m_Allocator->Commit();
+            CHECK(hr);
         }
     }
     m_State = State_Paused;
@@ -210,6 +225,9 @@ STDMETHODIMP CDScaler::Pause(void)
 STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
 {
     LOG(DBGLOG_FLOW, ("CDScaler::Run\n"));
+
+    CProtectCode WhileVarInScope(this);
+
     m_State = State_Running;
     return S_OK;
 }
@@ -235,8 +253,7 @@ STDMETHODIMP CDScaler::SetSyncSource(IReferenceClock *pClock)
 STDMETHODIMP CDScaler::GetSyncSource(IReferenceClock **pClock)
 {
     LOG(DBGLOG_FLOW, ("CDScaler::GetSyncSource\n"));
-    m_RefClock.CopyTo(pClock);
-    return S_OK;
+    return m_RefClock.CopyTo(pClock);
 }
 
 STDMETHODIMP CDScaler::GetClassID(CLSID __RPC_FAR *pClassID)
@@ -266,18 +283,18 @@ STDMETHODIMP CDScaler::Load(IStream __RPC_FAR *pStm)
     DWORD NumParams(0);
 
     HRESULT hr = GetParamCount(&NumParams);
-    if(FAILED(hr)) return hr;
+    CHECK(hr);
 
     for(DWORD i(0); i < NumParams; ++i)
     {
         MP_DATA ParamValue(0);
         DWORD BytesRead(0);
         hr = pStm->Read(&ParamValue, sizeof(MP_DATA), &BytesRead);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
         if(BytesRead == sizeof(MP_DATA))
         {
             hr = SetParam(i, ParamValue);
-            if(FAILED(hr)) return hr;
+            CHECK(hr);
         }
         else
         {
@@ -298,16 +315,16 @@ STDMETHODIMP CDScaler::Save(IStream __RPC_FAR *pStm, BOOL fClearDirty)
     DWORD NumParams(0);
 
     HRESULT hr = GetParamCount(&NumParams);
-    if(FAILED(hr)) return hr;
+    CHECK(hr);
 
     for(DWORD i(0); i < NumParams; ++i)
     {
         MP_DATA ParamValue(0);
         DWORD BytesWriten(0);
         hr = GetParam(i, &ParamValue);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
         hr = pStm->Write(&ParamValue, sizeof(MP_DATA), &BytesWriten);
-        if(FAILED(hr)) return hr;
+        CHECK(hr);
         if(BytesWriten != sizeof(MP_DATA)) return E_UNEXPECTED;
     }
 
@@ -328,7 +345,7 @@ STDMETHODIMP CDScaler::GetSizeMax(ULARGE_INTEGER __RPC_FAR *pcbSize)
     DWORD NumParams(0);
 
     HRESULT hr = GetParamCount(&NumParams);
-    if(FAILED(hr)) return hr;
+    CHECK(hr);
 
     pcbSize->QuadPart = sizeof(MP_DATA) * NumParams;
     return S_OK;
@@ -342,6 +359,7 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
     }
     if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
     {
+        CProtectCode WhileVarInScope(this);
         *pValue = m_ParamValues[dwParamIndex];
         return S_OK;
     }
@@ -355,6 +373,7 @@ STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
 {
     if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
     {
+        CProtectCode WhileVarInScope(this);
         m_ParamValues[dwParamIndex] = value;
         return S_OK;
     }
@@ -465,8 +484,14 @@ STDMETHODIMP CDScaler::GetName(BSTR* Name)
         return E_POINTER;
     }
     CComBSTR Result;
-    Result.LoadString(IDS_NAME);
-    return Result.CopyTo(Name);
+    if(Result.LoadString(IDS_NAME))
+    {
+        return Result.CopyTo(Name);
+    }
+    else
+    {
+        return E_UNEXPECTED;
+    }
 }
 
 STDMETHODIMP CDScaler::GetLicense(eFreeLicense* License)
@@ -486,6 +511,12 @@ STDMETHODIMP CDScaler::GetAuthors(BSTR* Authors)
         return E_POINTER;
     }
     CComBSTR Result;
-    Result.LoadString(IDS_AUTHORS);
-    return Result.CopyTo(Authors);
+    if(Result.LoadString(IDS_AUTHORS))
+    {
+        return Result.CopyTo(Authors);
+    }
+    else
+    {
+        return E_UNEXPECTED;
+    }
 }

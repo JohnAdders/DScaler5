@@ -142,9 +142,9 @@ SOURCE=.\OutputPin.cpp
 
 !IF  "$(CFG)" == "DScalerFilter - Win32 Debug"
 
-# SUBTRACT CPP /FA<none>
-
 !ELSEIF  "$(CFG)" == "DScalerFilter - Win32 Release"
+
+# ADD CPP /GB /O1
 
 !ENDIF 
 
