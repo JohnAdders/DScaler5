@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Params.h,v 1.5 2004-03-15 17:17:03 adcockj Exp $
+// $Id: Params.h,v 1.6 2004-04-16 16:19:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -105,10 +105,12 @@ public:
                 CProtectCode WhileVarInScope(this);
                 if(value < Params[dwParamIndex].MParamInfo.mpdMinValue)
                 {
+                    Params[dwParamIndex].Value = Params[dwParamIndex].MParamInfo.mpdMinValue;
                     return E_INVALIDARG;
                 }
                 else if(value > Params[dwParamIndex].MParamInfo.mpdMaxValue)
                 {
+                    Params[dwParamIndex].Value = Params[dwParamIndex].MParamInfo.mpdMaxValue;
                     return E_INVALIDARG;
                 }
                 else

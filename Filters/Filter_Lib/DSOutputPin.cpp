@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.8 2004-03-08 17:20:05 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.9 2004-04-16 16:19:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2004/03/08 17:20:05  adcockj
+// Minor bug fixes
+//
 // Revision 1.7  2004/03/05 15:56:29  adcockj
 // Interim check in of DScalerFilter (compiles again)
 //
@@ -454,11 +457,16 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
             }
             m_Allocator = m_MyMemAlloc;
         }
+		if(m_Filter->m_State != State_Stopped)
+		{
+			NeedToCommit = true;
+		}
     }
 	else
 	{
         hr = m_Allocator->Decommit();
         CHECK(hr);
+
 		NeedToCommit = true;
 	}
 
@@ -514,7 +522,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    if(FAILED(hr))
+    if(FAILED(hr) && false)
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return VFW_E_NO_TRANSPORT;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.2 2004-02-25 17:14:03 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.3 2004-04-16 16:19:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/02/25 17:14:03  adcockj
+// Fixed some timing bugs
+// Tidy up of code
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -64,7 +68,7 @@ STDMETHODIMP CDSBasePin::Disconnect(void)
     {
         return S_FALSE;
     }
-    else if(m_Filter->m_State == State_Stopped)
+    else
     {
         ClearMediaType(&m_ConnectedMediaType);
         m_ConnectedPin.Detach();
@@ -77,10 +81,6 @@ STDMETHODIMP CDSBasePin::Disconnect(void)
         InternalDisconnect();
         
         return S_OK;
-    }
-    else
-    {
-        return VFW_E_NOT_STOPPED;
     }
 }
 

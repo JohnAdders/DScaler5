@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.18 2004-04-14 16:31:34 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.19 2004-04-16 16:19:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2004/04/14 16:31:34  adcockj
+// Subpicture fixes, AFD started and minor fixes
+//
 // Revision 1.17  2004/04/13 06:23:42  adcockj
 // Start to improve aspect handling
 //
@@ -294,6 +297,19 @@ HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
     case VIDEODELAY:
         // don't care when this changes
         break;
+	case DOACCURATEASPECT:
+        // \todo we should care when this changes
+		// but we would need to store the sequence
+        break;
+	case DVBASPECTPREFS:
+		{
+			// reset the sizes when these param change
+			// ensure we don't do this while we'rte in the middle of
+			// processing
+			CProtectCode WhileVarInScope(&m_DeliverLock);
+			CorrectOutputSize();
+		}
+		break;
     }
     return S_OK;
 }
@@ -531,7 +547,7 @@ HRESULT CMpegDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
 
 HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
 {
-    wchar_t DeintText[] = L"DVB Aspect Preferences\0" L"None\0" L"16:9 Display\0" L"4:3 Display Center Cut out\0" L"4:3 Display Letterbox\0";
+    wchar_t DeintText[] = L"DVB Aspect Preferences\0" L"None\0" L"16:9 Display\0" L"4:3 Display Center Cut out\0" L"4:3 Display LetterBox\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(DeintText));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, DeintText, sizeof(DeintText));
@@ -1066,7 +1082,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// cope with dynamic format changes from our side
 	// will possibly call NegotiateAllocator on the output pins
 	// which flushes so we shouldn't have any samples outstanding here
-	if(FAILED(hr = ReconnectOutput()))
+	if(FAILED(hr = ReconnectOutput(false)))
 	{
         LogBadHRESULT(hr, __FILE__, __LINE__);
 		return hr;
@@ -1089,7 +1105,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// formats properly and should never call NegotiateAllocator
 	if(hr == S_FALSE && m_NeedToAttachFormat)
 	{
-		if(FAILED(hr = ReconnectOutput()))
+		if(FAILED(hr = ReconnectOutput(true)))
 		{
 			LogBadHRESULT(hr, __FILE__, __LINE__);
 			return hr;
@@ -1097,28 +1113,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	}
 
 
-	if(m_NeedToAttachFormat)
-	{
-		m_VideoOutPin->SetType(&m_InternalMT);
-		pOut->SetMediaType(&m_InternalMT);
-
-        SI(IMediaEventSink) pMES = m_Graph;
-        if(pMES)
-        {
-		    // some renderers don't send this
-		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
-        }
-
-	    m_NeedToAttachFormat = false;
-
-	}
-
-    if(FAILED(hr = pOut->GetPointer(&pDataOut)))
-	{
-        LogBadHRESULT(hr, __FILE__, __LINE__);
-		return hr;
-	}
-	
 	LOG(DBGLOG_ALL, ("%010I64d - %010I64d - %010I64d - %010I64d\n", m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop, rtStart, rtStop));
 
 	SI(IMediaSample2) pOut2 = pOut;
@@ -1133,7 +1127,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         Props.tStart = rtStart;
         Props.tStop = rtStop;
 
-        if(m_IsDiscontinuity || fRepeatLast)
+        if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
 		{
 		    Props.dwSampleFlags |= AM_SAMPLE_DATADISCONTINUITY;
 		}
@@ -1176,14 +1170,36 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 		pOut->SetTime(&rtStart, &rtStop);
 		pOut->SetMediaTime(NULL, NULL);
 
-        if(m_IsDiscontinuity || fRepeatLast)
+        if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
 			pOut->SetDiscontinuity(TRUE);
         else
     	    pOut->SetDiscontinuity(FALSE);
 	    pOut->SetSyncPoint(TRUE);
     }
 
+	if(m_NeedToAttachFormat)
+	{
+		m_VideoOutPin->SetType(&m_InternalMT);
+		pOut->SetMediaType(&m_InternalMT);
+
+        SI(IMediaEventSink) pMES = m_Graph;
+        if(pMES)
+        {
+		    // some renderers don't send this
+		    pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
+        }
+
+	    m_NeedToAttachFormat = false;
+
+	}
+
 	BYTE** buf = &m_CurrentPicture->m_Buf[0];
+
+    if(FAILED(hr = pOut->GetPointer(&pDataOut)))
+	{
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+		return hr;
+	}
 
 	if(m_ChromaType == CHROMA_420)
 	{
@@ -1250,14 +1266,15 @@ void CMpegDecoder::FlushMPEG()
 	ResetMpeg2Decoder();
 }
 
-HRESULT CMpegDecoder::ReconnectOutput()
+HRESULT CMpegDecoder::ReconnectOutput(bool ForceReconnect)
 {
 	HRESULT hr = S_OK;
 
 	if((m_OutputWidth != m_CurrentWidth) || 
 		(m_OutputHeight != m_CurrentHeight) || 
 		(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
-		(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY))
+		(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY) ||
+		ForceReconnect)
 	{
         CopyMediaType(&m_InternalMT, m_VideoOutPin->GetMediaType());
 	
@@ -1282,7 +1299,7 @@ HRESULT CMpegDecoder::ReconnectOutput()
 			CorrectSourceTarget(vih->rcSource, vih->rcTarget);
 		}
 		
-		if(m_OutputWidth > bmi->biWidth)
+		if((m_OutputWidth > bmi->biWidth) || (m_OutputWidth != m_CurrentWidth))
 		{
 			bmi->biWidth = m_OutputWidth;
 		}
@@ -1313,16 +1330,24 @@ HRESULT CMpegDecoder::ReconnectOutput()
 	    hr = m_VideoOutPin->m_Allocator->GetProperties(&AllocatorProps);
         CHECK(hr);
 
-        if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-        {
-            hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
-            if(FAILED(hr))
-            {
-                LogBadHRESULT(hr, __FILE__, __LINE__);
-                return hr;
-            }
+        if((m_OutputWidth != m_CurrentWidth) || 
+			(m_OutputHeight != m_CurrentHeight) ||
+			(m_ARMpegX * m_ARAdjustX != m_ARCurrentOutX) || 
+			(m_ARMpegY * m_ARAdjustY != m_ARCurrentOutY))
+		{
+			SI(IGraphConfig) GraphConfig = m_Graph;
+			if(GraphConfig)
+			{
+				hr = GraphConfig->Reconnect(m_VideoOutPin, m_VideoOutPin->m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+				CHECK(hr);
+			}
         }
-     
+        
+		if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
+		{
+			hr = m_VideoOutPin->NegotiateAllocator(NULL, &m_InternalMT);
+			CHECK(hr);
+		}
 		m_NeedToAttachFormat = true; 
 
 		m_CurrentWidth = m_OutputWidth;
@@ -1636,7 +1661,11 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 	m_OutputWidth = m_MpegWidth;
 	m_OutputHeight = m_MpegHeight;
 
-	m_AFD = 0;
+	// reset AFD to show all on new sequence
+	if(m_AFD)
+	{
+		m_AFD = 8;
+	}
 
 	CorrectOutputSize();
 
@@ -1853,6 +1882,33 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
     return hr;
 }
 
+void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
+{
+	long OriginalHeight = m_OutputHeight;
+	m_OutputHeight = m_OutputHeight * XAdjust;
+	m_OutputHeight /= YAdjust;
+	m_ARAdjustX = YAdjust;
+	m_ARAdjustY = XAdjust;
+	
+	if(!IsTop)
+	{
+		m_PanScanOffsetY += (OriginalHeight - m_OutputHeight) / 2;
+		m_DoPanAndScan = true;
+	}
+}
+
+void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
+{
+	long OriginalWidth = m_OutputWidth;
+	m_OutputWidth = m_OutputWidth * XAdjust;
+	m_OutputWidth /= YAdjust;
+	m_ARAdjustX = XAdjust;
+	m_ARAdjustY = YAdjust;
+	
+	m_PanScanOffsetX += (OriginalWidth - m_OutputWidth) / 2;
+	m_DoPanAndScan = true;
+}
+
 void CMpegDecoder::CorrectOutputSize()
 {
 
@@ -1867,61 +1923,98 @@ void CMpegDecoder::CorrectOutputSize()
 
 	m_OutputWidth = m_MpegWidth;
 
+	m_ARAdjustX = 1;
+	m_ARAdjustY = 1;
+	m_PanScanOffsetX = 0;
+	m_PanScanOffsetY = 0;
 
 	if(m_AFD)
 	{
-		if(m_ARMpegX * 100 / m_ARMpegY  > 144)
-		{
-			// reset all the adjustments
-			m_DoPanAndScan = false;
-			m_ARAdjustX = 1;
-			m_ARAdjustY = 1;
-			m_PanScanOffsetX = 0;
-			m_PanScanOffsetY = 0;
+		// reset all the adjustments
+		m_DoPanAndScan = false;
+		eDVBAspectPrefs AspectPrefs = (eDVBAspectPrefs)GetParamEnum(DVBASPECTPREFS);
 
+		if(m_ARMpegX * 100 / m_ARMpegY  < 144)
+		{
 			// if we are in a 4:3 type mode
 			switch(m_AFD)
 			{
 			// box 16:9 top
 			case 2:
-				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				if(AspectPrefs == DVB169)
 				{
-					m_OutputHeight = m_OutputHeight * 3;
-					m_OutputHeight /= 4;
-					m_ARAdjustX = 4;
-					m_ARAdjustY = 3;
+					LetterBox(4,3, true);
 				}
+				break;
 			// box 14:9 top
 			case 3:
-				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				if(AspectPrefs == DVB169)
 				{
-					m_OutputHeight = m_OutputHeight * 6;
-					m_OutputHeight /= 7;
-					m_ARAdjustX = 7;
-					m_ARAdjustY = 6;
+					LetterBox(7,6, true);
 				}
-			// box 16:6 centre
+				break;
+			// box >16:9 centre
 			case 4:
-				if(GetParamEnum(DVBASPECTPREFS) == DVB169)
+				if(AspectPrefs == DVB169)
 				{
-					m_OutputHeight = m_OutputHeight * 3;
-					m_OutputHeight /= 4;
-					m_ARAdjustX = 4;
-					m_ARAdjustY = 3;
-					m_DoPanAndScan = true;
-					m_PanScanOffsetY = 0;
+					LetterBox(4,3);
 				}
+				break;
+			// same as coded
 			case 8:
+				// do nothing;
+				break;
+			// 4:3 centre
 			case 9:
+				break;
+			// 16:9 centre
 			case 10:
+				if(AspectPrefs == DVB169)
+				{
+					LetterBox(4,3);
+				}
+				break;
+			// 14:9 centre
 			case 11:
+				if(AspectPrefs == DVB169)
+				{
+					LetterBox(7,6);
+				}
+				break;
+			// 4:3 with shoot and protect 14:9
 			case 13:
+				if(AspectPrefs == DVB169)
+				{
+					LetterBox(7,6);
+				}
+				break;
+			// 16:9 with shoot and protect 14:9
 			case 14:
+				if(AspectPrefs == DVB169)
+				{
+					LetterBox(4,3);
+				}
+				else
+				{
+					LetterBox(4,3);
+					PillarBox(7,6);
+				}
+				break;
+			// 16:9 with shoot and protect 4:3
 			case 15:
+				if(AspectPrefs == DVB169)
+				{
+					LetterBox(4,3);
+				}
+				else
+				{
+					LetterBox(4,3);
+					PillarBox(4,3);
+				}
+				break;
 			// reserved
 			default:
 				break;
-
 			}
 		}
 		else
@@ -1929,18 +2022,89 @@ void CMpegDecoder::CorrectOutputSize()
 			// otherwise we must be in a 16:9 type mode
 			switch(m_AFD)
 			{
+			// box 16:9 top
 			case 2:
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				break;
 			// box 14:9 top
 			case 3:
-			// box 16:6 centre
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				else if(AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(7, 6);
+				}
+				break;
+			// box >16:9 centre
 			case 4:
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				break;
+			// same as coded
 			case 8:
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				break;
+			// 4:3 centre
 			case 9:
+				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(4, 3);
+				}
+				break;
+			// 16:9 centre
 			case 10:
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				break;
+			// 14:9 centre
 			case 11:
+				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(7, 6);
+				}
+				break;
+			// 4:3 with shoot and protect 14:9
 			case 13:
+				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(4, 3);
+				}
+				else if(AspectPrefs == DVB169)
+				{
+					PillarBox(4, 3);
+					LetterBox(7, 6);
+				}
+				break;
+			// 16:9 with shoot and protect 14:9
 			case 14:
+				if(AspectPrefs == DVBCCO)
+				{
+					PillarBox(4, 3);
+				}
+				else if(AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(7, 6);
+				}
+				break;
+			// 16:9 with shoot and protect 4:3
 			case 15:
+				if(AspectPrefs == DVBCCO || AspectPrefs == DVBLETTERBOX)
+				{
+					PillarBox(4, 3);
+				}
+				break;
 			// reserved
 			default:
 				break;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.12 2004-04-14 16:31:34 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.13 2004-04-16 16:19:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -65,7 +65,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"3:2 playback smoothing")
     DEFINE_PARAM_ENUM(DIBob, DIAuto, L"Deinterlace Mode")
     DEFINE_PARAM_INT(0, 200, 0, L"ms", L"Video Delay")
-    DEFINE_PARAM_BOOL(1, L"Use accurate aspect ratios")
+    DEFINE_PARAM_BOOL(0, L"Use accurate aspect ratios")
     DEFINE_PARAM_ENUM(DVBLETTERBOX, DVB169, L"DVB Aspect Preferences")
 END_PARAM_LIST()
 
@@ -202,7 +202,7 @@ private:
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
     void FlushMPEG();
-    HRESULT ReconnectOutput();
+    HRESULT ReconnectOutput(bool ForceReconnect);
     void ResetMpeg2Decoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
     HRESULT ProcessNewSequence();
@@ -271,6 +271,9 @@ private:
 	void Simplify(unsigned long& u, unsigned long& v);
 	void CorrectSourceTarget(RECT& rcSource, RECT& rcTarget);
 	void CorrectOutputSize();
+	void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
+	void PillarBox(long YAdjust, long XAdjust);
+
 };
 
 #define m_VideoInPin m_InputPins[0]

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.4 2004-04-14 16:31:34 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.5 2004-04-16 16:19:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2004/04/14 16:31:34  adcockj
+// Subpicture fixes, AFD started and minor fixes
+//
 // Revision 1.3  2004/04/13 06:23:42  adcockj
 // Start to improve aspect handling
 //
@@ -67,7 +70,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
 		hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
         CHECK(hr);
 	}
-    // process Active Format Descriptor
+    // process Active Format Description
     // see http://www.dtg.org.uk/publications/books/afd.pdf
     // and ETSI TR 101 154
     if(UserDataLen >=6 && *(DWORD*)UserData == 0x31475444)
