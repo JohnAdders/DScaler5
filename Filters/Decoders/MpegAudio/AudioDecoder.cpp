@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.30 2004-07-29 13:44:59 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.31 2004-07-30 08:13:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.30  2004/07/29 13:44:59  adcockj
+// More fixes for Laurent's issues
+//
 // Revision 1.29  2004/07/29 10:26:54  adcockj
 // Fixes for audio issues reported by Laurent
 //
@@ -324,7 +327,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     {
         // we specify a fixed size buffer and so size is already
         // taken care of
-        pProperties->cBuffers = 1;
+        pProperties->cBuffers = 3;
         pProperties->cbBuffer = 0; 
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
