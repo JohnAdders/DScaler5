@@ -105,6 +105,27 @@ SOURCE=.\CInPlaceDMO.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\Common\CPUID.asm
+
+!IF  "$(CFG)" == "DMO_Lib - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "DMO_Lib - Win32 Debug"
+
+# Begin Custom Build
+IntDir=.\Debug
+InputPath=..\..\Common\CPUID.asm
+InputName=CPUID
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\CVideoDMO.cpp
 # End Source File
 # Begin Source File

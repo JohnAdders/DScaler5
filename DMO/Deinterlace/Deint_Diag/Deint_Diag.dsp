@@ -126,6 +126,27 @@ SOURCE=.\Deint_Diag.rc
 # End Source File
 # Begin Source File
 
+SOURCE=.\Deint_Diag_Core.asm
+
+!IF  "$(CFG)" == "Deint_Diag - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "Deint_Diag - Win32 Debug"
+
+# Begin Custom Build
+IntDir=.\Debug
+InputPath=.\Deint_Diag_Core.asm
+InputName=Deint_Diag_Core
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
+
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\StdAfx.CPP
 # ADD CPP /Yc"stdafx.h"
 # End Source File
