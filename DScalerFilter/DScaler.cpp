@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.9 2003-05-08 15:58:37 adcockj Exp $
+// $Id: DScaler.cpp,v 1.10 2003-05-09 15:51:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2003/05/08 15:58:37  adcockj
+// Better error handling, threading and format support
+//
 // Revision 1.8  2003/05/07 16:27:41  adcockj
 // Slightly better properties implementation
 //
@@ -53,12 +56,11 @@
 #include "OutputPin.h"
 
 // define any parameters used
-const MP_PARAMINFO CDScaler::m_ParamInfos[NUM_DSCALERFILTER_PARAMS] = 
+const MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] = 
 {
-    { MPT_INT, 0, -10, 20, 0, L"Units1", L"Name2" },
-    { MPT_FLOAT, 0, -10, 20, 0, L"Units2", L"Name2" },
-    { MPT_BOOL, 0, 0, 1, 0, L"Units3", L"Name3" }, 
-    { MPT_ENUM, 0, 0, 3, 0, L"Units4", L"Name4" }, 
+    { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment X" },
+    { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment Y" },
+    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Is Input Anamorphic" }, 
 };
 
 
@@ -69,7 +71,7 @@ CDScaler::CDScaler()
     m_Graph = NULL;
     m_IsDirty = FALSE;
     wcscpy(m_Name, L"DScaler Filter");
-    for(int i(0); i < NUM_DSCALERFILTER_PARAMS; ++i)
+    for(int i(0); i < PARAMS_LASTONE; ++i)
     {
         m_ParamValues[i] = m_ParamInfos[i].mpdNeutralValue;
     }
@@ -357,7 +359,7 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
     {
         return E_POINTER;
     }
-    if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
+    if(dwParamIndex < PARAMS_LASTONE)
     {
         CProtectCode WhileVarInScope(this);
         *pValue = m_ParamValues[dwParamIndex];
@@ -371,10 +373,12 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
 
 STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
 {
-    if(dwParamIndex < NUM_DSCALERFILTER_PARAMS)
+    if(dwParamIndex < PARAMS_LASTONE)
     {
         CProtectCode WhileVarInScope(this);
         m_ParamValues[dwParamIndex] = value;
+        // \todo need to work out some way of informing to processing that a change has
+        // happened
         return S_OK;
     }
     else
@@ -407,7 +411,7 @@ STDMETHODIMP CDScaler::GetParamCount(DWORD *pdwParams)
     {
         return E_POINTER;
     }
-    *pdwParams = NUM_DSCALERFILTER_PARAMS;
+    *pdwParams = PARAMS_LASTONE;
     return S_OK;
 }
 
@@ -417,7 +421,7 @@ STDMETHODIMP CDScaler::GetParamInfo(DWORD dwParamIndex,MP_PARAMINFO *pInfo)
     {
         return E_POINTER;
     }
-    if(dwParamIndex >= NUM_DSCALERFILTER_PARAMS)
+    if(dwParamIndex >= PARAMS_LASTONE)
     {
         return E_INVALIDARG;
     }
@@ -432,7 +436,7 @@ STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
     {
         return E_POINTER;
     }
-    if(dwParamIndex >= NUM_DSCALERFILTER_PARAMS)
+    if(dwParamIndex >= PARAMS_LASTONE)
     {
         return E_INVALIDARG;
     }
@@ -519,4 +523,36 @@ STDMETHODIMP CDScaler::GetAuthors(BSTR* Authors)
     {
         return E_UNEXPECTED;
     }
+}
+
+float CDScaler::GetParamFloat(eDScalerFilterParams ParamId)
+{
+    ATLASSERT(ParamId >= 0 && ParamId < PARAMS_LASTONE);
+    ATLASSERT(m_ParamInfos[ParamId].mpType == MPT_FLOAT);
+    CProtectCode WhileVarInScope(this);
+    return (float)m_ParamValues[ParamId];
+}
+
+long CDScaler::GetParamInt(eDScalerFilterParams ParamId)
+{
+    ATLASSERT(ParamId >= 0 && ParamId < PARAMS_LASTONE);
+    ATLASSERT(m_ParamInfos[ParamId].mpType == MPT_INT);
+    CProtectCode WhileVarInScope(this);
+    return (long)m_ParamValues[ParamId];
+}
+
+BOOL CDScaler::GetParamBool(eDScalerFilterParams ParamId)
+{
+    ATLASSERT(ParamId >= 0 && ParamId < PARAMS_LASTONE);
+    ATLASSERT(m_ParamInfos[ParamId].mpType == MPT_BOOL);
+    CProtectCode WhileVarInScope(this);
+    return (BOOL)m_ParamValues[ParamId];
+}
+
+long CDScaler::GetParamEnum(eDScalerFilterParams ParamId)
+{
+    ATLASSERT(ParamId >= 0 && ParamId < PARAMS_LASTONE);
+    ATLASSERT(m_ParamInfos[ParamId].mpType == MPT_ENUM);
+    CProtectCode WhileVarInScope(this);
+    return (BOOL)m_ParamValues[ParamId];
 }

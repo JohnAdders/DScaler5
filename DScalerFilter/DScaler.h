@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.h,v 1.6 2003-05-07 16:27:41 adcockj Exp $
+// $Id: DScaler.h,v 1.7 2003-05-09 15:51:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -26,8 +26,6 @@
 #include "InputPin.h"
 #include "OutputPin.h"
 #include "..\GenDMOProp\GenDMOProp.h"
-
-#define NUM_DSCALERFILTER_PARAMS 4
 
 class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScaler : 
 	public CComObjectRootEx<CComMultiThreadModel>,
@@ -64,11 +62,18 @@ BEGIN_PROP_MAP(CDScaler)
 	PROP_PAGE(CLSID_LicensePropPage)
 END_PROP_MAP()
 
-
 	HRESULT FinalConstruct();
 	void FinalRelease();
 
 	CComPtr<IUnknown> m_pUnkMarshaler;
+
+    enum eDScalerFilterParams
+    {
+        ASPECTINCREASEX,
+        ASPECTINCREASEY,
+        INPUTISANAMORPHIC,
+        PARAMS_LASTONE,
+    };
 
 // IBaseFilter
 public:
@@ -116,6 +121,12 @@ public:
     STDMETHOD(GetAuthors)(BSTR* Authors);
 
 public:
+    float GetParamFloat(eDScalerFilterParams ParamId);
+    long GetParamInt(eDScalerFilterParams ParamId);
+    BOOL GetParamBool(eDScalerFilterParams ParamId);
+    long GetParamEnum(eDScalerFilterParams ParamId);
+    
+public:
     CInputPin* m_InputPin;
     COutputPin* m_OutputPin;
     CComPtr<IReferenceClock> m_RefClock;
@@ -124,8 +135,8 @@ public:
     WCHAR m_Name[MAX_FILTER_NAME];
     BOOL m_IsDirty;
 private:
-    MP_DATA m_ParamValues[NUM_DSCALERFILTER_PARAMS];
-    static const MP_PARAMINFO m_ParamInfos[NUM_DSCALERFILTER_PARAMS];
+    MP_DATA m_ParamValues[PARAMS_LASTONE];
+    static const MP_PARAMINFO m_ParamInfos[PARAMS_LASTONE];
 };
 
 #endif
