@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.25 2004-05-10 16:48:50 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.26 2004-05-12 17:01:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.25  2004/05/10 16:48:50  adcockj
+// Imporved handling of sequence changes
+//
 // Revision 1.24  2004/05/10 06:40:27  adcockj
 // Fixes for better compatability with PES streams
 //
@@ -459,7 +462,6 @@ HRESULT CMpegDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pProperties
 	    ExtractBIH(pPin->GetMediaType(), &bih);
 
 	    pProperties->cBuffers = 3;
-        // make sure we've always got enough for standard definition TV YUY2
 		if(m_InsideReconnect)
 		{
 			pProperties->cbBuffer = m_InternalMT.lSampleSize;
@@ -954,7 +956,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
 	if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xE0010000)
 	{
-		// skip past the PES header annd Id
+		// skip past the PES header and Id
 		len -= 4;
 		pDataIn += 4;
 
@@ -981,7 +983,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 			len -= 2;
 			pDataIn += 2;
 	
-			// skip past all the optional headers and the llength byte itself
+			// skip past all the optional headers and the length byte itself
 			len -= *pDataIn + 1;
 			pDataIn += *pDataIn + 1;
 		}
@@ -1030,14 +1032,6 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 	{
 		m_IsDiscontinuity = true;
 	}
-
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
-    {
-		LOG(DBGLOG_ALL, ("GetTime %010I64d %010I64d\n", pSampleProperties->tStart, pSampleProperties->tStop));
-		LARGE_INTEGER temp;
-		temp.QuadPart = pSampleProperties->tStart;
-		mpeg2_tag_picture(m_dec, temp.HighPart, temp.LowPart);
-    }
 
 	mpeg2_buffer(m_dec, pDataIn, pDataIn + len);
 	while(1)
@@ -1217,15 +1211,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	// formats properly and should never call NegotiateAllocator
 	if(hr == S_FALSE && m_NeedToAttachFormat)
 	{
-		//pOut.Detach();
 		if(FAILED(hr = ReconnectOutput(true)))
-		{
-			LogBadHRESULT(hr, __FILE__, __LINE__);
-			return hr;
-		}
-
-		//hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
-		if(FAILED(hr))
 		{
 			LogBadHRESULT(hr, __FILE__, __LINE__);
 			return hr;
@@ -1972,6 +1958,23 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
 		m_IsDiscontinuity = true;
 	}
 
+	// naughty but the mpeg2_tag_picture function doesn't let us only tag I frames
+	// which is what we need in the bda case when we get 
+	// loads of timestamps
+	mpeg2_picture_t* CurrentPicture = (mpeg2_picture_t*)mpeg2_info(m_dec)->current_picture;
+
+    if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+    {
+		LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d\n", pSampleProperties->tStart));
+		LARGE_INTEGER temp;
+		temp.QuadPart = pSampleProperties->tStart;
+		CurrentPicture->tag = temp.HighPart;
+		CurrentPicture->tag2 = temp.LowPart;
+		CurrentPicture->flags |= PIC_FLAG_TAGS;
+		// make sure we only tag one i-frame per timestamp
+		pSampleProperties->dwSampleFlags &=  ~AM_SAMPLE_TIMEVALID;
+    }
+
     // set up the memory want to receive the buffers into
     CFrameBuffer* Buffer = GetNextBuffer();
     if(Buffer == NULL)
@@ -2082,7 +2085,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay()
             break;
         }
 
-		if((picture->tag != 0 || picture->tag2 != 0))
+		if(picture->flags & PIC_FLAG_TAGS)
 		{
 			LARGE_INTEGER temp;
 			temp.HighPart = picture->tag;

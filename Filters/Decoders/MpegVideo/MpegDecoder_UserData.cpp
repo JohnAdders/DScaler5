@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_UserData.cpp,v 1.7 2004-05-10 06:40:42 adcockj Exp $
+// $Id: MpegDecoder_UserData.cpp,v 1.8 2004-05-12 17:01:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/05/10 06:40:42  adcockj
+// Fixes for better compatability with PES streams
+//
 // Revision 1.6  2004/05/06 06:38:07  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -97,11 +100,11 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
     {
 	    if(mpeg2_info(m_dec)->user_data_len > 4)
 	    {
-		    LOG(DBGLOG_FLOW, ("User Data State %d First DWORD %08x Length %d\n", State, *(DWORD*)UserData, UserDataLen));
+		    LOG(DBGLOG_ALL, ("User Data State %d First DWORD %08x Length %d\n", State, *(DWORD*)UserData, UserDataLen));
 	    }
         else
         {
-		    LOG(DBGLOG_FLOW, ("User Data State %d Length %d\n", State, UserDataLen));
+		    LOG(DBGLOG_ALL, ("User Data State %d Length %d\n", State, UserDataLen));
         }
     }
     return hr;
