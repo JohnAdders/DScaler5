@@ -109,6 +109,16 @@ SOURCE=..\..\Common\CPUID.asm
 
 !IF  "$(CFG)" == "DMO_Lib - Win32 Release"
 
+# Begin Custom Build
+IntDir=.\Release
+InputPath=..\..\Common\CPUID.asm
+InputName=CPUID
+
+"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+
+# End Custom Build
+
 !ELSEIF  "$(CFG)" == "DMO_Lib - Win32 Debug"
 
 # Begin Custom Build
