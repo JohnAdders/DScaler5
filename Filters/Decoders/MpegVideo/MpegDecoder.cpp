@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.35 2004-07-28 16:32:34 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.36 2004-07-29 08:31:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.35  2004/07/28 16:32:34  adcockj
+// Fixes Blight's problems from the forum
+//
 // Revision 1.34  2004/07/23 21:00:12  adcockj
 // Fixed compilation problem in VS6
 //
@@ -1363,16 +1366,15 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         pOut->SetMediaType(&m_InternalMT);
         LogMediaType(&m_InternalMT, "AttachFormat", DBGLOG_FLOW);
         m_NeedToAttachFormat = false;
+
+        SI(IMediaEventSink) pMES = m_Graph;
+        if(pMES)
+        {
+            // some renderers don't send this
+            pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
+        }
+
     }
-
-
-    SI(IMediaEventSink) pMES = m_Graph;
-    if(pMES)
-    {
-        // some renderers don't send this
-        pMES->Notify(EC_VIDEO_SIZE_CHANGED, MAKELPARAM(m_OutputWidth, m_OutputHeight), 0);
-    }
-
 
     BYTE** buf = &m_CurrentPicture->m_Buf[0];
 
