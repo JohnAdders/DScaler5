@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.38 2004-10-05 19:27:08 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.39 2004-10-21 18:52:09 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.38  2004/10/05 19:27:08  adcockj
+// Correct some stuttering/timing issues
+//
 // Revision 1.37  2004/09/23 14:27:57  adcockj
 // preliminary fixed for reconnection issues
 //
@@ -199,7 +202,7 @@ CAudioDecoder::CAudioDecoder() :
     m_AudioInPin->AddRef();
     m_AudioInPin->SetupObject(this, L"Audio In");
 
-    m_AudioOutPin = new CDSOutputPushPin();
+    m_AudioOutPin = new CDSOutputPin();
     if(m_AudioOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -345,7 +348,7 @@ HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             if(QualityControl)
             {
                 LOG(DBGLOG_FLOW, ("Coped With Famine - %d\n", q.Late));
-                return QualityControl->Notify(pSelf, q);
+                return QualityControl->Notify(this, q);
             }
         }
         if(q.Type == Flood)
@@ -354,11 +357,12 @@ HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
             if(QualityControl)
             {
                 LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
-                return QualityControl->Notify(pSelf, q);
+                return QualityControl->Notify(this, q);
             }
         }
     }
-    return S_OK;
+    LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
+	return VFW_E_NOT_FOUND;
 }
 
 
@@ -613,8 +617,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         LOG(DBGLOG_FLOW, ("Got Time Discontinuity\n"));
         SendOutLastSamples(m_AudioInPin);
     }
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY ||
-        pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY)
+    if(InSample->IsDiscontinuity() == S_OK)
     {
         LOG(DBGLOG_FLOW, ("Got Discontinuity\n"));
         m_IsDiscontinuity = true;
@@ -792,8 +795,10 @@ HRESULT CAudioDecoder::Deliver()
 {
     HRESULT hr = S_OK;
     REFERENCE_TIME rtDur = 10000000i64 * m_InternalMT.lSampleSize / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
+	REFERENCE_TIME rtStop = m_rtOutputStart + rtDur;
 
-    m_CurrentOutputSample->SetTime(&m_rtOutputStart, NULL);
+    m_CurrentOutputSample->SetTime(&m_rtOutputStart, &rtStop);
+	m_CurrentOutputSample->SetMediaTime(NULL, NULL);
 
 	if(!m_Preroll)
 	{
@@ -854,7 +859,7 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
             // if we want spdif then we should always be able to connect
             // at 48000 but at other frequencies we probably will have to fall back to
             // PCM
-            if(m_InputSampleRate == 48000)
+            if(m_InputSampleRate == 480000)
             {
                 if(TypeNum > 0) return VFW_S_NO_MORE_ITEMS;
             }
@@ -995,6 +1000,11 @@ HRESULT CAudioDecoder::Activate()
     }
     else
     {
+		if(m_OutputSampleType == OUTSAMPLE_FLOAT && IsClockUpstream())
+		{
+			HRESULT hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
+			CHECK(hr);
+		}
         m_AC3SilenceFrames = 0;
     }
 
@@ -1487,7 +1497,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         hr = GetOutputSampleAndPointer();
         CHECK(hr);
     }
-
+	//m_AC3SilenceFrames = 0;
     if(m_AC3SilenceFrames == 0)
     {
         *m_pDataOut++ = (BYTE)HeaderWord;
