@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.53 2004-11-06 14:36:09 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.54 2004-11-09 17:20:38 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.53  2004/11/06 14:36:09  adcockj
+// VS6 project update
+//
 // Revision 1.52  2004/11/05 16:58:31  adcockj
 // Fix for use with other containers
 //
@@ -244,7 +247,7 @@ CMpegDecoder::CMpegDecoder() :
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::CreatePins\n"));
     
-    m_VideoInPin = new CDSBufferedInputPin;
+    m_VideoInPin = new CDSInputPin;
     if(m_VideoInPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 1"));
