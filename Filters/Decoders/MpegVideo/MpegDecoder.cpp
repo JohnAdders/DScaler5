@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.1 2004-02-06 12:17:16 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.2 2004-02-06 16:41:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //	Copyright (C) 2003 Gabest
@@ -44,6 +44,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/02/06 12:17:16  adcockj
+// Major changes to the Libraries to remove ATL and replace with YACL
+// First draft of Mpeg2 video decoder filter
+// Broken DScalerFilter part converted to new library
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -108,8 +113,6 @@ CMpegDecoder::CMpegDecoder() :
     ClearMediaType(&MT);
 
 	m_sphli = NULL;
-    // \TODO make into parameter
-    m_EnableForcedSubtitles = true;
 	m_spon = TRUE;
 
 	m_rate.Rate = 10000;
@@ -208,6 +211,15 @@ STDMETHODIMP CMpegDecoder::get_Authors(BSTR* Authors)
 
 HRESULT CMpegDecoder::ParamChanged(DWORD dwParamIndex)
 {
+    switch(dwParamIndex)
+    {
+    case DISPLAYFORCEDSUBS:
+        // don't care when this changes
+        break;
+    case FRAMESMOOTH32:
+        // don't care when this changes
+        break;
+    }
     return S_OK;
 }
 
@@ -841,7 +853,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 					{
 						m_fb.rtStart = m_fb.rtStop;
 					}
-					m_fb.rtStop = m_fb.rtStart + m_AvgTimePerFrame * picture->nb_fields / (picture_2nd ? 1 : 2);
+    				m_fb.rtStop = m_fb.rtStart + m_AvgTimePerFrame * picture->nb_fields / (picture_2nd ? 1 : 2);
 
 					switch(m_ChromaType)
 					{
@@ -928,6 +940,16 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 	REFERENCE_TIME rtStart;
 	REFERENCE_TIME rtStop;
 	rtStart = m_LastOutputTime;
+
+    // if we want smooth frames then we simply adjust the stop time by half
+    // a frame so that 3:2 becomes 2.5:2.5
+    // the way we always use the previous stop time as the start time for the next 
+    // frame will mean that we only have to worry about adjusting the 3 field parts.
+    if(GetParamBool(FRAMESMOOTH32) && m_fFilm && m_fb.nb_fields == 3)
+    {
+    	rtStop = m_rate.StartTime + (m_fb.rtStop - m_rate.StartTime - m_AvgTimePerFrame /2) * abs(m_rate.Rate) / 10000;
+    }
+
 	rtStop = m_rate.StartTime + (m_fb.rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
 
 	if(rtStop <= rtStart)

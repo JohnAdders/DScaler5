@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.1 2004-02-06 12:17:16 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.2 2004-02-06 16:41:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -57,7 +57,15 @@ public:
 
 
 BEGIN_PARAM_LIST()
+    DEFINE_PARAM_BOOL(1, L"Display Forced Subtitles")
+    DEFINE_PARAM_BOOL(1, L"3:2 playback smoothing")
 END_PARAM_LIST()
+
+    enum eMpegVideoParams
+    {
+        DISPLAYFORCEDSUBS,
+        FRAMESMOOTH32,
+    };
 
 public:
     // IBaseFilter
@@ -183,7 +191,6 @@ private:
 	AM_PROPERTY_COMPOSIT_ON m_spon;
 	AM_DVD_YUV m_sppal[16];
 	AM_PROPERTY_SPHLI* m_sphli; // temp
-    bool m_EnableForcedSubtitles;
 	class sp_t
 	{
 	public:
