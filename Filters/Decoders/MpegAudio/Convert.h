@@ -87,69 +87,60 @@ static __inline void Convert##BITSINSAMPLE##ToFloat(BYTE*& pOutput, long Sample)
     pOutput += 4; \
 }
 
-// these conversion routines rely on being fed floating
-// samples in the range [-1, 1]
-// adding the magic number 3158737.0 forces values in
-// this range to be represented with the same high dword
-// and a low DWORD value range [0, 0xFFFFFFFF]
-// which can then be truncated to the required length
-
-// \todo could probably optimize with MMX instructions
-
 static __inline void ConvertDoubleTo16(BYTE*& pOutput, double Sample)
 {
-    Sample += 3158737.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
-    
+    long lSample = Sample * (double)(1<<23);
+
     // Dither - add some 2Q triangular noise
-    qwSample.QuadPart += DitherTable[((DitherCounter++)&DITHER_MASK)];
+    lSample += DitherTable[((DitherCounter++)&DITHER_MASK)] >> 8;
 
-    if(qwSample.HighPart > 0x41481968)
+    if(lSample > 0x7FFFFF)
     {
-        qwSample.LowPart = 0xFFFFFFFF;
+        lSample = 0x7FFFFF;
     }
-    else if(qwSample.HighPart < 0x41481968)
+    else if(lSample < -(1<<23))
     {
-        qwSample.LowPart = 0;
+        lSample = -(1<<23);
     }
-    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 16;
-    *pOutput++ = (BYTE)(lSample);
-    *pOutput++ = (BYTE)(lSample>>8);
-}
-
-static __inline void ConvertDoubleTo24(BYTE*& pOutput, double Sample)
-{
-    Sample += 3158736.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
-    
-    if(qwSample.HighPart > 0x41481968)
-    {
-        qwSample.LowPart = 0xFFFFFFFF;
-    }
-    else if(qwSample.HighPart < 0x41481968)
-    {
-        qwSample.LowPart = 0;
-    }
-    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 8;
-    *pOutput++ = (BYTE)(lSample);
     *pOutput++ = (BYTE)(lSample>>8);
     *pOutput++ = (BYTE)(lSample>>16);
 }
 
+static __inline void ConvertDoubleTo24(BYTE*& pOutput, double Sample)
+{
+    long lSample;
+    if(Sample >= 1.0)
+    {
+        lSample = 0x7FFFFFFF;
+    }
+    else if(Sample < -1.0)
+    {
+        lSample = -(1<<31);
+    }
+    else
+    {
+        lSample = Sample * (double)(1<<31);
+    }
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
+    *pOutput++ = (BYTE)(lSample>>24);
+}
+
 static __inline void ConvertDoubleTo32(BYTE*& pOutput, double Sample)
 {
-    Sample += 3158736.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&Sample;
-    
-    if(qwSample.HighPart > 0x41481968)
+    long lSample;
+    if(Sample >= 1.0)
     {
-        qwSample.LowPart = 0xFFFFFFFF;
+        lSample = 0x7FFFFFFF;
     }
-    else if(qwSample.HighPart < 0x41481968)
+    else if(Sample < -1.0)
     {
-        qwSample.LowPart = 0;
+        lSample = -(1<<31);
     }
-    long lSample = qwSample.LowPart - 0x80000000;
+    else
+    {
+        lSample = Sample * (double)(1<<31);
+    }
     *pOutput++ = (BYTE)(lSample);
     *pOutput++ = (BYTE)(lSample>>8);
     *pOutput++ = (BYTE)(lSample>>16);
@@ -158,58 +149,59 @@ static __inline void ConvertDoubleTo32(BYTE*& pOutput, double Sample)
 
 static __inline void ConvertFloatTo16(BYTE*& pOutput, float Sample)
 {
-    double dSample = Sample + 3158736.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
-    
+    long lSample = Sample * (float)(1<<23);
+
     // Dither - add some 2Q triangular noise
-    qwSample.QuadPart += DitherTable[((DitherCounter++)&DITHER_MASK)]; \
+    lSample += DitherTable[((DitherCounter++)&DITHER_MASK)] >> 8;
 
-    if(qwSample.HighPart > 0x41481968)
+    if(lSample > 0x7FFFFF)
     {
-        qwSample.LowPart = 0xFFFFFFFF;
+        lSample = 0x7FFFFF;
     }
-    else if(qwSample.HighPart < 0x41481968)
+    else if(lSample < -(1<<23))
     {
-        qwSample.LowPart = 0;
+        lSample = -(1<<23);
     }
-    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 16;
-    *pOutput++ = (BYTE)(lSample);
-    *pOutput++ = (BYTE)(lSample>>8);
-}
-
-static __inline void ConvertFloatTo24(BYTE*& pOutput, float Sample)
-{
-    double dSample = Sample + 3158736.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
-    
-    if(qwSample.HighPart > 0x41481968)
-    {
-        qwSample.LowPart = 0xFFFFFFFF;
-    }
-    else if(qwSample.HighPart < 0x41481968)
-    {
-        qwSample.LowPart = 0;
-    }
-    long lSample = (long)(qwSample.LowPart - 0x80000000) >> 8;
-    *pOutput++ = (BYTE)(lSample);
     *pOutput++ = (BYTE)(lSample>>8);
     *pOutput++ = (BYTE)(lSample>>16);
 }
 
+static __inline void ConvertFloatTo24(BYTE*& pOutput, float Sample)
+{
+    long lSample;
+    if(Sample >= 1.0)
+    {
+        lSample = 0x7FFFFFFF;
+    }
+    else if(Sample < -1.0)
+    {
+        lSample = -(1<<31);
+    }
+    else
+    {
+        lSample = Sample * (float)(1<<31);
+    }
+
+    *pOutput++ = (BYTE)(lSample>>8);
+    *pOutput++ = (BYTE)(lSample>>16);
+    *pOutput++ = (BYTE)(lSample>>24);
+}
+
 static __inline void ConvertFloatTo32(BYTE*& pOutput, float Sample)
 {
-    double dSample = Sample + 3158736.0;
-    LARGE_INTEGER qwSample = *(LARGE_INTEGER*)&dSample;
-    
-    if(qwSample.HighPart > 0x41481968)
+    long lSample;
+    if(Sample >= 1.0)
     {
-        qwSample.LowPart = 0xFFFFFFFF;
+        lSample = 0x7FFFFFFF;
     }
-    else if(qwSample.HighPart < 0x41481968)
+    else if(Sample < -1.0)
     {
-        qwSample.LowPart = 0;
+        lSample = -(1<<31);
     }
-    long lSample = qwSample.LowPart - 0x80000000;
+    else
+    {
+        lSample = Sample * (float)(1<<31);
+    }
     *pOutput++ = (BYTE)(lSample);
     *pOutput++ = (BYTE)(lSample>>8);
     *pOutput++ = (BYTE)(lSample>>16);
