@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.3 2003-05-01 18:15:17 adcockj Exp $
+// $Id: DScaler.cpp,v 1.4 2003-05-02 10:53:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/01 18:15:17  adcockj
+// Moved IMedaiSeeking to output pin
+//
 // Revision 1.2  2003/05/01 16:19:02  adcockj
 // Changed property pages ready for generic page
 //
@@ -291,14 +294,28 @@ STDMETHODIMP CDScaler::GetParam(DWORD dwParamIndex, MP_DATA *pValue)
     {
         return E_POINTER;
     }
-    // \todo get working
-    return E_NOTIMPL;
+    if(dwParamIndex == 0)
+    {
+        *pValue = 5;
+        return S_OK;
+    }
+    else
+    {
+        return E_INVALIDARG;
+    }
 }
 
 STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
 {
     // \todo get working
-    return E_NOTIMPL;
+    if(dwParamIndex == 0)
+    {
+        return S_OK;
+    }
+    else
+    {
+        return E_INVALIDARG;
+    }
 }
 
 STDMETHODIMP CDScaler::AddEnvelope(DWORD dwParamIndex,DWORD cPoints,MP_ENVELOPE_SEGMENT *ppEnvelope)
@@ -325,20 +342,52 @@ STDMETHODIMP CDScaler::GetParamCount(DWORD *pdwParams)
     {
         return E_POINTER;
     }
-    *pdwParams = 0;
+    *pdwParams = 1;
     return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetParamInfo(DWORD dwParamIndex,MP_PARAMINFO *pInfo)
 {
-    // \todo get working
-    return E_NOTIMPL;
+    if(pInfo == NULL)
+    {
+        return E_POINTER;
+    }
+    if(dwParamIndex == 0)
+    {
+        pInfo->mpType = MPT_INT;
+        pInfo->mopCaps = 0;
+        pInfo->mpdMinValue = -10;
+        pInfo->mpdMaxValue = 20;
+        pInfo->mpdNeutralValue = 0;
+        wcscpy(pInfo->szUnitText, L"Units");
+        wcscpy(pInfo->szLabel, L"Name");
+        return S_OK;
+    }
+    else
+    {
+        return E_INVALIDARG;
+    }
 }
 
 STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
 {
     // \todo get working
-    return E_NOTIMPL;
+    if(ppwchText == NULL)
+    {
+        return E_POINTER;
+    }
+    if(dwParamIndex == 0)
+    {
+        *ppwchText = (WCHAR*)CoTaskMemAlloc(200);
+        if(*ppwchText == NULL) return E_OUTOFMEMORY;
+        wcscpy(*ppwchText, L"Name\0Units\0");
+        return S_OK;
+    }
+    else
+    {
+        return E_INVALIDARG;
+    }
+    return S_OK;
 }
 
 STDMETHODIMP CDScaler::GetNumTimeFormats(DWORD *pdwNumTimeFormats)
