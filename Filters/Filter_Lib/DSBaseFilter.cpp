@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.7 2004-05-25 16:59:30 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.8 2004-07-07 14:09:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/05/25 16:59:30  adcockj
+// fixed issues with new buffered pin
+//
 // Revision 1.6  2004/04/14 16:31:34  adcockj
 // Subpicture fixes, AFD started and minor fixes
 //
@@ -53,7 +56,7 @@ CDSBaseFilter::CDSBaseFilter(LPCWSTR Name, int NumberOfInputPins, int NumberOfOu
 {
     m_State = State_Stopped;
     m_Graph = NULL;
-	m_rtStartTime = 0;
+    m_rtStartTime = 0;
     wcscpy(m_Name, Name);
     m_NumInputPins = NumberOfInputPins;
     m_NumOutputPins = NumberOfOutputPins;
@@ -183,7 +186,7 @@ STDMETHODIMP CDSBaseFilter::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
     LOG(DBGLOG_ALL, ("CDSBaseFilter::JoinFilterGraph\n"));
     if(pGraph != NULL)
     {
-		LoadDefaultsFromRegistry();
+        LoadDefaultsFromRegistry();
 
         // we need the FilterGraph2 interface
         // so that we can use ReconnectEx for dynamic connections
@@ -218,12 +221,12 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
     
     int i;
     
-	FILTER_STATE OldState = m_State;
+    FILTER_STATE OldState = m_State;
     m_State = State_Stopped;
 
-	LockAllPins();
+    LockAllPins();
 
-	if(OldState != State_Stopped)
+    if(OldState != State_Stopped)
     {
         for(i = 0; i < m_NumInputPins; ++i)
         {
@@ -238,8 +241,8 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
         Deactivate();
     }
 
-	UnlockAllPins();
-	LOG(DBGLOG_FLOW, ("CDSBaseFilter::End Stop\n"));
+    UnlockAllPins();
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::End Stop\n"));
 
     return S_OK;
 }
@@ -253,7 +256,7 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
 
     if(m_State == State_Stopped)
     {
-		LockAllPins();
+        LockAllPins();
     
         int i;
         for(i = 0; i < m_NumInputPins; ++i)
@@ -266,13 +269,13 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
         }
         Activate();
 
-		UnlockAllPins();
+        UnlockAllPins();
     }
 
     m_State = State_Paused;
 
 
-	LOG(DBGLOG_FLOW, ("CDSBaseFilter::Pause end\n"));
+    LOG(DBGLOG_FLOW, ("CDSBaseFilter::Pause end\n"));
     return S_OK;
 }
 
@@ -285,7 +288,7 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
 
     if(m_State == State_Stopped)
     {
-		LockAllPins();
+        LockAllPins();
         int i;
         for(i = 0; i < m_NumInputPins; ++i)
         {
@@ -296,12 +299,12 @@ STDMETHODIMP CDSBaseFilter::Run(REFERENCE_TIME tStart)
             m_OutputPins[i]->Activate();
         }
         Activate();
-		UnlockAllPins();
+        UnlockAllPins();
     }
 
     m_State = State_Running;
 
-	m_rtStartTime = tStart;
+    m_rtStartTime = tStart;
 
 
     LOG(DBGLOG_FLOW, ("CDSBaseFilter::Run end\n"));

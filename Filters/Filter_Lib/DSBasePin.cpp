@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.5 2004-04-29 16:16:46 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.6 2004-07-07 14:09:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2004/04/29 16:16:46  adcockj
+// Yet more reconnection fixes
+//
 // Revision 1.4  2004/04/20 16:30:29  adcockj
 // Improved Dynamic Connections
 //
@@ -50,7 +53,7 @@ CDSBasePin::CDSBasePin(PIN_DIRECTION Direction)
     InitMediaType(&m_ConnectedMediaType);
     m_FormatVersion = 0;
     m_Direction = Direction;
-	m_MyMemAlloc = new CInputMemAlloc;
+    m_MyMemAlloc = new CInputMemAlloc;
 }
 
 void CDSBasePin::SetupObject(CDSBaseFilter* Filter, LPWSTR PinId)
@@ -78,8 +81,8 @@ STDMETHODIMP CDSBasePin::Disconnect(void)
     {
         ClearMediaType(&m_ConnectedMediaType);
         m_ConnectedPin.Detach();
-		
-		m_Allocator->Decommit();
+        
+        m_Allocator->Decommit();
         m_Allocator.Detach();
         
         ++m_FormatVersion;
@@ -232,7 +235,7 @@ HRESULT CDSBasePin::SetType(const AM_MEDIA_TYPE *pmt)
     hr = m_Filter->NotifyFormatChange(pmt, this);
     CHECK(hr);
 
-	return hr;
+    return hr;
 }
 
 STDMETHODIMP CDSBasePin::Set(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData)
@@ -255,24 +258,24 @@ STDMETHODIMP CDSBasePin::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWO
 
 HRESULT CDSBasePin::GetConnectedFilterCLSID(CLSID* pClsid)
 {
-	PIN_INFO PinInfo;
-	BOOL RetVal = TRUE;
+    PIN_INFO PinInfo;
+    BOOL RetVal = TRUE;
 
 
-	if(!m_ConnectedPin)
-	{
-		return VFW_E_NOT_CONNECTED;
-	}
+    if(!m_ConnectedPin)
+    {
+        return VFW_E_NOT_CONNECTED;
+    }
 
-	HRESULT hr = m_ConnectedPin->QueryPinInfo(&PinInfo);
-	if(SUCCEEDED(hr))
-	{
-		if(PinInfo.pFilter != NULL)
-		{
-			hr = PinInfo.pFilter->GetClassID(pClsid);
-			PinInfo.pFilter->Release();
-		}
-	}
+    HRESULT hr = m_ConnectedPin->QueryPinInfo(&PinInfo);
+    if(SUCCEEDED(hr))
+    {
+        if(PinInfo.pFilter != NULL)
+        {
+            hr = PinInfo.pFilter->GetClassID(pClsid);
+            PinInfo.pFilter->Release();
+        }
+    }
 
-	return hr;
+    return hr;
 }

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.10 2004-07-01 16:12:47 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.11 2004-07-07 14:09:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.9  2004/05/25 16:59:30  adcockj
 // fixed issues with new buffered pin
 //
@@ -102,12 +106,12 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     // the filter at the other end
     // if this function returns TRUE we are talking to 
     // ourself then error
-	if(AreWeAreTalkingToOurself(pConnector) == TRUE)
-	{
+    if(AreWeAreTalkingToOurself(pConnector) == TRUE)
+    {
         return VFW_E_TYPE_NOT_ACCEPTED;
-	}
+    }
 
-	FixupMediaType((AM_MEDIA_TYPE *)pmt);
+    FixupMediaType((AM_MEDIA_TYPE *)pmt);
 
     if(QueryAccept(pmt) != S_OK)
     {
@@ -123,7 +127,7 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
 
     m_ConnectedPin = pConnector;
 
-	hr = m_Filter->NotifyConnected(this);
+    hr = m_Filter->NotifyConnected(this);
 
     LOG(DBGLOG_ALL, ("CDSInputPin::ReceiveConnection Exit\n"));
     return hr;
@@ -154,7 +158,7 @@ STDMETHODIMP CDSInputPin::EndOfStream(void)
     LOG(DBGLOG_ALL, ("CDSInputPin::EndOfStream\n"));
     HRESULT hr = S_OK;
 
-	// synchronize with Recieve
+    // synchronize with Recieve
     CProtectCode WhileVarInScope(this);
 
     bool Connected(false);
@@ -174,7 +178,7 @@ STDMETHODIMP CDSInputPin::EndOfStream(void)
         if(m_NotifyEvent == NULL)
         {
             // finish off processing
-			hr = m_Filter->SendOutLastSamples(this);
+            hr = m_Filter->SendOutLastSamples(this);
             CHECK(hr);
 
             // send the message downstream
@@ -200,9 +204,9 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CDSInputPin::BeginFlush\n"));
 
-	CProtectCode WhileVarInScope(m_Filter);
+    CProtectCode WhileVarInScope(m_Filter);
 
-	// Sets an internal flag that causes all data-streaming methods to fail
+    // Sets an internal flag that causes all data-streaming methods to fail
     m_Flushing = TRUE;
 
     // pass the Flush downstream
@@ -212,10 +216,10 @@ STDMETHODIMP CDSInputPin::BeginFlush(void)
         if(pPin->m_Direction == PINDIR_OUTPUT && pPin->m_ConnectedPin != NULL)
         {
             HRESULT hr = pPin->m_ConnectedPin->BeginFlush();
-			if(hr == E_FAIL)
-			{
-				hr = S_OK;
-			}
+            if(hr == E_FAIL)
+            {
+                hr = S_OK;
+            }
             CHECK(hr);
         }
     }
@@ -227,10 +231,10 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CDSInputPin::EndFlush\n"));
 
-	CProtectCode WhileVarInScope(m_Filter);
+    CProtectCode WhileVarInScope(m_Filter);
 
     // Make sure we've finished in the processing thread as well
-	CProtectCode WhileVarInScope2(this);
+    CProtectCode WhileVarInScope2(this);
 
     if(m_Block == TRUE)
     {
@@ -240,7 +244,7 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         }
     }
 
-	HRESULT hr =  S_OK;
+    HRESULT hr =  S_OK;
 
     // Calls EndFlush downstream. 
     for(int i(0); i < m_Filter->GetNumPins(); ++i)
@@ -249,10 +253,10 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
         if(pPin->m_Direction == PINDIR_OUTPUT && pPin->m_ConnectedPin != NULL)
         {
             hr = pPin->m_ConnectedPin->EndFlush();
-			if(hr == E_FAIL)
-			{
-				hr = S_OK;
-			}
+            if(hr == E_FAIL)
+            {
+                hr = S_OK;
+            }
             CHECK(hr);
         }
     }
@@ -261,7 +265,7 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
     CHECK(hr);
 
     
-	m_Flushing = FALSE;
+    m_Flushing = FALSE;
     return hr;
 }
 
@@ -356,9 +360,9 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     if(InSampleProperties.pMediaType != NULL)
     {
 
-		LOG(DBGLOG_FLOW, ("Got new media type\n"));
+        LOG(DBGLOG_FLOW, ("Got new media type\n"));
 
-		FixupMediaType(InSampleProperties.pMediaType);
+        FixupMediaType(InSampleProperties.pMediaType);
 
         // this shouldn't ever fail as a good filter will have
         // called this already but I've seen a filter ignore the
@@ -372,16 +376,16 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
         SetType(InSampleProperties.pMediaType);
     }
 
-	// check to see if we are blocked
+    // check to see if we are blocked
     // need to check this before we get each sample
     CheckForBlocking();
 
-	// make sure we don't bother sending nothing down
-	if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
-	{
-		// Send the sample to the filter for processing 
-		hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
-	}
+    // make sure we don't bother sending nothing down
+    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
+    {
+        // Send the sample to the filter for processing 
+        hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
+    }
 
     // make sure that anything that needs to be cleaned up
     // is actually cleaned up
@@ -408,9 +412,9 @@ STDMETHODIMP CDSInputPin::ReceiveMultiple(IMediaSample **InSamples, long nSample
     {
         hr = Receive(InSamples[i]);
         if(FAILED(hr))
-		{
-			return hr;
-		}
+        {
+            return hr;
+        }
         ++(*nSamplesProcessed);
     }
     return hr;
@@ -560,35 +564,35 @@ HRESULT CDSInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPER
 void CDSInputPin::FixupMediaType(AM_MEDIA_TYPE *pmt)
 {
     BITMAPINFOHEADER* BitmapInfo = NULL;
-	LPRECT pSource;
+    LPRECT pSource;
 
-	if(pmt->formattype == FORMAT_VIDEOINFO2)
+    if(pmt->formattype == FORMAT_VIDEOINFO2)
     {
         VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-		pSource = &Format->rcSource; 
+        pSource = &Format->rcSource; 
     }
     else if(pmt->formattype == FORMAT_VideoInfo)
     {
         VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-		pSource = &Format->rcSource; 
+        pSource = &Format->rcSource; 
     }
     else
     {
         return;
     }
 
-	if(pSource->right == 0)
-	{
-		pSource->right = BitmapInfo->biWidth;
-		pSource->bottom = abs(BitmapInfo->biHeight);
-	}
+    if(pSource->right == 0)
+    {
+        pSource->right = BitmapInfo->biWidth;
+        pSource->bottom = abs(BitmapInfo->biHeight);
+    }
 
-	if(BitmapInfo->biSizeImage > BitmapInfo->biHeight * BitmapInfo->biWidth * BitmapInfo->biBitCount / 8U)
-	{
-		BitmapInfo->biWidth = BitmapInfo->biSizeImage / (BitmapInfo->biHeight * BitmapInfo->biBitCount / 8);
-	}
+    if(BitmapInfo->biSizeImage > BitmapInfo->biHeight * BitmapInfo->biWidth * BitmapInfo->biBitCount / 8U)
+    {
+        BitmapInfo->biWidth = BitmapInfo->biSizeImage / (BitmapInfo->biHeight * BitmapInfo->biBitCount / 8);
+    }
 }
 
 void CDSInputPin::CheckForBlocking()
@@ -612,40 +616,40 @@ void CDSInputPin::CheckForBlocking()
 
 BOOL CDSInputPin::AreWeAreTalkingToOurself(IPin* pConnector)
 {
-	PIN_INFO PinInfo;
-	BOOL RetVal = TRUE;
+    PIN_INFO PinInfo;
+    BOOL RetVal = TRUE;
 
     m_SourceType = SOURCE_DEFAULT;
 
-	CLSID MyClassId;
+    CLSID MyClassId;
     HRESULT hr = m_Filter->GetClassID(&MyClassId);
     CHECK(hr);
 
-	hr = pConnector->QueryPinInfo(&PinInfo);
-	if(SUCCEEDED(hr))
-	{
-		if(PinInfo.pFilter != NULL)
-		{
-			CLSID ClassId;
-			hr = PinInfo.pFilter->GetClassID(&ClassId);
-			if(SUCCEEDED(hr))
-			{
-				if(ClassId == MyClassId)
-				{   
-					// if we're talking to ourselves
-					// return TRUE
-    				RetVal = TRUE;
-				}
-				else
-				{
-    				RetVal = FALSE;
-				}
-			}
-			PinInfo.pFilter->Release();
-		}
-	}
+    hr = pConnector->QueryPinInfo(&PinInfo);
+    if(SUCCEEDED(hr))
+    {
+        if(PinInfo.pFilter != NULL)
+        {
+            CLSID ClassId;
+            hr = PinInfo.pFilter->GetClassID(&ClassId);
+            if(SUCCEEDED(hr))
+            {
+                if(ClassId == MyClassId)
+                {   
+                    // if we're talking to ourselves
+                    // return TRUE
+                    RetVal = TRUE;
+                }
+                else
+                {
+                    RetVal = FALSE;
+                }
+            }
+            PinInfo.pFilter->Release();
+        }
+    }
 
-	return RetVal;
+    return RetVal;
 }
 
 HRESULT CDSInputPin::Block(DWORD dwBlockFlags, HANDLE hEvent)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBufferedInputPin.cpp,v 1.2 2004-05-25 16:59:30 adcockj Exp $
+// $Id: DSBufferedInputPin.cpp,v 1.3 2004-07-07 14:09:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/05/25 16:59:30  adcockj
+// fixed issues with new buffered pin
+//
 // Revision 1.1  2004/05/24 06:29:27  adcockj
 // Interim buffer fix
 //
@@ -71,7 +74,7 @@ CDSBufferedInputPin::CDSBufferedInputPin() :
     m_SamplesReadyEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     m_ThreadStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     m_WorkerThread = NULL;
-	m_ThreadRetCode = S_OK;
+    m_ThreadRetCode = S_OK;
     
 }
 
@@ -93,9 +96,9 @@ STDMETHODIMP CDSBufferedInputPin::BeginFlush(void)
     CProtectCode WhileVarInScope2(&m_SamplesLock);
 
     while(!m_Samples.empty())
-	{
-		m_Samples.pop();
-	}
+    {
+        m_Samples.pop();
+    }
 
     return hr;
 }
@@ -104,10 +107,10 @@ STDMETHODIMP CDSBufferedInputPin::EndFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::EndFlush\n"));
 
-	// make sure we are not in ProcessBufferedSamples
-	CProtectCode WhileVarInScope(&m_WorkerThreadLock);
+    // make sure we are not in ProcessBufferedSamples
+    CProtectCode WhileVarInScope(&m_WorkerThreadLock);
     
-	HRESULT hr = CDSInputPin::EndFlush();
+    HRESULT hr = CDSInputPin::EndFlush();
 
     return hr;
 }
@@ -123,7 +126,7 @@ STDMETHODIMP CDSBufferedInputPin::EndOfStream(void)
 
     CProtectCode WhileVarInScope2(&m_SamplesLock);
 
-	m_Samples.push((IMediaSample*)NULL);
+    m_Samples.push((IMediaSample*)NULL);
 
     SetEvent(m_SamplesReadyEvent);
 
@@ -134,10 +137,10 @@ STDMETHODIMP CDSBufferedInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TI
 {
     LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::EndOfStream\n"));
 
-	// make sure we are not in ProcessBufferedSamples
-	CProtectCode WhileVarInScope(&m_WorkerThreadLock);
+    // make sure we are not in ProcessBufferedSamples
+    CProtectCode WhileVarInScope(&m_WorkerThreadLock);
 
-	return CDSInputPin::NewSegment(tStart, tStop, dRate);
+    return CDSInputPin::NewSegment(tStart, tStop, dRate);
 }
 
 
@@ -151,7 +154,7 @@ STDMETHODIMP CDSBufferedInputPin::Receive(IMediaSample *InSample)
     }
     if(m_Flushing == TRUE)
     {
-	    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::Receive flushing\n"));
+        LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::Receive flushing\n"));
         return S_FALSE;
     }
     if(m_Filter->m_State == State_Stopped)
@@ -169,12 +172,12 @@ STDMETHODIMP CDSBufferedInputPin::Receive(IMediaSample *InSample)
     CProtectCode WhileVarInScope2(&m_SamplesLock);
 
     if(m_ThreadRetCode != S_OK)
-	{
-	    LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::Receive error %08x\n", m_ThreadRetCode));
-		return m_ThreadRetCode;
-	}
+    {
+        LOG(DBGLOG_FLOW, ("CDSBufferedInputPin::Receive error %08x\n", m_ThreadRetCode));
+        return m_ThreadRetCode;
+    }
 
-	m_Samples.push(InSample);
+    m_Samples.push(InSample);
 
     SetEvent(m_SamplesReadyEvent);
     
@@ -185,11 +188,11 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
 {
     CDSBufferedInputPin* pThis = (CDSBufferedInputPin*)pParam;
 
-	SetThreadPriority(pThis->m_WorkerThread, THREAD_PRIORITY_HIGHEST);
+    SetThreadPriority(pThis->m_WorkerThread, THREAD_PRIORITY_HIGHEST);
 
     while(1)
     {
-		HRESULT hr = S_OK;
+        HRESULT hr = S_OK;
         DWORD dwWaitResult;
         HANDLE hEvents[2]; 
 
@@ -201,38 +204,38 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
         switch (dwWaitResult) 
         {
             case WAIT_OBJECT_0: 
-				{
-					CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
-					pThis->m_ThreadRetCode = S_FALSE;
-					while(!pThis->m_Samples.empty())
-					{
-						pThis->m_Samples.pop();
-					}
-				}
-				LOG(DBGLOG_FLOW, ("ProcessingThread Exit by event\n"));
-				ExitThread(0);
+                {
+                    CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
+                    pThis->m_ThreadRetCode = S_FALSE;
+                    while(!pThis->m_Samples.empty())
+                    {
+                        pThis->m_Samples.pop();
+                    }
+                }
+                LOG(DBGLOG_FLOW, ("ProcessingThread Exit by event\n"));
+                ExitThread(0);
                 break; 
             case WAIT_OBJECT_0 + 1:
                 hr = pThis->ProcessBufferedSamples();
-				if(FAILED(hr))
-				{
-					if(hr == VFW_E_NOT_COMMITTED)
-					{
-						{
-							CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
-							pThis->m_ThreadRetCode = hr;
-						}
-						ExitThread(0);
-					}
-				}
+                if(FAILED(hr))
+                {
+                    if(hr == VFW_E_NOT_COMMITTED)
+                    {
+                        {
+                            CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
+                            pThis->m_ThreadRetCode = hr;
+                        }
+                        ExitThread(0);
+                    }
+                }
                 break;
             default: 
-				{
-					CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
-					pThis->m_ThreadRetCode = E_UNEXPECTED;
-				}
-				LOG(DBGLOG_FLOW, ("ProcessingThread Exit by unexpected\n"));
-				ExitThread(0); 
+                {
+                    CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
+                    pThis->m_ThreadRetCode = E_UNEXPECTED;
+                }
+                LOG(DBGLOG_FLOW, ("ProcessingThread Exit by unexpected\n"));
+                ExitThread(0); 
                 break;
         }
     }
@@ -243,7 +246,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSamples()
     long size = 1;
     HRESULT hr = S_OK;
 
-	CProtectCode WhileVarInScope(&m_WorkerThreadLock);
+    CProtectCode WhileVarInScope(&m_WorkerThreadLock);
     LOG(DBGLOG_ALL, ("CDSBufferedInputPin::ProcessBufferedSamples\n"));
 
     while(size > 0 && SUCCEEDED(hr))
@@ -251,7 +254,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSamples()
         SI(IMediaSample) InSample;
         
         {
-    	    CProtectCode WhileVarInScope(&m_SamplesLock);
+            CProtectCode WhileVarInScope(&m_SamplesLock);
             size = m_Samples.size();
             if(size > 0)
             {
@@ -264,37 +267,37 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSamples()
         {
             hr = ProcessBufferedSample(InSample.GetNonAddRefedInterface());
         }
-		else
-		{
-			hr = CDSInputPin::EndOfStream();
-		}
+        else
+        {
+            hr = CDSInputPin::EndOfStream();
+        }
 
-		if(WaitForSingleObject(m_ThreadStopEvent, 0) != WAIT_TIMEOUT)
-		{
-			hr = E_UNEXPECTED;
-		}
+        if(WaitForSingleObject(m_ThreadStopEvent, 0) != WAIT_TIMEOUT)
+        {
+            hr = E_UNEXPECTED;
+        }
 
         {
-    	    CProtectCode WhileVarInScope(&m_SamplesLock);
+            CProtectCode WhileVarInScope(&m_SamplesLock);
             size = m_Samples.size();
-			if(size == 0)
-			{
-			    ResetEvent(m_SamplesReadyEvent);
-				return hr;
+            if(size == 0)
+            {
+                ResetEvent(m_SamplesReadyEvent);
+                return hr;
 
-			}
+            }
         }
     }
 
-	{
-		LogBadHRESULT(hr, __FILE__, __LINE__);
-		CProtectCode WhileVarInScope(&m_SamplesLock);
-		while(!m_Samples.empty())
-		{
-			m_Samples.pop();
-		}
-		ResetEvent(m_SamplesReadyEvent);
-	}
+    {
+        LogBadHRESULT(hr, __FILE__, __LINE__);
+        CProtectCode WhileVarInScope(&m_SamplesLock);
+        while(!m_Samples.empty())
+        {
+            m_Samples.pop();
+        }
+        ResetEvent(m_SamplesReadyEvent);
+    }
 
     return hr;
 }
@@ -324,7 +327,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSample(IMediaSample* InSample)
     // a NULL means the type is the same as last time
     if(InSampleProperties.pMediaType != NULL)
     {
-		FixupMediaType(InSampleProperties.pMediaType);
+        FixupMediaType(InSampleProperties.pMediaType);
 
         // this shouldn't ever fail as a good filter will have
         // called this already but I've seen a filter ignore the
@@ -338,16 +341,16 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSample(IMediaSample* InSample)
         SetType(InSampleProperties.pMediaType);
     }
 
-	// check to see if we are blocked
+    // check to see if we are blocked
     // need to check this before we get each sample
     CheckForBlocking();
 
-	// make sure we don't bother sending nothing down
-	if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
-	{
-		// Send the sample to the filter for processing 
-		hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
-	}
+    // make sure we don't bother sending nothing down
+    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
+    {
+        // Send the sample to the filter for processing 
+        hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
+    }
 
     // make sure that anything that needs to be cleaned up
     // is actually cleaned up
@@ -374,7 +377,7 @@ HRESULT CDSBufferedInputPin::Activate()
 
     ResetEvent(m_ThreadStopEvent);
     ResetEvent(m_SamplesReadyEvent);
-	m_ThreadRetCode = S_OK;
+    m_ThreadRetCode = S_OK;
 
     m_WorkerThread = CreateThread(NULL, 0, 
         (LPTHREAD_START_ROUTINE) ProcessingThread, 
@@ -393,15 +396,15 @@ HRESULT CDSBufferedInputPin::Deactivate()
     HRESULT hr = CDSInputPin::Deactivate();
     CHECK(hr);
 
-	DWORD dwWaitResult = WaitForSingleObject(m_WorkerThread, 100);
+    DWORD dwWaitResult = WaitForSingleObject(m_WorkerThread, 100);
 
-	if(dwWaitResult == WAIT_TIMEOUT)
-	{
-		TerminateThread(m_WorkerThread, 0);
-	}
+    if(dwWaitResult == WAIT_TIMEOUT)
+    {
+        TerminateThread(m_WorkerThread, 0);
+    }
 
-	CloseHandle(m_WorkerThread);
-	m_WorkerThread = NULL;
+    CloseHandle(m_WorkerThread);
+    m_WorkerThread = NULL;
 
     return hr;
 }

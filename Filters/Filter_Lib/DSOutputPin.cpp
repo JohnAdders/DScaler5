@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.13 2004-07-01 16:12:47 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.14 2004-07-07 14:09:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/07/01 16:12:47  adcockj
+// First attempt at better handling of audio when the output is connected to a
+// filter that can't cope with dynamic changes.
+//
 // Revision 1.12  2004/05/06 06:38:07  adcockj
 // Interim fixes for connection and PES streams
 //
@@ -150,7 +154,7 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 
     ClearMediaType(&ProposedType);
 
-	hr = m_Filter->NotifyConnected(this);
+    hr = m_Filter->NotifyConnected(this);
 
     if(FAILED(hr))
     {
@@ -186,11 +190,11 @@ STDMETHODIMP CDSOutputPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 
 STDMETHODIMP CDSOutputPin::Disconnect(void)
 {
-	HRESULT hr = CDSBasePin::Disconnect();
-	CHECK(hr);
-	m_MemInputPin.Detach();
-	m_PinConnection.Detach();
-	return hr;
+    HRESULT hr = CDSBasePin::Disconnect();
+    CHECK(hr);
+    m_MemInputPin.Detach();
+    m_PinConnection.Detach();
+    return hr;
 }
 
 
@@ -255,8 +259,8 @@ void CDSOutputPin::InternalDisconnect()
 
 STDMETHODIMP CDSOutputPin::GetLatency(REFERENCE_TIME *prtLatency)
 {
-	*prtLatency = 400000;
-	return S_OK;
+    *prtLatency = 400000;
+    return S_OK;
 }
 
 
@@ -268,42 +272,42 @@ STDMETHODIMP CDSOutputPin::GetLatency(REFERENCE_TIME *prtLatency)
 
 STDMETHODIMP CDSOutputPin::GetPushSourceFlags(ULONG *pFlags)
 {
-	HRESULT hr =  S_OK;
-	GETPUSHSOURCE
-	if(PushSource)
-	{
-		*pFlags = 0;
-	}
-	else
-	{
-		*pFlags = AM_PUSHSOURCECAPS_NOT_LIVE;
-	}
-	return hr;
+    HRESULT hr =  S_OK;
+    GETPUSHSOURCE
+    if(PushSource)
+    {
+        *pFlags = 0;
+    }
+    else
+    {
+        *pFlags = AM_PUSHSOURCECAPS_NOT_LIVE;
+    }
+    return hr;
 }
 
 STDMETHODIMP CDSOutputPin::SetPushSourceFlags(ULONG Flags)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDSOutputPin::SetStreamOffset(REFERENCE_TIME rtOffset)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDSOutputPin::GetStreamOffset(REFERENCE_TIME *prtOffset)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDSOutputPin::GetMaxStreamOffset(REFERENCE_TIME *prtMaxOffset)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 STDMETHODIMP CDSOutputPin::SetMaxStreamOffset(REFERENCE_TIME rtMaxOffset)
 {
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 
@@ -438,40 +442,40 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 
     DWORD dwFlags = PrevFrameSkipped ? AM_GBF_PREVFRAMESKIPPED : 0;
 
-	// get a sample to output to
-	HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
+    // get a sample to output to
+    HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
 
-	if(*OutSample == NULL)
-	{
-		return VFW_E_WRONG_STATE;
-	}
+    if(*OutSample == NULL)
+    {
+        return VFW_E_WRONG_STATE;
+    }
 
-	// check for media type changes on the output side
-	// a NULL means the type is the same as last time
+    // check for media type changes on the output side
+    // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* pMediaType = NULL;
 
     hr = (*OutSample)->GetMediaType(&pMediaType);
 
-	CHECK(hr);
+    CHECK(hr);
 
-	if(hr == S_OK && pMediaType != NULL)
-	{
-	    LOG(DBGLOG_ALL, ("Got new media type from renderer\n"));
+    if(hr == S_OK && pMediaType != NULL)
+    {
+        LOG(DBGLOG_ALL, ("Got new media type from renderer\n"));
 
-		hr = SetType(pMediaType);
-		CHECK(hr);
+        hr = SetType(pMediaType);
+        CHECK(hr);
 
         FreeMediaType(pMediaType);
-		return S_FALSE;
-	}
-	else
-	{
-		return S_OK;
-	}
+        return S_FALSE;
+    }
+    else
+    {
+        return S_OK;
+    }
 }
 
 HRESULT CDSOutputPin::Activate()
@@ -480,23 +484,23 @@ HRESULT CDSOutputPin::Activate()
     if(m_Allocator != NULL)
     {
         hr = m_Allocator->Commit();
-		if(hr == E_OUTOFMEMORY)
-		{
-		    LOG(DBGLOG_FLOW, ("Out of memory - will try and reduce buffer count\n"));
+        if(hr == E_OUTOFMEMORY)
+        {
+            LOG(DBGLOG_FLOW, ("Out of memory - will try and reduce buffer count\n"));
 
-			ALLOCATOR_PROPERTIES Properties;
-			ZeroMemory(&Properties, sizeof(ALLOCATOR_PROPERTIES));
-			m_Allocator->GetProperties(&Properties);
-			while(hr == E_OUTOFMEMORY && Properties.cBuffers > 1)
-			{
-				Properties.cBuffers--;
-				ALLOCATOR_PROPERTIES ActualProperties;
-				hr = m_Allocator->SetProperties(&Properties, &ActualProperties);
-				CHECK(hr)
+            ALLOCATOR_PROPERTIES Properties;
+            ZeroMemory(&Properties, sizeof(ALLOCATOR_PROPERTIES));
+            m_Allocator->GetProperties(&Properties);
+            while(hr == E_OUTOFMEMORY && Properties.cBuffers > 1)
+            {
+                Properties.cBuffers--;
+                ALLOCATOR_PROPERTIES ActualProperties;
+                hr = m_Allocator->SetProperties(&Properties, &ActualProperties);
+                CHECK(hr)
 
-				hr = m_Allocator->Commit();
-			}
-		}
+                hr = m_Allocator->Commit();
+            }
+        }
     }
     return hr;
 }
@@ -515,9 +519,9 @@ HRESULT CDSOutputPin::Deactivate()
 HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
     HRESULT hr = S_OK;
-	bool NeedToCommit = false;
+    bool NeedToCommit = false;
 
-	// if we haven't already choosen an allocator
+    // if we haven't already choosen an allocator
     if(m_Allocator == NULL)
     {
         // ask the conencted filter for it's allocator
@@ -532,18 +536,18 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
             }
             m_Allocator = m_MyMemAlloc;
         }
-		if(m_Filter->m_State != State_Stopped)
-		{
-			NeedToCommit = true;
-		}
+        if(m_Filter->m_State != State_Stopped)
+        {
+            NeedToCommit = true;
+        }
     }
-	else
-	{
+    else
+    {
         hr = m_Allocator->Decommit();
         CHECK(hr);
 
-		NeedToCommit = true;
-	}
+        NeedToCommit = true;
+    }
 
     // lets try and negotiate a sensible set of requirements
     // try to allocate the settings the renderer has asked for
@@ -622,11 +626,11 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         m_PinConnection = pReceivePin;
     }
 
-	if(NeedToCommit)
-	{
+    if(NeedToCommit)
+    {
         hr = m_Allocator->Commit();
         CHECK(hr);
-	}
+    }
 
     return S_OK;
 }
