@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,5,0
- PRODUCTVERSION 0,0,5,0
+ FILEVERSION 0,0,6,0
+ PRODUCTVERSION 0,0,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,13 +72,13 @@ BEGIN
             VALUE "Comments", "This file is licensed under the LGPL"
             VALUE "CompanyName", "DScaler Team"
             VALUE "FileDescription", "GenDMOProp Module"
-            VALUE "FileVersion", "0, 0, 5, 0"
+            VALUE "FileVersion", "0, 0, 6, 0"
             VALUE "InternalName", "GenDMOProp"
-            VALUE "LegalCopyright", "Copyright 2004 John Adcock et al"
-            VALUE "LegalTrademarks", "(c) 2004 John Adcock"
+            VALUE "LegalCopyright", "Copyright 2005 John Adcock et al"
+            VALUE "LegalTrademarks", "(c) 2005 John Adcock"
             VALUE "OriginalFilename", "GenDMOProp.DLL"
             VALUE "ProductName", "GenDMOProp Module"
-            VALUE "ProductVersion", "0, 0, 5, 0"
+            VALUE "ProductVersion", "0, 0, 6, 0"
         END
     END
     BLOCK "VarFileInfo"

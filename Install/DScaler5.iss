@@ -1,5 +1,5 @@
 ;////////////////////////////////////////////////////////////////////////////
-;// $Id: DScaler5.iss,v 1.3 2004-07-11 15:29:23 adcockj Exp $
+;// $Id: DScaler5.iss,v 1.4 2005-02-26 14:00:25 adcockj Exp $
 ;/////////////////////////////////////////////////////////////////////////////
 ;// Copyright (c) 2002 John Adcock.  All rights reserved.
 ;/////////////////////////////////////////////////////////////////////////////
@@ -18,6 +18,9 @@
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.3  2004/07/11 15:29:23  adcockj
+;// Updated install and help
+;//
 ;// Revision 1.2  2004/04/14 16:29:26  adcockj
 ;// Updated instaler for help and to latest version of Innosetup
 ;//
@@ -41,7 +44,7 @@ AllowNoIcons=yes
 LicenseFile=gpl.rtf
 AppMutex=DScaler5
 ;required for installing the driver on NT platforms
-AdminPrivilegesRequired=yes
+PrivilegesRequired=admin
 DisableStartupPrompt=yes
 
 
@@ -49,7 +52,7 @@ DisableStartupPrompt=yes
 [Messages]
 BeveledLabel=DScaler 5
 WizardLicense=GPL License Agreement
-LicenseLabel2=Do you want to continue to install [name]? If you choose No, Setup will close.
+LicenseLabel3=Do you want to continue to install [name]? If you choose No, Setup will close.
 WizardInfoBefore=Warning
 InfoBeforeLabel=Please read the following important warning before continuing.
 InfoBeforeClickLabel=When you are ready and happy to continue with Setup, click Next.
