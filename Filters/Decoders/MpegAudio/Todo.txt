@@ -6,8 +6,6 @@ New functionality to add
 
 - Support for post processing
 - Support for varying the output format based on user preference
-- Decent dithering when down-sampling
-- use fast double to long conversion using bias of 3158736
 - Support for getting PCM output to SPDIF directly using WAVE_FORMAT_DOLBY_AC3_SPDIF type
 
 Issues to think about
