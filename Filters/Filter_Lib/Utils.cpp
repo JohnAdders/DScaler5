@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: Utils.cpp,v 1.9 2004-09-10 15:35:57 adcockj Exp $
+// $Id: Utils.cpp,v 1.10 2004-09-13 17:14:53 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2004/09/10 15:35:57  adcockj
+// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
+//
 // Revision 1.8  2004/07/23 16:25:07  adcockj
 // Fix issues with changing buffer size with wave renderer to hopefully fix DTS problem
 //
@@ -351,6 +354,13 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
                 {
                     LOG(LogLevel, (" ControllFlags: Unknown (%lu)",pHeader2->dwControlFlags));
                 }
+            }
+            if(MediaType->formattype == FORMAT_MPEG2_VIDEO)
+            {
+                MPEG2VIDEOINFO* pHeaderMpeg = (MPEG2VIDEOINFO*)MediaType->pbFormat;
+                LOG(LogLevel, (" Mpeg Flags: %lu\n", pHeaderMpeg->dwFlags));
+
+
             }
         }
         //BITMAPINFOHEADER
