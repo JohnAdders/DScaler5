@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.25 2004-07-26 17:08:00 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.26 2004-07-26 17:24:43 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.25  2004/07/26 17:08:00  adcockj
+// Force use of fixed size output buffers to work around issues with Wave renderer
+//
 // Revision 1.24  2004/07/23 16:25:07  adcockj
 // Fix issues with changing buffer size with wave renderer to hopefully fix DTS problem
 //
@@ -179,6 +182,9 @@ CAudioDecoder::CAudioDecoder() :
     m_CanReconnect = false;
     m_DownSample = false;
 	m_Preroll = false;
+    m_BytesLeftInBuffer = 0;
+    m_pDataOut = NULL;
+    m_BufferSizeAtFrameStart = 0;
     
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
@@ -920,6 +926,8 @@ HRESULT CAudioDecoder::Deactivate()
 
     m_IsDiscontinuity = false; 
 
+    Flush(m_AudioInPin);
+
     return S_OK;
 }
 
@@ -977,6 +985,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         m_InputSampleRate = wfe->nSamplesPerSec;
         m_IsDiscontinuity = true;
         m_NeedToAttachFormat = true;
+        Flush(m_AudioInPin);
         
         // cope with dynamic format changes
         // these can happen during DVD playback
