@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.34 2004-07-23 21:00:12 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.35 2004-07-28 16:32:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.34  2004/07/23 21:00:12  adcockj
+// Fixed compilation problem in VS6
+//
 // Revision 1.33  2004/07/21 15:05:24  adcockj
 // Fixed some issues with ff & rew
 //
@@ -893,7 +896,7 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             }
             if(mvih->dwFlags & AMMPEG2_SourceIsLetterboxed)
             {
-                LOG(DBGLOG_FLOW, ("L Sent\n"));
+                LOG(DBGLOG_FLOW, ("Letterboxed Sent\n"));
                 m_LetterBoxed = true;
             }
         }
@@ -1297,7 +1300,6 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             return hr;
         }
         Props.tStart = rtStart;
-        //Props.tStop = rtStop;
 
         if(m_IsDiscontinuity || fRepeatLast || m_NeedToAttachFormat)
         {
@@ -1312,20 +1314,27 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             Props.dwSampleFlags |= AM_SAMPLE_TIMEDISCONTINUITY;
         }
         Props.dwSampleFlags |= AM_SAMPLE_TIMEVALID;
-        //Props.dwSampleFlags |= AM_SAMPLE_STOPVALID;
         Props.dwSampleFlags |= AM_SAMPLE_SPLICEPOINT;
 
-        if(m_CurrentPicture->m_NumFields == 3)
-            if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
-                Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD;
+        // send video flags to VMR only
+        // causes wierd strobing effect on film otherwise
+        if(m_ConnectedToOut == VMR7_OUTFILTER || m_ConnectedToOut == VMR9_OUTFILTER)
+        {
+            if(m_CurrentPicture->m_NumFields == 3)
+                if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
+                    Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST | AM_VIDEO_FLAG_REPEAT_FIELD;
+                else
+                    Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_REPEAT_FIELD;
             else
-                Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_REPEAT_FIELD;
+                if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
+                    Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
+                else
+                    Props.dwTypeSpecificFlags = 0;
+        }
         else
-            if(m_CurrentPicture->m_Flags&PIC_FLAG_TOP_FIELD_FIRST)
-                Props.dwTypeSpecificFlags = AM_VIDEO_FLAG_FIELD1FIRST;
-            else
-                Props.dwTypeSpecificFlags = 0;
-
+        {
+            Props.dwTypeSpecificFlags = 0;
+        }
 
         // tell the next filter that this is film
         if(m_NextFrameDeint == DIWeave)

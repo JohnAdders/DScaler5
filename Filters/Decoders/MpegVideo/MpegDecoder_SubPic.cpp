@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.10 2004-07-07 14:07:07 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.11 2004-07-28 16:32:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,11 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.10  2004/07/07 14:07:07  adcockj
+// Added ATSC subtitle support
+// Removed tabs
+// Fixed film flag handling of progressive frames
+//
 // Revision 1.9  2004/04/14 16:31:34  adcockj
 // Subpicture fixes, AFD started and minor fixes
 //
@@ -290,9 +295,12 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
         DWORD offset2;
         if(!DecodeSubpic(m_SubPicureList.back(), sphli, offset1, offset2))
         {
-            LOG(DBGLOG_ALL,("Refresh Image\n"));
             CProtectCode WhileVarInScope(&m_DeliverLock);
-            Deliver(true);
+            if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart))
+            {
+                LOG(DBGLOG_ALL,("Refresh Image\n"));
+                Deliver(true);
+            }
         }
     }
 

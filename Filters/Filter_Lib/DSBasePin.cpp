@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBasePin.cpp,v 1.7 2004-07-16 16:03:20 adcockj Exp $
+// $Id: DSBasePin.cpp,v 1.8 2004-07-28 16:32:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2004/07/16 16:03:20  adcockj
+// Fixed compilation issues under .NET
+//
 // Revision 1.6  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -122,6 +125,8 @@ STDMETHODIMP CDSBasePin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
     {
         return E_POINTER;
     }
+
+    ZeroMemory(pmt, sizeof(AM_MEDIA_TYPE));
 
     if(m_ConnectedPin != NULL)
     {
