@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.4 2003-05-06 07:01:05 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.5 2003-05-07 16:27:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2003/05/06 07:01:05  adcockj
+// Fixes for crashing with multiple pages
+//
 // Revision 1.3  2003/05/02 15:52:25  adcockj
 // Initial limited version of Generic prop page
 //
@@ -49,14 +52,6 @@ CGenDMOPropPage::CGenDMOPropPage()
 
 CGenDMOPropPage::~CGenDMOPropPage() 
 {
-    m_ListBox.Detach();
-    m_EditBox.Detach();
-    m_CheckBox.Detach();
-    m_Slider.Detach();
-    m_Scrollbar.Detach();
-    m_Combo.Detach();
-    Detach();
-
     for(DWORD i(0); i < m_NumParams; ++i)
     {
         CoTaskMemFree(m_ParamTexts[i]);
@@ -70,12 +65,32 @@ CGenDMOPropPage::~CGenDMOPropPage()
     m_ParamInfos = NULL;
 }
 
+STDMETHODIMP CGenDMOPropPage::Deactivate()
+{
+    // as a side effect this updates the
+    // values from the controls before 
+    // we destroy the window
+    SetDirty(HasAnythingChanged());
+
+    m_ListBox.Detach();
+    m_EditBox.Detach();
+    m_CheckBox.Detach();
+    m_Slider.Detach();
+    m_Scrollbar.Detach();
+    m_Combo.Detach();
+
+    return IPropertyPageImpl<CGenDMOPropPage>::Deactivate();
+}
+
 STDMETHODIMP CGenDMOPropPage::Apply(void)
 {
 	ATLTRACE(_T("CGenDMOPropPage::Apply\n"));
-    
-    GetValueFromControls();
 
+    if(IsWindow())
+    {
+        GetValueFromControls();
+    }
+    
 	for (DWORD i(0); i < m_NumParams; ++i)
 	{
         MP_DATA CurrentValue;
@@ -102,6 +117,47 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
 
     if(m_MediaParamInfo != NULL && m_MediaParams != NULL)
     {
+        // How many parameters have we got
+        HRESULT hr = m_MediaParamInfo->GetParamCount(&m_NumParams);
+        if(FAILED(hr)) return hr;
+    
+        // if there are no parameters then just return
+        if(m_NumParams == 0)
+        {
+            m_Params = NULL;
+            m_ParamInfos = NULL;
+            return S_OK;
+        }
+
+        // allocate enough memory for the information structures
+        m_Params = (MP_DATA*)CoTaskMemAlloc(m_NumParams * sizeof(MP_DATA));
+        if(m_Params == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+        m_ParamInfos = (MP_PARAMINFO*)CoTaskMemAlloc(m_NumParams * sizeof(MP_PARAMINFO));
+        if(m_ParamInfos == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+        m_ParamTexts = (WCHAR**)CoTaskMemAlloc(m_NumParams * sizeof(WCHAR*));
+        if(m_ParamTexts == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+
+        // go and get the current state and information
+        // and load up the names into the list box
+        for(DWORD i(0); i < m_NumParams; ++i)
+        {
+            hr = m_MediaParamInfo->GetParamInfo(i, &m_ParamInfos[i]);
+            if(FAILED(hr)) return hr;
+            hr = m_MediaParams->GetParam(i, &m_Params[i]);
+            if(FAILED(hr)) return hr;
+            hr = m_MediaParamInfo->GetParamText(i, &m_ParamTexts[i]);
+            if(FAILED(hr)) return hr;
+        }
+
         return S_OK;
     }
     else
@@ -134,48 +190,10 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
     m_Scrollbar.ShowWindow(SW_HIDE);
     m_Combo.ShowWindow(SW_HIDE);
 
-
+    // load up the names into the list box
     m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
-
-    // How many parameters have we got
-    hr = m_MediaParamInfo->GetParamCount(&m_NumParams);
-    if(FAILED(hr)) return hr;
-    
-    // if there are no parameters then just return
-    if(m_NumParams == 0)
-    {
-        m_Params = NULL;
-        m_ParamInfos = NULL;
-        return S_OK;
-    }
-
-    // allocate enough memory for the information structures
-    m_Params = (MP_DATA*)CoTaskMemAlloc(m_NumParams * sizeof(MP_DATA));
-    if(m_Params == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-    m_ParamInfos = (MP_PARAMINFO*)CoTaskMemAlloc(m_NumParams * sizeof(MP_PARAMINFO));
-    if(m_ParamInfos == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-    m_ParamTexts = (WCHAR**)CoTaskMemAlloc(m_NumParams * sizeof(WCHAR*));
-    if(m_ParamTexts == NULL)
-    {
-        return E_OUTOFMEMORY;
-    }
-
-    // go and get the current state and information
-    // and load up the names into the list box
     for(DWORD i(0); i < m_NumParams; ++i)
     {
-        hr = m_MediaParamInfo->GetParamInfo(i, &m_ParamInfos[i]);
-        if(FAILED(hr)) return hr;
-        hr = m_MediaParams->GetParam(i, &m_Params[i]);
-        if(FAILED(hr)) return hr;
-        hr = m_MediaParamInfo->GetParamText(i, &m_ParamTexts[i]);
-        if(FAILED(hr)) return hr;
         SendMessageW(m_ListBox.m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
     }
     m_CurrentParam = 0;

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.4 2003-05-06 07:01:05 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.5 2003-05-07 16:27:03 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -64,6 +64,7 @@ END_MSG_MAP()
 	STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 	STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
+	STDMETHOD(Deactivate)(void);
     BOOL HasAnythingChanged();
     void SetDirty(BOOL bDirty);
 
