@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.1 2005-04-14 11:21:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.7  2004/08/06 08:38:54  adcockj
 // Added optional YV12 output type
 //

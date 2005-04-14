@@ -1,5 +1,5 @@
 ;///////////////////////////////////////////////////////////////////////////////
-;// $Id: a_yuv2yuy2.asm,v 1.1 2004-10-28 15:52:24 adcockj Exp $
+;// $Id: a_yuv2yuy2.asm,v 1.1 2005-04-14 11:21:07 adcockj Exp $
 ;///////////////////////////////////////////////////////////////////////////////
 ;//	This program is free software; you can redistribute it and/or modify
 ;//	it under the terms of the GNU General Public License as published by
@@ -28,6 +28,9 @@
 ;// CVS Log
 ;//
 ;// $Log: not supported by cvs2svn $
+;// Revision 1.1  2004/10/28 15:52:24  adcockj
+;// Moved video output pin code into new class
+;//
 ;// Revision 1.2  2004/08/06 08:38:54  adcockj
 ;// Added optional YV12 output type
 ;//

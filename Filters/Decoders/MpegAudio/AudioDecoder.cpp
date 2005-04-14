@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.51 2005-03-20 14:17:34 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.52 2005-04-14 11:21:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.51  2005/03/20 14:17:34  adcockj
+// Better debug logging
+//
 // Revision 1.50  2005/03/08 13:22:02  adcockj
 // Added connection type option
 //
@@ -872,7 +875,8 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 		rtStop += DelayMs * 10000;
 	}
 
-#ifdef _NOT_DEFINED_
+// blocked out code for monitoring current graph clock.
+#ifndef _NOT_DEFINED_
 	REFERENCE_TIME Now = 0;
     static REFERENCE_TIME Last = 0;
     LARGE_INTEGER Freq;
@@ -883,11 +887,10 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 
     m_RefClock->GetTime(&Now);
 
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d - %010I64d - %010I64d\n", rtStart, rtStart, Now - m_rtStartTime, rtStop));
+    LOG(DBGLOG_FLOW, ("Times - %010I64d - %010I64d - %010I64d\n", Now - m_rtStartTime, rtStart, rtStop));
     Last = Now;
     Last2 = Now2;
 #endif
-
 
 	if(!m_Preroll && rtStop > 0)
 	{

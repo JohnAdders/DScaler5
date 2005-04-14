@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToRGB.cpp,v 1.1 2004-10-28 15:52:24 adcockj Exp $
+// $Id: PlanarYUVToRGB.cpp,v 1.1 2005-04-14 11:21:07 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  This file based on code taken from vd.cpp in the guliverkli project
@@ -29,6 +29,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/10/28 15:52:24  adcockj
+// Moved video output pin code into new class
+//
 // Revision 1.3  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
