@@ -41,7 +41,7 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\Common" /I "..\..\GenDMOProp" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "NOLOGGING" /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O2 /I "..\..\Common" /I "..\..\GenDMOProp" /I "..\Filter_Lib" /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /D "NOLOGGING" /Yu"stdafx.h" /FD /c
 # ADD BASE RSC /l 0x809 /d "NDEBUG"
 # ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -64,7 +64,7 @@ LIB32=link.exe -lib
 # PROP Intermediate_Dir "Debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\..\Common" /I "..\..\GenDMOProp" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\..\Common" /I "..\..\GenDMOProp" /I "..\Filter_Lib" /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /FR /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE RSC /l 0x809 /d "_DEBUG"
 # ADD RSC /l 0x809 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -178,86 +178,7 @@ InputName=a_yuvtable
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\Common\CPUID.asm
-
-!IF  "$(CFG)" == "VideoOutPin - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=..\..\Common\CPUID.asm
-InputName=CPUID
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "VideoOutPin - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=..\..\Common\CPUID.asm
-InputName=CPUID
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSBaseFilter.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSBasePin.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSBufferedInputPin.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSInputPin.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSOutputPin.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSUtil.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\DSVideoOutPin.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\EnumMediaTypes.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\EnumPins.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\InputMemAlloc.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaBufferWrapper.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaTypes.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MoreUuids.cpp
 # End Source File
 # Begin Source File
 
@@ -272,65 +193,13 @@ SOURCE=.\PlanarYUVToYUY2.cpp
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
-# Begin Source File
-
-SOURCE=.\Utils.cpp
-# End Source File
 # End Group
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=.\DSBaseFilter.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSBasePin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSBufferedInputPin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSInputPin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSOutputPin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\DSUtil.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\DSVideoOutPin.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\EnumMediaTypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\EnumPins.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\InputMemAlloc.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaBufferWrapper.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\MediaTypes.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\MoreUuids.h
 # End Source File
 # Begin Source File
 
@@ -343,10 +212,6 @@ SOURCE=.\PlanarYUVToYUY2.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\Utils.h
 # End Source File
 # End Group
 # Begin Source File

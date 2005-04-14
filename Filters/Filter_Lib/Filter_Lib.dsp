@@ -85,99 +85,6 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=.\a_yuv2rgb.asm
-
-!IF  "$(CFG)" == "Filter_Lib - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuv2rgb.asm
-InputName=a_yuv2rgb
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Filter_Lib - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuv2rgb.asm
-InputName=a_yuv2rgb
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\a_yuv2yuy2.asm
-
-!IF  "$(CFG)" == "Filter_Lib - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuv2yuy2.asm
-InputName=a_yuv2yuy2
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Filter_Lib - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuv2yuy2.asm
-InputName=a_yuv2yuy2
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
-SOURCE=.\a_yuvtable.asm
-
-!IF  "$(CFG)" == "Filter_Lib - Win32 Release"
-
-# Begin Custom Build
-IntDir=.\Release
-InputPath=.\a_yuvtable.asm
-InputName=a_yuvtable
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ELSEIF  "$(CFG)" == "Filter_Lib - Win32 Debug"
-
-# Begin Custom Build
-IntDir=.\Debug
-InputPath=.\a_yuvtable.asm
-InputName=a_yuvtable
-
-"$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
-
-# End Custom Build
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=..\..\Common\CPUID.asm
 
 !IF  "$(CFG)" == "Filter_Lib - Win32 Release"
@@ -233,10 +140,6 @@ SOURCE=.\DSUtil.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\DSVideoOutPin.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\EnumMediaTypes.cpp
 # End Source File
 # Begin Source File
@@ -258,14 +161,6 @@ SOURCE=.\MediaTypes.cpp
 # Begin Source File
 
 SOURCE=.\MoreUuids.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToRGB.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToYUY2.cpp
 # End Source File
 # Begin Source File
 
@@ -306,10 +201,6 @@ SOURCE=.\DSUtil.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\DSVideoOutPin.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\EnumMediaTypes.h
 # End Source File
 # Begin Source File
@@ -331,14 +222,6 @@ SOURCE=.\MediaTypes.h
 # Begin Source File
 
 SOURCE=.\MoreUuids.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToRGB.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\PlanarYUVToYUY2.h
 # End Source File
 # Begin Source File
 
