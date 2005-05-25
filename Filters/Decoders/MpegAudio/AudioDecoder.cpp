@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.52 2005-04-14 11:21:05 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.53 2005-05-25 08:05:22 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.52  2005/04/14 11:21:05  adcockj
+// First stage of code reorganisation
+//
 // Revision 1.51  2005/03/20 14:17:34  adcockj
 // Better debug logging
 //
@@ -876,20 +879,23 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 	}
 
 // blocked out code for monitoring current graph clock.
-#ifndef _NOT_DEFINED_
-	REFERENCE_TIME Now = 0;
-    static REFERENCE_TIME Last = 0;
-    LARGE_INTEGER Freq;
-    LARGE_INTEGER Now2;
-    static LARGE_INTEGER Last2;
-    QueryPerformanceFrequency(&Freq);
-    QueryPerformanceCounter(&Now2);
+#ifdef _NOT_DEFINED_
+    if(RefClock)
+    {
+	    REFERENCE_TIME Now = 0;
+        static REFERENCE_TIME Last = 0;
+        LARGE_INTEGER Freq;
+        LARGE_INTEGER Now2;
+        static LARGE_INTEGER Last2;
+        QueryPerformanceFrequency(&Freq);
+        QueryPerformanceCounter(&Now2);
 
-    m_RefClock->GetTime(&Now);
+        m_RefClock->GetTime(&Now);
 
-    LOG(DBGLOG_FLOW, ("Times - %010I64d - %010I64d - %010I64d\n", Now - m_rtStartTime, rtStart, rtStop));
-    Last = Now;
-    Last2 = Now2;
+        LOG(DBGLOG_FLOW, ("Times - %010I64d - %010I64d - %010I64d\n", Now - m_rtStartTime, rtStart, rtStop));
+        Last = Now;
+        Last2 = Now2;
+    }
 #endif
 
 	if(!m_Preroll && rtStop > 0)
