@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.1 2005-04-14 11:21:07 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.2 2005-10-05 14:30:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2005/04/14 11:21:07  adcockj
+// First stage of code reorganisation
+//
 // Revision 1.13  2005/03/20 14:18:14  adcockj
 // aspect fixes and new deinterlacing test parameter
 //
@@ -278,6 +281,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
 {
     struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
     {
+        {&MEDIASUBTYPE_NV12, 1, 12, '21VN'},
         {&MEDIASUBTYPE_YV12, 1, 12, '21VY'},
         {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
         {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
@@ -309,18 +313,16 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         VIHIndex = -1;
     }
 
-    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
+    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
     {
         TypeNum += VariationsPerType;
     }
-    
-    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
+
+	if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
     {
-        if(TypeNum >= VariationsPerType)
-        {
-            TypeNum += VariationsPerType;
-        }
+        TypeNum += 2 * VariationsPerType;
     }
+    
 
     // this will make sure we won't connect to the old renderer in dvd mode
     // that renderer can't switch the format dynamically
@@ -459,6 +461,13 @@ void CDSVideoOutPin::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
 
         BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
     }
+    else if(bihOut->biCompression == '21VN')
+    {
+        BYTE* pOutV = pOut + abs(bihOut->biHeight) * bihOut->biWidth;
+        BYTE* pOutU = pOutV + abs(bihOut->biHeight) * bihOut->biWidth / 4;
+
+        BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
     else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
     {
         int pitchOut = bihOut->biWidth*bihOut->biBitCount>>3;
@@ -503,6 +512,13 @@ void CDSVideoOutPin::Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
 
         BitBltFromI422ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
     }
+    else if(bihOut->biCompression == '21VN')
+    {
+        BYTE* pOutV = pOut + abs(bihOut->biHeight) * bihOut->biWidth;
+        BYTE* pOutU = pOutV + abs(bihOut->biHeight) * bihOut->biWidth / 4;
+
+        BitBltFromI422ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
     else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
     {
         int pitchOut = bihOut->biWidth*bihOut->biBitCount>>3;
@@ -541,6 +557,13 @@ void CDSVideoOutPin::Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
         BitBltFromI444ToYUY2(w, h, pOut, bihOut->biWidth*2, pIn, pInU, pInV, pitchIn);
     }
     else if(bihOut->biCompression == '21VY')
+    {
+        BYTE* pOutV = pOut + abs(bihOut->biHeight) * bihOut->biWidth;
+        BYTE* pOutU = pOutV + abs(bihOut->biHeight) * bihOut->biWidth / 4;
+
+        BitBltFromI444ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+    }
+    else if(bihOut->biCompression == '21VN')
     {
         BYTE* pOutV = pOut + abs(bihOut->biHeight) * bihOut->biWidth;
         BYTE* pOutU = pOutV + abs(bihOut->biHeight) * bihOut->biWidth / 4;

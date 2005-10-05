@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.36 2005-03-20 14:18:14 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.37 2005-10-05 14:30:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -69,7 +69,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(DVBLETTERBOX, DVB169, L"DVB Aspect Preferences")
     DEFINE_PARAM_BOOL(0, L"Hardcode for PAL with ffdshow")
     DEFINE_PARAM_ENUM(ACCELERATED_IDCT, ACCELERATED_IDCT, L"IDCT to Use")
-    DEFINE_PARAM_ENUM(SPACE_YUY2, SPACE_YUY2, L"Colour space to output")
+    DEFINE_PARAM_ENUM(SPACE_NV12, SPACE_YUY2, L"Colour space to output")
     DEFINE_PARAM_BOOL(1, L"Do Analog Blanking")
     DEFINE_PARAM_BOOL(0, L"Force Field 1 first Flag")
 END_PARAM_LIST()
@@ -217,6 +217,7 @@ private:
     {
         SPACE_YV12,
         SPACE_YUY2,
+        SPACE_NV12,
     } eOutputSpace;
 
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);

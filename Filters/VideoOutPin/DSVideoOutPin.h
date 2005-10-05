@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.1 2005-04-14 11:21:07 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.2 2005-10-05 14:30:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,3 +123,4 @@ private:
 #define VIDEOTYPEFLAG_PROGRESSIVE 8
 #define VIDEOTYPEFLAG_FORCE_DSCALER 16
 #define VIDEOTYPEFLAG_SET_FIELD1FIRST 32
+#define VIDEOTYPEFLAG_FORCE_NV12 64

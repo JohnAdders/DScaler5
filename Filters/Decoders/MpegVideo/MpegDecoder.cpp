@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.71 2005-03-20 14:18:14 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.72 2005-10-05 14:30:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.71  2005/03/20 14:18:14  adcockj
+// aspect fixes and new deinterlacing test parameter
+//
 // Revision 1.70  2005/03/08 13:35:09  adcockj
 // Better handling of square pixel formats
 // Turn off quality control
@@ -787,7 +790,7 @@ HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
 
 HRESULT CMpegDecoder::GetEnumTextOutputSpace(WCHAR **ppwchText)
 {
-    wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0";
+    wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0" L"NV12\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, Text, sizeof(Text));
@@ -844,7 +847,17 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     if(pPin == m_VideoOutPin)
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
-        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
+
+		DWORD VideoFlags = 0;
+		switch(GetParamEnum(OUTPUTSPACE))
+		{
+		case SPACE_YUY2:
+			VideoFlags |= VIDEOTYPEFLAG_FORCE_YUY2;
+			break;
+		case SPACE_YV12:
+			VideoFlags |= VIDEOTYPEFLAG_FORCE_YV12;
+			break;
+		}
         VideoFlags |= (GetParamBool(FIELD1FIRST))?VIDEOTYPEFLAG_SET_FIELD1FIRST:0;
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
