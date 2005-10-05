@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.72 2005-10-05 14:30:42 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.73 2005-10-05 16:21:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.72  2005/10/05 14:30:42  adcockj
+// implemented NV12 just to see if we get connection, will produce corrupted output at present
+//
 // Revision 1.71  2005/03/20 14:18:14  adcockj
 // aspect fixes and new deinterlacing test parameter
 //
@@ -706,6 +709,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                     pmt->majortype == CLSID_CDScaler) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
+                   pmt->subtype == MEDIASUBTYPE_NV12 ||
                     pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||

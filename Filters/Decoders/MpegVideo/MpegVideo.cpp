@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegVideo.cpp,v 1.9 2005-01-04 17:53:43 adcockj Exp $
+// $Id: MpegVideo.cpp,v 1.10 2005-10-05 16:21:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2005/01/04 17:53:43  adcockj
+// added option to force dscalewr filter to be loaded2
+//
 // Revision 1.8  2004/10/28 15:52:24  adcockj
 // Moved video output pin code into new class
 //
@@ -120,6 +123,7 @@ STDAPI DllRegisterServer(void)
     REGPINTYPES OutputTypes[] = {   
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_NV12},
         {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2},
         {&CLSID_CDScaler, &MEDIASUBTYPE_YV12},
     };

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MediaTypes.cpp,v 1.1 2004-10-28 16:02:53 adcockj Exp $
+// $Id: MediaTypes.cpp,v 1.2 2005-10-05 16:21:16 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/10/28 16:02:53  adcockj
+// added new files
+//
 // Revision 1.3  2004/07/07 14:07:07  adcockj
 // Added ATSC subtitle support
 // Removed tabs
@@ -90,6 +93,16 @@ VIH vihs[] =
         {0, 0, 0},                                                      // mask[3]
         VIH_NORMAL,                                                     // size
         &MEDIASUBTYPE_YV12                                              // subtype
+    },
+    // NV12
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','1','2'), 0, 0, 0, 0, 0}     // bmiHeader
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH_NORMAL,                                                     // size
+        &MEDIASUBTYPE_NV12                                              // subtype
     },
     // IYUV
     {
@@ -224,6 +237,17 @@ VIH2 vih2s[] =
         {0, 0, 0},                                                      // mask[3]
         VIH2_NORMAL,                                                    // size
         &MEDIASUBTYPE_YV12                                              // subtype
+    },
+    // NV12
+    {
+        {                   
+            {0, 0, 0, 0}, {0, 0, 0, 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            {BIH_SIZE, 0, 0, 1, 12, mmioFOURCC('N','V','1','2'), 0, 0, 0, 0, 0}     // bmiHeader
+
+        }, 
+        {0, 0, 0},                                                      // mask[3]
+        VIH2_NORMAL,                                                    // size
+        &MEDIASUBTYPE_NV12                                              // subtype
     },
     // IYUV
     {

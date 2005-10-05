@@ -115,7 +115,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				Outputs="$(OutDir)\regsvr32.trg"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="\source\deinterlace\DScaler5\Filters\DeCSS\Debug\DeCSS.lib "
+				AdditionalOptions="..\..\DeCSS\Debug\DeCSS.lib"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/MpegVideo.dll"
 				LinkIncremental="1"
