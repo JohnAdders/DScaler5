@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: PlanarYUVToYUY2.cpp,v 1.1 2005-04-14 11:21:07 adcockj Exp $
+// $Id: PlanarYUVToYUY2.cpp,v 1.2 2005-10-07 15:32:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2005/04/14 11:21:07  adcockj
+// First stage of code reorganisation
+//
 // Revision 1.1  2004/10/28 15:52:24  adcockj
 // Moved video output pin code into new class
 //
@@ -115,6 +118,36 @@ bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
 
     return(true);
 }
+
+bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
+{
+    if(w&1) return(false);
+
+    int pitch = min(abs(srcpitch), abs(dstpitch));
+    
+    int y;
+    for(y = 0; y < h; y++, srcy += srcpitch, dsty += dstpitch)
+        memcpy_accel(dsty, srcy, pitch);
+
+    pitch >>= 1;
+    srcpitch >>= 1;
+
+
+    for(y = 0; y < h; y+=2, srcu += srcpitch, srcv += srcpitch, dstuv += dstpitch)
+	{
+		for(int x(0); x < pitch; ++x)
+		{
+			dstuv[2*x] = srcu[x]; 
+			dstuv[2*x + 1] = srcv[x];
+		}
+	}
+
+    if(CpuFeatureFlags & FEATURE_MMX)
+        EndMMX();
+
+    return(true);
+}
+
 
 bool BitBltFromI422ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.2 2005-10-05 14:30:42 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.3 2005-10-07 15:32:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2005/10/05 14:30:42  adcockj
+// implemented NV12 just to see if we get connection, will produce corrupted output at present
+//
 // Revision 1.1  2005/04/14 11:21:07  adcockj
 // First stage of code reorganisation
 //
@@ -464,9 +467,8 @@ void CDSVideoOutPin::Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pi
     else if(bihOut->biCompression == '21VN')
     {
         BYTE* pOutV = pOut + abs(bihOut->biHeight) * bihOut->biWidth;
-        BYTE* pOutU = pOutV + abs(bihOut->biHeight) * bihOut->biWidth / 4;
 
-        BitBltFromI420ToI420(w, h, pOut, pOutU, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
+        BitBltFromI420ToNV12(w, h, pOut, pOutV, bihOut->biWidth, pIn, pInU, pInV, pitchIn);
     }
     else if(bihOut->biCompression == BI_RGB || bihOut->biCompression == BI_BITFIELDS)
     {
