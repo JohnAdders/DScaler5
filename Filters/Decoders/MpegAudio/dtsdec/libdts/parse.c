@@ -258,7 +258,9 @@ int dts_frame (dts_state_t * state, uint8_t * buf, int * flags,
     }
 
     /* FIME: channels mixing levels */
-    state->clev = state->slev = 1;
+    // JA 19/1/06 change to values that don't have clipping
+    state->slev = 2 * LEVEL_3DB;
+    state->clev = LEVEL_3DB;
     state->output = dts_downmix_init (state->amode, *flags, level,
                                       state->clev, state->slev);
     if (state->output < 0)
