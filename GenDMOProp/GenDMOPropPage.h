@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.h,v 1.11 2004-11-04 16:09:41 adcockj Exp $
+// $Id: GenDMOPropPage.h,v 1.12 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -29,7 +29,7 @@ EXTERN_C const CLSID CLSID_GenDMOPropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CGenDMOPropPage
 class ATL_NO_VTABLE CGenDMOPropPage :
-	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComObjectRootEx<CComMultiThreadModel>,
 	public CComCoClass<CGenDMOPropPage, &CLSID_GenDMOPropPage>,
 	public IPropertyPageImpl<CGenDMOPropPage>,
 	public CDialogImpl<CGenDMOPropPage>

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: LicensePropPage.cpp,v 1.3 2003-05-20 16:51:02 adcockj Exp $
+// $Id: LicensePropPage.cpp,v 1.4 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2003/05/20 16:51:02  adcockj
+// Interim checkin, preparation for DMO processing path
+//
 // Revision 1.2  2003/05/06 16:36:27  adcockj
 // Prelimuianry support for license page
 //
@@ -58,19 +61,16 @@ STDMETHODIMP CLicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     }
     m_License = *ppUnk;
 
-    if(m_License != NULL)
-    {
-        return S_OK;
-    }
-    else
-    {
-        m_License.Release();
-        return E_NOINTERFACE;
-    }
+    return S_OK;
 }   
 
 STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
+    if(m_License == NULL)
+    {
+        return E_UNEXPECTED;
+    }
+
 	HRESULT hr = IPropertyPageImpl<CLicensePropPage>::Activate(hWndParent,pRect,bModal);
 	if(FAILED(hr))
 	{

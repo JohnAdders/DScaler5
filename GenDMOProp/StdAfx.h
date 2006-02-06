@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.5 2004-12-15 13:04:10 adcockj Exp $
+// $Id: StdAfx.h,v 1.6 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -30,7 +30,7 @@
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0400
 #endif
-#define _ATL_APARTMENT_THREADED
+#define _ATL_FREE_THREADED
 
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override

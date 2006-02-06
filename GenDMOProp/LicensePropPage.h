@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: LicensePropPage.h,v 1.2 2003-05-06 16:36:27 adcockj Exp $
+// $Id: LicensePropPage.h,v 1.3 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -29,7 +29,7 @@ EXTERN_C const CLSID CLSID_LicensePropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CLicensePropPage
 class ATL_NO_VTABLE CLicensePropPage :
-	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComObjectRootEx<CComMultiThreadModel>,
 	public CComCoClass<CLicensePropPage, &CLSID_LicensePropPage>,
 	public IPropertyPageImpl<CLicensePropPage>,
 	public CDialogImpl<CLicensePropPage>

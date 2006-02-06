@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StatisticsPropPage.h,v 1.1 2004-12-15 13:04:10 adcockj Exp $
+// $Id: StatisticsPropPage.h,v 1.2 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -29,7 +29,7 @@ EXTERN_C const CLSID CLSID_StatisticsPropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CStatisticsPropPage
 class ATL_NO_VTABLE CStatisticsPropPage :
-	public CComObjectRootEx<CComSingleThreadModel>,
+	public CComObjectRootEx<CComMultiThreadModel>,
 	public CComCoClass<CStatisticsPropPage, &CLSID_LicensePropPage>,
 	public IPropertyPageImpl<CStatisticsPropPage>,
 	public CDialogImpl<CStatisticsPropPage>

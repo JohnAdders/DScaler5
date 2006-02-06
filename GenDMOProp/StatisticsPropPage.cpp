@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StatisticsPropPage.cpp,v 1.1 2004-12-15 13:04:10 adcockj Exp $
+// $Id: StatisticsPropPage.cpp,v 1.2 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/12/15 13:04:10  adcockj
+// added simple statistics display
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -53,28 +56,22 @@ STDMETHODIMP CStatisticsPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     
     m_Statistics = *ppUnk;
 
-    if(m_Statistics != NULL)
-    {
-        return S_OK;
-    }
-    else
-    {
-        return E_NOINTERFACE;
-    }
+    return S_OK;
 }   
 
 STDMETHODIMP CStatisticsPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
-	HRESULT hr = IPropertyPageImpl<CStatisticsPropPage>::Activate(hWndParent,pRect,bModal);
+    if(m_Statistics == NULL)
+    {
+        return E_UNEXPECTED;
+    }
+
+    HRESULT hr = IPropertyPageImpl<CStatisticsPropPage>::Activate(hWndParent,pRect,bModal);
 	if(FAILED(hr))
 	{
 		return hr;
 	}
 
-    if(m_Statistics == NULL)
-    {
-        return E_UNEXPECTED;
-    }
 
     DWORD NumProps;
 

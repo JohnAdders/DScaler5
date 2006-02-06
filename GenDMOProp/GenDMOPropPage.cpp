@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: GenDMOPropPage.cpp,v 1.19 2004-11-04 16:09:41 adcockj Exp $
+// $Id: GenDMOPropPage.cpp,v 1.20 2006-02-06 15:39:06 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2004/11/04 16:09:41  adcockj
+// Made settings changes always go to the registry
+//
 // Revision 1.18  2004/10/31 14:20:39  adcockj
 // fixed issues with settings dialog
 //
@@ -239,19 +242,23 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
             hr = m_MediaParamInfo->GetParamText(i, &m_ParamTexts[i]);
             if(FAILED(hr)) return hr;
         }
-
-        return S_OK;
     }
     else
     {
         m_MediaParamInfo.Release();
         m_MediaParams.Release();
-        return E_NOINTERFACE;
     }
+
+    return S_OK;
 }   
 
 STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
+    if(m_MediaParamInfo == NULL || m_MediaParams == NULL)
+    {
+        return E_UNEXPECTED;
+    }
+
     HRESULT hr = IPropertyPageImpl<CGenDMOPropPage>::Activate(hWndParent,pRect,bModal);
     if(FAILED(hr))
     {
