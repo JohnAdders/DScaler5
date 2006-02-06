@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.17 2005-03-04 17:54:37 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.18 2006-02-06 15:38:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2005/03/04 17:54:37  adcockj
+// Menu fixes & added rate stuff locking
+//
 // Revision 1.16  2005/02/17 09:31:48  adcockj
 // Added analog blanking option
 // Removed force Dscaler filter option
@@ -352,7 +355,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
         AM_PROPERTY_SPHLI sphli;
         DWORD offset1;
         DWORD offset2;
-        if(!DecodeSubpic(m_SubPicureList.back(), sphli, offset1, offset2))
+        if(!DecodeSubpic(m_SubPicureList.back(), sphli, offset1, offset2, NULL))
         {
             CProtectCode WhileVarInScope(&m_DeliverLock);
             if(m_CurrentPicture && HasSubpicsToRender(m_CurrentPicture->m_rtStart) && m_LastPictureWasStill)
@@ -366,7 +369,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
     return hr;
 }
 
-bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2)
+bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2, REFERENCE_TIME* rt)
 {
     memset(&sphli, 0, sizeof(sphli));
 
@@ -391,8 +394,15 @@ bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD
         int pts = GetWORD;
         next = GetWORD;
 
+
         if(next > packetsize || next < datasize)
             return(false);
+
+        bool ignore(false);
+        if(rt && ((sp->rtStart + 1024*PTS2RT(pts)) > *rt))
+        {
+            ignore = true;
+        }
 
         for(bool fBreak = false; !fBreak; )
         {
@@ -420,11 +430,17 @@ bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD
             {
                 case 0x00: // forced start displaying
                     //LOG(DBGLOG_FLOW,("forced start displaying\n"));
-                    sp->fForced = true;
+                    if(!ignore)
+                    {
+                        sp->fForced = true;
+                    }
                     break;
                 case 0x01: // normal start displaying
                     //LOG(DBGLOG_FLOW,("normal start displaying\n"));
-                    sp->fForced = false;
+                    if(!ignore)
+                    {
+                        sp->fForced = false;
+                    }
                     break;
                 case 0x02: // stop displaying
                     //LOG(DBGLOG_FLOW,("stop displaying\n"));
@@ -432,26 +448,39 @@ bool CMpegDecoder::DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD
                     break;
                 case 0x03:
                     //LOG(DBGLOG_FLOW,("0x03\n"));
-                    sphli.ColCon.emph2col = p[i]>>4;
-                    sphli.ColCon.emph1col = p[i]&0xf;
-                    sphli.ColCon.patcol = p[i+1]>>4;
-                    sphli.ColCon.backcol = p[i+1]&0xf;
+                    if(!ignore)
+                    {
+                        sphli.ColCon.emph2col = p[i]>>4;
+                        sphli.ColCon.emph1col = p[i]&0xf;
+                        sphli.ColCon.patcol = p[i+1]>>4;
+                        sphli.ColCon.backcol = p[i+1]&0xf;
+                    }
                     i += 2;
                     break;
                 case 0x04:
                     //LOG(DBGLOG_FLOW,("0x04\n"));
-                    sphli.ColCon.emph2con = p[i]>>4;
-                    sphli.ColCon.emph1con = p[i]&0xf;
-                    sphli.ColCon.patcon = p[i+1]>>4;
-                    sphli.ColCon.backcon = p[i+1]&0xf;
+                    if(!ignore)
+                    {
+                        sphli.ColCon.emph2con = max(sphli.ColCon.emph2con, p[i]>>4);
+                        sphli.ColCon.emph1con = max(sphli.ColCon.emph1con, p[i]&0xf);
+                        sphli.ColCon.patcon = max(sphli.ColCon.patcon,p[i+1]>>4);
+                        sphli.ColCon.backcon = max(sphli.ColCon.backcon, p[i+1]&0xf);
+                        sphli.ColCon.emph2con = p[i]>>4;
+                        sphli.ColCon.emph1con = p[i]&0xf;
+                        sphli.ColCon.patcon = p[i+1]>>4;
+                        sphli.ColCon.backcon = p[i+1]&0xf;
+                    }
                     i += 2;
                     break;
                 case 0x05:
                     //LOG(DBGLOG_FLOW,("0x05\n"));
-                    sphli.StartX = (p[i]<<4) + (p[i+1]>>4);
-                    sphli.StopX = ((p[i+1]&0x0f)<<8) + p[i+2]+1;
-                    sphli.StartY = (p[i+3]<<4) + (p[i+4]>>4);
-                    sphli.StopY = ((p[i+4]&0x0f)<<8) + p[i+5]+1;
+                    if(!ignore)
+                    {
+                        sphli.StartX = (p[i]<<4) + (p[i+1]>>4);
+                        sphli.StopX = ((p[i+1]&0x0f)<<8) + p[i+2]+1;
+                        sphli.StartY = (p[i+3]<<4) + (p[i+4]>>4);
+                        sphli.StopY = ((p[i+4]&0x0f)<<8) + p[i+5]+1;
+                    }
                     i += 6;
                     break;
                 case 0x06:
@@ -574,31 +603,44 @@ void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE col
     if(pt.x + len > rc.right) len = rc.right - pt.x;
     if(len <= 0 || pt.x >= rc.right) return;
 
-    BYTE contrast = 0, color_hli, contrast_hli = 0;
+    BYTE contrast;
 
-    if(sphli_hli) switch(color)
+    AM_PROPERTY_SPHLI* infoToUse = &sphli;
+
+    if(sphli_hli) 
     {
-    case 0: color_hli = sphli_hli->ColCon.backcol; contrast_hli = sphli_hli->ColCon.backcon; break;
-    case 1: color_hli = sphli_hli->ColCon.patcol; contrast_hli = sphli_hli->ColCon.patcon; break;
-    case 2: color_hli = sphli_hli->ColCon.emph1col; contrast_hli = sphli_hli->ColCon.emph1con; break;
-    case 3: color_hli = sphli_hli->ColCon.emph2col; contrast_hli = sphli_hli->ColCon.emph2con; break;
-    default: ASSERT(0); return;
+        if(PtInRect(&rchli, pt))
+        {
+            infoToUse = sphli_hli;
+        }
     }
-    
+
     switch(color)
     {
-    case 0: color = sphli.ColCon.backcol; contrast = sphli.ColCon.backcon; break;
-    case 1: color = sphli.ColCon.patcol; contrast = sphli.ColCon.patcon; break;
-    case 2: color = sphli.ColCon.emph1col; contrast = sphli.ColCon.emph1con; break;
-    case 3: color = sphli.ColCon.emph2col; contrast = sphli.ColCon.emph2con; break;
-    default: ASSERT(0); return;
+    case 0: 
+        color = infoToUse->ColCon.backcol; 
+        contrast = infoToUse->ColCon.backcon; 
+        break;
+    case 1: 
+        color = infoToUse->ColCon.patcol; 
+        contrast = infoToUse->ColCon.patcon; 
+        break;
+    case 2: 
+        color = infoToUse->ColCon.emph1col; 
+        contrast = infoToUse->ColCon.emph1con; 
+        break;
+    case 3: 
+        color = infoToUse->ColCon.emph2col; 
+        contrast = infoToUse->ColCon.emph2con; 
+        break;
+    default: 
+        ASSERT(0); 
+        return;
     }
+    
 
     if(contrast == 0)
     {
-        if(contrast_hli == 0)
-            return;
-
         if(IsRectEmpty(&rchli))
             return;
 
@@ -609,8 +651,7 @@ void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE col
 
     while(len-- > 0)
     {
-        bool hli = sphli_hli && PtInRect(&rchli, pt);
-        DrawPixel(yuv, pt, pitch, hli ? color_hli : color, hli ? contrast_hli : contrast, sppal);
+        DrawPixel(yuv, pt, pitch, color, contrast, sppal);
         pt.x++;
     }
 }
@@ -627,11 +668,11 @@ void CMpegDecoder::RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sp
     }
 }
 
-void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli)
+void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli, REFERENCE_TIME* rt)
 {
     AM_PROPERTY_SPHLI sphli;
     DWORD offset[2];
-    if(!DecodeSubpic(sp, sphli, offset[0], offset[1]))
+    if(!DecodeSubpic(sp, sphli, offset[0], offset[1], rt))
     {
         LOG(DBGLOG_FLOW,("Decoder Error\n"));
         return;
@@ -790,7 +831,7 @@ void CMpegDecoder::RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h)
         if(sp->rtStart <= rt + 90000 && rt < sp->rtStop
         && (m_spon || sp->fForced && (GetParamBool(DISPLAYFORCEDSUBS) || sphli_hli)))
         {
-            RenderSubpic(sp, p, w, h, sphli_hli);
+            RenderSubpic(sp, p, w, h, sphli_hli, &rt);
             LOG(DBGLOG_ALL,("RenderSubpic: %I64d - %I64d - %I64d %d\n", rt, sp->rtStart, sp->rtStop, sphli_hli));
             pDone = true;
         }

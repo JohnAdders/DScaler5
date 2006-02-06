@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.37 2005-10-05 14:30:42 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.38 2006-02-06 15:38:34 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -42,7 +42,7 @@ class CMpegDecoder :
 {
 public:
 
-IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281ABDB6}", "MpegVideo Filter", "Filter.MpegVideo.1", "Filter.MpegVideo", "both")
+IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281ABDB6}", "DScaler Mpeg2 Video Decoder", "Filter.MpegVideo.1", "Filter.MpegVideo", "both")
     IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IBaseFilter)
     IMPLEMENTS_INTERFACE(IMediaFilter)
@@ -53,6 +53,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CMpegDecoder, "{F8904F1F-0371-4471-8866-90E6281AB
     IMPLEMENTS_INTERFACE_AS(IPersist, IPersistStream)
     IMPLEMENTS_INTERFACE(ISaveDefaults)
     IMPLEMENTS_INTERFACE(IAMDecoderCaps)
+    IMPLEMENTS_INTERFACE_AS(IUnknown, IPersistStream)
 END_INTERFACE_TABLE()
 
 public:
@@ -289,12 +290,12 @@ private:
     HRESULT GetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
     HRESULT SupportPropSetSubPic(DWORD dwPropID, DWORD *pTypeSupport);
     HRESULT ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
-    bool DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2);
+    bool DecodeSubpic(CSubPicture* sp, AM_PROPERTY_SPHLI& sphli, DWORD& offset1, DWORD& offset2, REFERENCE_TIME* rt);
     void FlushSubPic();
     void RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h);
     void ClearOldSubpics(REFERENCE_TIME rt);
     bool HasSubpicsToRender(REFERENCE_TIME rt);
-    void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
+    void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli, REFERENCE_TIME* rt);
     void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void CorrectOutputSize();
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
