@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.18 2006-02-06 15:38:34 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.19 2006-02-07 17:40:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2006/02/06 15:38:34  adcockj
+// fixed fading subtitles issue
+//
 // Revision 1.17  2005/03/04 17:54:37  adcockj
 // Menu fixes & added rate stuff locking
 //
@@ -678,6 +681,8 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
         return;
     }
 
+    long shift(0); 
+
     BYTE* pData = &sp->pData[0];
     RECT rc = {sphli.StartX, sphli.StartY, sphli.StopX, sphli.StopY};
     RECT rchli = {0,0,0,0};
@@ -687,6 +692,13 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
         RECT rc_hli = {sphli_hli->StartX, sphli_hli->StartY, sphli_hli->StopX, sphli_hli->StopY};
         IntersectRect(&rchli, &rc, &rc_hli);
     }
+    else
+    {
+        // only do shift when there is no highlight
+        // probably not foolproof but should make 
+        // menus work better even with a shift activated
+        shift = GetParamInt(SUBTITLEVERTICALOFFSET);
+    }
 
     int nField = 0;
 
@@ -694,7 +706,7 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
 
     for(nField = 0; nField < 2; nField++)
     {
-        POINT pt = {sphli.StartX, sphli.StartY + nField};
+        POINT pt = {sphli.StartX, sphli.StartY + nField + shift};
         int fAligned = 1;
         
         while(offset[nField] < end[nField] && pt.y <= sphli.StopY)
