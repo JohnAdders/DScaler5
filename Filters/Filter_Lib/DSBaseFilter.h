@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.h,v 1.6 2004-07-20 16:37:57 adcockj Exp $
+// $Id: DSBaseFilter.h,v 1.7 2006-02-07 17:39:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -87,16 +87,19 @@ public:
     WCHAR m_Name[MAX_FILTER_NAME];
     
 protected:
+    STDMETHOD(AddToRot)(IUnknown *pUnkGraph);
+    void RemoveFromRot();
+    bool IsClockUpstreamFromFilter(IBaseFilter* Filter);
+    void LockAllPins();
+    void UnlockAllPins();
+
     CDSInputPin** m_InputPins;
     CDSOutputPin** m_OutputPins;
     int m_NumInputPins;
     int m_NumOutputPins;
     bool m_IsDiscontinuity;
-    void LockAllPins();
-    void UnlockAllPins();
     REFERENCE_TIME m_rtStartTime;
-    bool IsClockUpstreamFromFilter(IBaseFilter* Filter);
-
+    DWORD m_Register;
 };
 
 

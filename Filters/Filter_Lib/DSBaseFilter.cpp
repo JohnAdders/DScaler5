@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.11 2004-12-15 13:04:08 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.12 2006-02-07 17:39:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/12/15 13:04:08  adcockj
+// added simple statistics display
+//
 // Revision 1.10  2004/11/02 16:57:24  adcockj
 // fix for crashing problem on exit
 //
@@ -219,13 +222,51 @@ STDMETHODIMP CDSBaseFilter::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
         {
             wcscpy(m_Name, pName);
         }
+#ifdef _DEBUG
+        AddToRot(pGraph);
+#endif
     }
     else
     {
         m_Graph = NULL;
+#ifdef _DEBUG
+        RemoveFromRot();
+#endif
     }
     return S_OK;
 }
+
+STDMETHODIMP CDSBaseFilter::AddToRot(IUnknown *pUnkGraph) 
+{
+    IMoniker * pMoniker;
+    IRunningObjectTable *pROT;
+    if (FAILED(GetRunningObjectTable(0, &pROT))) 
+    {
+        return E_FAIL;
+    }
+    WCHAR wsz[256];
+    wsprintfW(wsz, L"FilterGraph %08x pid %08x", (DWORD_PTR)pUnkGraph, GetCurrentProcessId());
+    HRESULT hr = CreateItemMoniker(L"!", wsz, &pMoniker);
+    if (SUCCEEDED(hr)) 
+    {
+        hr = pROT->Register(ROTFLAGS_REGISTRATIONKEEPSALIVE, pUnkGraph,
+            pMoniker, &m_Register);
+        pMoniker->Release();
+    }
+    pROT->Release();
+    return hr;
+}
+
+void CDSBaseFilter::RemoveFromRot()
+{
+    IRunningObjectTable *pROT;
+    if (SUCCEEDED(GetRunningObjectTable(0, &pROT))) 
+    {
+        pROT->Revoke(m_Register);
+        pROT->Release();
+    }
+}
+
 
 STDMETHODIMP CDSBaseFilter::QueryVendorInfo(LPWSTR *pVendorInfo)
 {
