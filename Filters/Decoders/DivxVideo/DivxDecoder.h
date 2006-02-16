@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.3 2004-11-18 21:26:23 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.4 2006-02-16 21:49:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -59,7 +59,7 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_ENUM(DIBob, DIAuto, L"Deinterlace Mode")
     DEFINE_PARAM_INT(0, 200, 0, L"ms", L"Video Delay")
     DEFINE_PARAM_BOOL(0, L"Use accurate aspect ratios")
-    DEFINE_PARAM_ENUM(SPACE_YUY2, SPACE_YUY2, L"Colour space to output")
+    DEFINE_PARAM_ENUM(SPACE_NV12, SPACE_YUY2, L"Colour space to output")
 END_PARAM_LIST()
 
     enum eDivxVideoParams
@@ -157,6 +157,7 @@ private:
     {
         SPACE_YV12,
         SPACE_YUY2,
+        SPACE_NV12,
     } eOutputSpace;
 
     HRESULT Deliver();

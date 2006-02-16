@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.11 2005-02-08 15:57:00 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.12 2006-02-16 21:49:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2005/02/08 15:57:00  adcockj
+// Added preliminary auto film detection to DivX filter
+//
 // Revision 1.10  2005/01/21 14:25:06  adcockj
 // Buffer fix
 //
@@ -311,6 +314,7 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
+                   pmt->subtype == MEDIASUBTYPE_NV12 ||
                     pmt->subtype == MEDIASUBTYPE_ARGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB32 ||
                     pmt->subtype == MEDIASUBTYPE_RGB24 ||
@@ -348,7 +352,7 @@ HRESULT CDivxDecoder::GetEnumTextDeintMode(WCHAR **ppwchText)
 
 HRESULT CDivxDecoder::GetEnumTextOutputSpace(WCHAR **ppwchText)
 {
-    wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0";
+    wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0" L"NV12\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, Text, sizeof(Text));
@@ -392,7 +396,16 @@ HRESULT CDivxDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     if(pPin == m_VideoOutPin)
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
-        DWORD VideoFlags = (GetParamEnum(OUTPUTSPACE) == SPACE_YUY2)?VIDEOTYPEFLAG_FORCE_YUY2:0;
+		DWORD VideoFlags = 0;
+		switch(GetParamEnum(OUTPUTSPACE))
+		{
+		case SPACE_YUY2:
+			VideoFlags |= VIDEOTYPEFLAG_FORCE_YUY2;
+			break;
+		case SPACE_YV12:
+			VideoFlags |= VIDEOTYPEFLAG_FORCE_YV12;
+			break;
+		}
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, 0);
     }
     else
