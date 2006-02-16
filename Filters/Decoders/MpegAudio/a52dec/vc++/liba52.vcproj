@@ -3,6 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="liba52"
+	ProjectGUID="{1B665132-E865-4D51-AAED-D65E0A241727}"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>

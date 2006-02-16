@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,0,6,0
- PRODUCTVERSION 0,0,6,0
+ FILEVERSION 0,0,8,0
+ PRODUCTVERSION 0,0,8,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -72,13 +72,13 @@ BEGIN
             VALUE "Comments", "This file is licensed under the GPL"
             VALUE "CompanyName", "DScaler Team"
             VALUE "FileDescription", "MpegAudio Module"
-            VALUE "FileVersion", "0, 0, 6, 0"
+            VALUE "FileVersion", "0, 0, 8, 0"
             VALUE "InternalName", "MpegAudio"
             VALUE "LegalCopyright", "Copyright 2005 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gildas Bazin, Gabest, John Adcock et al"
             VALUE "LegalTrademarks", "(c) 2005 Michel Lespinasse, Aaron Holtzman, Underbit Technologies Inc, Gildas Bazin, Gabest, John Adcock et al"
             VALUE "OriginalFilename", "MpegAudio.DLL"
             VALUE "ProductName", "MpegAudio Module"
-            VALUE "ProductVersion", "0, 0, 6, 0"
+            VALUE "ProductVersion", "0, 0, 8, 0"
         END
     END
     BLOCK "VarFileInfo"
