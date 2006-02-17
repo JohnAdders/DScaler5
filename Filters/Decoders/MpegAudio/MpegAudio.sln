@@ -9,6 +9,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "libmad\msvc++\lib
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
 	ProjectSection(ProjectDependencies) = postProject
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
@@ -21,6 +22,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "djbfft", "djbfft\djbfft.vcp
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeCSS", "..\..\DeCSS\DeCSS.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
 	ProjectSection(ProjectDependencies) = postProject
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcproj", "{AB9F7727-3934-4FDA-B998-24012EA27D28}"
