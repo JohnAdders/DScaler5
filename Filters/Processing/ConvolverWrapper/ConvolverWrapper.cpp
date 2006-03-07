@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ConvolverWrapper.cpp,v 1.1 2005-07-21 12:42:33 adcockj Exp $
+// $Id: ConvolverWrapper.cpp,v 1.2 2006-03-07 15:12:41 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // ConvolverWrapper.dll - DirectShow filter for detecting audio type in PCM streams
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2005/07/21 12:42:33  adcockj
+// firstt cut of wrapper for John Pavel's convolver
+//
 // Revision 1.3  2004/10/21 18:52:30  adcockj
 // Half works with ac3 now
 //
@@ -150,7 +153,7 @@ HRESULT CConvolverWrapper::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps
     }
     else if(pPin == m_AudioOutPin)
     {
-        if(m_AudioInPin->GetConnectedFilter() != NULL)
+        if(m_AudioInPin->IsConnected())
         {
             HRESULT hr = m_AudioInPin->m_Allocator->GetProperties(pProps);
             if(pProps->cBuffers < 3)

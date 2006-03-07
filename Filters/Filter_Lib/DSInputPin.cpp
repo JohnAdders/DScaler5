@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.17 2005-02-17 09:39:29 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.18 2006-03-07 15:12:40 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2005/02/17 09:39:29  adcockj
+// Better connection logic
+// Better audio logging
+//
 // Revision 1.16  2004/12/21 14:46:59  adcockj
 // fixed connection and settings issues
 //
@@ -668,13 +672,16 @@ void CDSInputPin::CheckForBlocking()
 BOOL CDSInputPin::AreWeAreTalkingToOurself(IPin* pConnector)
 {
     PIN_INFO PinInfo;
-    BOOL RetVal = TRUE;
+    BOOL RetVal = FALSE;
 
     m_SourceType = SOURCE_DEFAULT;
 
     CLSID MyClassId;
     HRESULT hr = m_Filter->GetClassID(&MyClassId);
-    CHECK(hr);
+    if(FAILED(hr))
+    {
+        return RetVal;
+    }
 
     hr = pConnector->QueryPinInfo(&PinInfo);
     if(SUCCEEDED(hr))
