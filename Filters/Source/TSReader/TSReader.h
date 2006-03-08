@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TSReader.h,v 1.3 2004-10-27 09:56:49 adcockj Exp $
+// $Id: TSReader.h,v 1.4 2006-03-08 16:58:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -148,6 +148,7 @@ private:
     AM_MEDIA_TYPE* GetVideoMediaType();
     AM_MEDIA_TYPE* GetAC3MediaType();
     AM_MEDIA_TYPE* GetMPAMediaType();
+    AM_MEDIA_TYPE* GetAACMediaType();
 
     class CPSIData
     {

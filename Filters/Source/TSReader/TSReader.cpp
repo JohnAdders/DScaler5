@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TSReader.cpp,v 1.3 2005-02-17 09:41:23 adcockj Exp $
+// $Id: TSReader.cpp,v 1.4 2006-03-08 16:58:12 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2005/02/17 09:41:23  adcockj
+// Improved timecode handling
+//
 // Revision 1.2  2004/10/26 16:35:03  adcockj
 // Whoops - should be GPL not LGPL
 //
@@ -34,6 +37,7 @@
 #include "DSInputPin.h"
 #include "TSReaderOutPin.h"
 #include "MediaBufferWrapper.h"
+#include "MoreUuids.h"
 
 extern HINSTANCE g_hInstance;
 
@@ -217,6 +221,9 @@ HRESULT CTSReader::Activate()
                     AM_MEDIA_TYPE* pMediaType;
                     switch(m_PSIDataArray[i]->m_AudioType)
                     {
+                    case 6:
+                        pMediaType = GetAACMediaType();
+                        break;
                     case 3:
                         pMediaType = GetMPAMediaType();
                         break;
@@ -406,6 +413,27 @@ AM_MEDIA_TYPE* CTSReader::GetMPAMediaType()
     return &MediaType;
 }
 
+AM_MEDIA_TYPE* CTSReader::GetAACMediaType()
+{
+    static AM_MEDIA_TYPE MediaType;
+    InitMediaType(&MediaType);
+
+    MediaType.majortype = MEDIATYPE_Audio;
+    MediaType.subtype = MEDIASUBTYPE_MP4A;
+    MediaType.formattype = FORMAT_WaveFormatEx;
+    static WAVEFORMATEX wfe;
+    wfe.wFormatTag = 80; 
+    wfe.nChannels = 2; 
+    wfe.nSamplesPerSec = 48000; 
+    wfe.nAvgBytesPerSec = 0; 
+    wfe.nBlockAlign = 0; 
+    wfe.wBitsPerSample = 16; 
+    wfe.cbSize = 0;
+    MediaType.cbFormat = sizeof(wfe);
+    MediaType.pbFormat = (BYTE*)&wfe;
+    return &MediaType;
+}
+
 HRESULT CTSReader::Render(IPin* pPin, IGraphBuilder* pGraphBuilder)
 {
     SI(IBaseFilter) MpegDemuxFilter;
@@ -428,7 +456,6 @@ HRESULT CTSReader::Render(IPin* pPin, IGraphBuilder* pGraphBuilder)
     hr = pGraphBuilder->ConnectDirect(pPin, InputPin.GetNonAddRefedInterface(), NULL);
     CHECK(hr);
 
-    
     m_MpegDemux = MpegDemuxFilter;
 
     SI(IPin) VideoPin;
@@ -509,8 +536,48 @@ void CTSReader::ProcessingThread(void* pParam)
         return;
     }
 
-    hr = pThis->PushFile(hFile);
-    CloseHandle(hFile);
+    while(SUCCEEDED(hr))
+    {
+        hr = pThis->PushFile(hFile);
+        CloseHandle(hFile);
+
+        long namelength(wcslen(pThis->m_FileName));
+
+        if(namelength >= 4)
+        {
+            if(pThis->m_FileName[namelength - 4] >= '0' && pThis->m_FileName[namelength - 4] <= '8')
+            {
+                ++pThis->m_FileName[namelength - 4];
+            }
+            else
+            {
+                int offset = 4;
+                while((namelength - offset) >= 0 && pThis->m_FileName[namelength - offset] == '9')
+                {
+                    ++offset;
+                }
+                if((namelength - offset) >= 0)
+                {
+                    if(pThis->m_FileName[namelength - offset] >= '0' && pThis->m_FileName[namelength - offset] <= '8')
+                    {
+                        ++pThis->m_FileName[namelength - offset];
+                    }
+                }
+                else
+                {
+                    hr = E_UNEXPECTED;
+                }
+            }
+            if(SUCCEEDED(hr))
+            {
+                hFile = CreateFileW(pThis->m_FileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+                if (hFile == INVALID_HANDLE_VALUE)
+                {
+                    hr = E_UNEXPECTED;
+                }
+            }
+        }
+    }
 
     pThis->m_OutPin->m_ConnectedPin->EndOfStream();
 }
@@ -579,10 +646,9 @@ HRESULT CTSReader::PushFile(HANDLE hFile)
 {
     HRESULT hr = S_OK;
 
-    bool bCarryOn = true;
     m_bNotYetSetPins = true;
 
-    while(bCarryOn)
+    while(1)
     {
         SI(IMediaSample) OutSample;
         hr = m_OutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, FALSE);
@@ -606,7 +672,7 @@ HRESULT CTSReader::PushFile(HANDLE hFile)
         CHECK(hr);
 
     }
-    return S_FALSE;
+    return E_UNEXPECTED;
 }
 
 void CTSReader::UpdatePAT(dvbpsi_pat_t* p_pat)
@@ -689,6 +755,11 @@ void CTSReader::CPSIData::UpdatePMT(dvbpsi_pmt_t* p_pmt)
             {
                 m_AudioPid = pEs->i_pid;
                 m_AudioType = 3;
+            }
+            if((pEs->i_type == 15) && m_AudioPid == -1)
+            {
+                m_AudioPid = pEs->i_pid;
+                m_AudioType = 6;
             }
             if(pEs->i_type == 129)
             {
