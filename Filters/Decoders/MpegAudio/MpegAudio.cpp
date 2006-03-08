@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegAudio.cpp,v 1.6 2005-02-17 09:28:09 adcockj Exp $
+// $Id: MpegAudio.cpp,v 1.7 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding audio
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2005/02/17 09:28:09  adcockj
+// Added extra type to work aroung bug in MPC with dvr-ms files
+//
 // Revision 1.5  2004/07/16 15:45:19  adcockj
 // Fixed compilation issues under .NET
 // Improved (hopefully) handling of negative times and preroll
@@ -119,6 +122,18 @@ STDAPI DllRegisterServer(void)
         {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
         {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
         {&MEDIATYPE_Audio, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
+	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_AAC},
+	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_AAC},
+	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_AAC},
+	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_AAC},
+	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MP4A},
+	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MP4A},
+	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MP4A},
+	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MP4A},
+	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_mp4a},
+	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_mp4a},
+	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_mp4a},
+	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_mp4a},
     };
 
     REGPINTYPES OutputTypes[] = {   

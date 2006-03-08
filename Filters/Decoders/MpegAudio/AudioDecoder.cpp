@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.53 2005-05-25 08:05:22 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.54 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.53  2005/05/25 08:05:22  adcockj
+// fixed issue with no clock
+//
 // Revision 1.52  2005/04/14 11:21:05  adcockj
 // First stage of code reorganisation
 //
@@ -224,9 +227,9 @@
 #include "DSCSSInputPin.h"
 #include "DSOutputPin.h"
 #include "MediaBufferWrapper.h"
-#include "MoreUuids.h"
 #include "CPUID.h"
 #include "mmreg.h"
+#include "MoreUuids.h"
 
 extern HINSTANCE g_hInstance;
 
@@ -277,6 +280,9 @@ CAudioDecoder::CAudioDecoder() :
     m_a52_state = NULL;
     m_dts_state = NULL;
     m_madinit = false;
+    
+    m_aac_handle = NULL;
+    m_aac_init = false;
 
     m_rate.Rate = 10000;
     m_rate.StartTime = 0;
@@ -411,6 +417,7 @@ HRESULT CAudioDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstance
 
 HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
+    //return E_FAIL;
     if(pPin == m_AudioInPin)
     {
         if(q.Type == Famine)
@@ -512,7 +519,31 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
                 (pmt->majortype == MEDIATYPE_MPEG2_PES && 
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
                 (pmt->majortype == MEDIATYPE_Audio && 
-                 pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
+                 pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_AAC) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_AAC) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                 pmt->subtype == MEDIASUBTYPE_AAC) ||
+                (pmt->majortype == MEDIATYPE_Audio && 
+                 pmt->subtype == MEDIASUBTYPE_AAC) ||
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_MP4A) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_MP4A) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                 pmt->subtype == MEDIASUBTYPE_MP4A) ||
+                (pmt->majortype == MEDIATYPE_Audio && 
+                 pmt->subtype == MEDIASUBTYPE_MP4A) ||
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_mp4a) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                 pmt->subtype == MEDIASUBTYPE_mp4a) ||
+                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                 pmt->subtype == MEDIASUBTYPE_mp4a) ||
+                (pmt->majortype == MEDIATYPE_Audio &&
+                 pmt->subtype == MEDIASUBTYPE_mp4a);
         if(pmt->formattype == FORMAT_WaveFormatEx)
         {
             MPEG1WAVEFORMAT* wfe = (MPEG1WAVEFORMAT*)pmt->pbFormat;
@@ -740,6 +771,9 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         break;
     case PROCESS_MPA:
         hr = ProcessMPA();
+        break;
+    case PROCESS_AAC:
+        hr = ProcessAAC();
         break;
     }
 
@@ -1133,17 +1167,16 @@ void CAudioDecoder::InitLibraries()
     switch(m_ProcessingType)
     {
     case PROCESS_AC3:
-        m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
+        InitAC3();
         break;
     case PROCESS_MPA:
-        libmad::mad_stream_init(&m_stream);
-        libmad::mad_frame_init(&m_frame);
-        libmad::mad_synth_init(&m_synth);
-        mad_stream_options(&m_stream, 0);
-        m_madinit = true;
+        InitMPA();
         break;
     case PROCESS_DTS:
-        m_dts_state = libdts::dts_init(0);
+        InitDTS();
+        break;
+    case PROCESS_AAC:
+        InitAAC();
         break;
     default:
     case PROCESS_PCM:
@@ -1153,25 +1186,10 @@ void CAudioDecoder::InitLibraries()
 
 void CAudioDecoder::FinishLibraries()
 {
-    if(m_a52_state != NULL)
-    {
-        liba52::a52_free(m_a52_state);
-        m_a52_state = NULL;
-    }
-
-    if(m_dts_state != NULL)
-    {
-        libdts::dts_free(m_dts_state);
-        m_dts_state = NULL;
-    }
-
-    if(m_madinit == true)
-    {
-        mad_synth_finish(&m_synth);
-        libmad::mad_frame_finish(&m_frame);
-        libmad::mad_stream_finish(&m_stream);
-        m_madinit = false;
-    }
+    FinishAC3();
+    FinishDTS();
+    FinishAAC();
+    FinishMPA();
 }
 
 HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
@@ -1418,6 +1436,30 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
                 m_DownSample = true;
             }
         }
+        else if(IsMediaTypeAAC(pMediaType))
+        {
+            LOG(DBGLOG_FLOW, ("Got change to AAC\n"));
+            m_ProcessingType = PROCESS_AAC;
+
+            if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
+            {
+                if(m_ConnectedAsSpdif || m_InputSampleRate != m_OutputSampleRate)
+                {
+                    if(m_OutputSampleType == OUTSAMPLE_FLOAT)
+                    {
+                        hr = CreateInternalIEEEMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask);
+                    }
+                    else
+                    {
+                        hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
+                    }
+                    CHECK(hr);
+                    m_OutputSampleRate = m_InputSampleRate;
+                    m_NeedToAttachFormat = true;
+                    m_ConnectedAsSpdif = false;
+                }
+            }
+        }
         else
         {
             LOG(DBGLOG_FLOW, ("Got unexpected change format\n"));
@@ -1551,33 +1593,6 @@ HRESULT CAudioDecoder::GetOutputSampleAndPointer()
     m_BytesLeftInBuffer = m_InternalMT.lSampleSize;
 
     return hr;
-}
-
-BOOL CAudioDecoder::IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType)
-{
-    return (pMediaType->subtype == MEDIASUBTYPE_DOLBY_AC3 ||
-            pMediaType->subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3);
-}
-
-BOOL CAudioDecoder::IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType)
-{
-    return (pMediaType->subtype == MEDIASUBTYPE_DTS ||
-            pMediaType->subtype == MEDIASUBTYPE_WAVE_DTS);
-}
-
-BOOL CAudioDecoder::IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType)
-{
-    return (pMediaType->subtype == MEDIASUBTYPE_MP3 ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG1Payload ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG1Packet ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO ||
-            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG);
-}
-
-BOOL CAudioDecoder::IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType)
-{
-    return (pMediaType->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
 }
 
 HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData)

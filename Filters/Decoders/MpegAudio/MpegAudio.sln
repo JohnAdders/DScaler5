@@ -23,16 +23,20 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeCSS", "..\..\DeCSS\DeCSS.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
-		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio.vcproj", "{AB9F7727-3934-4FDA-B998-24012EA27D28}"
 	ProjectSection(ProjectDependencies) = postProject
 		{1B665132-E865-4D51-AAED-D65E0A241727} = {1B665132-E865-4D51-AAED-D65E0A241727}
 		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387} = {5EFCFACB-1835-422C-ACDA-E3B3A2F51387}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "a52dec\vc++\liba52.vcproj", "{1B665132-E865-4D51-AAED-D65E0A241727}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfaad", "libfaad\libfaad.vcproj", "{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
@@ -108,6 +112,14 @@ Global
 		{1B665132-E865-4D51-AAED-D65E0A241727}.Release.Build.0 = Release|Win32
 		{1B665132-E865-4D51-AAED-D65E0A241727}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
 		{1B665132-E865-4D51-AAED-D65E0A241727}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Debug.ActiveCfg = Debug|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Debug.Build.0 = Debug|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Debug Fixed Point.ActiveCfg = Debug Fixed Point|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Debug Fixed Point.Build.0 = Debug Fixed Point|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Release.ActiveCfg = Release|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Release.Build.0 = Release|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Release Fixed Point.ActiveCfg = Release Fixed Point|Win32
+		{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}.Release Fixed Point.Build.0 = Release Fixed Point|Win32
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 	EndGlobalSection

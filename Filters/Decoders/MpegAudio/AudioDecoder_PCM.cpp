@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.11 2004-10-27 12:10:55 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.12 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.11  2004/10/27 12:10:55  adcockj
+// checked over Laurent's changes
+//
 // Revision 1.10  2004/08/03 08:55:56  adcockj
 // Fixes for seeking issues
 //
@@ -252,4 +255,9 @@ HRESULT CAudioDecoder::ProcessLPCM()
     m_buff.resize(0);
 
     return hr;
+}
+
+BOOL CAudioDecoder::IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO);
 }

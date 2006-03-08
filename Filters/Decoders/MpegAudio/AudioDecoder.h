@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.27 2006-02-16 22:26:16 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.28 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -48,6 +48,11 @@ namespace libdts
     {
         #include "dtsdec\include\dts.h"
     }
+}
+
+namespace libfaad
+{
+    #include "libfaad\faad.h"
 }
 
 DEFINE_GUID(CLSID_CAudioDecoder, 0xd2ca75c2, 0x5a1, 0x4915, 0x88, 0xa8, 0xd4, 0x33, 0xf8, 0x76, 0xd1, 0x86);
@@ -133,6 +138,7 @@ public:
         PROCESS_MPA,
         PROCESS_DTS,
         PROCESS_PCM,
+        PROCESS_AAC,
     };
 
 public:
@@ -177,6 +183,10 @@ protected:
     liba52::a52_state_t* m_a52_state;
     libdts::dts_state_t* m_dts_state;
 
+    libfaad::faacDecHandle m_aac_handle;
+    bool m_aac_init;
+
+
     struct libmad::mad_stream m_stream;
     struct libmad::mad_frame m_frame;
     struct libmad::mad_synth m_synth;
@@ -190,6 +200,18 @@ protected:
     HRESULT ProcessAC3();
     HRESULT ProcessDTS();
     HRESULT ProcessMPA();
+    HRESULT ProcessAAC();
+
+    void InitAC3();
+    void InitDTS();
+    void InitMPA();
+    void InitAAC();
+
+    void FinishAC3();
+    void FinishDTS();
+    void FinishMPA();
+    void FinishAAC();
+
     HRESULT Deliver(bool IsSpdif);
 
     HRESULT GetEnumTextSpeakerConfig(WCHAR **ppwchText);
@@ -203,6 +225,7 @@ protected:
     BOOL IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType);
     BOOL IsMediaTypePCM(const AM_MEDIA_TYPE* pMediaType);
+    BOOL IsMediaTypeAAC(const AM_MEDIA_TYPE* pMediaType);
     HRESULT SendDigitalData(WORD HeaderWord, short DigitalLength, long FinalLength, const char* pData);
     HRESULT UpdateStartTime();
     void InitLibraries();

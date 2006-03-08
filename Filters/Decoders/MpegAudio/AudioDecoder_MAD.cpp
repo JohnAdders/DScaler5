@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_MAD.cpp,v 1.21 2004-10-27 12:10:55 adcockj Exp $
+// $Id: AudioDecoder_MAD.cpp,v 1.22 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2004/10/27 12:10:55  adcockj
+// checked over Laurent's changes
+//
 // Revision 1.20  2004/08/16 16:08:45  adcockj
 // timestamp fixes
 //
@@ -106,6 +109,7 @@
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
 #include "Convert.h"
+#include "MoreUuids.h"
 
 #define BLOCK_SIZE_LAYER1   1536
 #define BLOCK_SIZE_LAYER23  4608
@@ -281,3 +285,32 @@ HRESULT CAudioDecoder::ProcessMPA()
     return S_OK;
 }
 
+BOOL CAudioDecoder::IsMediaTypeMP3(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_MP3 ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1AudioPayload ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1Payload ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG1Packet ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO ||
+            pMediaType->subtype == MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG);
+}
+
+void CAudioDecoder::InitMPA()
+{
+    libmad::mad_stream_init(&m_stream);
+    libmad::mad_frame_init(&m_frame);
+    libmad::mad_synth_init(&m_synth);
+    mad_stream_options(&m_stream, 0);
+    m_madinit = true;
+}
+
+void CAudioDecoder::FinishMPA()
+{
+    if(m_madinit == true)
+    {
+        mad_synth_finish(&m_synth);
+        libmad::mad_frame_finish(&m_frame);
+        libmad::mad_stream_finish(&m_stream);
+        m_madinit = false;
+    }
+}

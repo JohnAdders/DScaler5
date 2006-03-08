@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.13 2004-10-27 12:10:55 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.14 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2004/10/27 12:10:55  adcockj
+// checked over Laurent's changes
+//
 // Revision 1.12  2004/08/16 16:08:45  adcockj
 // timestamp fixes
 //
@@ -79,6 +82,7 @@
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
 #include "Convert.h"
+#include "MoreUuids.h"
 
 using namespace liba52;
 
@@ -336,4 +340,24 @@ HRESULT CAudioDecoder::ProcessAC3()
     m_buff.resize(end - p);
 
     return hr;
+}
+
+BOOL CAudioDecoder::IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DOLBY_AC3 ||
+            pMediaType->subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3);
+}
+
+void CAudioDecoder::InitAC3()
+{
+    m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
+}
+
+void CAudioDecoder::FinishAC3()
+{
+    if(m_a52_state != NULL)
+    {
+        liba52::a52_free(m_a52_state);
+        m_a52_state = NULL;
+    }
 }

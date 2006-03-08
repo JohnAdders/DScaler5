@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_DTS.cpp,v 1.15 2004-10-27 12:10:55 adcockj Exp $
+// $Id: AudioDecoder_DTS.cpp,v 1.16 2006-03-08 17:13:28 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2004/10/27 12:10:55  adcockj
+// checked over Laurent's changes
+//
 // Revision 1.14  2004/08/16 16:08:45  adcockj
 // timestamp fixes
 //
@@ -105,6 +108,7 @@
 #include "DSInputPin.h"
 #include "DSOutputPin.h"
 #include "Convert.h"
+#include "MoreUuids.h"
 
 using namespace libdts;
 
@@ -369,3 +373,22 @@ HRESULT CAudioDecoder::ProcessDTS()
     return hr;
 }
 
+BOOL CAudioDecoder::IsMediaTypeDTS(const AM_MEDIA_TYPE* pMediaType)
+{
+    return (pMediaType->subtype == MEDIASUBTYPE_DTS ||
+            pMediaType->subtype == MEDIASUBTYPE_WAVE_DTS);
+}
+
+void CAudioDecoder::InitDTS()
+{
+    m_dts_state = libdts::dts_init(0);
+}
+
+void CAudioDecoder::FinishDTS()
+{
+    if(m_dts_state != NULL)
+    {
+        libdts::dts_free(m_dts_state);
+        m_dts_state = NULL;
+    }
+}
