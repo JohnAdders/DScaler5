@@ -174,7 +174,6 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="1"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;_ATL_STATIC_REGISTRY;_ATL_MIN_CRT;$(NoInherit)"
 						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
@@ -235,7 +234,6 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="1"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;_ATL_STATIC_REGISTRY;_ATL_MIN_CRT;$(NoInherit)"
 						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
@@ -255,7 +253,6 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="1"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;_ATL_STATIC_REGISTRY;_ATL_MIN_CRT;$(NoInherit)"
 						BrowseInformation="1"/>
 				</FileConfiguration>
 			</File>
@@ -279,7 +276,6 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="1"
-						PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_MBCS;_USRDLL;_ATL_STATIC_REGISTRY;_ATL_MIN_CRT;$(NoInherit)"
 						UsePrecompiledHeader="1"
 						BrowseInformation="1"/>
 				</FileConfiguration>
