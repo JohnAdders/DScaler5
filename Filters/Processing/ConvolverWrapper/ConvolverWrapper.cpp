@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ConvolverWrapper.cpp,v 1.2 2006-03-07 15:12:41 adcockj Exp $
+// $Id: ConvolverWrapper.cpp,v 1.3 2006-03-10 09:29:47 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // ConvolverWrapper.dll - DirectShow filter for detecting audio type in PCM streams
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2006/03/07 15:12:41  adcockj
+// fix for convolver under audacity
+//
 // Revision 1.1  2005/07/21 12:42:33  adcockj
 // firstt cut of wrapper for John Pavel's convolver
 //
@@ -362,34 +365,43 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
             hr = m_Convolver->ProcessOutput(0, 1, &Output, &Status);
             CHECK(hr);
 
-            if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	        {
-		        OutputSample->SetDiscontinuity(TRUE);
-	        }
-            else
+            BYTE* pBuffer = NULL;
+            DWORD Length = 0;
+
+            hr = OutputBuffer->GetBufferAndLength(&pBuffer, &Length);
+            CHECK(hr);
+
+            if(Length > 0)
             {
-		        OutputSample->SetDiscontinuity(FALSE);
-            }
-            
-            if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
-            {
-                if(pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID)
+                if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+	            {
+		            OutputSample->SetDiscontinuity(TRUE);
+	            }
+                else
                 {
-                    OutputSample->SetTime(&pSampleProperties->tStart, &pSampleProperties->tStop);
+		            OutputSample->SetDiscontinuity(FALSE);
+                }
+                
+                if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
+                {
+                    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID)
+                    {
+                        OutputSample->SetTime(&pSampleProperties->tStart, &pSampleProperties->tStop);
+                    }
+                    else
+                    {
+                        OutputSample->SetTime(&pSampleProperties->tStart, NULL);
+                    }
                 }
                 else
                 {
-                    OutputSample->SetTime(&pSampleProperties->tStart, NULL);
+                    OutputSample->SetTime(NULL, NULL);
                 }
-            }
-            else
-            {
-                OutputSample->SetTime(NULL, NULL);
-            }
 
-            OutputSample->SetActualDataLength(pSampleProperties->lActual);
+                OutputSample->SetActualDataLength(Length);
 
-            hr = m_AudioOutPin->SendSample(OutputSample.GetNonAddRefedInterface());
+                hr = m_AudioOutPin->SendSample(OutputSample.GetNonAddRefedInterface());
+            }
        }
     }
     else
