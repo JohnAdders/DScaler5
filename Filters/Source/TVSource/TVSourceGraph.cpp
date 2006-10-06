@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TVSourceGraph.cpp,v 1.1 2006-10-06 17:00:35 adcockj Exp $
+// $Id: TVSourceGraph.cpp,v 1.2 2006-10-06 17:07:50 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2006/10/06 17:00:35  adcockj
+// Added new filter for TV from files
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -39,6 +42,12 @@ HRESULT getCaptureCardFilter(std::wstring cardName, SI(IBaseFilter)& filter)
     // Create an enumerator for the video capture category.
     hr = devEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, enumMoniker.GetReleasedInterfaceReference(), 0);
     if(FAILED(hr)) return hr;
+    
+    // we get false for empty which means that there are no capture cards
+    if(hr == S_FALSE)
+    {
+        return E_POINTER;
+    }
 
     SI(IMoniker) moniker;
     while (enumMoniker->Next(1, moniker.GetReleasedInterfaceReference(), NULL) == S_OK)
