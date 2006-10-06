@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DScaler.cpp,v 1.19 2005-02-17 09:41:22 adcockj Exp $
+// $Id: DScaler.cpp,v 1.20 2006-10-06 13:46:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2005/02/17 09:41:22  adcockj
+// Improved timecode handling
+//
 // Revision 1.18  2005/01/04 17:53:44  adcockj
 // added option to force dscalewr filter to be loaded2
 //
@@ -244,7 +247,8 @@ HRESULT CDScaler::GetEnumTextDeinterlaceMode(WCHAR **ppwchText)
     *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_DeinterlaceNames.length() + 2 + 22 * 2);
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
 	memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
-    for(size_t i(0); i < m_DeinterlaceNames.length(); ++i)
+    size_t i(0);
+    for(; i < m_DeinterlaceNames.length(); ++i)
     {
         if(m_DeinterlaceNames[i] != L'~')
         {
@@ -264,7 +268,8 @@ HRESULT CDScaler::GetEnumTextFilmDetectMode(WCHAR **ppwchText)
     *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_FilmDetectorNames.length() + 2 + 22 * 2);
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
 	memcpy(*ppwchText, L"Film Detect Mode\0None\0", 22 * 2);
-    for(size_t i(0); i < m_FilmDetectorNames.length(); ++i)
+    size_t i(0);
+    for(; i < m_FilmDetectorNames.length(); ++i)
     {
         if(m_FilmDetectorNames[i] != L'~')
         {

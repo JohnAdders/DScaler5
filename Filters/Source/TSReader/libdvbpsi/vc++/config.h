@@ -93,12 +93,17 @@
    if it is not supported. */
 #define inline __inline
 
+// if below vc8.0 then we need this
+#if _MSC_VER < 1400
 /* Define as `__restrict' if that's what the C compiler calls it, or to
    nothing if it is not supported. */
 #define restrict __restrict
+#endif
 
 /* Define to `unsigned' if <sys/types.h> does not define. */
 /* #undef size_t */
 
 /* Stop expected compiler warnings from appearing */
-#pragma warning(disable: 4244 4305 4098)
+#pragma warning(disable: 4244 4305 4098 4018)
+
+#define _CRT_SECURE_NO_DEPRECATE

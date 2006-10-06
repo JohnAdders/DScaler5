@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.1 2005-07-21 12:42:34 adcockj Exp $
+// $Id: StdAfx.h,v 1.2 2006-10-06 13:46:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // ConvolverWrapper.dll - DirectShow filter for detecting audio type in PCM streams
 // Copyright (c) 2004 John Adcock
@@ -20,6 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#define _CRT_SECURE_NO_DEPRECATE
 
 #define STRICT
 #ifndef _WIN32_WINNT

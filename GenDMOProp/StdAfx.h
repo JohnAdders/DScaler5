@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.6 2006-02-06 15:39:06 adcockj Exp $
+// $Id: StdAfx.h,v 1.7 2006-10-06 13:46:21 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // GenDMOProp.dll - Generic DirectShow property page using IMediaParams
 // Copyright (c) 2003 John Adcock
@@ -25,6 +25,8 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+
+#define _CRT_SECURE_NO_DEPRECATE
 
 #define STRICT
 #ifndef _WIN32_WINNT

@@ -2,7 +2,7 @@
  * pmt.c: PMT decoder/generator
  *----------------------------------------------------------------------------
  * (c)2001-2002 VideoLAN
- * $Id: pmt.c,v 1.1 2004-10-26 16:27:10 adcockj Exp $
+ * $Id: pmt.c,v 1.2 2006-10-06 13:46:20 adcockj Exp $
  *
  * Authors: Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *
@@ -295,8 +295,7 @@ void dvbpsi_GatherPMTSections(dvbpsi_decoder_t* p_decoder,
   if(b_append && (p_pmt_decoder->i_program_number != p_section->i_extension))
   {
     /* Invalid program_number */
-    //DVBPSI_ERROR("PMT decoder", \
-                 "'program_number' don't match");
+    //DVBPSI_ERROR("PMT decoder", "'program_number' don't match");
     b_append = 0;
   }
 

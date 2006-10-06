@@ -128,3 +128,5 @@
 
 /* Define to `int' if <sys/types.h> does not define. */
 /* #undef pid_t */
+
+#define _CRT_SECURE_NO_DEPRECATE

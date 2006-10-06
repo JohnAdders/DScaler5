@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_PCM.cpp,v 1.12 2006-03-08 17:13:28 adcockj Exp $
+// $Id: AudioDecoder_PCM.cpp,v 1.13 2006-10-06 13:46:18 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2006/03/08 17:13:28  adcockj
+// added aac decoding
+//
 // Revision 1.11  2004/10/27 12:10:55  adcockj
 // checked over Laurent's changes
 //
@@ -251,7 +254,6 @@ HRESULT CAudioDecoder::ProcessLPCM()
         }
     }
 
-    ASSERT(i == LenIn);
     m_buff.resize(0);
 
     return hr;

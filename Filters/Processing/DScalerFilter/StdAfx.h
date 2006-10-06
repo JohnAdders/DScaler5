@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: StdAfx.h,v 1.1 2004-02-06 12:17:17 adcockj Exp $
+// $Id: StdAfx.h,v 1.2 2006-10-06 13:46:20 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,8 @@
 
 
 #pragma once
+
+#define _CRT_SECURE_NO_DEPRECATE
 
 #define STRICT
 #ifndef _WIN32_WINNT
