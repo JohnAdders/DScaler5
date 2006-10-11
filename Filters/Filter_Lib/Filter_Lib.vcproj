@@ -3,7 +3,6 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="Filter_Lib"
-	ProjectGUID="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
 	SccProjectName=""
 	SccLocalPath="">
 	<Platforms>
@@ -130,8 +129,7 @@
 					Name="Debug|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="$(InputName)"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
+						CommandLine="nasmw -f win32 -o &quot;$(IntDir)&quot;\&quot;$(InputName)&quot;.obj -p &quot;..\..\Common\DScaler.mac&quot; &quot;$(InputPath)&quot;
 "
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
@@ -139,9 +137,7 @@
 					Name="Release|Win32">
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="$(InputName)"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)
-"
+						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"/>
 				</FileConfiguration>
 			</File>
@@ -188,7 +184,25 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\DSBufferedInputPin.cpp">
+				RelativePath="DSBufferedInputPin.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="DSInputPin.cpp">
@@ -233,7 +247,25 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\DSUtil.cpp">
+				RelativePath="DSUtil.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="EnumMediaTypes.cpp">
@@ -320,10 +352,46 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\MediaTypes.cpp">
+				RelativePath="MediaTypes.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\MoreUuids.cpp">
+				RelativePath="MoreUuids.cpp">
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="0"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+						BasicRuntimeChecks="3"
+						BrowseInformation="1"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="StdAfx.cpp">
@@ -374,16 +442,13 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl">
 			<File
-				RelativePath="..\..\Common\CPUID.h">
-			</File>
-			<File
 				RelativePath="DSBaseFilter.h">
 			</File>
 			<File
 				RelativePath="DSBasePin.h">
 			</File>
 			<File
-				RelativePath=".\DSBufferedInputPin.h">
+				RelativePath="DSBufferedInputPin.h">
 			</File>
 			<File
 				RelativePath="DSInputPin.h">
@@ -392,7 +457,7 @@
 				RelativePath="DSOutputPin.h">
 			</File>
 			<File
-				RelativePath=".\DSUtil.h">
+				RelativePath="DSUtil.h">
 			</File>
 			<File
 				RelativePath="EnumMediaTypes.h">
@@ -401,25 +466,16 @@
 				RelativePath="EnumPins.h">
 			</File>
 			<File
-				RelativePath="..\..\Common\GenDMOProp.h">
-			</File>
-			<File
 				RelativePath="InputMemAlloc.h">
 			</File>
 			<File
 				RelativePath="MediaBufferWrapper.h">
 			</File>
 			<File
-				RelativePath=".\MediaTypes.h">
+				RelativePath="MediaTypes.h">
 			</File>
 			<File
-				RelativePath=".\MoreUuids.h">
-			</File>
-			<File
-				RelativePath="..\..\Common\Params.h">
-			</File>
-			<File
-				RelativePath="..\..\Common\ProtectCode.h">
+				RelativePath="MoreUuids.h">
 			</File>
 			<File
 				RelativePath="StdAfx.h">
