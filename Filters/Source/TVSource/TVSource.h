@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TVSource.h,v 1.1 2006-10-06 17:00:35 adcockj Exp $
+// $Id: TVSource.h,v 1.2 2006-10-13 15:24:23 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,7 @@ BEGIN_CLASS_REGISTRY_TABLE(CTVSource)
     DEFAULT_CLASS_REGISTRY_ENTRIES("{1E3EAB17-274F-45a5-8E45-F70B3D97AB26}", "TVSource Filter Class", "Filter.TVSource.1", "Filter.TVSource", "both")
     REGISTRY_KEY(HKEY_CLASSES_ROOT, "Media Type\\Extensions\\.tv", 0, NULL, REGFLAG_NORMAL)
     REGISTRY_SUBKEY(0, "Source Filter", "{1E3EAB17-274F-45a5-8E45-F70B3D97AB26}", REGFLAG_NORMAL)
+    REGISTRY_SUBKEY(0, "PerceivedType", "video", REGFLAG_NORMAL)
 END_CLASS_REGISTRY_TABLE()
 IMPLEMENT_AGGREGATABLE_UNKNOWN(CTVSource)
 IMPLEMENT_GENERIC_CLASS_FACTORY(CTVSource)
