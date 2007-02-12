@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TSReader.cpp,v 1.4 2006-03-08 16:58:12 adcockj Exp $
+// $Id: TSReader.cpp,v 1.5 2007-02-12 22:03:25 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2006/03/08 16:58:12  adcockj
+// added multiple file support to tsreader
+//
 // Revision 1.3  2005/02/17 09:41:23  adcockj
 // Improved timecode handling
 //
@@ -244,8 +247,8 @@ HRESULT CTSReader::Activate()
                     hr = AudioPin->ConnectedTo(AudioInPin.GetReleasedInterfaceReference());
                     CHECK(hr);
 
-                    hr = AudioInPin->ReceiveConnection(AudioPin.GetNonAddRefedInterface(), pMediaType);
-                    CHECK(hr);
+                    //hr = AudioInPin->ReceiveConnection(AudioPin.GetNonAddRefedInterface(), pMediaType);
+                    //CHECK(hr);
 
                 }
 
@@ -461,17 +464,34 @@ HRESULT CTSReader::Render(IPin* pPin, IGraphBuilder* pGraphBuilder)
     SI(IPin) VideoPin;
     SI(IPin) AudioPin;
 
-    hr = m_MpegDemux->CreateOutputPin(GetVideoMediaType(), L"Video", VideoPin.GetReleasedInterfaceReference());
-    CHECK(hr);
-
     hr = m_MpegDemux->CreateOutputPin(GetAC3MediaType(), L"Audio", AudioPin.GetReleasedInterfaceReference());
     CHECK(hr);
 
-
-    hr = pGraphBuilder->Render(VideoPin.GetNonAddRefedInterface());
+    hr = m_MpegDemux->CreateOutputPin(GetVideoMediaType(), L"Video", VideoPin.GetReleasedInterfaceReference());
     CHECK(hr);
 
     hr = pGraphBuilder->Render(AudioPin.GetNonAddRefedInterface());
+    CHECK(hr);
+
+    SI(IBaseFilter) analyseFilter;
+
+    hr = analyseFilter.CreateInstance(CLSID_Mpeg2VideoStreamAnalyzer);
+    CHECK(hr);
+    
+    hr = pGraphBuilder->AddFilter(analyseFilter.GetNonAddRefedInterface(), L"MPEG-2 Analyser");
+    CHECK(hr);
+
+    SI(IPin) AnalysePin;
+    hr = analyseFilter->FindPin(L"in", AnalysePin.GetReleasedInterfaceReference());
+    CHECK(hr);
+
+    hr = pGraphBuilder->Connect(VideoPin.GetNonAddRefedInterface(), AnalysePin.GetNonAddRefedInterface());
+    CHECK(hr);
+
+    hr = analyseFilter->FindPin(L"out", AnalysePin.GetReleasedInterfaceReference());
+    CHECK(hr);
+
+    hr = pGraphBuilder->Render(AnalysePin.GetNonAddRefedInterface());
     CHECK(hr);
 
     return hr;
@@ -560,7 +580,12 @@ void CTSReader::ProcessingThread(void* pParam)
                 {
                     if(pThis->m_FileName[namelength - offset] >= '0' && pThis->m_FileName[namelength - offset] <= '8')
                     {
-                        ++pThis->m_FileName[namelength - offset];
+                        ++(pThis->m_FileName[namelength - offset]);
+                        while(offset > 4)
+                        {
+                            --offset;
+                            pThis->m_FileName[namelength - offset] = '0';
+                        }
                     }
                 }
                 else
