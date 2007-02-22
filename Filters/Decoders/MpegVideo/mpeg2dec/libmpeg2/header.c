@@ -366,8 +366,12 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
     height = sequence->picture_height;
 
     for (i = 0; i < sizeof (video_modes) / sizeof (video_modes[0]); i++)
+    {
       	if (width == video_modes[i].width && height == video_modes[i].height)
+        {
       	    break;
+        }
+    }
 
     // JA 7/Mar/2005 removed 
     if (i == sizeof (video_modes) / sizeof (video_modes[0]) ||

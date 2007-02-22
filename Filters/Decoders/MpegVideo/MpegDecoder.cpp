@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.73 2005-10-05 16:21:16 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.74 2007-02-22 07:18:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.73  2005/10/05 16:21:16  adcockj
+// get NV12 mode connection working
+//
 // Revision 1.72  2005/10/05 14:30:42  adcockj
 // implemented NV12 just to see if we get connection, will produce corrupted output at present
 //
@@ -1687,6 +1690,10 @@ void CMpegDecoder::UpdateAspectRatio()
         {
             m_ARMpegX *= 704;
         }
+        else if(m_MpegWidth == 544 && GetParamBool(ANALOGBLANKING))
+        {
+            m_ARMpegX *= 532;
+        }
         else
         {
             m_ARMpegX *= m_MpegWidth;
@@ -1991,6 +1998,11 @@ void CMpegDecoder::CorrectOutputSize()
     {
         m_OutputWidth = 704;
         m_VideoOutPin->SetPanScanX(8);
+    }
+    else if(m_MpegWidth == 544 && GetParamBool(ANALOGBLANKING))
+    {
+        m_OutputWidth = 532;
+        m_VideoOutPin->SetPanScanX(6);
     }
     else
     {
