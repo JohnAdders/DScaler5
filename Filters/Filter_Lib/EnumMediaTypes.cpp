@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.cpp,v 1.2 2004-07-07 14:09:01 adcockj Exp $
+// $Id: EnumMediaTypes.cpp,v 1.3 2007-06-25 06:05:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/07/07 14:09:01  adcockj
+// removed tabs
+//
 // Revision 1.1  2004/02/06 12:17:17  adcockj
 // Major changes to the Libraries to remove ATL and replace with YACL
 // First draft of Mpeg2 video decoder filter
@@ -86,9 +89,9 @@ STDMETHODIMP CEnumMediaTypes::Next(ULONG cTypes, AM_MEDIA_TYPE **ppTypes, ULONG 
         InitMediaType(*ppTypes);
         HRESULT hr = m_Update->GetType(m_Count, *ppTypes);
 
-        CHECK(hr);
-        if(hr == S_FALSE)
+        if(hr != S_OK)
         {
+            FreeMediaType(*ppTypes);
             m_Count = -1;
         }
         else

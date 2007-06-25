@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.h,v 1.5 2005-02-08 15:32:35 adcockj Exp $
+// $Id: DSInputPin.h,v 1.6 2007-06-25 06:05:00 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,6 +79,8 @@ public:
     HRESULT Deactivate();
     HRESULT Block(DWORD dwBlockFlags, HANDLE hEvent);
     BOOL IsFlushing() {return m_Flushing;};
+    virtual HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
+    HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
 
 protected:
     void InternalDisconnect() {};
@@ -95,8 +97,6 @@ protected:
 
 	BOOL AreWeAreTalkingToOurself(IPin* pConnector);
 	void FixupMediaType(AM_MEDIA_TYPE *pmt);
-    virtual HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
-    HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     void CheckForBlocking();
 
 protected:

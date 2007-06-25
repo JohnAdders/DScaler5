@@ -76,7 +76,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalOptions="..\..\DeCSS\Release\DeCSS.lib"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/MpegVideo.dll"
 				LinkIncremental="1"
@@ -213,18 +212,6 @@
 		</Configuration>
 	</Configurations>
 	<References>
-		<ProjectReference
-			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
-			RelativePathToProject="..\..\Filter_Lib\Filter_Lib.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
-			RelativePathToProject="..\..\..\GenDMOProp\GenDMOProp.vcproj"
-		/>
-		<ProjectReference
-			ReferencedProjectIdentifier="{D61929A4-D585-4652-89D0-8A732BEBFD1E}"
-			RelativePathToProject=".\mpeg2dec\vc++\libmpeg2.vcproj"
-		/>
 	</References>
 	<Files>
 		<Filter

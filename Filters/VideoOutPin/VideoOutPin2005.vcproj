@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="8.00"
 	Name="VideoOutPin"
-	ProjectGUID="{56EB8405-DBBA-4933-B9B1-846166AA5080}"
+	ProjectGUID="{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}"
 	>
 	<Platforms>
 		<Platform
