@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.3 2005-10-07 15:32:48 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.4 2007-06-25 17:05:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2005/10/07 15:32:48  adcockj
+// basic NV12 support
+//
 // Revision 1.2  2005/10/05 14:30:42  adcockj
 // implemented NV12 just to see if we get connection, will produce corrupted output at present
 //
@@ -335,7 +338,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         // there should be no reason why 
         // anything that doesn't support YUY2 or YV12 need the
         // stupid old RGB types
-        if(TypeNum >= VariationsPerType * 2) 
+        if(TypeNum >= VariationsPerType * 3) 
             return VFW_S_NO_MORE_ITEMS;
     }
     else
