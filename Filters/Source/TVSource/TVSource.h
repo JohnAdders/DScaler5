@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: TVSource.h,v 1.2 2006-10-13 15:24:23 adcockj Exp $
+// $Id: TVSource.h,v 1.3 2007-06-25 17:06:17 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,6 +38,11 @@ BEGIN_CLASS_REGISTRY_TABLE(CTVSource)
     DEFAULT_CLASS_REGISTRY_ENTRIES("{1E3EAB17-274F-45a5-8E45-F70B3D97AB26}", "TVSource Filter Class", "Filter.TVSource.1", "Filter.TVSource", "both")
     REGISTRY_KEY(HKEY_CLASSES_ROOT, "Media Type\\Extensions\\.tv", 0, NULL, REGFLAG_NORMAL)
     REGISTRY_SUBKEY(0, "Source Filter", "{1E3EAB17-274F-45a5-8E45-F70B3D97AB26}", REGFLAG_NORMAL)
+    REGISTRY_SUBKEY(0, "PerceivedType", "video", REGFLAG_NORMAL)
+    REGISTRY_KEY(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Multimedia\\WMPlayer\\Extensions\\.tv", 0, NULL, REGFLAG_NORMAL)
+    REGISTRY_SUBKEY(0, "Runtime", "7", REGFLAG_NORMAL)
+    REGISTRY_SUBKEY(0, "Permissions", "15", REGFLAG_NORMAL)
+    REGISTRY_SUBKEY(0, "UserApprovedOwning", "yes", REGFLAG_NORMAL)
     REGISTRY_SUBKEY(0, "PerceivedType", "video", REGFLAG_NORMAL)
 END_CLASS_REGISTRY_TABLE()
 IMPLEMENT_AGGREGATABLE_UNKNOWN(CTVSource)
