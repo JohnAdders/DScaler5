@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.74 2007-02-22 07:18:55 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.75 2007-06-25 17:05:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.74  2007/02/22 07:18:55  adcockj
+// added support for analog blanking for 544 widths
+//
 // Revision 1.73  2005/10/05 16:21:16  adcockj
 // get NV12 mode connection working
 //
@@ -590,9 +593,11 @@ HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 	}
 	else
 	{
+        LOG(DBGLOG_FLOW, ("Quality Message type %d prop %d late %d\n", q.Type, q.Proportion, q.Late));
 		return E_FAIL;
 	}
 
+    Sleep(10);
     if(pPin == m_VideoOutPin)
     {
         if(q.Type == Famine)
@@ -1143,12 +1148,6 @@ HRESULT CMpegDecoder::ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties
     {
         mpeg2_state_t state = mpeg2_parse(m_dec);
 
-        if(mpeg2_info(m_dec)->user_data_len > 0)
-        {
-            hr = ProcessUserData(state, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
-            CHECK(hr);
-        }
-
         switch(state)
         {
         case STATE_BUFFER:
@@ -1185,6 +1184,14 @@ HRESULT CMpegDecoder::ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties
             }
             break;
         case STATE_GOP:
+            if(mpeg2_info(m_dec)->user_data_len > 0)
+            {
+                // GOP user data, DVD cc info and aspect ratio changes
+                // are handled as they arrive
+                hr = ProcessUserData(state, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
+                CHECK(hr);
+            }
+            break;
         case STATE_SEQUENCE_REPEATED:
         case STATE_SLICE_1ST:
         case STATE_PICTURE_2ND:
@@ -1632,8 +1639,8 @@ HRESULT CMpegDecoder::ProcessNewSequence()
 
     m_Buffers[0].AddRef();
     m_Buffers[1].AddRef();
-    mpeg2_set_buf(m_dec, m_Buffers[0].m_Buf, &m_Buffers[0]);
-    mpeg2_set_buf(m_dec, m_Buffers[1].m_Buf, &m_Buffers[1]);
+    mpeg2_set_buf(m_dec, m_Buffers[0].m_Buf, (void*)(0 + 1));
+    mpeg2_set_buf(m_dec, m_Buffers[1].m_Buf, (void*)(1 + 1));
 
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
@@ -1721,17 +1728,19 @@ void CMpegDecoder::UpdateAspectRatio()
     CorrectOutputSize();
 }
 
-CMpegDecoder::CFrameBuffer* CMpegDecoder::GetNextBuffer()
+HRESULT CMpegDecoder::SetNextBuffer()
 {
     for(int i(0); i < NUM_BUFFERS; ++i)
     {
         if(m_Buffers[i].NotInUse())
         {
             m_Buffers[i].AddRef();
-            return &m_Buffers[i];
+
+            mpeg2_set_buf(m_dec, m_Buffers[i].m_Buf, (void*)(i + 1));
+            return S_OK;
         }
     }
-    return NULL;
+    return E_UNEXPECTED;
 }
 
 HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties)
@@ -1753,32 +1762,55 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
         CurrentPicture->flags |= PIC_FLAG_SKIP;
     }
 
+    HRESULT hr = SetNextBuffer();
+    CHECK(hr);
+
+    // picture User data (notably CC info) to be processed in picture display order
+    // so save the user info 
+    if(mpeg2_info(m_dec)->user_data_len > 0 && mpeg2_info(m_dec)->user_data_len <= MAX_USER_DATA)
+    {
+        memcpy(m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_UserData, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
+        m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_UserDataLen = mpeg2_info(m_dec)->user_data_len;
+    }
+    else
+    {
+        m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_UserDataLen = 0;
+        if(mpeg2_info(m_dec)->user_data_len > 0)
+        {
+            LOG(DBGLOG_ERROR, ("Really long pictute user data ignored\n"));
+        }
+    }
+
+
     if((CurrentPicture->flags&PIC_MASK_CODING_TYPE) == PIC_FLAG_CODING_TYPE_I && pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
     {
         LOG(DBGLOG_FLOW, ("Got I_Frame Time %010I64d - %010I64d\n", pSampleProperties->tStart, m_LastOutputTime));
-        LARGE_INTEGER temp;
-        temp.QuadPart = pSampleProperties->tStart;
-        CurrentPicture->tag = temp.HighPart;
-        CurrentPicture->tag2 = temp.LowPart;
-        CurrentPicture->flags |= PIC_FLAG_TAGS;
+        if(mpeg2_info(m_dec)->current_fbuf->id)
+        {
+            m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_rtStart = pSampleProperties->tStart;
+        }
+        else
+        {
+            LOG(DBGLOG_FLOW, ("Wierd id stuff going on\n"));
+        }
         // make sure we only tag one i-frame per timestamp
         pSampleProperties->dwSampleFlags &=  ~AM_SAMPLE_TIMEVALID;
     }
     else
     {
-        CurrentPicture->flags &= ~PIC_FLAG_TAGS;
+        if(mpeg2_info(m_dec)->current_fbuf->id)
+        {
+            m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_rtStart = -1;
+        }
+        else
+        {
+            LOG(DBGLOG_FLOW, ("Wierd id stuff going on\n"));
+        }
     }
 
     // set up the memory want to receive the buffers into
-    CFrameBuffer* Buffer = GetNextBuffer();
-    if(Buffer == NULL)
-    {
-        return E_UNEXPECTED;
-    }
 
-    mpeg2_set_buf(m_dec, Buffer->m_Buf, Buffer);
-
-    return S_OK;
+    return hr;
 }
 
 HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
@@ -1851,9 +1883,16 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
             }
         }
 
-        m_CurrentPicture = (CFrameBuffer*)fbuf->id;
+        m_CurrentPicture = &m_Buffers[(int)fbuf->id - 1];
         m_CurrentPicture->AddRef();
         m_CurrentPicture->m_Flags = picture->flags;
+
+        // picture User data (notably CC info) to be processed in picture display order
+        if(m_CurrentPicture->m_UserDataLen != 0)
+        {
+            hr = ProcessUserData(STATE_PICTURE, m_CurrentPicture->m_UserData, m_CurrentPicture->m_UserDataLen);
+            CHECK(hr);
+        }
 
         m_CurrentPicture->m_NumFields = picture->nb_fields;
         if(picture_2nd != NULL)
@@ -1861,7 +1900,6 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
             m_CurrentPicture->m_NumFields += picture_2nd->nb_fields;
         }
 
-        // if the 
         if((mpeg2_info(m_dec)->sequence->flags&SEQ_FLAG_PROGRESSIVE_SEQUENCE) == SEQ_FLAG_PROGRESSIVE_SEQUENCE ||
             ProgressiveHint == true)
         {
@@ -1899,15 +1937,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
             break;
         }
 
-        if(picture->flags & PIC_FLAG_TAGS)
-        {
-            LARGE_INTEGER temp;
-            temp.HighPart = picture->tag;
-            temp.LowPart = picture->tag2;
-
-            m_CurrentPicture->m_rtStart = temp.QuadPart;
-        }
-        else
+        if(m_CurrentPicture->m_rtStart == -1)
         {
             if(LastPicture != NULL)
             {
@@ -1942,8 +1972,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
 
     if (mpeg2_info(m_dec)->discard_fbuf)
     {
-        CFrameBuffer* m_Discard = (CFrameBuffer*)mpeg2_info(m_dec)->discard_fbuf->id;
-        m_Discard->Release();
+        m_Buffers[(int)mpeg2_info(m_dec)->discard_fbuf->id - 1].Release();
     }
 
     return hr;

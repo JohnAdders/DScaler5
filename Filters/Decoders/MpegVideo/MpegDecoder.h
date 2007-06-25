@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.39 2006-02-07 17:40:31 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.40 2007-06-25 17:05:05 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -32,6 +32,7 @@ extern "C"
 
 
 #define NUM_BUFFERS 4
+#define MAX_USER_DATA 256
 
 DEFINE_GUID(CLSID_CMpegDecoder, 0xf8904f1f, 0x371, 0x4471, 0x88, 0x66, 0x90, 0xe6, 0x28, 0x1a, 0xbd, 0xb6);
 
@@ -171,6 +172,8 @@ private:
         void AddRef() {m_UseCount++;};
         void Release() {m_UseCount--;};
         bool NotInUse() {return (m_UseCount <= 0);};
+        BYTE m_UserData[MAX_USER_DATA];
+        BYTE m_UserDataLen;
     private:
         void* m_ActualBuf;
         int m_AllocatedSize;
@@ -241,7 +244,7 @@ private:
     HRESULT GetEnumTextOutputSpace(WCHAR **ppwchText);
     void UpdateAspectRatio();
 
-    CFrameBuffer* GetNextBuffer();
+    HRESULT SetNextBuffer();
 
     void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
     void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
