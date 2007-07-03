@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.19 2006-02-07 17:40:31 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.20 2007-07-03 17:06:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2006/02/07 17:40:31  adcockj
+// added subtitle move option
+//
 // Revision 1.18  2006/02/06 15:38:34  adcockj
 // fixed fading subtitles issue
 //
@@ -591,34 +594,14 @@ void CMpegDecoder::DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE c
 //  *p = (BYTE)(((((int)*p-0x80)*(15-contrast) + ((int)sppal[color].U-0x80)*contrast) >> 4) + 0x80);
     *p -= (*p - sppal[color].U) * contrast >> 4;
 
-    // Neighter of the blending formulas are accurate (">>4" should be "/15").
+    // Neither of the blending formulas are accurate (">>4" should be "/15").
     // Even though the second one is a bit worse, since we are scaling the difference only,
     // the error is still not noticable.
 }
 
-void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
-                                AM_PROPERTY_SPHLI& sphli, RECT& rc,
-                                AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
-                                AM_DVD_YUV* sppal)
+void colorCodeToColor(BYTE colorCode, AM_PROPERTY_SPHLI* infoToUse, BYTE& color, BYTE& contrast)
 {
-    if(pt.y < rc.top || pt.y >= rc.bottom) return;
-    if(pt.x < rc.left) {len -= rc.left - pt.x; pt.x = rc.left;}
-    if(pt.x + len > rc.right) len = rc.right - pt.x;
-    if(len <= 0 || pt.x >= rc.right) return;
-
-    BYTE contrast;
-
-    AM_PROPERTY_SPHLI* infoToUse = &sphli;
-
-    if(sphli_hli) 
-    {
-        if(PtInRect(&rchli, pt))
-        {
-            infoToUse = sphli_hli;
-        }
-    }
-
-    switch(color)
+    switch(colorCode)
     {
     case 0: 
         color = infoToUse->ColCon.backcol; 
@@ -640,33 +623,75 @@ void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE col
         ASSERT(0); 
         return;
     }
-    
-
-    if(contrast == 0)
-    {
-        if(IsRectEmpty(&rchli))
-            return;
-
-        if(pt.y < rchli.top || pt.y >= rchli.bottom 
-        || pt.x+len < rchli.left || pt.x >= rchli.right)
-            return;
-    }
-
-    while(len-- > 0)
-    {
-        DrawPixel(yuv, pt, pitch, color, contrast, sppal);
-        pt.x++;
-    }
 }
 
-void CMpegDecoder::RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli)
+
+void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode, 
+                                AM_PROPERTY_SPHLI& sphli, RECT& rc,
+                                AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
+                                AM_DVD_YUV* sppal)
 {
-    POINT pt = {sphli_hli->StartX, sphli_hli->StartY};
-    for(; pt.y <= sphli_hli->StopY;  pt.y++)
+    if(pt.y < rc.top || pt.y >= rc.bottom) return;
+    if(pt.x < rc.left) {len -= rc.left - pt.x; pt.x = rc.left;}
+    if(pt.x + len > rc.right) len = rc.right - pt.x;
+    if(len <= 0 || pt.x >= rc.right) return;
+
+    BYTE contrast;
+    BYTE color;
+
+    colorCodeToColor(colorCode, &sphli, color, contrast);
+
+
+    if(sphli_hli && pt.y >= rchli.top && pt.y <= rchli.bottom)
     {
-        for(pt.x = sphli_hli->StartX; pt.x <= sphli_hli->StopX;  pt.x++)
+        // if we are in the same row as the highlight
+        // we need to make sure the highlight is handled properly
+
+        // first draw anothing on the lft of the highlight
+        // may do nothing
+        while(len-- > 0 && pt.x < rchli.left)
         {
-            DrawPixel(p, pt, w,sphli_hli->ColCon.patcol, sphli_hli->ColCon.patcon, m_sppal);
+            if(contrast != 0)
+            {
+                DrawPixel(yuv, pt, pitch, color, contrast, sppal);
+            }
+            pt.x++;
+        }
+
+        // process any part of the highlighed bit with new colors
+        colorCodeToColor(colorCode, sphli_hli, color, contrast);
+        while(len-- > 0 && pt.x < rchli.right)
+        {
+            if(contrast != 0)
+            {
+                DrawPixel(yuv, pt, pitch, color, contrast, sppal);
+            }
+            DrawPixel(yuv, pt, pitch, color, contrast, sppal);
+            pt.x++;
+        }
+
+        // if there is anything left do it in the non-highlighted colors
+        colorCodeToColor(colorCode, &sphli, color, contrast);
+        if(contrast != 0)
+        {
+            while(len-- > 0)
+            {
+                DrawPixel(yuv, pt, pitch, color, contrast, sppal);
+                pt.x++;
+            }
+        }
+    }
+    else
+    {
+        // if we are no bothered about the highlight
+        // process subpicture drawing in a simplfied way
+        if(contrast != 0)
+        {
+            while(len-- > 0)
+            {
+                DrawPixel(yuv, pt, pitch, color, contrast, sppal);
+                pt.x++;
+            }
         }
     }
 }
@@ -735,9 +760,6 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
                 len = rc.right - pt.x;
             }
             DrawPixels(p, pt, w, len, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
-
-            //DrawPixels(p, pt, w, rc.right - pt.x, (BYTE)(code & 3), sphli, rc, sphli_hli, rchli, m_sppal);
-
 
             pt.x += len;
             if(pt.x >= sphli.StopX)
@@ -848,11 +870,6 @@ void CMpegDecoder::RenderSubpics(REFERENCE_TIME rt, BYTE** p, int w, int h)
             pDone = true;
         }
         it++;
-    }
-    if(pDone == false && sphli_hli)
-    {
-        //RenderHighlight(p, w, h, sphli_hli);
-        LOG(DBGLOG_ALL,("RenderHighlight commented out: %I64d\n", rt));
     }
 }
 

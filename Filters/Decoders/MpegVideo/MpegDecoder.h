@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.40 2007-06-25 17:05:05 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.41 2007-07-03 17:06:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -247,7 +247,7 @@ private:
     HRESULT SetNextBuffer();
 
     void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
-    void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE color, 
+    void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode, 
                                 AM_PROPERTY_SPHLI& sphli, RECT& rc,
                                 AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
                                 AM_DVD_YUV* sppal);
@@ -301,7 +301,6 @@ private:
     void ClearOldSubpics(REFERENCE_TIME rt);
     bool HasSubpicsToRender(REFERENCE_TIME rt);
     void RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli, REFERENCE_TIME* rt);
-    void RenderHighlight(BYTE** p, int w, int h, AM_PROPERTY_SPHLI* sphli_hli);
     void CorrectOutputSize();
     void LetterBox(long YAdjust, long XAdjust, bool IsTop = false);
     void PillarBox(long YAdjust, long XAdjust);

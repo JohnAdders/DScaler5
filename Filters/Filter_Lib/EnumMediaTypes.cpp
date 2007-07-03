@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: EnumMediaTypes.cpp,v 1.3 2007-06-25 06:05:00 adcockj Exp $
+// $Id: EnumMediaTypes.cpp,v 1.4 2007-07-03 17:06:35 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2007/06/25 06:05:00  adcockj
+// Fixed enum issue and project wierdness
+//
 // Revision 1.2  2004/07/07 14:09:01  adcockj
 // removed tabs
 //
@@ -92,6 +95,7 @@ STDMETHODIMP CEnumMediaTypes::Next(ULONG cTypes, AM_MEDIA_TYPE **ppTypes, ULONG 
         if(hr != S_OK)
         {
             FreeMediaType(*ppTypes);
+            *ppTypes = 0;
             m_Count = -1;
         }
         else
