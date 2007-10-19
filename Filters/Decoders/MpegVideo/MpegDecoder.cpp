@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.75 2007-06-25 17:05:04 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.76 2007-10-19 17:05:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.75  2007/06/25 17:05:04  adcockj
+// Fixed ATSC CC ording issues by improving handling of picture data
+//
 // Revision 1.74  2007/02/22 07:18:55  adcockj
 // added support for analog blanking for 544 widths
 //
@@ -766,6 +769,26 @@ HRESULT CMpegDecoder::GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText)
     {
         return GetEnumTextOutputSpace(ppwchText);
     }
+    else if(dwParamIndex == NOMINALRANGE)
+    {
+        return GetEnumTextNominalRange(ppwchText);
+    }
+    else if(dwParamIndex == TRANSFERMATRIX)
+    {
+        return GetEnumTextTransferMatrix(ppwchText);
+    }
+    else if(dwParamIndex == LIGHTING)
+    {
+        return GetEnumTextLighting(ppwchText);
+    }
+    else if(dwParamIndex == PRIMARIES)
+    {
+        return GetEnumTextPrimaries(ppwchText);
+    }
+    else if(dwParamIndex == TRANSFERFUNCTION)
+    {
+        return GetEnumTextTransferFunction(ppwchText);
+    }
     else
     {
         return E_NOTIMPL;
@@ -803,6 +826,51 @@ HRESULT CMpegDecoder::GetEnumTextDVBAspectPrefs(WCHAR **ppwchText)
 HRESULT CMpegDecoder::GetEnumTextOutputSpace(WCHAR **ppwchText)
 {
     wchar_t Text[] = L"Output Colour Space\0" L"None\0" L"YV12\0" L"YUY2\0" L"NV12\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextNominalRange(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"Nominal Range\0" L"None\0" L"Default\0" L"Normal\0" L"Wide\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextTransferMatrix(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"Transfer Matrix\0" L"None\0" L"Default\0" L"BT709\0" L"BT601\0" L"SMPTE240M\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextLighting(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"Video Lighting\0" L"None\0" L"Default\0" L"Bright\0" L"Office\0" L"Dim\0" L"Dark\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextPrimaries(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"Video Primaries\0" L"None\0" L"Default\0" L"Reserved\0" L"BT709\0" L"Old NTSC\0" L"BT470 2 BG\0" L"SMPTE170M\0" L"SMPTE240M\0" L"EBU\0" L"SMPTE_C\0";
+    *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
+    if(*ppwchText == NULL) return E_OUTOFMEMORY;
+    memcpy(*ppwchText, Text, sizeof(Text));
+    return S_OK;
+}
+
+HRESULT CMpegDecoder::GetEnumTextTransferFunction(WCHAR **ppwchText)
+{
+    wchar_t Text[] = L"Video Tranfer Function\0" L"None\0" L"Default\0" L"Gamma 1.0\0" L"Gamma 1.8\0" L"Gamma 2.0\0" L"Gamma 2.2\0" L"2.2 BT709\0" L"2.2 SMPTE240M\0" L"2.2 8Bit\0" L"Gamma 2.8\0";
     *ppwchText = (WCHAR*)CoTaskMemAlloc(sizeof(Text));
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
     memcpy(*ppwchText, Text, sizeof(Text));
@@ -946,13 +1014,13 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         if(pMediaType->formattype == FORMAT_VideoInfo2)
         {
             VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
-            m_ControlFlags = vih->dwControlFlags;
+            m_ControlFlags = vih->dwControlFlags & 0x000F;
         	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
 		}
         else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
         {
             MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
-            m_ControlFlags = mvih->hdr.dwControlFlags;
+            m_ControlFlags = mvih->hdr.dwControlFlags & 0x000F;
             if(mvih->dwFlags & AMMPEG2_DoPanScan)
             {
                 LOG(DBGLOG_FLOW, ("Pan & Scan Sent\n"));
@@ -977,6 +1045,12 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_ControlFlags = 0;
         	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
 		}
+
+        m_ControlFlags += GetParamEnum(NOMINALRANGE) << 12;
+        m_ControlFlags += GetParamEnum(TRANSFERMATRIX) << 15;
+        m_ControlFlags += GetParamEnum(LIGHTING) << 18;
+        m_ControlFlags += GetParamEnum(PRIMARIES) << 22;
+        m_ControlFlags += GetParamEnum(NOMINALRANGE) << 27;
 
         CorrectOutputSize();
     }

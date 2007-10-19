@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.h,v 1.41 2007-07-03 17:06:35 adcockj Exp $
+// $Id: MpegDecoder.h,v 1.42 2007-10-19 17:05:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegVideo.dll - DirectShow filter for decoding Mpeg2 streams
 // Copyright (c) 2004 John Adcock
@@ -75,6 +75,11 @@ BEGIN_PARAM_LIST()
     DEFINE_PARAM_BOOL(1, L"Do Analog Blanking")
     DEFINE_PARAM_BOOL(0, L"Force Field 1 first Flag")
     DEFINE_PARAM_INT(-576, 576, 0, L"lines", L"Subtitle Vertical Offset")
+    DEFINE_PARAM_ENUM(RANGE_WIDE, RANGE_DEFAULT, L"Nominal Range")
+    DEFINE_PARAM_ENUM(TRANSFER_SMPTE240M, TRANSFER_DEFAULT, L"Video Transfer Matrix")
+    DEFINE_PARAM_ENUM(LIGHTING_DARK, LIGHTING_DEFAULT, L"Video Lighting")
+    DEFINE_PARAM_ENUM(PRIMARIES_SMPTE_C, PRIMARIES_DEFAULT, L"Video Primaries")
+    DEFINE_PARAM_ENUM(FUNC_28, FUNC_DEFAULT, L"Video Transfer Function")
 END_PARAM_LIST()
 
     enum eMpegVideoParams
@@ -91,6 +96,11 @@ END_PARAM_LIST()
         ANALOGBLANKING,
         FIELD1FIRST,
         SUBTITLEVERTICALOFFSET,
+        NOMINALRANGE,
+        TRANSFERMATRIX,
+        LIGHTING,
+        PRIMARIES,
+        TRANSFERFUNCTION,
     };
 
 public:
@@ -226,6 +236,56 @@ private:
         SPACE_NV12,
     } eOutputSpace;
 
+    typedef enum
+    {
+        RANGE_DEFAULT,
+        RANGE_NORMAL,
+        RANGE_WIDE,
+    } eNominalRange;
+
+    typedef enum
+    {
+        TRANSFER_DEFAULT, 
+        TRANSFER_BT709, 
+        TRANSFER_BT601, 
+        TRANSFER_SMPTE240M,
+    } eTransferMatrix;
+
+    typedef enum
+    {
+        LIGHTING_DEFAULT, 
+        LIGHTING_BRIGHT,
+        LIGHTING_OFFICE,
+        LIGHTING_DIM,
+        LIGHTING_DARK,
+    } eLighting;
+
+    typedef enum
+    {
+        PRIMARIES_DEFAULT, 
+        PRIMARIES_RESERVED, 
+        PRIMARIES_BT709, 
+        PRIMARIES_NTSC_ORIG, 
+        PRIMARIES_BT470, 
+        PRIMARIES_SMPTE170M,
+        PRIMARIES_SMPTE240M, 
+        PRIMARIES_EBU, 
+        PRIMARIES_SMPTE_C,
+    } ePrimaries;
+
+    typedef enum
+    {
+        FUNC_DEFAULT, 
+        FUNC_10, 
+        FUNC_18, 
+        FUNC_20, 
+        FUNC_22, 
+        FUNC_22_709, 
+        FUNC_22_240M, 
+        FUNC_22_8BIT, 
+        FUNC_28,
+    } eTransferFunction;
+
     HRESULT ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT ProcessMPEGBuffer(AM_SAMPLE2_PROPERTIES* pSampleProperties);
     HRESULT Deliver(bool fRepeatFrame);
@@ -242,6 +302,12 @@ private:
     HRESULT ProcessUserData(mpeg2_state_t State, const BYTE* const UserData, int UserDataLen);
     HRESULT GetEnumTextDVBAspectPrefs(WCHAR **ppwchText);
     HRESULT GetEnumTextOutputSpace(WCHAR **ppwchText);
+    HRESULT GetEnumTextNominalRange(WCHAR **ppwchText);
+    HRESULT GetEnumTextTransferMatrix(WCHAR **ppwchText);
+    HRESULT GetEnumTextLighting(WCHAR **ppwchText);
+    HRESULT GetEnumTextPrimaries(WCHAR **ppwchText);
+    HRESULT GetEnumTextTransferFunction(WCHAR **ppwchText);
+
     void UpdateAspectRatio();
 
     HRESULT SetNextBuffer();

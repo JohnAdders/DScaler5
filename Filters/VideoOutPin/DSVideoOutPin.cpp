@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.4 2007-06-25 17:05:35 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.5 2007-10-19 17:05:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2007/06/25 17:05:35  adcockj
+// Fixed connection issue
+//
 // Revision 1.3  2005/10/07 15:32:48  adcockj
 // basic NV12 support
 //
@@ -403,6 +406,11 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
         }
         vih->AvgTimePerFrame = m_AvgTimePerFrame;
         vih->dwControlFlags = ControlFlags;
+        if(ControlFlags & 0xfff0)
+        {
+            // set AMCONTROL_COLORINFO_PRESENT
+            vih->dwControlFlags |= 8;
+        }
         pmt->pbFormat = (BYTE*)vih;
         pmt->cbFormat = sizeof(VIDEOINFOHEADER2);       
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
