@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.5 2007-10-19 17:05:49 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.6 2007-10-20 14:55:49 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2007/10/19 17:05:49  adcockj
+// Added Support for setting new color info flags
+//
 // Revision 1.4  2007/06/25 17:05:35  adcockj
 // Fixed connection issue
 //
@@ -748,10 +751,17 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
         LOG(DBGLOG_FLOW, ("GetProperties %08x\n", hr));
         CHECK(hr);
         if(m_PitchWidth != 0 && (bmi->biWidth != m_PitchWidth || bmi->biHeight != m_PitchHeight))
-        {
-            bmi->biWidth = m_PitchWidth;
-            bmi->biHeight = m_PitchHeight;
-            bmi->biSizeImage = abs(m_PitchHeight)*bmi->biWidth*bmi->biBitCount>>3;
+		{
+			bmi->biWidth = max(m_PitchWidth, bmi->biWidth);
+			if(m_PitchHeight > 0)
+			{
+	            bmi->biHeight = max(m_PitchHeight, abs(bmi->biHeight));
+			}
+			else
+			{
+	            bmi->biHeight = min(m_PitchHeight, -abs(bmi->biHeight));
+			}
+            bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
             m_InternalMT.lSampleSize = bmi->biSizeImage;
             m_NeedToAttachFormat = true;
         }
@@ -793,7 +803,7 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
         bmi = &vih->bmiHeader;
         vih->AvgTimePerFrame = m_AvgTimePerFrame;
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
-        SetRect(&vih->rcTarget, 0, 0, 0, 0);
+        //SetRect(&vih->rcTarget, 0, 0, 0, 0);
     }
     else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
     {
@@ -804,7 +814,7 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
         vih->dwPictAspectRatioY = m_AspectY;
         Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
-        SetRect(&vih->rcTarget, 0, 0, 0, 0);
+        //SetRect(&vih->rcTarget, 0, 0, 0, 0);
     }
 
     bmi->biXPelsPerMeter = m_Width * m_AspectY;
