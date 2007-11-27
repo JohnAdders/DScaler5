@@ -1,0 +1,1502 @@
+EXPORTS
+    AVRtpPayloadTypes @1 DATA
+    RTPFirstDynamicPayloadHandler @2 DATA
+    __dynarray_add @3
+    aac_demuxer @4 DATA
+    ac3_demuxer @5 DATA
+    ac3_muxer @6 DATA
+    adler32 @7
+    adler32_combine @8
+    adts_muxer @9 DATA
+    aiff_demuxer @10 DATA
+    aiff_muxer @11 DATA
+    amr_demuxer @12 DATA
+    amr_muxer @13 DATA
+    apc_demuxer @14 DATA
+    ape_demuxer @15 DATA
+    asf_demuxer @16 DATA
+    asf_muxer @17 DATA
+    asf_stream_muxer @18 DATA
+    au_demuxer @19 DATA
+    au_muxer @20 DATA
+    av_add_index_entry @21
+    av_alloc_format_context @22
+    av_close_input_file @23
+    av_codec_get_id @24
+    av_codec_get_tag @25
+    av_destruct_packet @26
+    av_destruct_packet_nofree @27
+    av_dup_packet @28
+    av_filename_number_test @29
+    av_find_default_stream_index @30
+    av_find_input_format @31
+    av_find_stream_info @32
+    av_gen_search @33
+    av_get_frame_filename @34
+    av_get_packet @35
+    av_gettime @36
+    av_guess_codec @37
+    av_guess_image2_codec @38
+    av_hex_dump @39
+    av_hex_dump_log @40
+    av_index_search_timestamp @41
+    av_init_packet @42
+    av_interleave_packet_per_dts @43
+    av_interleaved_write_frame @44
+    av_new_packet @45
+    av_new_program @46
+    av_new_stream @47
+    av_open_input_file @48
+    av_open_input_stream @49
+    av_pkt_dump @50
+    av_pkt_dump_log @51
+    av_probe_input_format @52
+    av_program_add_stream_index @53
+    av_read_frame @54
+    av_read_packet @55
+    av_read_pause @56
+    av_read_play @57
+    av_register_all @58
+    av_register_input_format @59
+    av_register_output_format @60
+    av_register_rtp_dynamic_payload_handlers @61
+    av_seek_frame @62
+    av_seek_frame_binary @63
+    av_set_parameters @64
+    av_set_program_name @65
+    av_set_pts_info @66
+    av_update_cur_dts @67
+    av_write_frame @68
+    av_write_header @69
+    av_write_trailer @70
+    avf_sdp_create @71
+    avi_demuxer @72 DATA
+    avi_muxer @73 DATA
+    avs_demuxer @74 DATA
+    bethsoftvid_demuxer @75 DATA
+    brktimegm @76
+    c93_demuxer @77 DATA
+    codec_bmp_tags @78 DATA
+    codec_get_id @79
+    codec_get_tag @80
+    codec_movaudio_tags @81 DATA
+    codec_movvideo_tags @82 DATA
+    codec_wav_tags @83 DATA
+    crc32 @84
+    crc32_combine @85
+    crc_muxer @86 DATA
+    daud_demuxer @87 DATA
+    dsicin_demuxer @88 DATA
+    dts_demuxer @89 DATA
+    dump_format @90
+    dv_assemble_frame @91
+    dv_delete_mux @92
+    dv_demuxer @93 DATA
+    dv_get_packet @94
+    dv_init_demux @95
+    dv_init_mux @96
+    dv_muxer @97 DATA
+    dv_offset_reset @98
+    dv_produce_packet @99
+    dxa_demuxer @100 DATA
+    ea_cdata_demuxer @101 DATA
+    ea_demuxer @102 DATA
+    end_tag @103
+    ff_asfcrypt_dec @104
+    ff_crc04C11DB7_update @105
+    ff_get_v @106
+    ff_h264_dynamic_handler @107 DATA
+    ff_lsb2full @108
+    ff_mkv_codec_tags @109 DATA
+    ff_mov_iso639_to_lang @110
+    ff_mov_lang_to_iso639 @111
+    ff_mp4_obj_type @112 DATA
+    ff_nut_add_sp @113
+    ff_nut_reset_ts @114
+    ff_nut_sp_pos_cmp @115
+    ff_nut_sp_pts_cmp @116
+    ff_parse_specific_params @117
+    ff_qt_default_palette_16 @118 DATA
+    ff_qt_default_palette_256 @119 DATA
+    ff_qt_default_palette_4 @120 DATA
+    ff_rtp_codec_id @121
+    ff_rtp_enc_name @122
+    ff_rtp_send_aac @123
+    ff_rtp_send_data @124
+    ff_rtp_send_mpegvideo @125
+    ff_socket_nonblock @126
+    ffm_demuxer @127 DATA
+    ffm_muxer @128 DATA
+    ffm_nopts @129 DATA
+    file_protocol @130 DATA
+    find_info_tag @131
+    first_iformat @132 DATA
+    first_oformat @133 DATA
+    first_protocol @134 DATA
+    flac_codec @135 DATA
+    flac_demuxer @136 DATA
+    flac_muxer @137 DATA
+    flic_demuxer @138 DATA
+    flv_demuxer @139 DATA
+    flv_muxer @140 DATA
+    fourxm_demuxer @141 DATA
+    framecrc_muxer @142 DATA
+    get_be16 @143
+    get_be24 @144
+    get_be32 @145
+    get_be64 @146
+    get_buffer @147
+    get_byte @148
+    get_checksum @149
+    get_crc_table @150
+    get_le16 @151
+    get_le24 @152
+    get_le32 @153
+    get_le64 @154
+    get_partial_buffer @155
+    get_strz @156
+    get_wav_header @157
+    gif_demuxer @158 DATA
+    gif_muxer @159 DATA
+    guess_format @160
+    guess_stream_format @161
+    gxf_demuxer @162 DATA
+    gxf_muxer @163 DATA
+    h261_demuxer @164 DATA
+    h261_muxer @165 DATA
+    h263_demuxer @166 DATA
+    h263_muxer @167 DATA
+    h264_demuxer @168 DATA
+    h264_muxer @169 DATA
+    http_protocol @170 DATA
+    idcin_demuxer @171 DATA
+    image2_demuxer @172 DATA
+    image2_muxer @173 DATA
+    image2pipe_demuxer @174 DATA
+    image2pipe_muxer @175 DATA
+    inet_aton @176
+    inflate @177
+    inflateCopy @178
+    inflateEnd @179
+    inflateGetHeader @180
+    inflateInit2_ @181
+    inflateInit_ @182
+    inflatePrime @183
+    inflateReset @184
+    inflateSetDictionary @185
+    inflateSync @186
+    inflateSyncPoint @187
+    inflate_copyright @188 DATA
+    inflate_fast @189
+    inflate_table @190
+    ingenient_demuxer @191 DATA
+    init_checksum @192
+    init_put_byte @193
+    ipmovie_demuxer @194 DATA
+    m4v_demuxer @195 DATA
+    m4v_muxer @196 DATA
+    match_ext @197
+    matroska_audio_muxer @198 DATA
+    matroska_demuxer @199 DATA
+    matroska_muxer @200 DATA
+    mjpeg_demuxer @201 DATA
+    mjpeg_muxer @202 DATA
+    mktimegm @203
+    mm_demuxer @204 DATA
+    mmf_demuxer @205 DATA
+    mmf_muxer @206 DATA
+    mov_demuxer @207 DATA
+    mov_muxer @208 DATA
+    mp2_muxer @209 DATA
+    mp3_demuxer @210 DATA
+    mp3_muxer @211 DATA
+    mp4_muxer @212 DATA
+    mpc8_demuxer @213 DATA
+    mpc_demuxer @214 DATA
+    mpeg1system_muxer @215 DATA
+    mpeg1vcd_muxer @216 DATA
+    mpeg1video_muxer @217 DATA
+    mpeg2dvd_muxer @218 DATA
+    mpeg2svcd_muxer @219 DATA
+    mpeg2video_muxer @220 DATA
+    mpeg2vob_muxer @221 DATA
+    mpegps_demuxer @222 DATA
+    mpegts_demuxer @223 DATA
+    mpegts_muxer @224 DATA
+    mpegts_parse_close @225
+    mpegts_parse_open @226
+    mpegts_parse_packet @227
+    mpegtsraw_demuxer @228 DATA
+    mpegvideo_demuxer @229 DATA
+    mpjpeg_muxer @230 DATA
+    mtv_demuxer @231 DATA
+    mxf_demuxer @232 DATA
+    nsv_demuxer @233 DATA
+    null_muxer @234 DATA
+    nut_demuxer @235 DATA
+    nut_muxer @236 DATA
+    nuv_demuxer @237 DATA
+    ogg_demuxer @238 DATA
+    ogg_muxer @239 DATA
+    ogm_audio_codec @240 DATA
+    ogm_old_codec @241 DATA
+    ogm_video_codec @242 DATA
+    old_flac_codec @243 DATA
+    parse_date @244
+    parse_frame_rate @245
+    parse_image_size @246
+    pcm_alaw_demuxer @247 DATA
+    pcm_alaw_muxer @248 DATA
+    pcm_mulaw_demuxer @249 DATA
+    pcm_mulaw_muxer @250 DATA
+    pcm_read_seek @251
+    pcm_s16be_demuxer @252 DATA
+    pcm_s16be_muxer @253 DATA
+    pcm_s16le_demuxer @254 DATA
+    pcm_s16le_muxer @255 DATA
+    pcm_s8_demuxer @256 DATA
+    pcm_s8_muxer @257 DATA
+    pcm_u16be_demuxer @258 DATA
+    pcm_u16be_muxer @259 DATA
+    pcm_u16le_demuxer @260 DATA
+    pcm_u16le_muxer @261 DATA
+    pcm_u8_demuxer @262 DATA
+    pcm_u8_muxer @263 DATA
+    pipe_protocol @264 DATA
+    psp_muxer @265 DATA
+    put_be16 @266
+    put_be24 @267
+    put_be32 @268
+    put_be64 @269
+    put_bmp_header @270
+    put_buffer @271
+    put_byte @272
+    put_flush_packet @273
+    put_le16 @274
+    put_le24 @275
+    put_le32 @276
+    put_le64 @277
+    put_strz @278
+    put_tag @279
+    put_wav_header @280
+    rawvideo_demuxer @281 DATA
+    rawvideo_muxer @282 DATA
+    redir_demuxer @283 DATA
+    redir_open @284
+    register_protocol @285
+    resolve_host @286
+    rm_demuxer @287 DATA
+    rm_muxer @288 DATA
+    roq_demuxer @289 DATA
+    roq_muxer @290 DATA
+    rtp_check_and_send_back_rr @291
+    rtp_get_codec_info @292
+    rtp_get_file_handles @293
+    rtp_get_local_port @294
+    rtp_get_payload_type @295
+    rtp_muxer @296 DATA
+    rtp_parse_close @297
+    rtp_parse_open @298
+    rtp_parse_packet @299
+    rtp_protocol @300 DATA
+    rtp_set_remote_url @301
+    rtsp_default_protocols @302 DATA
+    rtsp_demuxer @303 DATA
+    rtsp_next_attr_and_value @304
+    rtsp_parse_line @305
+    sdp_demuxer @306 DATA
+    segafilm_demuxer @307 DATA
+    shorten_demuxer @308 DATA
+    siff_demuxer @309 DATA
+    smacker_demuxer @310 DATA
+    small_strptime @311
+    sol_demuxer @312 DATA
+    start_tag @313
+    str_demuxer @314 DATA
+    swf_demuxer @315 DATA
+    swf_muxer @316 DATA
+    tcp_protocol @317 DATA
+    tg2_muxer @318 DATA
+    tgp_muxer @319 DATA
+    theora_codec @320 DATA
+    thp_demuxer @321 DATA
+    tiertexseq_demuxer @322 DATA
+    tta_demuxer @323 DATA
+    txd_demuxer @324 DATA
+    udp_get_file_handle @325
+    udp_get_local_port @326
+    udp_protocol @327 DATA
+    udp_set_remote_url @328
+    uncompress @329
+    url_close @330
+    url_close_buf @331
+    url_close_dyn_buf @332
+    url_exist @333
+    url_fclose @334
+    url_fdopen @335
+    url_feof @336
+    url_ferror @337
+    url_fget_max_packet_size @338
+    url_fgetc @339
+    url_fgets @340
+    url_fileno @341
+    url_filesize @342
+    url_fopen @343
+    url_fprintf @344
+    url_fseek @345
+    url_fsize @346
+    url_fskip @347
+    url_ftell @348
+    url_get_filename @349
+    url_get_max_packet_size @350
+    url_interrupt_cb @351 DATA
+    url_open @352
+    url_open_buf @353
+    url_open_dyn_buf @354
+    url_open_dyn_packet_buf @355
+    url_read @356
+    url_resetbuf @357
+    url_seek @358
+    url_set_interrupt_cb @359
+    url_setbufsize @360
+    url_split @361
+    url_write @362
+    vc1_demuxer @363 DATA
+    vmd_demuxer @364 DATA
+    voc_codec_tags @365 DATA
+    voc_demuxer @366 DATA
+    voc_get_packet @367
+    voc_magic @368 DATA
+    voc_muxer @369 DATA
+    vorbis_codec @370 DATA
+    vorbis_comment @371
+    wav_codec_get_id @372
+    wav_demuxer @373 DATA
+    wav_muxer @374 DATA
+    wc3_demuxer @375 DATA
+    wsaud_demuxer @376 DATA
+    wsvqa_demuxer @377 DATA
+    wv_demuxer @378 DATA
+    yuv4mpegpipe_demuxer @379 DATA
+    yuv4mpegpipe_muxer @380 DATA
+    zError @381
+    z_errmsg @382 DATA
+    zcalloc @383
+    zcfree @384
+    zlibCompileFlags @385
+    zlibVersion @386
+
+IMPORTS
+
+    avutil-49.dll.av_add_q
+    avutil-49.dll.av_adler32_update
+    avutil-49.dll.av_aes_crypt
+    avutil-49.dll.av_aes_init
+    avutil-49.dll.av_aes_size
+    avutil-49.dll.av_base64_decode
+    avutil-49.dll.av_base64_encode
+    avutil-49.dll.av_crc
+    avutil-49.dll.av_crc04C11DB7
+    avutil-49.dll.av_crc07
+    avutil-49.dll.av_crc8005
+    avutil-49.dll.av_crcEDB88320
+    avutil-49.dll.av_crc_init
+    avutil-49.dll.av_d2q
+    avutil-49.dll.av_dbl2ext
+    avutil-49.dll.av_dbl2int
+    avutil-49.dll.av_div_q
+    avutil-49.dll.av_evaluate_lls
+    avutil-49.dll.av_ext2dbl
+    avutil-49.dll.av_fifo_drain
+    avutil-49.dll.av_fifo_free
+    avutil-49.dll.av_fifo_generic_read
+    avutil-49.dll.av_fifo_init
+    avutil-49.dll.av_fifo_read
+    avutil-49.dll.av_fifo_realloc
+    avutil-49.dll.av_fifo_size
+    avutil-49.dll.av_fifo_write
+    avutil-49.dll.av_flt2int
+    avutil-49.dll.av_free
+    avutil-49.dll.av_freep
+    avutil-49.dll.av_init_lls
+    avutil-49.dll.av_init_random
+    avutil-49.dll.av_int2dbl
+    avutil-49.dll.av_int2flt
+    avutil-49.dll.av_log
+    avutil-49.dll.av_log_default_callback
+    avutil-49.dll.av_log_get_level
+    avutil-49.dll.av_log_level
+    avutil-49.dll.av_log_set_callback
+    avutil-49.dll.av_log_set_level
+    avutil-49.dll.av_malloc
+    avutil-49.dll.av_mallocz
+    avutil-49.dll.av_md5_final
+    avutil-49.dll.av_md5_init
+    avutil-49.dll.av_md5_size
+    avutil-49.dll.av_md5_sum
+    avutil-49.dll.av_md5_update
+    avutil-49.dll.av_mul_q
+    avutil-49.dll.av_random_generate_untempered_numbers
+    avutil-49.dll.av_realloc
+    avutil-49.dll.av_reduce
+    avutil-49.dll.av_rescale
+    avutil-49.dll.av_rescale_q
+    avutil-49.dll.av_rescale_rnd
+    avutil-49.dll.av_solve_lls
+    avutil-49.dll.av_strdup
+    avutil-49.dll.av_stristart
+    avutil-49.dll.av_strlcat
+    avutil-49.dll.av_strlcatf
+    avutil-49.dll.av_strlcpy
+    avutil-49.dll.av_strstart
+    avutil-49.dll.av_sub_q
+    avutil-49.dll.av_tree_destroy
+    avutil-49.dll.av_tree_find
+    avutil-49.dll.av_tree_insert
+    avutil-49.dll.av_update_lls
+    avutil-49.dll.av_vlog
+    avutil-49.dll.ff_des_encdec
+    avutil-49.dll.ff_gcd
+    avutil-49.dll.ff_log2_tab
+    avutil-49.dll.ff_rc4_enc
+    avutil-49.dll.ff_sqrt_tab
+    avutil-49.dll.lzo1x_decode
+    avcodec-51.dll.DCtab_chrom
+    avcodec-51.dll.DCtab_lum
+    avcodec-51.dll.MPV_common_defaults
+    avcodec-51.dll.MPV_common_end
+    avcodec-51.dll.MPV_common_init
+    avcodec-51.dll.MPV_common_init_mmx
+    avcodec-51.dll.MPV_decode_defaults
+    avcodec-51.dll.MPV_decode_mb
+    avcodec-51.dll.MPV_encode_end
+    avcodec-51.dll.MPV_encode_init
+    avcodec-51.dll.MPV_encode_picture
+    avcodec-51.dll.MPV_frame_end
+    avcodec-51.dll.MPV_frame_start
+    avcodec-51.dll._dist_code
+    avcodec-51.dll._length_code
+    avcodec-51.dll._tr_align
+    avcodec-51.dll._tr_flush_block
+    avcodec-51.dll._tr_init
+    avcodec-51.dll._tr_stored_block
+    avcodec-51.dll._tr_tally
+    avcodec-51.dll.aac_parser
+    avcodec-51.dll.aasc_decoder
+    avcodec-51.dll.ac3_common_init
+    avcodec-51.dll.ac3_encoder
+    avcodec-51.dll.ac3_parametric_bit_allocation
+    avcodec-51.dll.ac3_parser
+    avcodec-51.dll.add_pixels_clamped_mmx
+    avcodec-51.dll.adler32
+    avcodec-51.dll.adler32_combine
+    avcodec-51.dll.adpcm_4xm_decoder
+    avcodec-51.dll.adpcm_adx_decoder
+    avcodec-51.dll.adpcm_adx_encoder
+    avcodec-51.dll.adpcm_ct_decoder
+    avcodec-51.dll.adpcm_ea_decoder
+    avcodec-51.dll.adpcm_ea_r1_decoder
+    avcodec-51.dll.adpcm_ea_r2_decoder
+    avcodec-51.dll.adpcm_ea_r3_decoder
+    avcodec-51.dll.adpcm_ea_xas_decoder
+    avcodec-51.dll.adpcm_g726_decoder
+    avcodec-51.dll.adpcm_g726_encoder
+    avcodec-51.dll.adpcm_ima_amv_decoder
+    avcodec-51.dll.adpcm_ima_dk3_decoder
+    avcodec-51.dll.adpcm_ima_dk4_decoder
+    avcodec-51.dll.adpcm_ima_ea_eacs_decoder
+    avcodec-51.dll.adpcm_ima_ea_sead_decoder
+    avcodec-51.dll.adpcm_ima_qt_decoder
+    avcodec-51.dll.adpcm_ima_smjpeg_decoder
+    avcodec-51.dll.adpcm_ima_wav_decoder
+    avcodec-51.dll.adpcm_ima_wav_encoder
+    avcodec-51.dll.adpcm_ima_ws_decoder
+    avcodec-51.dll.adpcm_ms_decoder
+    avcodec-51.dll.adpcm_ms_encoder
+    avcodec-51.dll.adpcm_sbpro_2_decoder
+    avcodec-51.dll.adpcm_sbpro_3_decoder
+    avcodec-51.dll.adpcm_sbpro_4_decoder
+    avcodec-51.dll.adpcm_swf_decoder
+    avcodec-51.dll.adpcm_swf_encoder
+    avcodec-51.dll.adpcm_thp_decoder
+    avcodec-51.dll.adpcm_xa_decoder
+    avcodec-51.dll.adpcm_yamaha_decoder
+    avcodec-51.dll.adpcm_yamaha_encoder
+    avcodec-51.dll.alac_decoder
+    avcodec-51.dll.align_put_bits
+    avcodec-51.dll.alloc_picture
+    avcodec-51.dll.amv_decoder
+    avcodec-51.dll.ape_decoder
+    avcodec-51.dll.asv1_decoder
+    avcodec-51.dll.asv1_encoder
+    avcodec-51.dll.asv2_decoder
+    avcodec-51.dll.asv2_encoder
+    avcodec-51.dll.atrac3_decoder
+    avcodec-51.dll.audio_resample
+    avcodec-51.dll.audio_resample_close
+    avcodec-51.dll.audio_resample_init
+    avcodec-51.dll.av_audio_convert
+    avcodec-51.dll.av_bitstream_filter_close
+    avcodec-51.dll.av_bitstream_filter_filter
+    avcodec-51.dll.av_bitstream_filter_init
+    avcodec-51.dll.av_build_filter
+    avcodec-51.dll.av_fast_realloc
+    avcodec-51.dll.av_find_opt
+    avcodec-51.dll.av_first_parser
+    avcodec-51.dll.av_free_static
+    avcodec-51.dll.av_get_bits_per_sample
+    avcodec-51.dll.av_get_bits_per_sample_format
+    avcodec-51.dll.av_get_double
+    avcodec-51.dll.av_get_int
+    avcodec-51.dll.av_get_pict_type_char
+    avcodec-51.dll.av_get_q
+    avcodec-51.dll.av_get_string
+    avcodec-51.dll.av_mallocz_static
+    avcodec-51.dll.av_next_option
+    avcodec-51.dll.av_opt_set_defaults
+    avcodec-51.dll.av_opt_set_defaults2
+    avcodec-51.dll.av_opt_show
+    avcodec-51.dll.av_parse_video_frame_rate
+    avcodec-51.dll.av_parse_video_frame_size
+    avcodec-51.dll.av_parser_change
+    avcodec-51.dll.av_parser_close
+    avcodec-51.dll.av_parser_init
+    avcodec-51.dll.av_parser_parse
+    avcodec-51.dll.av_picture_copy
+    avcodec-51.dll.av_picture_crop
+    avcodec-51.dll.av_picture_pad
+    avcodec-51.dll.av_register_bitstream_filter
+    avcodec-51.dll.av_register_codec_parser
+    avcodec-51.dll.av_resample
+    avcodec-51.dll.av_resample_close
+    avcodec-51.dll.av_resample_compensate
+    avcodec-51.dll.av_resample_init
+    avcodec-51.dll.av_set_double
+    avcodec-51.dll.av_set_int
+    avcodec-51.dll.av_set_q
+    avcodec-51.dll.av_set_string
+    avcodec-51.dll.av_tempfile
+    avcodec-51.dll.av_xiphlacing
+    avcodec-51.dll.avcodec_align_dimensions
+    avcodec-51.dll.avcodec_alloc_context
+    avcodec-51.dll.avcodec_alloc_context2
+    avcodec-51.dll.avcodec_alloc_frame
+    avcodec-51.dll.avcodec_build
+    avcodec-51.dll.avcodec_check_dimensions
+    avcodec-51.dll.avcodec_close
+    avcodec-51.dll.avcodec_decode_audio
+    avcodec-51.dll.avcodec_decode_audio2
+    avcodec-51.dll.avcodec_decode_subtitle
+    avcodec-51.dll.avcodec_decode_video
+    avcodec-51.dll.avcodec_default_execute
+    avcodec-51.dll.avcodec_default_free_buffers
+    avcodec-51.dll.avcodec_default_get_buffer
+    avcodec-51.dll.avcodec_default_get_format
+    avcodec-51.dll.avcodec_default_reget_buffer
+    avcodec-51.dll.avcodec_default_release_buffer
+    avcodec-51.dll.avcodec_encode_audio
+    avcodec-51.dll.avcodec_encode_subtitle
+    avcodec-51.dll.avcodec_encode_video
+    avcodec-51.dll.avcodec_find_best_pix_fmt
+    avcodec-51.dll.avcodec_find_decoder
+    avcodec-51.dll.avcodec_find_decoder_by_name
+    avcodec-51.dll.avcodec_find_encoder
+    avcodec-51.dll.avcodec_find_encoder_by_name
+    avcodec-51.dll.avcodec_flush_buffers
+    avcodec-51.dll.avcodec_get_chroma_sub_sample
+    avcodec-51.dll.avcodec_get_context_defaults
+    avcodec-51.dll.avcodec_get_context_defaults2
+    avcodec-51.dll.avcodec_get_frame_defaults
+    avcodec-51.dll.avcodec_get_pix_fmt
+    avcodec-51.dll.avcodec_get_pix_fmt_loss
+    avcodec-51.dll.avcodec_get_pix_fmt_name
+    avcodec-51.dll.avcodec_init
+    avcodec-51.dll.avcodec_open
+    avcodec-51.dll.avcodec_pix_fmt_string
+    avcodec-51.dll.avcodec_pix_fmt_to_codec_tag
+    avcodec-51.dll.avcodec_register_all
+    avcodec-51.dll.avcodec_set_dimensions
+    avcodec-51.dll.avcodec_string
+    avcodec-51.dll.avcodec_thread_init
+    avcodec-51.dll.avcodec_version
+    avcodec-51.dll.avpicture_alloc
+    avcodec-51.dll.avpicture_deinterlace
+    avcodec-51.dll.avpicture_fill
+    avcodec-51.dll.avpicture_free
+    avcodec-51.dll.avpicture_get_size
+    avcodec-51.dll.avpicture_layout
+    avcodec-51.dll.avs_decoder
+    avcodec-51.dll.bethsoftvid_decoder
+    avcodec-51.dll.bmp_decoder
+    avcodec-51.dll.bmp_encoder
+    avcodec-51.dll.c93_decoder
+    avcodec-51.dll.cavs_decoder
+    avcodec-51.dll.cavsvideo_parser
+    avcodec-51.dll.cbpy_tab
+    avcodec-51.dll.cinepak_decoder
+    avcodec-51.dll.cljr_decoder
+    avcodec-51.dll.compress
+    avcodec-51.dll.compress2
+    avcodec-51.dll.compressBound
+    avcodec-51.dll.cook_decoder
+    avcodec-51.dll.copy_picture
+    avcodec-51.dll.crc32
+    avcodec-51.dll.crc32_combine
+    avcodec-51.dll.cscd_decoder
+    avcodec-51.dll.cyuv_decoder
+    avcodec-51.dll.dca_decoder
+    avcodec-51.dll.dca_parser
+    avcodec-51.dll.dct_quantize_c
+    avcodec-51.dll.dct_quantize_trellis_c
+    avcodec-51.dll.deflate
+    avcodec-51.dll.deflateBound
+    avcodec-51.dll.deflateCopy
+    avcodec-51.dll.deflateEnd
+    avcodec-51.dll.deflateInit2_
+    avcodec-51.dll.deflateInit_
+    avcodec-51.dll.deflateParams
+    avcodec-51.dll.deflatePrime
+    avcodec-51.dll.deflateReset
+    avcodec-51.dll.deflateSetDictionary
+    avcodec-51.dll.deflateSetHeader
+    avcodec-51.dll.deflateTune
+    avcodec-51.dll.deflate_copyright
+    avcodec-51.dll.denoise_dct_c
+    avcodec-51.dll.dnxhd_decoder
+    avcodec-51.dll.dnxhd_encoder
+    avcodec-51.dll.draw_edges
+    avcodec-51.dll.dsicinaudio_decoder
+    avcodec-51.dll.dsicinvideo_decoder
+    avcodec-51.dll.dsputil_init
+    avcodec-51.dll.dsputil_init_mmx
+    avcodec-51.dll.dsputil_init_pix_mmx
+    avcodec-51.dll.dsputil_static_init
+    avcodec-51.dll.dump_extradata_bsf
+    avcodec-51.dll.dvbsub_decoder
+    avcodec-51.dll.dvbsub_encoder
+    avcodec-51.dll.dvbsub_parser
+    avcodec-51.dll.dvdsub_decoder
+    avcodec-51.dll.dvdsub_encoder
+    avcodec-51.dll.dvdsub_parser
+    avcodec-51.dll.dvvideo_decoder
+    avcodec-51.dll.dvvideo_encoder
+    avcodec-51.dll.dxa_decoder
+    avcodec-51.dll.eightbps_decoder
+    avcodec-51.dll.fdct_ifast
+    avcodec-51.dll.fdct_ifast248
+    avcodec-51.dll.ff_aac_ac3_parse
+    avcodec-51.dll.ff_ac3_baptab
+    avcodec-51.dll.ff_ac3_bit_alloc_calc_bap
+    avcodec-51.dll.ff_ac3_bit_alloc_calc_mask
+    avcodec-51.dll.ff_ac3_bit_alloc_calc_psd
+    avcodec-51.dll.ff_ac3_bitratetab
+    avcodec-51.dll.ff_ac3_bndsz
+    avcodec-51.dll.ff_ac3_channels
+    avcodec-51.dll.ff_ac3_frame_sizes
+    avcodec-51.dll.ff_ac3_freqs
+    avcodec-51.dll.ff_ac3_hth
+    avcodec-51.dll.ff_ac3_latab
+    avcodec-51.dll.ff_ac3_parse_header
+    avcodec-51.dll.ff_ac3_window
+    avcodec-51.dll.ff_aic_dc_scale_table
+    avcodec-51.dll.ff_alternate_horizontal_scan
+    avcodec-51.dll.ff_alternate_vertical_scan
+    avcodec-51.dll.ff_apply_motion_4x4
+    avcodec-51.dll.ff_apply_motion_8x8
+    avcodec-51.dll.ff_apply_vector_2x2
+    avcodec-51.dll.ff_apply_vector_4x4
+    avcodec-51.dll.ff_avg_cavs_qpel16_mc00_c
+    avcodec-51.dll.ff_avg_cavs_qpel16_mc00_mmx2
+    avcodec-51.dll.ff_avg_cavs_qpel8_mc00_c
+    avcodec-51.dll.ff_avg_cavs_qpel8_mc00_mmx2
+    avcodec-51.dll.ff_avg_qpel16_mc11_old_c
+    avcodec-51.dll.ff_avg_qpel16_mc12_old_c
+    avcodec-51.dll.ff_avg_qpel16_mc13_old_c
+    avcodec-51.dll.ff_avg_qpel16_mc31_old_c
+    avcodec-51.dll.ff_avg_qpel16_mc32_old_c
+    avcodec-51.dll.ff_avg_qpel16_mc33_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc11_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc12_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc13_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc31_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc32_old_c
+    avcodec-51.dll.ff_avg_qpel8_mc33_old_c
+    avcodec-51.dll.ff_block_permute
+    avcodec-51.dll.ff_build_rac_states
+    avcodec-51.dll.ff_cavs_chroma_dec
+    avcodec-51.dll.ff_cavs_chroma_qp
+    avcodec-51.dll.ff_cavs_dequant_mul
+    avcodec-51.dll.ff_cavs_dequant_shift
+    avcodec-51.dll.ff_cavs_dir_mv
+    avcodec-51.dll.ff_cavs_end
+    avcodec-51.dll.ff_cavs_filter
+    avcodec-51.dll.ff_cavs_init
+    avcodec-51.dll.ff_cavs_init_mb
+    avcodec-51.dll.ff_cavs_init_pic
+    avcodec-51.dll.ff_cavs_init_top_lines
+    avcodec-51.dll.ff_cavs_inter
+    avcodec-51.dll.ff_cavs_inter_dec
+    avcodec-51.dll.ff_cavs_intra_dec
+    avcodec-51.dll.ff_cavs_intra_mv
+    avcodec-51.dll.ff_cavs_load_intra_pred_chroma
+    avcodec-51.dll.ff_cavs_load_intra_pred_luma
+    avcodec-51.dll.ff_cavs_modify_mb_i
+    avcodec-51.dll.ff_cavs_mv
+    avcodec-51.dll.ff_cavs_next_mb
+    avcodec-51.dll.ff_cavs_partition_flags
+    avcodec-51.dll.ff_cavs_scan3x3
+    avcodec-51.dll.ff_cavs_un_mv
+    avcodec-51.dll.ff_cavsdsp_init
+    avcodec-51.dll.ff_cavsdsp_init_3dnow
+    avcodec-51.dll.ff_cavsdsp_init_mmx2
+    avcodec-51.dll.ff_check_alignment
+    avcodec-51.dll.ff_clean_h263_qscales
+    avcodec-51.dll.ff_clean_intra_table_entries
+    avcodec-51.dll.ff_clean_mpeg4_qscales
+    avcodec-51.dll.ff_combine_frame
+    avcodec-51.dll.ff_convert_matrix
+    avcodec-51.dll.ff_copy_bits
+    avcodec-51.dll.ff_cropTbl
+    avcodec-51.dll.ff_dbkneetab
+    avcodec-51.dll.ff_dct_common_init
+    avcodec-51.dll.ff_decode_dxt1
+    avcodec-51.dll.ff_decode_dxt3
+    avcodec-51.dll.ff_div6
+    avcodec-51.dll.ff_dnxhd_cid_table
+    avcodec-51.dll.ff_dnxhd_get_cid_table
+    avcodec-51.dll.ff_do_elbg
+    avcodec-51.dll.ff_draw_horiz_band
+    avcodec-51.dll.ff_emulated_edge_mc
+    avcodec-51.dll.ff_epzs_motion_search
+    avcodec-51.dll.ff_er_add_slice
+    avcodec-51.dll.ff_er_frame_end
+    avcodec-51.dll.ff_er_frame_start
+    avcodec-51.dll.ff_estimate_b_frame_motion
+    avcodec-51.dll.ff_estimate_p_frame_motion
+    avcodec-51.dll.ff_eval
+    avcodec-51.dll.ff_eval2
+    avcodec-51.dll.ff_eval_free
+    avcodec-51.dll.ff_faandct
+    avcodec-51.dll.ff_faandct248
+    avcodec-51.dll.ff_fdct248_islow
+    avcodec-51.dll.ff_fdct_mmx
+    avcodec-51.dll.ff_fdct_mmx2
+    avcodec-51.dll.ff_fdct_sse2
+    avcodec-51.dll.ff_fdecaytab
+    avcodec-51.dll.ff_fft_calc_3dn
+    avcodec-51.dll.ff_fft_calc_3dn2
+    avcodec-51.dll.ff_fft_calc_c
+    avcodec-51.dll.ff_fft_calc_sse
+    avcodec-51.dll.ff_fft_end
+    avcodec-51.dll.ff_fft_init
+    avcodec-51.dll.ff_fft_permute
+    avcodec-51.dll.ff_fgaintab
+    avcodec-51.dll.ff_find_best_tables
+    avcodec-51.dll.ff_find_start_code
+    avcodec-51.dll.ff_find_unused_picture
+    avcodec-51.dll.ff_fix_long_mvs
+    avcodec-51.dll.ff_fix_long_p_mvs
+    avcodec-51.dll.ff_flac_compute_autocorr
+    avcodec-51.dll.ff_float_to_int16_c
+    avcodec-51.dll.ff_floortab
+    avcodec-51.dll.ff_flv_encode_picture_header
+    avcodec-51.dll.ff_frame_rate_tab
+    avcodec-51.dll.ff_get_2pass_fcode
+    avcodec-51.dll.ff_get_best_fcode
+    avcodec-51.dll.ff_get_mb_score
+    avcodec-51.dll.ff_gmc_c
+    avcodec-51.dll.ff_golomb_vlc_len
+    avcodec-51.dll.ff_h261_encode_init
+    avcodec-51.dll.ff_h261_encode_mb
+    avcodec-51.dll.ff_h261_encode_picture_header
+    avcodec-51.dll.ff_h261_get_picture_format
+    avcodec-51.dll.ff_h261_loop_filter
+    avcodec-51.dll.ff_h261_reorder_mb_index
+    avcodec-51.dll.ff_h261_rl_table_store
+    avcodec-51.dll.ff_h263_chroma_qscale_table
+    avcodec-51.dll.ff_h263_decode_end
+    avcodec-51.dll.ff_h263_decode_frame
+    avcodec-51.dll.ff_h263_decode_init
+    avcodec-51.dll.ff_h263_decode_mb
+    avcodec-51.dll.ff_h263_decode_mba
+    avcodec-51.dll.ff_h263_encode_mba
+    avcodec-51.dll.ff_h263_encode_motion
+    avcodec-51.dll.ff_h263_find_frame_end
+    avcodec-51.dll.ff_h263_get_gob_height
+    avcodec-51.dll.ff_h263_loop_filter
+    avcodec-51.dll.ff_h263_loop_filter_strength
+    avcodec-51.dll.ff_h263_resync
+    avcodec-51.dll.ff_h263_update_motion_val
+    avcodec-51.dll.ff_h264_find_frame_end
+    avcodec-51.dll.ff_h264_idct8_add_c
+    avcodec-51.dll.ff_h264_idct8_dc_add_c
+    avcodec-51.dll.ff_h264_idct_add_c
+    avcodec-51.dll.ff_h264_idct_dc_add_c
+    avcodec-51.dll.ff_h264_lowres_idct_add_c
+    avcodec-51.dll.ff_h264_lowres_idct_put_c
+    avcodec-51.dll.ff_h264_lps_range
+    avcodec-51.dll.ff_h264_lps_state
+    avcodec-51.dll.ff_h264_mlps_state
+    avcodec-51.dll.ff_h264_mps_state
+    avcodec-51.dll.ff_h264_norm_shift
+    avcodec-51.dll.ff_h264_pred_init
+    avcodec-51.dll.ff_huff_build_tree
+    avcodec-51.dll.ff_idct_xvid_mmx
+    avcodec-51.dll.ff_idct_xvid_mmx2
+    avcodec-51.dll.ff_imdct_calc
+    avcodec-51.dll.ff_imdct_calc_3dn2
+    avcodec-51.dll.ff_imdct_calc_sse
+    avcodec-51.dll.ff_img_copy_plane
+    avcodec-51.dll.ff_init_block_index
+    avcodec-51.dll.ff_init_cabac_decoder
+    avcodec-51.dll.ff_init_cabac_encoder
+    avcodec-51.dll.ff_init_cabac_states
+    avcodec-51.dll.ff_init_elbg
+    avcodec-51.dll.ff_init_me
+    avcodec-51.dll.ff_init_range_decoder
+    avcodec-51.dll.ff_init_range_encoder
+    avcodec-51.dll.ff_init_scantable
+    avcodec-51.dll.ff_inter_intra_vlc
+    avcodec-51.dll.ff_interleaved_dirac_golomb_vlc_code
+    avcodec-51.dll.ff_interleaved_golomb_vlc_len
+    avcodec-51.dll.ff_interleaved_se_golomb_vlc_code
+    avcodec-51.dll.ff_interleaved_ue_golomb_vlc_code
+    avcodec-51.dll.ff_intrax8_common_init
+    avcodec-51.dll.ff_intrax8_decode_picture
+    avcodec-51.dll.ff_intrax8dsp_init
+    avcodec-51.dll.ff_inverse
+    avcodec-51.dll.ff_jpeg_fdct_islow
+    avcodec-51.dll.ff_jpegls_decode_lse
+    avcodec-51.dll.ff_jpegls_decode_picture
+    avcodec-51.dll.ff_jpegls_init_state
+    avcodec-51.dll.ff_jpegls_reset_coding_parameters
+    avcodec-51.dll.ff_left_modifier_c
+    avcodec-51.dll.ff_left_modifier_l
+    avcodec-51.dll.ff_log2_run
+    avcodec-51.dll.ff_lzw_cur_ptr
+    avcodec-51.dll.ff_lzw_decode
+    avcodec-51.dll.ff_lzw_decode_close
+    avcodec-51.dll.ff_lzw_decode_init
+    avcodec-51.dll.ff_lzw_decode_open
+    avcodec-51.dll.ff_lzw_decode_tail
+    avcodec-51.dll.ff_lzw_encode
+    avcodec-51.dll.ff_lzw_encode_flush
+    avcodec-51.dll.ff_lzw_encode_init
+    avcodec-51.dll.ff_lzw_encode_state_size
+    avcodec-51.dll.ff_mb_non_intra_vlc
+    avcodec-51.dll.ff_mba_length
+    avcodec-51.dll.ff_mba_max
+    avcodec-51.dll.ff_mdct_calc
+    avcodec-51.dll.ff_mdct_end
+    avcodec-51.dll.ff_mdct_init
+    avcodec-51.dll.ff_mjpeg_bits_ac_chrominance
+    avcodec-51.dll.ff_mjpeg_bits_ac_luminance
+    avcodec-51.dll.ff_mjpeg_bits_dc_chrominance
+    avcodec-51.dll.ff_mjpeg_bits_dc_luminance
+    avcodec-51.dll.ff_mjpeg_build_huffman_codes
+    avcodec-51.dll.ff_mjpeg_decode_dht
+    avcodec-51.dll.ff_mjpeg_decode_dqt
+    avcodec-51.dll.ff_mjpeg_decode_end
+    avcodec-51.dll.ff_mjpeg_decode_frame
+    avcodec-51.dll.ff_mjpeg_decode_init
+    avcodec-51.dll.ff_mjpeg_decode_sof
+    avcodec-51.dll.ff_mjpeg_decode_sos
+    avcodec-51.dll.ff_mjpeg_encode_close
+    avcodec-51.dll.ff_mjpeg_encode_dc
+    avcodec-51.dll.ff_mjpeg_encode_init
+    avcodec-51.dll.ff_mjpeg_encode_mb
+    avcodec-51.dll.ff_mjpeg_encode_picture_header
+    avcodec-51.dll.ff_mjpeg_encode_picture_trailer
+    avcodec-51.dll.ff_mjpeg_encode_stuffing
+    avcodec-51.dll.ff_mjpeg_val_ac_chrominance
+    avcodec-51.dll.ff_mjpeg_val_ac_luminance
+    avcodec-51.dll.ff_mjpeg_val_dc_chrominance
+    avcodec-51.dll.ff_mjpeg_val_dc_luminance
+    avcodec-51.dll.ff_mpa_alloc_tables
+    avcodec-51.dll.ff_mpa_bitrate_tab
+    avcodec-51.dll.ff_mpa_decode_header
+    avcodec-51.dll.ff_mpa_enwindow
+    avcodec-51.dll.ff_mpa_freq_tab
+    avcodec-51.dll.ff_mpa_l2_select_table
+    avcodec-51.dll.ff_mpa_quant_bits
+    avcodec-51.dll.ff_mpa_quant_steps
+    avcodec-51.dll.ff_mpa_sblimit_table
+    avcodec-51.dll.ff_mpa_synth_filter
+    avcodec-51.dll.ff_mpa_synth_init
+    avcodec-51.dll.ff_mpc_dequantize_and_synth
+    avcodec-51.dll.ff_mpc_init
+    avcodec-51.dll.ff_mpeg12_common_init
+    avcodec-51.dll.ff_mpeg12_mbAddrIncrTable
+    avcodec-51.dll.ff_mpeg12_mbMotionVectorTable
+    avcodec-51.dll.ff_mpeg12_mbPatTable
+    avcodec-51.dll.ff_mpeg12_static_rl_table_store
+    avcodec-51.dll.ff_mpeg12_vlc_dc_chroma_bits
+    avcodec-51.dll.ff_mpeg12_vlc_dc_chroma_code
+    avcodec-51.dll.ff_mpeg12_vlc_dc_lum_bits
+    avcodec-51.dll.ff_mpeg12_vlc_dc_lum_code
+    avcodec-51.dll.ff_mpeg1_aspect
+    avcodec-51.dll.ff_mpeg1_clean_buffers
+    avcodec-51.dll.ff_mpeg1_dc_scale_table
+    avcodec-51.dll.ff_mpeg1_default_intra_matrix
+    avcodec-51.dll.ff_mpeg1_default_non_intra_matrix
+    avcodec-51.dll.ff_mpeg1_encode_init
+    avcodec-51.dll.ff_mpeg1_encode_slice_header
+    avcodec-51.dll.ff_mpeg1_find_frame_end
+    avcodec-51.dll.ff_mpeg2_aspect
+    avcodec-51.dll.ff_mpeg4_c_dc_scale_table
+    avcodec-51.dll.ff_mpeg4_clean_buffers
+    avcodec-51.dll.ff_mpeg4_decode_mb
+    avcodec-51.dll.ff_mpeg4_decode_partitions
+    avcodec-51.dll.ff_mpeg4_decode_picture_header
+    avcodec-51.dll.ff_mpeg4_default_intra_matrix
+    avcodec-51.dll.ff_mpeg4_default_non_intra_matrix
+    avcodec-51.dll.ff_mpeg4_encode_video_packet_header
+    avcodec-51.dll.ff_mpeg4_find_frame_end
+    avcodec-51.dll.ff_mpeg4_get_video_packet_prefix_length
+    avcodec-51.dll.ff_mpeg4_init_direct_mv
+    avcodec-51.dll.ff_mpeg4_init_partitions
+    avcodec-51.dll.ff_mpeg4_merge_partitions
+    avcodec-51.dll.ff_mpeg4_resync_prefix
+    avcodec-51.dll.ff_mpeg4_set_direct_mv
+    avcodec-51.dll.ff_mpeg4_stuffing
+    avcodec-51.dll.ff_mpeg4_y_dc_scale_table
+    avcodec-51.dll.ff_mpeg4video_split
+    avcodec-51.dll.ff_mpeg_flush
+    avcodec-51.dll.ff_mpegaudio_decode_header
+    avcodec-51.dll.ff_msmp4_dc_chroma_vlc
+    avcodec-51.dll.ff_msmp4_dc_luma_vlc
+    avcodec-51.dll.ff_msmp4_mb_i_table
+    avcodec-51.dll.ff_msmp4_mb_i_vlc
+    avcodec-51.dll.ff_msmpeg4_code012
+    avcodec-51.dll.ff_msmpeg4_coded_block_pred
+    avcodec-51.dll.ff_msmpeg4_decode_block
+    avcodec-51.dll.ff_msmpeg4_decode_init
+    avcodec-51.dll.ff_msmpeg4_decode_motion
+    avcodec-51.dll.ff_msmpeg4_encode_block
+    avcodec-51.dll.ff_msmpeg4_encode_init
+    avcodec-51.dll.ff_msmpeg4_encode_motion
+    avcodec-51.dll.ff_msmpeg4_handle_slices
+    avcodec-51.dll.ff_mspel_motion
+    avcodec-51.dll.ff_parse
+    avcodec-51.dll.ff_parse1_close
+    avcodec-51.dll.ff_parse_close
+    avcodec-51.dll.ff_parse_eval
+    avcodec-51.dll.ff_png_get_nb_channels
+    avcodec-51.dll.ff_png_pass_mask
+    avcodec-51.dll.ff_png_pass_row_size
+    avcodec-51.dll.ff_png_pass_xmin
+    avcodec-51.dll.ff_png_pass_xshift
+    avcodec-51.dll.ff_png_pass_ymask
+    avcodec-51.dll.ff_png_zalloc
+    avcodec-51.dll.ff_png_zfree
+    avcodec-51.dll.ff_pngsig
+    avcodec-51.dll.ff_pnm_decode_header
+    avcodec-51.dll.ff_pre_estimate_p_frame_motion
+    avcodec-51.dll.ff_print_debug_info
+    avcodec-51.dll.ff_put_cavs_qpel16_mc00_c
+    avcodec-51.dll.ff_put_cavs_qpel16_mc00_mmx2
+    avcodec-51.dll.ff_put_cavs_qpel8_mc00_c
+    avcodec-51.dll.ff_put_cavs_qpel8_mc00_mmx2
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc11_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc12_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc13_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc31_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc32_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel16_mc33_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc11_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc12_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc13_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc31_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc32_old_c
+    avcodec-51.dll.ff_put_no_rnd_qpel8_mc33_old_c
+    avcodec-51.dll.ff_put_qpel16_mc11_old_c
+    avcodec-51.dll.ff_put_qpel16_mc12_old_c
+    avcodec-51.dll.ff_put_qpel16_mc13_old_c
+    avcodec-51.dll.ff_put_qpel16_mc31_old_c
+    avcodec-51.dll.ff_put_qpel16_mc32_old_c
+    avcodec-51.dll.ff_put_qpel16_mc33_old_c
+    avcodec-51.dll.ff_put_qpel8_mc11_old_c
+    avcodec-51.dll.ff_put_qpel8_mc12_old_c
+    avcodec-51.dll.ff_put_qpel8_mc13_old_c
+    avcodec-51.dll.ff_put_qpel8_mc31_old_c
+    avcodec-51.dll.ff_put_qpel8_mc32_old_c
+    avcodec-51.dll.ff_put_qpel8_mc33_old_c
+    avcodec-51.dll.ff_put_string
+    avcodec-51.dll.ff_put_vc1_mspel_mc00_c
+    avcodec-51.dll.ff_rac_terminate
+    avcodec-51.dll.ff_rate_control_init
+    avcodec-51.dll.ff_rate_control_uninit
+    avcodec-51.dll.ff_rate_estimate_qscale
+    avcodec-51.dll.ff_raw_pixelFormatTags
+    avcodec-51.dll.ff_realloc_static
+    avcodec-51.dll.ff_rem6
+    avcodec-51.dll.ff_reverse
+    avcodec-51.dll.ff_rl_mpeg1
+    avcodec-51.dll.ff_rl_mpeg2
+    avcodec-51.dll.ff_rle_encode
+    avcodec-51.dll.ff_sdecaytab
+    avcodec-51.dll.ff_se_golomb_vlc_code
+    avcodec-51.dll.ff_set_cmp
+    avcodec-51.dll.ff_set_mpeg4_time
+    avcodec-51.dll.ff_set_qscale
+    avcodec-51.dll.ff_sgaintab
+    avcodec-51.dll.ff_shrink22
+    avcodec-51.dll.ff_shrink44
+    avcodec-51.dll.ff_shrink88
+    avcodec-51.dll.ff_simple_idct_add_mmx
+    avcodec-51.dll.ff_simple_idct_mmx
+    avcodec-51.dll.ff_simple_idct_put_mmx
+    avcodec-51.dll.ff_snow_horizontal_compose97i
+    avcodec-51.dll.ff_snow_horizontal_compose97i_mmx
+    avcodec-51.dll.ff_snow_horizontal_compose97i_sse2
+    avcodec-51.dll.ff_snow_inner_add_yblock
+    avcodec-51.dll.ff_snow_inner_add_yblock_mmx
+    avcodec-51.dll.ff_snow_inner_add_yblock_sse2
+    avcodec-51.dll.ff_snow_vertical_compose97i
+    avcodec-51.dll.ff_spatial_dwt
+    avcodec-51.dll.ff_split_xiph_headers
+    avcodec-51.dll.ff_squareTbl
+    avcodec-51.dll.ff_svq1_block_type_vlc
+    avcodec-51.dll.ff_svq1_frame_size_table
+    avcodec-51.dll.ff_svq1_inter_codebooks
+    avcodec-51.dll.ff_svq1_inter_mean_vlc
+    avcodec-51.dll.ff_svq1_inter_multistage_vlc
+    avcodec-51.dll.ff_svq1_intra_codebooks
+    avcodec-51.dll.ff_svq1_intra_mean_vlc
+    avcodec-51.dll.ff_svq1_intra_multistage_vlc
+    avcodec-51.dll.ff_table0_dc_chroma
+    avcodec-51.dll.ff_table0_dc_lum
+    avcodec-51.dll.ff_table1_dc_chroma
+    avcodec-51.dll.ff_table1_dc_lum
+    avcodec-51.dll.ff_top_modifier_c
+    avcodec-51.dll.ff_top_modifier_l
+    avcodec-51.dll.ff_ue_golomb_len
+    avcodec-51.dll.ff_ue_golomb_vlc_code
+    avcodec-51.dll.ff_update_duplicate_context
+    avcodec-51.dll.ff_vbv_update
+    avcodec-51.dll.ff_vc1_4mv_block_pattern_bits
+    avcodec-51.dll.ff_vc1_4mv_block_pattern_codes
+    avcodec-51.dll.ff_vc1_4mv_block_pattern_vlc
+    avcodec-51.dll.ff_vc1_ac_coeff_table
+    avcodec-51.dll.ff_vc1_adv_interlaced_4x4_zz
+    avcodec-51.dll.ff_vc1_adv_interlaced_4x8_zz
+    avcodec-51.dll.ff_vc1_adv_interlaced_8x4_zz
+    avcodec-51.dll.ff_vc1_adv_interlaced_8x8_zz
+    avcodec-51.dll.ff_vc1_adv_progressive_4x8_zz
+    avcodec-51.dll.ff_vc1_adv_progressive_8x4_zz
+    avcodec-51.dll.ff_vc1_bfraction_bits
+    avcodec-51.dll.ff_vc1_bfraction_codes
+    avcodec-51.dll.ff_vc1_bfraction_lut
+    avcodec-51.dll.ff_vc1_bfraction_vlc
+    avcodec-51.dll.ff_vc1_cbpcy_p_bits
+    avcodec-51.dll.ff_vc1_cbpcy_p_codes
+    avcodec-51.dll.ff_vc1_cbpcy_p_vlc
+    avcodec-51.dll.ff_vc1_dqscale
+    avcodec-51.dll.ff_vc1_fps_dr
+    avcodec-51.dll.ff_vc1_fps_nr
+    avcodec-51.dll.ff_vc1_horizontal_zz
+    avcodec-51.dll.ff_vc1_imode_bits
+    avcodec-51.dll.ff_vc1_imode_codes
+    avcodec-51.dll.ff_vc1_imode_vlc
+    avcodec-51.dll.ff_vc1_mv_diff_bits
+    avcodec-51.dll.ff_vc1_mv_diff_codes
+    avcodec-51.dll.ff_vc1_mv_diff_vlc
+    avcodec-51.dll.ff_vc1_mv_pmode_table
+    avcodec-51.dll.ff_vc1_mv_pmode_table2
+    avcodec-51.dll.ff_vc1_norm2_bits
+    avcodec-51.dll.ff_vc1_norm2_codes
+    avcodec-51.dll.ff_vc1_norm2_vlc
+    avcodec-51.dll.ff_vc1_norm6_bits
+    avcodec-51.dll.ff_vc1_norm6_codes
+    avcodec-51.dll.ff_vc1_norm6_spec
+    avcodec-51.dll.ff_vc1_norm6_vlc
+    avcodec-51.dll.ff_vc1_normal_zz
+    avcodec-51.dll.ff_vc1_pixel_aspect
+    avcodec-51.dll.ff_vc1_pquant_table
+    avcodec-51.dll.ff_vc1_simple_progressive_4x4_zz
+    avcodec-51.dll.ff_vc1_simple_progressive_4x8_zz
+    avcodec-51.dll.ff_vc1_simple_progressive_8x4_zz
+    avcodec-51.dll.ff_vc1_simple_progressive_8x8_zz
+    avcodec-51.dll.ff_vc1_subblkpat_bits
+    avcodec-51.dll.ff_vc1_subblkpat_codes
+    avcodec-51.dll.ff_vc1_subblkpat_vlc
+    avcodec-51.dll.ff_vc1_ttblk_bits
+    avcodec-51.dll.ff_vc1_ttblk_codes
+    avcodec-51.dll.ff_vc1_ttblk_to_tt
+    avcodec-51.dll.ff_vc1_ttblk_vlc
+    avcodec-51.dll.ff_vc1_ttfrm_to_tt
+    avcodec-51.dll.ff_vc1_ttmb_bits
+    avcodec-51.dll.ff_vc1_ttmb_codes
+    avcodec-51.dll.ff_vc1_ttmb_vlc
+    avcodec-51.dll.ff_vc1_vertical_zz
+    avcodec-51.dll.ff_vc1dsp_init
+    avcodec-51.dll.ff_vector_fmul_add_add_c
+    avcodec-51.dll.ff_vorbis_floor1_inverse_db_table
+    avcodec-51.dll.ff_vorbis_floor1_render_list
+    avcodec-51.dll.ff_vorbis_len2vlc
+    avcodec-51.dll.ff_vorbis_nth_root
+    avcodec-51.dll.ff_vorbis_ready_floor1_list
+    avcodec-51.dll.ff_vorbis_vwin
+    avcodec-51.dll.ff_vp3_dsp_init_mmx
+    avcodec-51.dll.ff_vp3_idct_add_c
+    avcodec-51.dll.ff_vp3_idct_add_mmx
+    avcodec-51.dll.ff_vp3_idct_add_sse2
+    avcodec-51.dll.ff_vp3_idct_c
+    avcodec-51.dll.ff_vp3_idct_mmx
+    avcodec-51.dll.ff_vp3_idct_put_c
+    avcodec-51.dll.ff_vp3_idct_put_mmx
+    avcodec-51.dll.ff_vp3_idct_put_sse2
+    avcodec-51.dll.ff_vp3_idct_sse2
+    avcodec-51.dll.ff_wma_end
+    avcodec-51.dll.ff_wma_hgain_huffbits
+    avcodec-51.dll.ff_wma_hgain_huffcodes
+    avcodec-51.dll.ff_wma_init
+    avcodec-51.dll.ff_wma_lsp_codebook
+    avcodec-51.dll.ff_wma_scale_huffbits
+    avcodec-51.dll.ff_wma_scale_huffcodes
+    avcodec-51.dll.ff_wma_total_gain_to_bits
+    avcodec-51.dll.ff_wmv2_add_mb
+    avcodec-51.dll.ff_wmv2_decode_mb
+    avcodec-51.dll.ff_wmv2_decode_picture_header
+    avcodec-51.dll.ff_wmv2_decode_secondary_picture_header
+    avcodec-51.dll.ff_wmv2_encode_mb
+    avcodec-51.dll.ff_wmv2_encode_picture_header
+    avcodec-51.dll.ff_wmv2_idct_c
+    avcodec-51.dll.ff_write_pass1_stats
+    avcodec-51.dll.ff_write_quant_matrix
+    avcodec-51.dll.ff_yuv420p_list
+    avcodec-51.dll.ff_zigzag248_direct
+    avcodec-51.dll.ff_zigzag_direct
+    avcodec-51.dll.ffv1_decoder
+    avcodec-51.dll.ffv1_encoder
+    avcodec-51.dll.ffvhuff_decoder
+    avcodec-51.dll.ffvhuff_encoder
+    avcodec-51.dll.first_avcodec
+    avcodec-51.dll.first_bitstream_filter
+    avcodec-51.dll.flac_decoder
+    avcodec-51.dll.flac_encoder
+    avcodec-51.dll.flashsv_decoder
+    avcodec-51.dll.flashsv_encoder
+    avcodec-51.dll.flic_decoder
+    avcodec-51.dll.flv_decoder
+    avcodec-51.dll.flv_encoder
+    avcodec-51.dll.flv_h263_decode_picture_header
+    avcodec-51.dll.fourxm_decoder
+    avcodec-51.dll.fraps_decoder
+    avcodec-51.dll.free_vlc
+    avcodec-51.dll.get_crc_table
+    avcodec-51.dll.gif_decoder
+    avcodec-51.dll.gif_encoder
+    avcodec-51.dll.h261_decoder
+    avcodec-51.dll.h261_encoder
+    avcodec-51.dll.h261_parser
+    avcodec-51.dll.h263_decode_init_vlc
+    avcodec-51.dll.h263_decode_picture_header
+    avcodec-51.dll.h263_decoder
+    avcodec-51.dll.h263_encode_gob_header
+    avcodec-51.dll.h263_encode_init
+    avcodec-51.dll.h263_encode_mb
+    avcodec-51.dll.h263_encode_picture_header
+    avcodec-51.dll.h263_encoder
+    avcodec-51.dll.h263_get_picture_format
+    avcodec-51.dll.h263_parser
+    avcodec-51.dll.h263_pred_motion
+    avcodec-51.dll.h263i_decoder
+    avcodec-51.dll.h263p_encoder
+    avcodec-51.dll.h264_decoder
+    avcodec-51.dll.h264_mp4toannexb_bsf
+    avcodec-51.dll.h264_parser
+    avcodec-51.dll.huffyuv_decoder
+    avcodec-51.dll.huffyuv_encoder
+    avcodec-51.dll.idcin_decoder
+    avcodec-51.dll.imc_decoder
+    avcodec-51.dll.img_convert
+    avcodec-51.dll.img_copy
+    avcodec-51.dll.img_crop
+    avcodec-51.dll.img_get_alpha_info
+    avcodec-51.dll.img_pad
+    avcodec-51.dll.img_resample
+    avcodec-51.dll.img_resample_close
+    avcodec-51.dll.img_resample_full_init
+    avcodec-51.dll.img_resample_init
+    avcodec-51.dll.imx_dump_header_bsf
+    avcodec-51.dll.indeo2_decoder
+    avcodec-51.dll.indeo3_decoder
+    avcodec-51.dll.inflate
+    avcodec-51.dll.inflateCopy
+    avcodec-51.dll.inflateEnd
+    avcodec-51.dll.inflateGetHeader
+    avcodec-51.dll.inflateInit2_
+    avcodec-51.dll.inflateInit_
+    avcodec-51.dll.inflatePrime
+    avcodec-51.dll.inflateReset
+    avcodec-51.dll.inflateSetDictionary
+    avcodec-51.dll.inflateSync
+    avcodec-51.dll.inflateSyncPoint
+    avcodec-51.dll.inflate_copyright
+    avcodec-51.dll.inflate_fast
+    avcodec-51.dll.inflate_table
+    avcodec-51.dll.init_rl
+    avcodec-51.dll.init_vlc_rl
+    avcodec-51.dll.init_vlc_sparse
+    avcodec-51.dll.intel_h263_decode_picture_header
+    avcodec-51.dll.inter_MCBPC_bits
+    avcodec-51.dll.inter_MCBPC_code
+    avcodec-51.dll.inter_level
+    avcodec-51.dll.inter_run
+    avcodec-51.dll.inter_vlc
+    avcodec-51.dll.interplay_dpcm_decoder
+    avcodec-51.dll.interplay_video_decoder
+    avcodec-51.dll.intra_MCBPC_bits
+    avcodec-51.dll.intra_MCBPC_code
+    avcodec-51.dll.intra_level
+    avcodec-51.dll.intra_run
+    avcodec-51.dll.intra_vlc
+    avcodec-51.dll.inv_zigzag_direct16
+    avcodec-51.dll.j_rev_dct
+    avcodec-51.dll.j_rev_dct1
+    avcodec-51.dll.j_rev_dct2
+    avcodec-51.dll.j_rev_dct4
+    avcodec-51.dll.jpegls_decoder
+    avcodec-51.dll.jpegls_encoder
+    avcodec-51.dll.kmvc_decoder
+    avcodec-51.dll.ljpeg_encoder
+    avcodec-51.dll.loco_decoder
+    avcodec-51.dll.mace3_decoder
+    avcodec-51.dll.mace6_decoder
+    avcodec-51.dll.mdec_decoder
+    avcodec-51.dll.mjpeg_decoder
+    avcodec-51.dll.mjpeg_encoder
+    avcodec-51.dll.mjpeg_parser
+    avcodec-51.dll.mjpega_dump_header_bsf
+    avcodec-51.dll.mjpegb_decoder
+    avcodec-51.dll.mm_flags
+    avcodec-51.dll.mm_support
+    avcodec-51.dll.mmvideo_decoder
+    avcodec-51.dll.mp2_decoder
+    avcodec-51.dll.mp2_encoder
+    avcodec-51.dll.mp3_decoder
+    avcodec-51.dll.mp3_header_compress_bsf
+    avcodec-51.dll.mp3_header_decompress_bsf
+    avcodec-51.dll.mp3adu_decoder
+    avcodec-51.dll.mp3on4_decoder
+    avcodec-51.dll.mpc7_decoder
+    avcodec-51.dll.mpc8_decoder
+    avcodec-51.dll.mpeg1_encode_mb
+    avcodec-51.dll.mpeg1_encode_picture_header
+    avcodec-51.dll.mpeg1video_decoder
+    avcodec-51.dll.mpeg1video_encoder
+    avcodec-51.dll.mpeg2video_decoder
+    avcodec-51.dll.mpeg2video_encoder
+    avcodec-51.dll.mpeg4_decoder
+    avcodec-51.dll.mpeg4_encode_mb
+    avcodec-51.dll.mpeg4_encode_picture_header
+    avcodec-51.dll.mpeg4_encoder
+    avcodec-51.dll.mpeg4_pred_ac
+    avcodec-51.dll.mpeg4video_parser
+    avcodec-51.dll.mpegaudio_parser
+    avcodec-51.dll.mpegvideo_decoder
+    avcodec-51.dll.mpegvideo_parser
+    avcodec-51.dll.msmpeg4_decode_ext_header
+    avcodec-51.dll.msmpeg4_decode_picture_header
+    avcodec-51.dll.msmpeg4_encode_ext_header
+    avcodec-51.dll.msmpeg4_encode_mb
+    avcodec-51.dll.msmpeg4_encode_picture_header
+    avcodec-51.dll.msmpeg4v1_decoder
+    avcodec-51.dll.msmpeg4v1_encoder
+    avcodec-51.dll.msmpeg4v2_decoder
+    avcodec-51.dll.msmpeg4v2_encoder
+    avcodec-51.dll.msmpeg4v3_decoder
+    avcodec-51.dll.msmpeg4v3_encoder
+    avcodec-51.dll.msrle_decoder
+    avcodec-51.dll.msvideo1_decoder
+    avcodec-51.dll.mszh_decoder
+    avcodec-51.dll.mv_tables
+    avcodec-51.dll.mvtab
+    avcodec-51.dll.nelly_decode_block
+    avcodec-51.dll.nellymoser_decoder
+    avcodec-51.dll.noise_bsf
+    avcodec-51.dll.nuv_decoder
+    avcodec-51.dll.old_ff_c_dc_scale_table
+    avcodec-51.dll.old_ff_y_dc_scale_table
+    avcodec-51.dll.pam_encoder
+    avcodec-51.dll.pbm_encoder
+    avcodec-51.dll.pcm_alaw_decoder
+    avcodec-51.dll.pcm_alaw_encoder
+    avcodec-51.dll.pcm_mulaw_decoder
+    avcodec-51.dll.pcm_mulaw_encoder
+    avcodec-51.dll.pcm_s16be_decoder
+    avcodec-51.dll.pcm_s16be_encoder
+    avcodec-51.dll.pcm_s16le_decoder
+    avcodec-51.dll.pcm_s16le_encoder
+    avcodec-51.dll.pcm_s24be_decoder
+    avcodec-51.dll.pcm_s24be_encoder
+    avcodec-51.dll.pcm_s24daud_decoder
+    avcodec-51.dll.pcm_s24daud_encoder
+    avcodec-51.dll.pcm_s24le_decoder
+    avcodec-51.dll.pcm_s24le_encoder
+    avcodec-51.dll.pcm_s32be_decoder
+    avcodec-51.dll.pcm_s32be_encoder
+    avcodec-51.dll.pcm_s32le_decoder
+    avcodec-51.dll.pcm_s32le_encoder
+    avcodec-51.dll.pcm_s8_decoder
+    avcodec-51.dll.pcm_s8_encoder
+    avcodec-51.dll.pcm_u16be_decoder
+    avcodec-51.dll.pcm_u16be_encoder
+    avcodec-51.dll.pcm_u16le_decoder
+    avcodec-51.dll.pcm_u16le_encoder
+    avcodec-51.dll.pcm_u24be_decoder
+    avcodec-51.dll.pcm_u24be_encoder
+    avcodec-51.dll.pcm_u24le_decoder
+    avcodec-51.dll.pcm_u24le_encoder
+    avcodec-51.dll.pcm_u32be_decoder
+    avcodec-51.dll.pcm_u32be_encoder
+    avcodec-51.dll.pcm_u32le_decoder
+    avcodec-51.dll.pcm_u32le_encoder
+    avcodec-51.dll.pcm_u8_decoder
+    avcodec-51.dll.pcm_u8_encoder
+    avcodec-51.dll.pcm_zork_decoder
+    avcodec-51.dll.pcm_zork_encoder
+    avcodec-51.dll.pgm_encoder
+    avcodec-51.dll.pgmyuv_encoder
+    avcodec-51.dll.png_decoder
+    avcodec-51.dll.png_encoder
+    avcodec-51.dll.pnm_parser
+    avcodec-51.dll.ppm_encoder
+    avcodec-51.dll.ptx_decoder
+    avcodec-51.dll.put_pixels_clamped_mmx
+    avcodec-51.dll.put_signed_pixels_clamped_mmx
+    avcodec-51.dll.qdm2_decoder
+    avcodec-51.dll.qdraw_decoder
+    avcodec-51.dll.qpeg_decoder
+    avcodec-51.dll.qtrle_decoder
+    avcodec-51.dll.qtrle_encoder
+    avcodec-51.dll.ra_144_decoder
+    avcodec-51.dll.ra_288_decoder
+    avcodec-51.dll.rawvideo_decoder
+    avcodec-51.dll.rawvideo_encoder
+    avcodec-51.dll.register_avcodec
+    avcodec-51.dll.remove_extradata_bsf
+    avcodec-51.dll.rl_table
+    avcodec-51.dll.roq_decoder
+    avcodec-51.dll.roq_dpcm_decoder
+    avcodec-51.dll.roq_dpcm_encoder
+    avcodec-51.dll.roq_encoder
+    avcodec-51.dll.rpza_decoder
+    avcodec-51.dll.rtjpeg_decode_frame_yuv420
+    avcodec-51.dll.rtjpeg_decode_init
+    avcodec-51.dll.rv10_decoder
+    avcodec-51.dll.rv10_encode_picture_header
+    avcodec-51.dll.rv10_encoder
+    avcodec-51.dll.rv20_decoder
+    avcodec-51.dll.rv20_encode_picture_header
+    avcodec-51.dll.rv20_encoder
+    avcodec-51.dll.rv_decode_dc
+    avcodec-51.dll.sgi_decoder
+    avcodec-51.dll.sgi_encoder
+    avcodec-51.dll.shorten_decoder
+    avcodec-51.dll.simple_idct
+    avcodec-51.dll.simple_idct248_put
+    avcodec-51.dll.simple_idct48_add
+    avcodec-51.dll.simple_idct84_add
+    avcodec-51.dll.simple_idct_add
+    avcodec-51.dll.simple_idct_put
+    avcodec-51.dll.smackaud_decoder
+    avcodec-51.dll.smacker_decoder
+    avcodec-51.dll.smc_decoder
+    avcodec-51.dll.snow_decoder
+    avcodec-51.dll.snow_encoder
+    avcodec-51.dll.sol_dpcm_decoder
+    avcodec-51.dll.sonic_decoder
+    avcodec-51.dll.sonic_encoder
+    avcodec-51.dll.sonic_ls_encoder
+    avcodec-51.dll.sp5x_decoder
+    avcodec-51.dll.svq1_decoder
+    avcodec-51.dll.svq1_encoder
+    avcodec-51.dll.svq3_decoder
+    avcodec-51.dll.sws_freeContext
+    avcodec-51.dll.sws_getCachedContext
+    avcodec-51.dll.sws_getContext
+    avcodec-51.dll.sws_scale
+    avcodec-51.dll.table_inter_intra
+    avcodec-51.dll.table_mb_non_intra
+    avcodec-51.dll.targa_decoder
+    avcodec-51.dll.targa_encoder
+    avcodec-51.dll.theora_decoder
+    avcodec-51.dll.thp_decoder
+    avcodec-51.dll.tiertexseqvideo_decoder
+    avcodec-51.dll.tiff_decoder
+    avcodec-51.dll.tiff_encoder
+    avcodec-51.dll.truemotion1_decoder
+    avcodec-51.dll.truemotion2_decoder
+    avcodec-51.dll.truespeech_decoder
+    avcodec-51.dll.tscc_decoder
+    avcodec-51.dll.tta_decoder
+    avcodec-51.dll.txd_decoder
+    avcodec-51.dll.ulti_decoder
+    avcodec-51.dll.uncompress
+    avcodec-51.dll.v2_intra_cbpc
+    avcodec-51.dll.v2_mb_type
+    avcodec-51.dll.vb_decoder
+    avcodec-51.dll.vc1_decoder
+    avcodec-51.dll.vc1_parser
+    avcodec-51.dll.vcr1_decoder
+    avcodec-51.dll.vmdaudio_decoder
+    avcodec-51.dll.vmdvideo_decoder
+    avcodec-51.dll.vmnc_decoder
+    avcodec-51.dll.vorbis_decoder
+    avcodec-51.dll.vorbis_encoder
+    avcodec-51.dll.vorbis_inverse_coupling
+    avcodec-51.dll.vp3_decoder
+    avcodec-51.dll.vp56_b2p
+    avcodec-51.dll.vp56_b6to4
+    avcodec-51.dll.vp56_coeff_bias
+    avcodec-51.dll.vp56_coeff_bit_length
+    avcodec-51.dll.vp56_coeff_parse_table
+    avcodec-51.dll.vp56_decode_frame
+    avcodec-51.dll.vp56_def_mb_types_stats
+    avcodec-51.dll.vp56_free
+    avcodec-51.dll.vp56_init
+    avcodec-51.dll.vp56_init_dequant
+    avcodec-51.dll.vp56_pc_tree
+    avcodec-51.dll.vp56_pva_tree
+    avcodec-51.dll.vp5_decoder
+    avcodec-51.dll.vp6_decoder
+    avcodec-51.dll.vp6a_decoder
+    avcodec-51.dll.vp6f_decoder
+    avcodec-51.dll.vqa_decoder
+    avcodec-51.dll.w53_32_c
+    avcodec-51.dll.w97_32_c
+    avcodec-51.dll.wavpack_decoder
+    avcodec-51.dll.wmav1_decoder
+    avcodec-51.dll.wmav1_encoder
+    avcodec-51.dll.wmav2_decoder
+    avcodec-51.dll.wmav2_encoder
+    avcodec-51.dll.wmv1_c_dc_scale_table
+    avcodec-51.dll.wmv1_decoder
+    avcodec-51.dll.wmv1_encoder
+    avcodec-51.dll.wmv1_scantable
+    avcodec-51.dll.wmv1_y_dc_scale_table
+    avcodec-51.dll.wmv2_decoder
+    avcodec-51.dll.wmv2_encoder
+    avcodec-51.dll.wmv2_inter_table
+    avcodec-51.dll.wmv2_scantableA
+    avcodec-51.dll.wmv2_scantableB
+    avcodec-51.dll.wmv3_dc_scale_table
+    avcodec-51.dll.wmv3_decoder
+    avcodec-51.dll.wnv1_decoder
+    avcodec-51.dll.ws_snd1_decoder
+    avcodec-51.dll.xan_dpcm_decoder
+    avcodec-51.dll.xan_wc3_decoder
+    avcodec-51.dll.xl_decoder
+    avcodec-51.dll.xsub_decoder
+    avcodec-51.dll.zError
+    avcodec-51.dll.z_errmsg
+    avcodec-51.dll.zcalloc
+    avcodec-51.dll.zcfree
+    avcodec-51.dll.zlibCompileFlags
+    avcodec-51.dll.zlibVersion
+    avcodec-51.dll.zlib_decoder
+    avcodec-51.dll.zlib_encoder
+    avcodec-51.dll.zmbv_decoder
+    avcodec-51.dll.zmbv_encoder
