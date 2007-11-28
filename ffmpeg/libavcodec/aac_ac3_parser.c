@@ -50,7 +50,7 @@ int ff_aac_ac3_parse(AVCodecParserContext *s1,
 
         if (s->frame_size == 0) {
             if ((s->inbuf_ptr - s->inbuf) == s->header_size) {
-                len = s->sync(s->inbuf, &channels, &sample_rate, &bit_rate,
+                len = s->sync(avctx, s->inbuf, &channels, &sample_rate, &bit_rate,
                               &samples);
                 if (len == 0) {
                     /* no sync found : move by one byte (inefficient, but simple!) */
@@ -61,7 +61,7 @@ int ff_aac_ac3_parse(AVCodecParserContext *s1,
                     /* update codec info */
                     avctx->sample_rate = sample_rate;
                     /* set channels,except if the user explicitly requests 1 or 2 channels, XXX/FIXME this is a bit ugly */
-                    if(avctx->codec_id == CODEC_ID_AC3){
+                    if(avctx->codec_id == CODEC_ID_AC3 || avctx->codec_id == CODEC_ID_EAC3){
                         if(avctx->channels!=1 && avctx->channels!=2){
                             avctx->channels = channels;
                         }

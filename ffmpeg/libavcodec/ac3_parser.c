@@ -84,7 +84,7 @@ int ff_ac3_parse_header(const uint8_t buf[7], AC3HeaderInfo *hdr)
     return 0;
 }
 
-static int ac3_sync(const uint8_t *buf, int *channels, int *sample_rate,
+static int ac3_sync(AVCodecContext *avctx, const uint8_t *buf, int *channels, int *sample_rate,
                     int *bit_rate, int *samples)
 {
     int err;
@@ -100,12 +100,16 @@ static int ac3_sync(const uint8_t *buf, int *channels, int *sample_rate,
 
     bsid = hdr.bsid;
     if(bsid <= 10) {             /* Normal AC-3 */
+        if(avctx->codec_id == CODEC_ID_EAC3)
+           avctx->codec_id = CODEC_ID_AC3;
         *sample_rate = hdr.sample_rate;
         *bit_rate = hdr.bit_rate;
         *channels = hdr.channels;
         *samples = AC3_FRAME_SIZE;
         return hdr.frame_size;
     } else if (bsid > 10 && bsid <= 16) { /* Enhanced AC-3 */
+		if(avctx->codec_id == CODEC_ID_AC3)
+           avctx->codec_id = CODEC_ID_EAC3;
         init_get_bits(&bits, &buf[2], (AC3_HEADER_SIZE-2) * 8);
         strmtyp = get_bits(&bits, 2);
         substreamid = get_bits(&bits, 3);
@@ -155,9 +159,16 @@ static int ac3_parse_init(AVCodecParserContext *s1)
     return 0;
 }
 
-
 AVCodecParser ac3_parser = {
     { CODEC_ID_AC3 },
+    sizeof(AACAC3ParseContext),
+    ac3_parse_init,
+    ff_aac_ac3_parse,
+    NULL,
+};
+
+AVCodecParser eac3_parser = {
+    { CODEC_ID_EAC3 },
     sizeof(AACAC3ParseContext),
     ac3_parse_init,
     ff_aac_ac3_parse,

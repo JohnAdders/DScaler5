@@ -75,6 +75,7 @@ void av_register_all(void)
     REGISTER_DEMUXER  (DV1394, dv1394);
     REGISTER_DEMUXER  (DXA, dxa);
     REGISTER_DEMUXER  (EA, ea);
+	REGISTER_DEMUXER  (EAC3, eac3);
     REGISTER_DEMUXER  (EA_CDATA, ea_cdata);
     REGISTER_MUXDEMUX (FFM, ffm);
     REGISTER_MUXDEMUX (FLAC, flac);
@@ -96,6 +97,7 @@ void av_register_all(void)
     REGISTER_MUXDEMUX (MATROSKA, matroska);
     REGISTER_MUXER    (MATROSKA_AUDIO, matroska_audio);
     REGISTER_MUXDEMUX (MJPEG, mjpeg);
+	REGISTER_DEMUXER  (MLP, mlp);
     REGISTER_DEMUXER  (MM, mm);
     REGISTER_MUXDEMUX (MMF, mmf);
     REGISTER_MUXDEMUX (MOV, mov);

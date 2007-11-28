@@ -24,8 +24,8 @@
  * Common code between AC3 encoder and decoder.
  */
 
-#ifndef FFMPEG_AC3_H
-#define FFMPEG_AC3_H
+#ifndef AC3_H
+#define AC3_H
 
 #include "ac3tab.h"
 
@@ -161,10 +161,11 @@ void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *bndpsd,
  * @param[in]  end        ending bin location
  * @param[in]  snroffset  SNR adjustment
  * @param[in]  floor      noise floor
+ * @param[in]  baptab     bit allocation pointer table
  * @param[out] bap        bit allocation pointers
  */
 void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
-                               int snroffset, int floor, uint8_t *bap);
+                               int snroffset, int floor, const uint8_t *baptab, uint8_t *bap);
 
 void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
                                    int8_t *exp, int start, int end,
@@ -172,4 +173,4 @@ void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
                                    int deltbae,int deltnseg,
                                    uint8_t *deltoffst, uint8_t *deltlen, uint8_t *deltba);
 
-#endif /* FFMPEG_AC3_H */
+#endif /* AC3_H */

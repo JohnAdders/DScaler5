@@ -38,7 +38,7 @@ static const int aac_channels[8] = {
 };
 
 
-static int aac_sync(const uint8_t *buf, int *channels, int *sample_rate,
+static int aac_sync(AVCodecContext *avctx, const uint8_t *buf, int *channels, int *sample_rate,
                     int *bit_rate, int *samples)
 {
     GetBitContext bits;

@@ -38,7 +38,7 @@ static int wav_write_header(AVFormatContext *s)
     offset_t fmt, fact;
 
     put_tag(pb, "RIFF");
-    put_le32(pb, 0); /* file length */
+    put_le32(pb, 36); /* file length */
     put_tag(pb, "WAVE");
 
     /* format header */

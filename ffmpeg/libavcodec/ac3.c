@@ -173,7 +173,7 @@ void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *bndpsd,
 }
 
 void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
-                               int snroffset, int floor, uint8_t *bap)
+                               int snroffset, int floor, const uint8_t *baptab, uint8_t *bap)
 {
     int i, j, k, end1, v, address;
 
@@ -190,7 +190,7 @@ void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
         end1 = FFMIN(bndtab[j] + ff_ac3_bndsz[j], end);
         for (k = i; k < end1; k++) {
             address = av_clip((psd[i] - v) >> 5, 0, 63);
-            bap[i] = ff_ac3_baptab[address];
+            bap[i] = baptab[address];
             i++;
         }
     } while (end > bndtab[j++]);
@@ -215,7 +215,7 @@ void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
                                deltbae, deltnseg, deltoffst, deltlen, deltba,
                                mask);
 
-    ff_ac3_bit_alloc_calc_bap(mask, psd, start, end, snroffset, s->floor, bap);
+    ff_ac3_bit_alloc_calc_bap(mask, psd, start, end, snroffset, s->floor, ff_ac3_baptab, bap);
 }
 
 /**

@@ -273,6 +273,7 @@ enum CodecID {
     CODEC_ID_APE,
     CODEC_ID_NELLYMOSER,
     CODEC_ID_MUSEPACK8,
+    CODEC_ID_EAC3,
 
     /* subtitle codecs */
     CODEC_ID_DVD_SUBTITLE= 0x17000,

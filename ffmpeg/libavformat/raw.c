@@ -227,6 +227,39 @@ static int ac3_read_header(AVFormatContext *s,
     return 0;
 }
 
+
+static int mlp_read_header(AVFormatContext *s,
+                           AVFormatParameters *ap)
+{
+    AVStream *st;
+
+    st = av_new_stream(s, 0);
+    if (!st)
+        return AVERROR(ENOMEM);
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_MLP;
+    st->need_parsing = AVSTREAM_PARSE_FULL;
+    /* the parameters will be extracted from the compressed bitstream */
+    return 0;
+}
+
+static int eac3_read_header(AVFormatContext *s,
+                            AVFormatParameters *ap)
+{
+    AVStream *st;
+
+    st = av_new_stream(s, 0);
+    if (!st)
+        return AVERROR(ENOMEM);
+
+    st->codec->codec_type = CODEC_TYPE_AUDIO;
+    st->codec->codec_id = CODEC_ID_EAC3;
+    st->need_parsing = AVSTREAM_PARSE_FULL;
+    /* the parameters will be extracted from the compressed bitstream */
+    return 0;
+}
+
+
 static int shorten_read_header(AVFormatContext *s,
                                AVFormatParameters *ap)
 {
@@ -448,6 +481,30 @@ AVInputFormat shorten_demuxer = {
     raw_read_close,
     .flags= AVFMT_GENERIC_INDEX,
     .extensions = "shn",
+};
+
+AVInputFormat mlp_demuxer = {
+    "mlp",
+    "raw mlp",
+    0,
+    NULL,
+    mlp_read_header,
+    raw_read_partial_packet,
+    raw_read_close,
+    .flags= AVFMT_GENERIC_INDEX,
+    .extensions = "mlp",
+};
+
+AVInputFormat eac3_demuxer = {
+    "eac3",
+    "raw eac3",
+    0,
+    NULL,
+    eac3_read_header,
+    raw_read_partial_packet,
+    raw_read_close,
+    .flags= AVFMT_GENERIC_INDEX,
+    .extensions = "eac3",
 };
 
 AVInputFormat flac_demuxer = {
