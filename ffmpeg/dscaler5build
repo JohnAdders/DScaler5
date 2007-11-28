@@ -1,0 +1,11 @@
+#!/bin/sh
+./dscaler5config
+make
+mkdir ../Debug
+mkdir ../Release
+cp libavcodec/avcodec-51.dll ../Debug
+cp libavcodec/avcodec-51.dll ../Release
+cp libavformat/avformat-51.dll ../Debug
+cp libavformat/avformat-51.dll ../Release
+cp libavutil/avutil-49.dll ../Debug
+cp libavutil/avutil-49.dll ../Release
