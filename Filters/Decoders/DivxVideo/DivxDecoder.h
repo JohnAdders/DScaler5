@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.4 2006-02-16 21:49:50 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.5 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -24,11 +24,21 @@
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
 
-#include "avcodec.h"
+extern "C"
+{
+    #include "avcodec.h"
+}
 
 #define NUM_BUFFERS 4
 
 DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x4b, 0x5e, 0x74, 0xb3, 0xbf);
+
+
+typedef struct
+{
+    DWORD FourCC;
+    CodecID FFMpegCodecID;
+} SCodecList;
 
 class CDivxDecoder : 
     public CDSBaseFilter,
@@ -101,6 +111,14 @@ public:
     HRESULT Activate();
     HRESULT Deactivate();
 
+    //  functions relating to the fourccs we support
+    static SCodecList* getCodecList();
+
+    static unsigned long UpperFourCC(unsigned long inFourCC);
+    static unsigned long LowerFourCC(unsigned long inFourCC);
+    static CodecID lookupCodec(unsigned long inFourCC);
+
+
 protected:
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR** ppwchText);
@@ -115,6 +133,7 @@ private:
     CodecID m_CodecID;
     void* m_ExtraData;
     int m_ExtraSize;
+    long m_NalSize;
     DWORD m_FourCC;
 
 

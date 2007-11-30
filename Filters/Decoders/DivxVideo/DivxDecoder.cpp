@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.12 2006-02-16 21:49:50 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.13 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2006/02/16 21:49:50  adcockj
+// added NV12 support
+//
 // Revision 1.11  2005/02/08 15:57:00  adcockj
 // Added preliminary auto film detection to DivX filter
 //
@@ -73,12 +76,6 @@
 
 extern HINSTANCE g_hInstance;
 
-extern "C"
-{
-void av_set_memory(av_malloc_fc mal,av_free_fc fre,av_realloc_fc rel);
-void av_register_all(void);
-}
-
 
 CDivxDecoder::CDivxDecoder() :
     CDSBaseFilter(L"DivxVideo Filter", 1, 1)
@@ -120,8 +117,10 @@ CDivxDecoder::CDivxDecoder() :
     m_Codec = NULL;
     m_CodecContext = NULL;
 
-    av_set_memory(malloc,free,realloc);
+    m_NalSize = 0;
+
     avcodec_init();
+    avcodec_register_all();
     av_log_set_callback(avlog);
     m_Rate = 10000;
 }
@@ -290,21 +289,26 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     bool Result = false;
     if(pPin == m_VideoInPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_Video && 
-                    (pmt->subtype == MEDIASUBTYPE_xvid ||
-                     pmt->subtype == MEDIASUBTYPE_XVID ||
-                     pmt->subtype == MEDIASUBTYPE_divx ||
-                     pmt->subtype == MEDIASUBTYPE_DIVX ||
-                     pmt->subtype == MEDIASUBTYPE_div3 ||
-                     pmt->subtype == MEDIASUBTYPE_DIV3 ||
-                     pmt->subtype == MEDIASUBTYPE_dx50 ||
-                     pmt->subtype == MEDIASUBTYPE_DX50 ||
-                     pmt->subtype == MEDIASUBTYPE_mp43 ||
-                     pmt->subtype == MEDIASUBTYPE_MP43 ||
-                     pmt->subtype == MEDIASUBTYPE_mp42 ||
-                     pmt->subtype == MEDIASUBTYPE_MP42 ||
-                     pmt->subtype == MEDIASUBTYPE_mp41 ||
-                     pmt->subtype == MEDIASUBTYPE_MP41));
+        Result = (pmt->majortype == MEDIATYPE_Video);
+        GUID test = MEDIASUBTYPE_xvid;
+        SCodecList* CodecList = getCodecList();
+        while(CodecList->FourCC)
+        {
+            test.Data1 = UpperFourCC(CodecList->FourCC);
+            if(test == pmt->subtype)
+            {
+                return Result;
+            }
+
+            test.Data1 = LowerFourCC(CodecList->FourCC);
+            if(test == pmt->subtype)
+            {
+                return Result;
+            }
+
+            ++CodecList;
+        }
+        Result = false;
     }
     else if(pPin == m_VideoOutPin)
     {
@@ -456,6 +460,56 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             }
             pSourceRect = &vih->rcSource;
 		}
+        else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
+        {
+            MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
+            m_AvgTimePerFrame = mvih->hdr.AvgTimePerFrame;
+            bih = &mvih->hdr.bmiHeader;
+            if(UpperFourCC(pMediaType->subtype.Data1) == MAKEFOURCC('A', 'V', 'C', '1'))
+            {
+                static uint8_t extraData[64] =
+                {
+                    0x01,
+                    (uint8_t)mvih->dwProfile,
+                    0x00,
+                    (uint8_t)mvih->dwLevel,
+                    (uint8_t)(mvih->dwFlags - 1),
+                    0x01,
+                    0x00,
+                    0x00,
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                };
+
+                BYTE* pExtra = (BYTE*)mvih->dwSequenceHeader;
+                long len = mvih->cbSequenceHeader;
+                int firstLen = pExtra[0] << 8 | pExtra[1] + 2;
+                if(firstLen <= len)
+                {
+                    memcpy(extraData + 6, pExtra, firstLen);
+                    pExtra += firstLen;
+                    len -= firstLen;
+                }
+
+                extraData[6 + firstLen] = 1;
+
+                int secondLen = pExtra[0] << 8 | pExtra[1] + 2;
+                if(secondLen <= len)
+                {
+                    memcpy(extraData + 6 + firstLen + 1, pExtra, secondLen);
+                }
+
+
+                m_ExtraSize = mvih->cbSequenceHeader + 7;
+                m_ExtraData = extraData;
+            }
+            pSourceRect = &mvih->hdr.rcSource;
+        }
         else
         {
             return E_UNEXPECTED;
@@ -471,8 +525,8 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_DivxHeight = min(abs(m_DivxHeight), pSourceRect->bottom);
         }
 
-        m_VideoOutPin->SetAspectX(m_DivxWidth);
-        m_VideoOutPin->SetAspectY(m_DivxHeight);
+        m_VideoOutPin->SetAspectX(m_ARDivxX);
+        m_VideoOutPin->SetAspectY(m_ARDivxY);
         m_VideoOutPin->SetWidth(m_DivxWidth);
         m_VideoOutPin->SetHeight(m_DivxHeight);
         m_VideoOutPin->SetPanScanX(0);
@@ -480,36 +534,13 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
         m_VideoOutPin->SetAvgTimePerFrame(m_AvgTimePerFrame);
 
-        switch(bih->biCompression)
+        m_FourCC = UpperFourCC(bih->biCompression);
+        m_CodecID = lookupCodec(m_FourCC);
+        
+        if(m_CodecID == -1)
         {
-        case MAKEFOURCC('D', 'I', 'V', 'X'):
-        case MAKEFOURCC('d', 'i', 'v', 'x'):
-        case MAKEFOURCC('X', 'V', 'I', 'D'):
-        case MAKEFOURCC('x', 'v', 'i', 'd'):
-        case MAKEFOURCC('D', 'X', '5', '0'):
-        case MAKEFOURCC('d', 'x', '5', '0'):
-            m_CodecID = CODEC_ID_MPEG4;
-            break;
-        case MAKEFOURCC('D', 'I', 'V', '3'):
-        case MAKEFOURCC('d', 'i', 'v', '3'):
-        case MAKEFOURCC('M', 'P', '4', '3'):
-        case MAKEFOURCC('m', 'p', '4', '3'):
-            m_CodecID = CODEC_ID_MSMPEG4V3;
-            break;
-        case MAKEFOURCC('M', 'P', '4', '2'):
-        case MAKEFOURCC('m', 'p', '4', '2'):
-            m_CodecID = CODEC_ID_MSMPEG4V2;
-            break;
-        case MAKEFOURCC('M', 'P', '4', '1'):
-        case MAKEFOURCC('m', 'p', '4', '1'):
-            m_CodecID = CODEC_ID_MSMPEG4V1;
-            break;
-        default:
             return E_UNEXPECTED;
-            break;
         }
-        m_FourCC = bih->biCompression;
-
     }
     else if(pPin == m_VideoOutPin)
     {
@@ -543,6 +574,22 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
 
     if(len <= 0) 
         return S_OK;
+
+    if(m_CodecID == CODEC_ID_H264)
+    {
+        if(m_fWaitForKeyFrame && (pSampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) == 0)
+        {
+            if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
+            {
+                return S_FALSE;
+            }
+            else
+            {
+                return S_OK;
+            }
+        }
+        m_fWaitForKeyFrame = false;
+    }
 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
     {
@@ -665,8 +712,6 @@ HRESULT CDivxDecoder::Deliver()
 
     if(rtStop > 0)
     {
-
-
         // cope with dynamic format changes from our side
         // will possibly call NegotiateAllocator on the output pins
         // which flushes so we shouldn't have any samples outstanding here
@@ -815,8 +860,6 @@ void CDivxDecoder::ResetDivxDecoder()
 
     m_CodecContext = avcodec_alloc_context();
 
-    //m_CodecContext->flags |= CODEC_FLAG_TRUNCATED;
-
     m_CodecContext->width = m_DivxWidth;
     m_CodecContext->height = m_DivxHeight;
     m_CodecContext->idct_algo = FF_IDCT_AUTO;
@@ -824,27 +867,27 @@ void CDivxDecoder::ResetDivxDecoder()
     m_CodecContext->error_concealment = FF_EC_GUESS_MVS | FF_EC_DEBLOCK;
     m_CodecContext->error_resilience = FF_ER_COMPLIANT;
 
-    switch(m_CodecID)
+    if(m_CodecID == CODEC_ID_H264)
     {
-    case CODEC_ID_MSMPEG4V3:
-        m_Codec = &msmpeg4v3_decoder;
-        break;
-    case CODEC_ID_MSMPEG4V2:
-        m_Codec = &msmpeg4v2_decoder;
-        break;
-    case CODEC_ID_MSMPEG4V1:
-        m_Codec = &msmpeg4v1_decoder;
-        break;
-    default:
-    case CODEC_ID_MPEG4:
-        m_Codec = &mpeg4_decoder;
-        break;
+        //m_CodecContext->error_concealment = FF_EC_GUESS_MVS;
+        m_CodecContext->error_concealment = 0;
+        m_CodecContext->skip_loop_filter = AVDISCARD_ALL;
+        //m_CodecContext->skip_loop_filter = AVDISCARD_NONREF;
+        //m_CodecContext->nal_length_size = m_NalSize;
+        //m_CodecContext->debug = 0xffffffff;
+        if(m_ExtraData != NULL)
+        {
+            m_CodecContext->extradata = (uint8_t*) m_ExtraData;
+            m_CodecContext->extradata_size = m_ExtraSize;
+        }
     }
+
+    m_Codec = avcodec_find_decoder(m_CodecID);
 
     if (avcodec_open(m_CodecContext, m_Codec) < 0) 
     {
         avcodec_close(m_CodecContext);
-        free(m_CodecContext);
+        av_free(m_CodecContext);
         m_CodecContext = NULL;
         m_Codec = NULL;
         return;
@@ -879,7 +922,7 @@ HRESULT CDivxDecoder::Deactivate()
     if(m_CodecContext != NULL)
     {
         avcodec_close(m_CodecContext);
-        free(m_CodecContext);
+        av_free(m_CodecContext);
         m_CodecContext = NULL;
     }
     m_Codec = NULL;
@@ -924,5 +967,86 @@ void CDivxDecoder::avlog(void*,int,const char* szFormat, va_list Args)
     {
         OutputDebugString("DebugString too long, truncated!!\n");
     }
-    OutputDebugString(szMessage);
+    else
+    {
+        OutputDebugString(szMessage);
+    }
+}
+
+SCodecList* CDivxDecoder::getCodecList()
+{
+    static SCodecList CodecList[] =
+    {
+        { MAKEFOURCC('D', 'I', 'V', 'X'), CODEC_ID_MPEG4 },
+        { MAKEFOURCC('X', 'V', 'I', 'D'), CODEC_ID_MPEG4 },
+        { MAKEFOURCC('D', 'X', '5', '0'), CODEC_ID_MPEG4 },
+        { MAKEFOURCC('M', 'P', '4', 'V') ,CODEC_ID_MPEG4 },
+        { MAKEFOURCC('D', 'I', 'V', '3'), CODEC_ID_MSMPEG4V3 },
+        { MAKEFOURCC('M', 'P', '4', '3'), CODEC_ID_MSMPEG4V3 },
+        { MAKEFOURCC('M', 'P', '4', '2'), CODEC_ID_MSMPEG4V2 },
+        { MAKEFOURCC('M', 'P', '4', '1'), CODEC_ID_MSMPEG4V1 },
+        { MAKEFOURCC('A', 'V', 'C', '1'), CODEC_ID_H264 },
+        { MAKEFOURCC('H', '2', '6', '4'), CODEC_ID_H264 },
+        { MAKEFOURCC('X', '2', '6', '4'), CODEC_ID_H264 },
+        { MAKEFOURCC('V', 'S', 'S', 'H'), CODEC_ID_H264 },
+        { MAKEFOURCC('D', 'A', 'V', 'C'), CODEC_ID_H264 },
+        { MAKEFOURCC('P', 'A', 'V', 'C'), CODEC_ID_H264 },
+        { 0, (CodecID)0 },
+    };
+    return CodecList;
+}
+
+namespace
+{
+    char upper(char in)
+    {
+        if(in >= 'a' && in <= 'z')
+        {
+            in += 'A' - 'a';
+        }
+        return in;
+    }
+    
+    char lower(char in)
+    {
+        if(in >= 'A' && in <= 'Z')
+        {
+            in += 'a' - 'A';
+        }
+        return in;
+    }
+}
+
+unsigned long CDivxDecoder::UpperFourCC(unsigned long inFourCC)
+{
+    char* asChars = (char*)&inFourCC;
+    asChars[0] = upper(asChars[0]);
+    asChars[1] = upper(asChars[1]);
+    asChars[2] = upper(asChars[2]);
+    asChars[3] = upper(asChars[3]);
+    return inFourCC;
+}
+
+unsigned long CDivxDecoder::LowerFourCC(unsigned long inFourCC)
+{
+    char* asChars = (char*)&inFourCC;
+    asChars[0] = lower(asChars[0]);
+    asChars[1] = lower(asChars[1]);
+    asChars[2] = lower(asChars[2]);
+    asChars[3] = lower(asChars[3]);
+    return inFourCC;
+}
+
+CodecID CDivxDecoder::lookupCodec(unsigned long inFourCC)
+{
+    SCodecList* CodecList = getCodecList();
+    while(CodecList->FourCC)
+    {
+        if(CodecList->FourCC == inFourCC)
+        {
+            return CodecList->FFMpegCodecID;
+        }
+        ++CodecList;
+    }
+    return (CodecID)-1;
 }

@@ -213,6 +213,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}"
+			RelativePathToProject=".\libdvbpsi\vc++\libdvbpsi2005.vcproj"
 		/>
 	</References>
 	<Files>

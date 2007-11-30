@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxVideo.cpp,v 1.2 2004-11-09 17:21:37 adcockj Exp $
+// $Id: DivxVideo.cpp,v 1.3 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.2  2004/11/09 17:21:37  adcockj
+// Seeking fixes
+//
 // Revision 1.1  2004/11/05 17:45:53  adcockj
 // Added new decoder
 //
@@ -86,30 +89,39 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
+    std::vector<REGPINTYPES> InputTypes;
 
-    REGPINTYPES InputTypes[] = {    
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_xvid },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_XVID },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_divx },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_DIVX },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_div3 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_DIV3 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_dx50 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_DX50 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_mp43 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_MP43 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_mp42 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_MP42 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_mp41 },
-            { &MEDIATYPE_Video, &MEDIASUBTYPE_MP41 },
-    };
+    SCodecList* CodecList = CDivxDecoder::getCodecList();
+
+    while(CodecList->FourCC)
+    {
+        GUID* newGUID(new GUID);
+        *(newGUID) = MEDIASUBTYPE_xvid;
+        newGUID->Data1 = CDivxDecoder::UpperFourCC(CodecList->FourCC);
+        REGPINTYPES type = { &MEDIATYPE_Video, newGUID};
+        InputTypes.push_back(type);
+        ++CodecList;
+    }
+
+    CodecList = CDivxDecoder::getCodecList();
+
+    while(CodecList->FourCC)
+    {
+        GUID* newGUID(new GUID);
+        *(newGUID) = MEDIASUBTYPE_xvid;
+        newGUID->Data1 = CDivxDecoder::LowerFourCC(CodecList->FourCC);
+        REGPINTYPES type = { &MEDIATYPE_Video, newGUID};
+        InputTypes.push_back(type);
+        ++CodecList;
+    }
 
     REGPINTYPES OutputTypes[] = {   
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
+        {&MEDIATYPE_Video, &MEDIASUBTYPE_NV12},
     };
     
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, InputTypes.size(), &InputTypes[0], 0, NULL, &GUID_NULL}, 
                               { REG_PINFLAG_B_OUTPUT , 1, countof(OutputTypes), OutputTypes, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
@@ -122,6 +134,12 @@ STDAPI DllRegisterServer(void)
   
     HRESULT hr = RegisterFilter(CLSID_CDivxDecoder, L"DScaler Divx Video Decoder", &RegInfo);
     CHECK(hr);
+
+    for(size_t i(0); i < InputTypes.size(); ++i)
+    {
+        delete InputTypes[i].clsMinorType;
+    }
+
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 

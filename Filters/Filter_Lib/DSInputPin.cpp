@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSInputPin.cpp,v 1.18 2006-03-07 15:12:40 adcockj Exp $
+// $Id: DSInputPin.cpp,v 1.19 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2006/03/07 15:12:40  adcockj
+// fix for convolver under audacity
+//
 // Revision 1.17  2005/02/17 09:39:29  adcockj
 // Better connection logic
 // Better audio logging
@@ -385,6 +388,7 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     {
         return E_POINTER;
     }
+    
     if(m_Filter->m_State == State_Stopped)
     {
         return VFW_E_WRONG_STATE;

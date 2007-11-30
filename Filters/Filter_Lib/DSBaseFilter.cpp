@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSBaseFilter.cpp,v 1.12 2006-02-07 17:39:12 adcockj Exp $
+// $Id: DSBaseFilter.cpp,v 1.13 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.12  2006/02/07 17:39:12  adcockj
+// added debug build code to add filter grapg to ROT
+//
 // Revision 1.11  2004/12/15 13:04:08  adcockj
 // added simple statistics display
 //
@@ -281,10 +284,11 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
     
     int i;
     
-    FILTER_STATE OldState = m_State;
-    m_State = State_Stopped;
 
     LockAllPins();
+
+    FILTER_STATE OldState = m_State;
+    m_State = State_Stopped;
 
     if(OldState != State_Stopped)
     {

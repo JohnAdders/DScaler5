@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.3 2004-11-25 17:22:10 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.4 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2004/11/25 17:22:10  adcockj
+// Fixed some more connection issues
+//
 // Revision 1.2  2004/11/04 16:01:13  adcockj
 // Minor changes in preparation for Divx filter
 //
@@ -177,7 +180,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
         ptr = (BYTE*)((MPEG2VIDEOINFO*)pmt->pbFormat)->dwSequenceHeader; 
         len = ((MPEG2VIDEOINFO*)pmt->pbFormat)->cbSequenceHeader;
 
-        if(ptr && len >= 8)
+        if(ptr && len >= 8 && ptr[0] == 0 && ptr[1] == 0 && ptr[2] == 0x01 && ptr[3] == 0xb3)
         {
             w = (ptr[4]<<4)|(ptr[5]>>4);
             h = ((ptr[5]&0xf)<<8)|ptr[6];

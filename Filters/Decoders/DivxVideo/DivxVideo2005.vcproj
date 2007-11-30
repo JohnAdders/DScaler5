@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -77,10 +77,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/LTCG"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/DivxVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Release"
 				ModuleDefinitionFile=".\DivxVideo.def"
 				ProgramDatabaseFile=".\Release/DivxVideo.pdb"
 				SubSystem="2"
@@ -146,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -175,10 +176,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/DivxVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Debug"
 				ModuleDefinitionFile=".\DivxVideo.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/DivxVideo.pdb"
@@ -215,15 +217,14 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
-			RelativePathToProject="..\..\Filter_Lib\Filter_Lib.vcproj"
+			RelativePathToProject="..\..\Filter_Lib\Filter_Lib2005.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
-			RelativePathToProject="..\..\..\GenDMOProp\GenDMOProp.vcproj"
+			RelativePathToProject="..\..\..\GenDMOProp\GenDMOProp2005.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{27FBB7F9-58EE-4362-9B6E-AE35785C5B2C}"
-			RelativePathToProject="..\..\..\ffmpeg\libavcodec.vcproj"
 		/>
 	</References>
 	<Files>

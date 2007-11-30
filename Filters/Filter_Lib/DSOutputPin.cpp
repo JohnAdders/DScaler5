@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.23 2004-11-25 17:22:10 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.24 2007-11-30 18:06:48 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.23  2004/11/25 17:22:10  adcockj
+// Fixed some more connection issues
+//
 // Revision 1.22  2004/11/07 09:12:05  adcockj
 // fixed connection issue
 //
@@ -495,7 +498,11 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 	}
     if(FAILED(hr))
     {
-        LOG(DBGLOG_FLOW, ("GetBuffer Failed %08x\n", *OutSample));
+        if(m_Filter->m_State == State_Stopped)
+        {
+            return VFW_E_WRONG_STATE;
+        }
+        LOG(DBGLOG_FLOW, ("GetBuffer Failed %08x\n", hr));
         return hr;
     }
 
