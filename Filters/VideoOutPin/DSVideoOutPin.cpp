@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.6 2007-10-20 14:55:49 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.7 2007-12-03 07:54:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.6  2007/10/20 14:55:49  adcockj
+// Better EVR Connections
+//
 // Revision 1.5  2007/10/19 17:05:49  adcockj
 // Added Support for setting new color info flags
 //
@@ -952,6 +955,7 @@ HRESULT CDSVideoOutPin::ReconnectOther()
         if(hr != S_OK)
         {
             LOG(DBGLOG_FLOW, ("DynamicQueryAccept failed in ReconnectOutput %08x\n", hr));
+			return S_OK;
             return VFW_E_TYPE_NOT_ACCEPTED;
         }
     }
@@ -961,7 +965,8 @@ HRESULT CDSVideoOutPin::ReconnectOther()
         if(hr != S_OK)
         {
             LOG(DBGLOG_FLOW, ("QueryAccept failed in ReconnectOutput %08x\n", hr));
-            return VFW_E_TYPE_NOT_ACCEPTED;
+            return S_OK;
+			return VFW_E_TYPE_NOT_ACCEPTED;
         }
     }
 
@@ -971,11 +976,13 @@ HRESULT CDSVideoOutPin::ReconnectOther()
 
     if(GraphConfig)
     {
-        hr = GraphConfig->Reconnect(this, m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
-        CHECK(hr);
+        //hr = GraphConfig->Reconnect(this, m_ConnectedPin.GetNonAddRefedInterface(), &m_InternalMT, NULL, NULL, AM_GRAPH_CONFIG_RECONNECT_DIRECTCONNECT);
+        return S_OK;
+		CHECK(hr);
     }
 
-    return hr;
+    return S_OK;
+	return hr;
 }
 
 HRESULT CDSVideoOutPin::ReconnectWM10()

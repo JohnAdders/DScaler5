@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.5 2007-11-30 18:06:48 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.6 2007-12-03 07:54:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -26,10 +26,18 @@
 
 extern "C"
 {
-    #include "avcodec.h"
+	#ifdef  _MSC_VER
+		#pragma warning(disable: 4244)
+	#endif
+
+	#include "avcodec.h"
+
+	#ifdef  _MSC_VER
+		#pragma warning(default: 4244)
+	#endif
 }
 
-#define NUM_BUFFERS 4
+#define NUM_BUFFERS 16
 
 DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x4b, 0x5e, 0x74, 0xb3, 0xbf);
 
@@ -117,6 +125,10 @@ public:
     static unsigned long UpperFourCC(unsigned long inFourCC);
     static unsigned long LowerFourCC(unsigned long inFourCC);
     static CodecID lookupCodec(unsigned long inFourCC);
+    static int __cdecl GetBuffer(struct AVCodecContext *c, AVFrame *pic);
+    int InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic);
+    static void __cdecl ReleaseBuffer(struct AVCodecContext *c, AVFrame *pic);
+    void InternalReleaseBuffer(struct AVCodecContext *c, AVFrame *pic);
 
 
 protected:
@@ -126,12 +138,13 @@ protected:
 private:
     REFERENCE_TIME m_AvgTimePerFrame;
     REFERENCE_TIME m_LastOutputTime;
+    REFERENCE_TIME m_LastInputTime;
     DWORD m_Rate;
     bool m_fWaitForKeyFrame;
     bool m_fFilm;
     CCanLock m_DeliverLock;
     CodecID m_CodecID;
-    void* m_ExtraData;
+	std::vector<BYTE> m_ExtraData;
     int m_ExtraSize;
     long m_NalSize;
     DWORD m_FourCC;
@@ -145,7 +158,6 @@ private:
     public:
         CFrameBuffer();
         ~CFrameBuffer();
-        AVFrame m_Picture;
         REFERENCE_TIME m_rtStart;
         REFERENCE_TIME m_rtStop;
         unsigned int m_NumFields;
@@ -179,7 +191,7 @@ private:
         SPACE_NV12,
     } eOutputSpace;
 
-    HRESULT Deliver();
+    HRESULT Deliver(AVFrame& NextFrame);
     void FlushDivx();
 
     HRESULT AdjustRenderersMediaType();
@@ -189,6 +201,8 @@ private:
 
     CFrameBuffer* GetNextBuffer();
     static void __cdecl avlog(void*,int,const char*,va_list);
+    int (*m_OldGetBuffer)(struct AVCodecContext *c, AVFrame *pic);
+    void (*m_OldReleaseBuffer)(struct AVCodecContext *c, AVFrame *pic);
 
 };
 

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: ProtectCode.h,v 1.1 2004-02-06 11:09:49 adcockj Exp $
+// $Id: ProtectCode.h,v 1.2 2007-12-03 07:54:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,11 +31,25 @@ class CCanLock :
     public ICanLock
 {
 public:
-    CCanLock() {InitializeCriticalSection(&m_Crit);};
-    ~CCanLock() {DeleteCriticalSection(&m_Crit);};
+    CCanLock() 
+	{
+		InitializeCriticalSection(&m_Crit);
+	}
+    
+	~CCanLock()
+	{
+		DeleteCriticalSection(&m_Crit);
+	}
 
-    void Lock() {EnterCriticalSection(&m_Crit);};
-    void Unlock() {LeaveCriticalSection(&m_Crit);};
+    void Lock()
+	{
+		EnterCriticalSection(&m_Crit);
+	}
+    
+	void Unlock() 
+	{
+		LeaveCriticalSection(&m_Crit);
+	}
 private:
     CRITICAL_SECTION m_Crit;
 };

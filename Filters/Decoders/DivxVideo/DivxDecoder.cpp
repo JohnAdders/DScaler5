@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.13 2007-11-30 18:06:48 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.14 2007-12-03 07:54:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.13  2007/11/30 18:06:48  adcockj
+// Initial go at h264 support
+//
 // Revision 1.12  2006/02/16 21:49:50  adcockj
 // added NV12 support
 //
@@ -289,7 +292,7 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     bool Result = false;
     if(pPin == m_VideoInPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_Video);
+		Result = pmt->majortype == MEDIATYPE_Video?true:false;
         GUID test = MEDIASUBTYPE_xvid;
         SCodecList* CodecList = getCodecList();
         while(CodecList->FourCC)
@@ -378,16 +381,15 @@ HRESULT CDivxDecoder::SendOutLastSamples(CDSBasePin* pPin)
     HRESULT hr = S_OK;
     int GotPicture = 0;
 
-    if(m_CurrentPicture == NULL)
-    {
-        m_CurrentPicture = GetNextBuffer();
-    }
-    avcodec_decode_video(m_CodecContext, &m_CurrentPicture->m_Picture, &GotPicture, NULL, 0);
+	AVFrame NextFrame;
+
+    avcodec_decode_video(m_CodecContext, &NextFrame, &GotPicture, NULL, 0);
+
+	m_CurrentPicture = (CFrameBuffer*)NextFrame.opaque;
 
     if(GotPicture)
     {
-        hr = Deliver();
-        m_CurrentPicture->Release();
+        hr = Deliver(NextFrame);
         m_CurrentPicture = NULL;
     }
     return S_OK;
@@ -431,7 +433,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
         BITMAPINFOHEADER* bih = NULL;
         m_ExtraSize = 0;
-        m_ExtraData = NULL;
+        m_ExtraData.clear();
         RECT* pSourceRect;
     
         m_fWaitForKeyFrame = true;
@@ -444,7 +446,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             if(pMediaType->cbFormat > sizeof(VIDEOINFOHEADER2))
             {
                 m_ExtraSize = pMediaType->cbFormat - sizeof(VIDEOINFOHEADER2);
-                m_ExtraData = pMediaType->pbFormat + sizeof(VIDEOINFOHEADER2);
+                m_ExtraData.assign(pMediaType->pbFormat + sizeof(VIDEOINFOHEADER2), pMediaType->pbFormat + sizeof(VIDEOINFOHEADER2) + m_ExtraSize);
             }
 	        pSourceRect = &vih->rcSource;
     	}
@@ -456,7 +458,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             if(pMediaType->cbFormat > sizeof(VIDEOINFOHEADER))
             {
                 m_ExtraSize = pMediaType->cbFormat - sizeof(VIDEOINFOHEADER);
-                m_ExtraData = pMediaType->pbFormat + sizeof(VIDEOINFOHEADER);
+                m_ExtraData.assign(pMediaType->pbFormat + sizeof(VIDEOINFOHEADER), pMediaType->pbFormat + sizeof(VIDEOINFOHEADER) + m_ExtraSize);
             }
             pSourceRect = &vih->rcSource;
 		}
@@ -467,46 +469,40 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             bih = &mvih->hdr.bmiHeader;
             if(UpperFourCC(pMediaType->subtype.Data1) == MAKEFOURCC('A', 'V', 'C', '1'))
             {
-                static uint8_t extraData[64] =
-                {
-                    0x01,
-                    (uint8_t)mvih->dwProfile,
-                    0x00,
-                    (uint8_t)mvih->dwLevel,
-                    (uint8_t)(mvih->dwFlags - 1),
-                    0x01,
-                    0x00,
-                    0x00,
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-                };
+				m_ExtraData.push_back(0x01);
+                m_ExtraData.push_back((uint8_t)mvih->dwProfile);
+                m_ExtraData.push_back(0x00);
+                m_ExtraData.push_back((uint8_t)mvih->dwLevel);
+                m_ExtraData.push_back((uint8_t)(mvih->dwFlags - 1));
+                m_ExtraData.push_back(0x01);
 
-                BYTE* pExtra = (BYTE*)mvih->dwSequenceHeader;
+				BYTE* pExtra = (BYTE*)mvih->dwSequenceHeader;
                 long len = mvih->cbSequenceHeader;
                 int firstLen = pExtra[0] << 8 | pExtra[1] + 2;
                 if(firstLen <= len)
                 {
-                    memcpy(extraData + 6, pExtra, firstLen);
-                    pExtra += firstLen;
+					while(firstLen)
+					{
+		                m_ExtraData.push_back(*pExtra++);
+						--firstLen;
+					}
                     len -= firstLen;
                 }
 
-                extraData[6 + firstLen] = 1;
+                m_ExtraData.push_back(0x01);
 
                 int secondLen = pExtra[0] << 8 | pExtra[1] + 2;
                 if(secondLen <= len)
                 {
-                    memcpy(extraData + 6 + firstLen + 1, pExtra, secondLen);
+					while(secondLen)
+					{
+		                m_ExtraData.push_back(*pExtra++);
+						--secondLen;
+					}
                 }
 
 
                 m_ExtraSize = mvih->cbSequenceHeader + 7;
-                m_ExtraData = extraData;
             }
             pSourceRect = &mvih->hdr.rcSource;
         }
@@ -575,7 +571,14 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     if(len <= 0) 
         return S_OK;
 
-    if(m_CodecID == CODEC_ID_H264)
+	LOG(DBGLOG_FLOW, ("Process %010I64d - %010I64d - %d\n", pSampleProperties->tStart, pSampleProperties->tStop, len));
+
+    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
+    {
+        m_IsDiscontinuity = true;
+    }
+
+	if(m_CodecID == CODEC_ID_H264)
     {
         if(m_fWaitForKeyFrame && (pSampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) == 0)
         {
@@ -585,33 +588,24 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
             }
             else
             {
-                return S_OK;
+				// needs more testing to see if we only need to skip the preroll
+                //return S_OK;
             }
         }
-        m_fWaitForKeyFrame = false;
+        //m_fWaitForKeyFrame = false;
     }
 
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-    {
-        m_IsDiscontinuity = true;
-    }
-
-    if(m_CurrentPicture == NULL)
-    {
-        m_CurrentPicture = GetNextBuffer();
-    }
-
-    if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
-    {
-        m_CurrentPicture->m_rtStart = pSampleProperties->tStart;
-        m_CurrentPicture->m_rtStop = pSampleProperties->tStart + m_AvgTimePerFrame * m_Rate / 10000;
-    }
+	m_LastInputTime = pSampleProperties->tStart;
 
     int GotPicture = 0;
     int Count = 0;
     while(len - Count > 0)
     {
-        int Used = avcodec_decode_video(m_CodecContext, &m_CurrentPicture->m_Picture, &GotPicture, pDataIn + Count, len - Count);
+		AVFrame NextFrame;
+
+        int Used = avcodec_decode_video(m_CodecContext, &NextFrame, &GotPicture, (uint8_t*)(pDataIn + Count), len - Count);
+		LOG(DBGLOG_FLOW, ("Decoded %d %d %d\n", NextFrame.coded_picture_number, NextFrame.display_picture_number, NextFrame.data[0]));
+
         if(Used > 0)
         {
             Count += Used;
@@ -622,11 +616,18 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
         }
         if(GotPicture)
         {
-            // deinterlace
+			m_CurrentPicture = (CFrameBuffer*)NextFrame.opaque;
+			if(m_CodecID != CODEC_ID_H264)
+			{
+				m_CurrentPicture->m_rtStart = m_LastInputTime;
+				m_CurrentPicture->m_rtStop = m_LastInputTime + m_AvgTimePerFrame * m_Rate / 10000 ;
+			}
+
+			// deinterlace
             switch(GetParamEnum(DEINTMODE))
             {
             case DIAuto:
-                if(m_CurrentPicture->m_Picture.interlaced_frame == 0)
+                if(NextFrame.interlaced_frame == 0)
                 {
                     m_NextFrameDeint = DIWeave;
                 }
@@ -644,41 +645,59 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
                 break;
             }
 
-            hr = Deliver();
-            m_CurrentPicture->Release();
-            m_CurrentPicture = GetNextBuffer();
+            hr = Deliver(NextFrame);
         }
+		else
+		{
+	        LOG(DBGLOG_FLOW, ("Not got picture\n"));
+		}
     }
     return hr;
 }
 
-HRESULT CDivxDecoder::Deliver()
+HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame)
 {
+    HRESULT hr = S_OK;
     TCHAR frametype[] = {'?','I', 'P', 'B', 'S', '1', '2',};
     LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d]\n", 
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
-        frametype[m_CurrentPicture->m_Picture.pict_type],
-        m_CurrentPicture->m_Picture.repeat_pict,
-        m_CurrentPicture->m_Picture.key_frame,
-        m_CurrentPicture->m_Picture.interlaced_frame,
-        m_CurrentPicture->m_Picture.top_field_first));
+        frametype[NextFrame.pict_type],
+        NextFrame.repeat_pict,
+        NextFrame.key_frame,
+        NextFrame.interlaced_frame,
+        NextFrame.top_field_first));
 
-    REFERENCE_TIME rtStart;
+    if(m_fWaitForKeyFrame)
+    {
+        if(NextFrame.key_frame || NextFrame.pict_type == FF_I_TYPE)
+        {
+            m_fWaitForKeyFrame = false;
+			m_IsDiscontinuity = true;
+        }
+        else
+        {
+            return hr;
+        }
+    }
+
+	
+	REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
     
     if(m_IsDiscontinuity)
     {
         // if we're at a Discontinuity use the times we're being sent in
         rtStart = m_CurrentPicture->m_rtStart;
+	    rtStop = m_CurrentPicture->m_rtStop;
     }
     else
     {
         // if we're not at a Discontinuity
         // make sure that time are contiguous
         rtStart = m_LastOutputTime;
+	    rtStop = rtStart + m_AvgTimePerFrame * m_Rate / 10000 ;
     }
 
-    rtStop = m_CurrentPicture->m_rtStop;
 
     rtStop += GetParamInt(VIDEODELAY) * 10000;
 
@@ -686,7 +705,7 @@ HRESULT CDivxDecoder::Deliver()
     // and that Stop is always greater than start
     if(rtStart < m_LastOutputTime && m_LastOutputTime != 0)
     {
-        LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime));
+        LOG(DBGLOG_FLOW, ("Adjusted time to avoid backwards %010I64d - %010I64d\n", rtStart, m_LastOutputTime, rtStart - m_CurrentPicture->m_rtStart));
         rtStart = m_LastOutputTime;
     }
 
@@ -695,21 +714,10 @@ HRESULT CDivxDecoder::Deliver()
         rtStop = rtStart + 100;
     }
 
-    HRESULT hr = S_OK;
-    m_LastOutputTime = rtStop;
-    
-    if(m_fWaitForKeyFrame)
-    {
-        if(m_CurrentPicture->m_Picture.key_frame)
-        {
-            m_fWaitForKeyFrame = false;
-        }
-        else
-        {
-            return hr;
-        }
-    }
+    LOG(DBGLOG_FLOW, ("Picture Time %010I64d  - %010I64d\n", rtStop - m_LastOutputTime, rtStart - m_CurrentPicture->m_rtStart));
 
+	m_LastOutputTime = rtStop;
+    
     if(rtStop > 0)
     {
         // cope with dynamic format changes from our side
@@ -784,7 +792,7 @@ HRESULT CDivxDecoder::Deliver()
             pOut->SetSyncPoint(TRUE);
         }
 
-        BYTE** buf = &m_CurrentPicture->m_Picture.data[0];
+        BYTE** buf = (BYTE**)&(NextFrame.data[0]);
 
         if(FAILED(hr = pOut->GetPointer(&pDataOut)))
         {
@@ -792,7 +800,7 @@ HRESULT CDivxDecoder::Deliver()
             return hr;
         }
 
-        m_VideoOutPin->Copy420(pDataOut, buf, m_DivxWidth, m_DivxHeight, m_CurrentPicture->m_Picture.linesize[0], true);
+        m_VideoOutPin->Copy420(pDataOut, buf, m_DivxWidth, m_DivxHeight, NextFrame.linesize[0], true);
 
         hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
         if(FAILED(hr))
@@ -831,11 +839,7 @@ void CDivxDecoder::FlushDivx()
     m_fFilm = false;
     m_IsDiscontinuity = true;
 
-	if(m_CurrentPicture != NULL)
-    {
-        m_CurrentPicture->Release();
-        m_CurrentPicture = NULL;
-    }
+    m_CurrentPicture = NULL;
 	avcodec_flush_buffers(m_CodecContext);
 }
 
@@ -860,32 +864,40 @@ void CDivxDecoder::ResetDivxDecoder()
 
     m_CodecContext = avcodec_alloc_context();
 
+	m_CodecContext->opaque = this;
+	m_OldGetBuffer = m_CodecContext->get_buffer;
+	m_CodecContext->get_buffer = GetBuffer;
+	m_OldReleaseBuffer = m_CodecContext->release_buffer;
+	m_CodecContext->release_buffer = ReleaseBuffer;
+
     m_CodecContext->width = m_DivxWidth;
     m_CodecContext->height = m_DivxHeight;
     m_CodecContext->idct_algo = FF_IDCT_AUTO;
     m_CodecContext->codec_tag = m_FourCC;
-    m_CodecContext->error_concealment = FF_EC_GUESS_MVS | FF_EC_DEBLOCK;
-    m_CodecContext->error_resilience = FF_ER_COMPLIANT;
+	m_CodecContext->error_concealment = 0;
 
     if(m_CodecID == CODEC_ID_H264)
     {
-        //m_CodecContext->error_concealment = FF_EC_GUESS_MVS;
-        m_CodecContext->error_concealment = 0;
         m_CodecContext->skip_loop_filter = AVDISCARD_ALL;
-        //m_CodecContext->skip_loop_filter = AVDISCARD_NONREF;
-        //m_CodecContext->nal_length_size = m_NalSize;
-        //m_CodecContext->debug = 0xffffffff;
-        if(m_ExtraData != NULL)
+        if(m_ExtraSize > 0 && !m_ExtraData.empty())
         {
-            m_CodecContext->extradata = (uint8_t*) m_ExtraData;
+            m_CodecContext->extradata = (uint8_t*) &m_ExtraData[0];
             m_CodecContext->extradata_size = m_ExtraSize;
         }
     }
+    if(m_CodecID == CODEC_ID_VC1)
+    {
+        m_CodecContext->skip_loop_filter = AVDISCARD_ALL;
+        m_CodecContext->extradata = (uint8_t*) &m_ExtraData[0];
+        m_CodecContext->extradata_size = m_ExtraSize;
+	}
+
 
     m_Codec = avcodec_find_decoder(m_CodecID);
 
     if (avcodec_open(m_CodecContext, m_Codec) < 0) 
     {
+		// TODO: work out if this best way to exit
         avcodec_close(m_CodecContext);
         av_free(m_CodecContext);
         m_CodecContext = NULL;
@@ -991,6 +1003,8 @@ SCodecList* CDivxDecoder::getCodecList()
         { MAKEFOURCC('V', 'S', 'S', 'H'), CODEC_ID_H264 },
         { MAKEFOURCC('D', 'A', 'V', 'C'), CODEC_ID_H264 },
         { MAKEFOURCC('P', 'A', 'V', 'C'), CODEC_ID_H264 },
+        { MAKEFOURCC('P', 'A', 'V', 'C'), CODEC_ID_H264 },
+        { MAKEFOURCC('W', 'V', 'C', '1'), CODEC_ID_VC1 },
         { 0, (CodecID)0 },
     };
     return CodecList;
@@ -1049,4 +1063,45 @@ CodecID CDivxDecoder::lookupCodec(unsigned long inFourCC)
         ++CodecList;
     }
     return (CodecID)-1;
+}
+
+int __cdecl CDivxDecoder::GetBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	CDivxDecoder* Decoder = (CDivxDecoder*)c->opaque;
+	return Decoder->InternalGetBuffer(c, pic);
+}
+
+void __cdecl CDivxDecoder::ReleaseBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	CDivxDecoder* Decoder = (CDivxDecoder*)c->opaque;
+	Decoder->InternalReleaseBuffer(c, pic);
+}
+
+int CDivxDecoder::InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	int RetVal = m_OldGetBuffer(c, pic);
+	CFrameBuffer* FrameBuffer = GetNextBuffer();
+	if(!pic->reference)
+	{
+		//FrameBuffer->Release();
+		FrameBuffer->m_rtStart = 0;
+		FrameBuffer->m_rtStop = 0;
+	}
+	else
+	{
+		FrameBuffer->m_rtStart = m_LastInputTime;
+		FrameBuffer->m_rtStop = m_LastInputTime + m_AvgTimePerFrame * m_Rate / 10000 ;
+	}
+	FrameBuffer->m_NumFields = pic->coded_picture_number;
+	LOG(DBGLOG_FLOW, ("Get Buffer %d - %010I64d\n", pic->coded_picture_number, FrameBuffer->m_rtStart));
+	pic->opaque = FrameBuffer;
+	return RetVal;
+}
+
+void CDivxDecoder::InternalReleaseBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	CFrameBuffer* FrameBuffer = (CFrameBuffer*)pic->opaque;
+	LOG(DBGLOG_FLOW, ("Rel Buffer %d - %010I64d\n", pic->coded_picture_number, FrameBuffer->m_rtStart));
+	FrameBuffer->Release();
+	m_OldReleaseBuffer(c, pic);
 }

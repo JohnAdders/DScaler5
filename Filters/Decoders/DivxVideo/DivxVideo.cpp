@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxVideo.cpp,v 1.3 2007-11-30 18:06:48 adcockj Exp $
+// $Id: DivxVideo.cpp,v 1.4 2007-12-03 07:54:26 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.3  2007/11/30 18:06:48  adcockj
+// Initial go at h264 support
+//
 // Revision 1.2  2004/11/09 17:21:37  adcockj
 // Seeking fixes
 //
@@ -95,7 +98,7 @@ STDAPI DllRegisterServer(void)
 
     while(CodecList->FourCC)
     {
-        GUID* newGUID(new GUID);
+        GUID* newGUID = new GUID;
         *(newGUID) = MEDIASUBTYPE_xvid;
         newGUID->Data1 = CDivxDecoder::UpperFourCC(CodecList->FourCC);
         REGPINTYPES type = { &MEDIATYPE_Video, newGUID};
@@ -107,7 +110,7 @@ STDAPI DllRegisterServer(void)
 
     while(CodecList->FourCC)
     {
-        GUID* newGUID(new GUID);
+        GUID* newGUID = new GUID;
         *(newGUID) = MEDIASUBTYPE_xvid;
         newGUID->Data1 = CDivxDecoder::LowerFourCC(CodecList->FourCC);
         REGPINTYPES type = { &MEDIATYPE_Video, newGUID};
@@ -137,7 +140,7 @@ STDAPI DllRegisterServer(void)
 
     for(size_t i(0); i < InputTypes.size(); ++i)
     {
-        delete InputTypes[i].clsMinorType;
+        delete (GUID*)InputTypes[i].clsMinorType;
     }
 
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
