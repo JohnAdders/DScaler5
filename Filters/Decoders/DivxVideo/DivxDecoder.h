@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.6 2007-12-03 07:54:26 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.7 2007-12-05 18:10:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -45,7 +45,7 @@ DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x
 typedef struct
 {
     DWORD FourCC;
-    CodecID FFMpegCodecID;
+    CodecID FFMpegCodecId;
 } SCodecList;
 
 class CDivxDecoder : 
@@ -55,7 +55,7 @@ class CDivxDecoder :
 {
 public:
 
-IMPLEMENT_AGGREGATABLE_COCLASS(CDivxDecoder, "{4775ACFD-8FE4-483d-962B-AF4B5E74B3BF}", "DivxVideo Filter", "Filter.DivxVideo.1", "Filter.DivxVideo", "both")
+IMPLEMENT_AGGREGATABLE_COCLASS(CDivxDecoder, "{4775ACFD-8FE4-483d-962B-AF4B5E74B3BF}", "MPEG4 Video Filter", "Filter.DivxVideo.1", "Filter.DivxVideo", "both")
     IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IBaseFilter)
     IMPLEMENTS_INTERFACE(IMediaFilter)
@@ -158,9 +158,8 @@ private:
     public:
         CFrameBuffer();
         ~CFrameBuffer();
-        REFERENCE_TIME m_rtStart;
-        REFERENCE_TIME m_rtStop;
-        unsigned int m_NumFields;
+        REFERENCE_TIME m_rtStartCoded;
+        REFERENCE_TIME m_rtStartDisplay;
         int m_UseCount;
         void Clear();
         void AddRef() {m_UseCount++;};
@@ -169,7 +168,6 @@ private:
     private:
     };
     CFrameBuffer m_Buffers[NUM_BUFFERS];
-    CFrameBuffer* m_CurrentPicture;
 
     int m_DivxWidth;
     int m_DivxHeight;
@@ -191,11 +189,11 @@ private:
         SPACE_NV12,
     } eOutputSpace;
 
-    HRESULT Deliver(AVFrame& NextFrame);
+    HRESULT Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture);
     void FlushDivx();
 
     HRESULT AdjustRenderersMediaType();
-    void ResetDivxDecoder();
+    HRESULT ResetDivxDecoder();
     HRESULT GetEnumTextDeintMode(WCHAR **ppwchText);
     HRESULT GetEnumTextOutputSpace(WCHAR **ppwchText);
 

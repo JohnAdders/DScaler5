@@ -97,7 +97,7 @@ STRINGTABLE
 BEGIN
     IDS_PROJNAME            "Divx Video"
     IDS_AUTHORS             "Copyright (c) 2004 Fabrice Bellard et al,  Milan Cutka et al, John Adcock"
-    IDS_NAME                "Divx Video Decoder"
+    IDS_NAME                "MPEG4 Video Decoder"
 END
 
 #endif    // English (U.S.) resources

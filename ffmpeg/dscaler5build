@@ -1,5 +1,6 @@
 #!/bin/sh
 ./dscaler5config
+make clean
 make
 mkdir ../Debug
 mkdir ../Release

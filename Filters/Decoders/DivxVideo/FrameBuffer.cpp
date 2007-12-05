@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: FrameBuffer.cpp,v 1.1 2004-11-05 17:45:53 adcockj Exp $
+// $Id: FrameBuffer.cpp,v 1.2 2007-12-05 18:10:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.1  2004/11/05 17:45:53  adcockj
+// Added new decoder
+//
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
@@ -38,8 +41,7 @@ CDivxDecoder::CFrameBuffer::~CFrameBuffer()
 
 void CDivxDecoder::CFrameBuffer::Clear()
 {
-    m_rtStart = 0;
-    m_rtStop = 0;
-    m_NumFields = 0;
+    m_rtStartCoded = 0;
+    m_rtStartDisplay = 0;
     m_UseCount = 0;
 }

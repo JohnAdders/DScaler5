@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxVideo.cpp,v 1.4 2007-12-03 07:54:26 adcockj Exp $
+// $Id: DivxVideo.cpp,v 1.5 2007-12-05 18:10:31 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2004 John Adcock
@@ -21,6 +21,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2007/12/03 07:54:26  adcockj
+// Interim checkin will be tidied up later
+//
 // Revision 1.3  2007/11/30 18:06:48  adcockj
 // Initial go at h264 support
 //
@@ -135,7 +138,7 @@ STDAPI DllRegisterServer(void)
     RegInfo.rgPins2 = Pins;
     
   
-    HRESULT hr = RegisterFilter(CLSID_CDivxDecoder, L"DScaler Divx Video Decoder", &RegInfo);
+    HRESULT hr = RegisterFilter(CLSID_CDivxDecoder, L"DScaler MPEG4 Video Decoder", &RegInfo);
     CHECK(hr);
 
     for(size_t i(0); i < InputTypes.size(); ++i)
