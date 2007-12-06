@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.15 2007-12-05 18:10:30 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.16 2007-12-06 17:51:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2007/12/05 18:10:30  adcockj
+// various fixes, now seems to work for AVC1 and H264 with haali splitter
+//
 // Revision 1.14  2007/12/03 07:54:26  adcockj
 // Interim checkin will be tidied up later
 //
@@ -132,6 +135,10 @@ CDivxDecoder::CDivxDecoder() :
 CDivxDecoder::~CDivxDecoder()
 {
     LOG(DBGLOG_FLOW, ("CDivxDecoder::~CDivxDecoder\n"));
+    for(size_t i(0); i < m_Buffers.size(); ++i)
+    {
+        delete m_Buffers[i];
+    }
 }
 
 STDMETHODIMP CDivxDecoder::GetClassID(CLSID __RPC_FAR *pClassID)
@@ -592,15 +599,10 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     {
         if(m_fWaitForKeyFrame && (pSampleProperties->dwSampleFlags & AM_SAMPLE_SPLICEPOINT) == 0)
         {
+            // completely skip pre-roll
             if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
             {
                 return S_FALSE;
-            }
-            else
-            {
-                // return early if until we get the sync point flag
-                // TODO: need to check this doesn't hang with haali splitter
-                return S_OK;
             }
         }
     }
@@ -885,6 +887,8 @@ HRESULT CDivxDecoder::ResetDivxDecoder()
 
     if(m_Codec != NULL)
     {
+        avcodec_flush_buffers(m_CodecContext);
+        ResetBuffers();
         avcodec_close(m_CodecContext);
         m_Codec = NULL;
     }
@@ -965,6 +969,7 @@ HRESULT CDivxDecoder::Deactivate()
     if(m_Codec != NULL)
     {
         avcodec_flush_buffers(m_CodecContext);
+        ResetBuffers();
         avcodec_close(m_CodecContext);
         m_Codec = NULL;
     }
@@ -994,15 +999,26 @@ HRESULT CDivxDecoder::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME t
 
 CDivxDecoder::CFrameBuffer* CDivxDecoder::GetNextBuffer()
 {
-    for(int i(0); i < NUM_BUFFERS; ++i)
+    size_t i(0);
+    for(; i < m_Buffers.size(); ++i)
     {
-        if(m_Buffers[i].NotInUse())
+        if(m_Buffers[i]->NotInUse())
         {
-            m_Buffers[i].AddRef();
-            return &m_Buffers[i];
+            m_Buffers[i]->AddRef();
+            return m_Buffers[i];
         }
     }
-    return NULL;
+    m_Buffers.push_back(new CFrameBuffer);
+    LOG(DBGLOG_FLOW, ("Increasing internal buffer size %d \n", m_Buffers.size()));
+    return m_Buffers[i];
+}
+
+void CDivxDecoder::ResetBuffers()
+{
+    for(size_t i(0); i < m_Buffers.size(); ++i)
+    {
+        m_Buffers[i]->Clear();
+    }
 }
 
 void CDivxDecoder::avlog(void*,int,const char* szFormat, va_list Args)

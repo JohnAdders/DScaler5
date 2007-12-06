@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.7 2007-12-05 18:10:31 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.8 2007-12-06 17:51:01 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -37,10 +37,8 @@ extern "C"
 	#endif
 }
 
-#define NUM_BUFFERS 16
 
 DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x4b, 0x5e, 0x74, 0xb3, 0xbf);
-
 
 typedef struct
 {
@@ -160,14 +158,14 @@ private:
         ~CFrameBuffer();
         REFERENCE_TIME m_rtStartCoded;
         REFERENCE_TIME m_rtStartDisplay;
-        int m_UseCount;
         void Clear();
         void AddRef() {m_UseCount++;};
         void Release() {m_UseCount--;};
         bool NotInUse() {return (m_UseCount <= 0);};
     private:
+        int m_UseCount;
     };
-    CFrameBuffer m_Buffers[NUM_BUFFERS];
+    std::vector<CFrameBuffer*> m_Buffers;
 
     int m_DivxWidth;
     int m_DivxHeight;
@@ -198,6 +196,7 @@ private:
     HRESULT GetEnumTextOutputSpace(WCHAR **ppwchText);
 
     CFrameBuffer* GetNextBuffer();
+    void ResetBuffers();
     static void __cdecl avlog(void*,int,const char*,va_list);
     int (*m_OldGetBuffer)(struct AVCodecContext *c, AVFrame *pic);
     void (*m_OldReleaseBuffer)(struct AVCodecContext *c, AVFrame *pic);
