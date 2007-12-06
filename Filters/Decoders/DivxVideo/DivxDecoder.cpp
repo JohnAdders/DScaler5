@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.16 2007-12-06 17:51:01 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.17 2007-12-06 18:11:44 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2007/12/06 17:51:01  adcockj
+// dynamically allocate buffer information
+//
 // Revision 1.15  2007/12/05 18:10:30  adcockj
 // various fixes, now seems to work for AVC1 and H264 with haali splitter
 //
@@ -603,6 +606,12 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
             if(pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL)
             {
                 return S_FALSE;
+            }
+            else
+            {
+                // return early if until we get the sync point flag
+                // TODO: need to check this doesn't hang with haali splitter
+                return S_OK ;
             }
         }
     }
