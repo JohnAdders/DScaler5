@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.18 2007-12-11 17:59:11 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.19 2007-12-11 18:07:36 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.18  2007/12/11 17:59:11  adcockj
+// fix seek issues
+//
 // Revision 1.17  2007/12/06 18:11:44  adcockj
 // put back in early exit
 //
@@ -739,7 +742,7 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
         // if we're not at a Discontinuity
         // make sure that time are contiguous
         rtStart = m_LastOutputTime;
-        if(rtStartFromFile != 0 && abs(long(rtStartFromFile - m_LastOutputTime)) > 100000 )
+        if(NextFrame.pict_type == FF_I_TYPE && abs(long(rtStartFromFile - m_LastOutputTime)) > 100000 )
         {
             LOG(DBGLOG_FLOW, ("Adjusting timestamps\n"));
     	    rtStop = rtStartFromFile + m_AvgTimePerFrame * m_Rate / 10000 ;
@@ -748,7 +751,6 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
         {
     		rtStop = rtStart + m_AvgTimePerFrame * m_Rate / 10000 ;
         }
-
     }
 
 
