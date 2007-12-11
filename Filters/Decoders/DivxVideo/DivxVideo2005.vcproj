@@ -268,10 +268,6 @@
 				>
 			</File>
 			<File
-				RelativePath="DivxVideo.rc"
-				>
-			</File>
-			<File
 				RelativePath="FrameBuffer.cpp"
 				>
 				<FileConfiguration
@@ -349,6 +345,10 @@
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
 			>
+			<File
+				RelativePath="DivxVideo.rc"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Docs"

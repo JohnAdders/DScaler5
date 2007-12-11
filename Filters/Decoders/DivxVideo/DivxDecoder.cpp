@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.17 2007-12-06 18:11:44 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.18 2007-12-11 17:59:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.17  2007/12/06 18:11:44  adcockj
+// put back in early exit
+//
 // Revision 1.16  2007/12/06 17:51:01  adcockj
 // dynamically allocate buffer information
 //
@@ -614,6 +617,7 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
                 return S_OK ;
             }
         }
+        m_fWaitForKeyFrame = false;
     }
 
     if(m_AvgTimePerFrame == 0)
@@ -914,6 +918,8 @@ HRESULT CDivxDecoder::ResetDivxDecoder()
 	m_CodecContext->get_buffer = GetBuffer;
 	m_OldReleaseBuffer = m_CodecContext->release_buffer;
 	m_CodecContext->release_buffer = ReleaseBuffer;
+	m_OldRegetBuffer = m_CodecContext->reget_buffer;
+	m_CodecContext->reget_buffer = RegetBuffer;
 
     m_CodecContext->width = m_DivxWidth;
     m_CodecContext->height = m_DivxHeight;
@@ -1137,6 +1143,12 @@ void __cdecl CDivxDecoder::ReleaseBuffer(struct AVCodecContext *c, AVFrame *pic)
 	Decoder->InternalReleaseBuffer(c, pic);
 }
 
+int __cdecl CDivxDecoder::RegetBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	CDivxDecoder* Decoder = (CDivxDecoder*)c->opaque;
+	return Decoder->InternalRegetBuffer(c, pic);
+}
+
 int CDivxDecoder::InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic)
 {
 	int RetVal = m_OldGetBuffer(c, pic);
@@ -1151,4 +1163,12 @@ void CDivxDecoder::InternalReleaseBuffer(struct AVCodecContext *c, AVFrame *pic)
 	CFrameBuffer* FrameBuffer = (CFrameBuffer*)pic->opaque;
 	FrameBuffer->Release();
 	m_OldReleaseBuffer(c, pic);
+}
+
+int CDivxDecoder::InternalRegetBuffer(struct AVCodecContext *c, AVFrame *pic)
+{
+	int RetVal = m_OldRegetBuffer(c, pic);
+	CFrameBuffer* FrameBuffer = (CFrameBuffer*)pic->opaque;
+    FrameBuffer->m_rtStartCoded = m_LastInputTime;
+	return RetVal;
 }

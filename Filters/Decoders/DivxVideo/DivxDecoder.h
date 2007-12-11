@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.8 2007-12-06 17:51:01 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.9 2007-12-11 17:59:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -127,6 +127,8 @@ public:
     int InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic);
     static void __cdecl ReleaseBuffer(struct AVCodecContext *c, AVFrame *pic);
     void InternalReleaseBuffer(struct AVCodecContext *c, AVFrame *pic);
+    static int __cdecl RegetBuffer(struct AVCodecContext *c, AVFrame *pic);
+    int InternalRegetBuffer(struct AVCodecContext *c, AVFrame *pic);
 
 
 protected:
@@ -200,6 +202,7 @@ private:
     static void __cdecl avlog(void*,int,const char*,va_list);
     int (*m_OldGetBuffer)(struct AVCodecContext *c, AVFrame *pic);
     void (*m_OldReleaseBuffer)(struct AVCodecContext *c, AVFrame *pic);
+    int (*m_OldRegetBuffer)(struct AVCodecContext *c, AVFrame *pic);
 
 };
 
