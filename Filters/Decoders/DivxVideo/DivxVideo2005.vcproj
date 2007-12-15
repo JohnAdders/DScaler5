@@ -61,6 +61,7 @@
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				DebugInformationFormat="3"
 				CompileAs="0"
 			/>
 			<Tool
@@ -83,6 +84,7 @@
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="..\..\..\Release"
 				ModuleDefinitionFile=".\DivxVideo.def"
+				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Release/DivxVideo.pdb"
 				SubSystem="2"
 				OptimizeReferences="2"

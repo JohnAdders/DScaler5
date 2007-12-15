@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.76 2007-10-19 17:05:49 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.77 2007-12-15 14:49:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.76  2007/10/19 17:05:49  adcockj
+// Added Support for setting new color info flags
+//
 // Revision 1.75  2007/06/25 17:05:04  adcockj
 // Fixed ATSC CC ording issues by improving handling of picture data
 //
@@ -1635,6 +1638,8 @@ HRESULT CMpegDecoder::Activate()
 
 HRESULT CMpegDecoder::Deactivate()
 {
+    CProtectCode WhileVarInScope2(&m_DeliverLock);
+
     if(m_dec != NULL)
     {
         mpeg2_close(m_dec);

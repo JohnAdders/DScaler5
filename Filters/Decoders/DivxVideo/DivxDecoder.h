@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.h,v 1.9 2007-12-11 17:59:11 adcockj Exp $
+// $Id: DivxDecoder.h,v 1.10 2007-12-15 14:49:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -36,7 +36,6 @@ extern "C"
 		#pragma warning(default: 4244)
 	#endif
 }
-
 
 DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x4b, 0x5e, 0x74, 0xb3, 0xbf);
 

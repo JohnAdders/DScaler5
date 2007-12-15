@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.19 2007-12-11 18:07:36 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.20 2007-12-15 14:49:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.19  2007/12/11 18:07:36  adcockj
+// try this for timestamp issues
+//
 // Revision 1.18  2007/12/11 17:59:11  adcockj
 // fix seek issues
 //
@@ -615,9 +618,27 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
             }
             else
             {
-                // return early if until we get the sync point flag
-                // TODO: need to check this doesn't hang with haali splitter
-                return S_OK ;
+                // return early if until we get an SPS start code
+				if(m_CodecContext->codec_tag == MAKEFOURCC('A', 'V', 'C', '1'))
+				{
+					if(pSampleProperties->pbBuffer[0] != 0 ||
+						pSampleProperties->pbBuffer[1] != 0 ||
+						pSampleProperties->pbBuffer[2] != 0 ||
+						pSampleProperties->pbBuffer[4] != 0x67)
+					{
+						return S_OK;
+					}
+				}
+				else
+				{
+					if(pSampleProperties->pbBuffer[0] != 0 ||
+						pSampleProperties->pbBuffer[1] != 0 ||
+						pSampleProperties->pbBuffer[2] != 0x01 ||
+						pSampleProperties->pbBuffer[3] != 0x67)
+					{
+						return S_OK;
+					}
+				}
             }
         }
         m_fWaitForKeyFrame = false;
@@ -694,13 +715,14 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
 {
     HRESULT hr = S_OK;
     TCHAR frametype[] = {'?','I', 'P', 'B', 'S', '1', '2',};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d]\n", 
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d] %d\n", 
         CurrentPicture->m_rtStartCoded, CurrentPicture->m_rtStartDisplay,
         frametype[NextFrame.pict_type],
         NextFrame.repeat_pict,
         NextFrame.key_frame,
         NextFrame.interlaced_frame,
-        NextFrame.top_field_first));
+        NextFrame.top_field_first,
+		NextFrame.coded_picture_number));
 
     if(m_fWaitForKeyFrame)
     {
@@ -821,7 +843,16 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
 
             // tell the next filter that this is film
             if(m_NextFrameDeint == DIWeave)
+			{
                 Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
+			}
+			else
+			{
+				if(NextFrame.top_field_first)
+				{
+					Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_FIELD1FIRST;
+				}
+			}
 
             if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
             {
@@ -983,6 +1014,8 @@ HRESULT CDivxDecoder::Activate()
 
 HRESULT CDivxDecoder::Deactivate()
 {
+    CProtectCode WhileVarInScope2(&m_DeliverLock);
+
     if(m_Codec != NULL)
     {
         avcodec_flush_buffers(m_CodecContext);
@@ -1155,7 +1188,15 @@ int CDivxDecoder::InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic)
 {
 	int RetVal = m_OldGetBuffer(c, pic);
 	CFrameBuffer* FrameBuffer = GetNextBuffer();
-    FrameBuffer->m_rtStartCoded = m_LastInputTime;
+    LOG(DBGLOG_FLOW, ("Get ref - %d type - %d age - %d cpn - %d\n", pic->reference, pic->type,  pic->age, pic->coded_picture_number));
+	if(pic->reference)
+	{
+		FrameBuffer->m_rtStartCoded = m_LastInputTime;
+	}
+	else
+	{
+		FrameBuffer->m_rtStartCoded = m_LastInputTime;
+	}
 	pic->opaque = FrameBuffer;
 	return RetVal;
 }
