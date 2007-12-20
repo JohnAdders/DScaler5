@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.h,v 1.28 2006-03-08 17:13:28 adcockj Exp $
+// $Id: AudioDecoder.h,v 1.29 2007-12-20 18:24:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // MpegAudio.dll - DirectShow filter for decoding Mpeg audio streams
 // Copyright (c) 2004 John Adcock
@@ -54,6 +54,23 @@ namespace libfaad
 {
     #include "libfaad\faad.h"
 }
+
+namespace ffmpeg
+{
+    extern "C"
+    {
+	    #ifdef  _MSC_VER
+		    #pragma warning(disable: 4244)
+	    #endif
+
+	    #include "avcodec.h"
+
+	    #ifdef  _MSC_VER
+		    #pragma warning(default: 4244)
+	    #endif
+    }
+}
+
 
 DEFINE_GUID(CLSID_CAudioDecoder, 0xd2ca75c2, 0x5a1, 0x4915, 0x88, 0xa8, 0xd4, 0x33, 0xf8, 0x76, 0xd1, 0x86);
 
@@ -192,6 +209,9 @@ protected:
     struct libmad::mad_synth m_synth;
     bool m_madinit;
 
+    ffmpeg::AVCodec* m_Codec;
+    ffmpeg::AVCodecContext* m_CodecContext;
+
     std::vector<BYTE> m_buff;
     REFERENCE_TIME m_rtNextFrameStart;
     REFERENCE_TIME m_rtOutputStart;
@@ -239,6 +259,9 @@ private:
     HRESULT SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData);
     HRESULT GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropertyData, DWORD cbPropData, DWORD *pcbReturned);
     HRESULT SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport);
+
+    // logging for ffmpeg
+    static void __cdecl avlog(void*,int,const char*,va_list);
 
 private:
     AM_MEDIA_TYPE m_InternalMT;

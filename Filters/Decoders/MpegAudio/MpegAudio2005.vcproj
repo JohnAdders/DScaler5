@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -76,10 +76,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Release"
 				IgnoreDefaultLibraryNames="libc.lib"
 				ModuleDefinitionFile=".\MpegAudio.def"
 				ProgramDatabaseFile=".\Release/MpegAudio.pdb"
@@ -145,7 +146,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -174,10 +175,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Debug"
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/MpegAudio.pdb"
@@ -243,7 +245,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
@@ -270,10 +272,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Release"
 				IgnoreDefaultLibraryNames="libc.lib"
 				ModuleDefinitionFile=".\MpegAudio.def"
 				ProgramDatabaseFile=".\Release_Fixed_Point/MpegAudio.pdb"
@@ -339,7 +342,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_FIXED;LIBDTS_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -368,10 +371,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
+				AdditionalLibraryDirectories="..\..\..\Debug"
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug_Fixed_Point/MpegAudio.pdb"
@@ -420,7 +424,6 @@
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{DABBA817-B2FC-49AA-B872-2AAFAE560337}"
-			RelativePathToProject="..\..\DeCSS\DeCSS2005.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"

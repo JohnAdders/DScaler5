@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.14 2006-03-08 17:13:28 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.15 2007-12-20 18:24:55 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.14  2006/03/08 17:13:28  adcockj
+// added aac decoding
+//
 // Revision 1.13  2004/10/27 12:10:55  adcockj
 // checked over Laurent's changes
 //
@@ -192,6 +195,136 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 #endif
 
+int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bool* isEAC3)
+{
+    static int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,
+			 128, 160, 192, 224, 256, 320, 384, 448,
+			 512, 576, 640};
+    static uint8_t lfeon[8] = {0x10, 0x10, 0x04, 0x04, 0x04, 0x01, 0x04, 0x01};
+    int frmsizecod;
+    int bitrate;
+    int half;
+    int acmod;
+
+    if ((buf[0] != 0x0b) || (buf[1] != 0x77))	/* syncword */
+	return 0;
+
+    int bsid = buf[5] >> 3;
+
+    if (bsid > 10)
+    {
+        *isEAC3 = true;
+        int fscod = buf[4] >> 6;
+        int numblkscod = 3;
+        if(fscod == 0x03)
+        {
+            int fscod2 = (buf[4] >> 4) & 0x03;
+            switch(fscod2)
+            {
+            case 0x00:
+                *sample_rate = 24000;
+                break;
+            case 0x01:
+                *sample_rate = 22050;
+                break;
+            case 0x02:
+                *sample_rate = 16000;
+                break;
+            case 0x03:
+                return 0;
+            }
+        }
+        else
+        {
+            switch(fscod)
+            {
+            case 0x00:
+                *sample_rate = 48000;
+                break;
+            case 0x01:
+                *sample_rate = 44100;
+                break;
+            case 0x02:
+                *sample_rate = 32000;
+                break;
+            case 0x03:
+                return 0;
+            }
+            numblkscod = (buf[4] >> 4) & 0x03;
+        }
+
+        int numblks;
+        switch(numblkscod)
+        {
+        case 0x00:
+            numblks = 1;
+            break;
+        case 0x01:
+            numblks = 2;
+            break;
+        case 0x10:
+            numblks = 3;
+            break;
+        case 0x11:
+            numblks = 6;
+            break;
+        }
+        acmod = (buf[4] >> 1) & 0x07;
+        *flags = acmod | ((buf[4] & 0x01) ? A52_LFE : 0);
+
+    	return (((buf[2] & 0x07) << 8) + buf[3] + 1) * numblks * 2;
+    }
+    else
+    {
+        *isEAC3 = false;
+
+        int bsmod = (buf[5] & 0x07);
+        // ignore other audio modes
+        if(bsmod != 0)
+        {
+            return 0;
+        }
+
+
+        // support bsid as half modes
+        // note this is not descriobed in standard
+        if(bsid > 8)
+        {
+            half = bsid - 8;
+        }
+        else
+        {
+            half = 0;
+        }
+
+        /* acmod, dsurmod and lfeon */
+        acmod = buf[6] >> 5;
+        *flags = ((((buf[6] & 0xf8) == 0x50) ? A52_DOLBY : acmod) |
+	          ((buf[6] & lfeon[acmod]) ? A52_LFE : 0));
+
+        frmsizecod = buf[4] & 63;
+        if (frmsizecod >= 38)
+	    return 0;
+        bitrate = rate [frmsizecod >> 1];
+        *bit_rate = (bitrate * 1000) >> half;
+
+        switch (buf[4] & 0xc0) 
+        {
+        case 0:
+	        *sample_rate = 48000 >> half;
+	        return 4 * bitrate;
+        case 0x40:
+	        *sample_rate = 44100 >> half;
+	        return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
+        case 0x80:
+	        *sample_rate = 32000 >> half;
+	        return 6 * bitrate;
+        default:
+	        return 0;
+        }
+    }
+}
+
 
 HRESULT CAudioDecoder::ProcessAC3()
 {
@@ -205,8 +338,9 @@ HRESULT CAudioDecoder::ProcessAC3()
         int size = 0, sample_rate, bit_rate;
 
         int flags(0);
+        bool isEAC3(false);
 
-        if((size = a52_syncinfo(p, &flags, &sample_rate, &bit_rate)) > 0)
+        if((size = ea52_syncinfo(p, &flags, &sample_rate, &bit_rate, &isEAC3)) > 0)
         {
             bool fEnoughData = p + size <= end;
 
@@ -219,100 +353,141 @@ HRESULT CAudioDecoder::ProcessAC3()
                     hr = UpdateStartTime();
                     CHECK(hr)
                 }
-
-                if(m_ConnectedAsSpdif)
+                
+                if(isEAC3)
                 {
-                    hr = SendDigitalData(0x0001, size, 0x1800, (char*)p);
-                    if(hr != S_OK)
+                    if(m_CodecContext == NULL)
                     {
-                        return hr;
+                        m_Codec = ffmpeg::avcodec_find_decoder(ffmpeg::CODEC_ID_EAC3);
+                        if(m_Codec == NULL)
+                        {
+                            return E_UNEXPECTED;
+                        }
+                        m_CodecContext = ffmpeg::avcodec_alloc_context();
+                        m_CodecContext->sample_rate = sample_rate;
+                        int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
+                        scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
+                        m_CodecContext->channels = scmap.nChannels;
+
+                        if (ffmpeg::avcodec_open(m_CodecContext, m_Codec) < 0)
+                        {
+                            av_free(m_CodecContext);
+                            m_CodecContext = NULL;
+                            m_Codec = NULL;
+                            return E_UNEXPECTED;
+                        }
+                    }
+                    int frameSize(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+                    static std::vector<int16_t> samples(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 16);
+                    int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
+
+                    int decodedBytes =  ffmpeg::avcodec_decode_audio(m_CodecContext, pSamples, &frameSize, p, size);
+                    frameSize = decodedBytes;
+                    if(decodedBytes > 0)
+                    {
                     }
                 }
                 else
                 {
-
-                    switch(GetParamEnum(SPEAKERCONFIG))
+                    if(m_a52_state == NULL)
                     {
-                    case SPCFG_STEREO:
-                        flags = A52_STEREO;
-                        break;
-                    case SPCFG_DOLBY:
-                        flags = A52_DOLBY;
-                        break;
-                    case SPCFG_2F2R:
-                        flags = A52_2F2R;
-                        break;
-                    case SPCFG_2F2R1S:
-                        flags = A52_2F2R | A52_LFE;
-                        break;
-                    case SPCFG_3F2R:
-                        flags = A52_3F2R;
-                        break;
-                    case SPCFG_3F2R1S:
-                        flags = A52_3F2R | A52_LFE;
-                        break;
+                        m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
                     }
-                    
-                    flags += A52_ADJUST_LEVEL;
 
-                    sample_t level = LEVEL, gain = 1, bias = 0;
-                    level *= gain;
-
-                    if(a52_frame(m_a52_state, p, &flags, &level, bias) == 0)
+                    if(m_ConnectedAsSpdif)
                     {
-                        if(!GetParamBool(DYNAMICRANGECONTROL))
-                            a52_dynrng(m_a52_state, NULL, NULL);
-
-                        int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
-                        scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
-
-                        int i = 0;
-                        CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
-
-                        for(; i < 6 && a52_block(m_a52_state) == 0; i++)
+                        hr = SendDigitalData(0x0001, size, 0x1800, (char*)p);
+                        if(hr != S_OK)
                         {
-                            sample_t* samples = a52_samples(m_a52_state);
-                            sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
-                            int ch = 0;
-                            int outch = 0;
+                            return hr;
+                        }
+                    }
+                    else
+                    {
 
-                            for(int SpkFlag = 0; SpkFlag < 6; SpkFlag++)
-                            {
-                                if((scmap.dwChannelMask & (1 << SpkFlag) ) != 0)
-                                {
-                                    Channels[outch] = samples + 256*scmap.ch[ch];
-                                    ch++;
-                                }
-                                if((m_ChannelMask & (1 << SpkFlag) ) != 0)
-                                {
-                                    outch++;
-                                }
-                            }
-
-                            ASSERT(outch == m_ChannelsRequested);
-                            ASSERT(ch == scmap.nChannels);
+                        switch(GetParamEnum(SPEAKERCONFIG))
+                        {
+                        case SPCFG_STEREO:
+                            flags = A52_STEREO;
+                            break;
+                        case SPCFG_DOLBY:
+                            flags = A52_DOLBY;
+                            break;
+                        case SPCFG_2F2R:
+                            flags = A52_2F2R;
+                            break;
+                        case SPCFG_2F2R1S:
+                            flags = A52_2F2R | A52_LFE;
+                            break;
+                        case SPCFG_3F2R:
+                            flags = A52_3F2R;
+                            break;
+                        case SPCFG_3F2R1S:
+                            flags = A52_3F2R | A52_LFE;
+                            break;
+                        }
                         
-                            for(int j = 0; j < 256; j++, samples++)
+                        flags += A52_ADJUST_LEVEL;
+
+                        sample_t level = LEVEL, gain = 1, bias = 0;
+                        level *= gain;
+
+                        if(a52_frame(m_a52_state, p, &flags, &level, bias) == 0)
+                        {
+                            if(!GetParamBool(DYNAMICRANGECONTROL))
+                                a52_dynrng(m_a52_state, NULL, NULL);
+
+                            int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
+                            scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
+
+                            int i = 0;
+                            CONV_FUNC* pConvFunc = pConvFuncs[m_OutputSampleType];
+
+                            for(; i < 6 && a52_block(m_a52_state) == 0; i++)
                             {
-                                if(m_BytesLeftInBuffer == 0)
-                                {
-                                    hr = GetOutputSampleAndPointer();
-                                    CHECK(hr);
-                                }
+                                sample_t* samples = a52_samples(m_a52_state);
+                                sample_t* Channels[6] = { Silence, Silence, Silence, Silence, Silence, Silence, };
+                                int ch = 0;
+                                int outch = 0;
 
-                                for(int ch = 0; ch < m_ChannelsRequested; ch++)
+                                for(int SpkFlag = 0; SpkFlag < 6; SpkFlag++)
                                 {
-                                    pConvFunc(m_pDataOut, Channels[ch][j]);
-                                }
-
-                                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
-                                ASSERT(m_BytesLeftInBuffer >=0);
-                                if(m_BytesLeftInBuffer == 0)
-                                {
-                                    hr = Deliver(false);
-                                    if(hr != S_OK)
+                                    if((scmap.dwChannelMask & (1 << SpkFlag) ) != 0)
                                     {
-                                        return hr;
+                                        Channels[outch] = samples + 256*scmap.ch[ch];
+                                        ch++;
+                                    }
+                                    if((m_ChannelMask & (1 << SpkFlag) ) != 0)
+                                    {
+                                        outch++;
+                                    }
+                                }
+
+                                ASSERT(outch == m_ChannelsRequested);
+                                ASSERT(ch == scmap.nChannels);
+                            
+                                for(int j = 0; j < 256; j++, samples++)
+                                {
+                                    if(m_BytesLeftInBuffer == 0)
+                                    {
+                                        hr = GetOutputSampleAndPointer();
+                                        CHECK(hr);
+                                    }
+
+                                    for(int ch = 0; ch < m_ChannelsRequested; ch++)
+                                    {
+                                        pConvFunc(m_pDataOut, Channels[ch][j]);
+                                    }
+
+                                    m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                                    ASSERT(m_BytesLeftInBuffer >=0);
+                                    if(m_BytesLeftInBuffer == 0)
+                                    {
+                                        hr = Deliver(false);
+                                        if(hr != S_OK)
+                                        {
+                                            return hr;
+                                        }
                                     }
                                 }
                             }
@@ -350,7 +525,6 @@ BOOL CAudioDecoder::IsMediaTypeAC3(const AM_MEDIA_TYPE* pMediaType)
 
 void CAudioDecoder::InitAC3()
 {
-    m_a52_state = liba52::a52_init(MM_ACCEL_DJBFFT);
 }
 
 void CAudioDecoder::FinishAC3()
@@ -359,5 +533,13 @@ void CAudioDecoder::FinishAC3()
     {
         liba52::a52_free(m_a52_state);
         m_a52_state = NULL;
+    }
+    
+    if(m_CodecContext != NULL)
+    {
+        avcodec_close(m_CodecContext);
+        av_free(m_CodecContext);
+        m_Codec = NULL;
+        m_CodecContext = NULL;
     }
 }

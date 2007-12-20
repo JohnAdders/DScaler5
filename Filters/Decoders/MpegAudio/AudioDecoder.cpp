@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.54 2006-03-08 17:13:28 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.55 2007-12-20 18:24:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.54  2006/03/08 17:13:28  adcockj
+// added aac decoding
+//
 // Revision 1.53  2005/05/25 08:05:22  adcockj
 // fixed issue with no clock
 //
@@ -284,11 +287,18 @@ CAudioDecoder::CAudioDecoder() :
     m_aac_handle = NULL;
     m_aac_init = false;
 
+    m_Codec = NULL;
+    m_CodecContext = NULL;
+
     m_rate.Rate = 10000;
     m_rate.StartTime = 0;
 
 	m_ratechange.Rate = 10000;
     m_ratechange.StartTime = -1;
+
+    ffmpeg::av_log_set_callback(avlog);
+    ffmpeg::avcodec_init();
+    ffmpeg::avcodec_register_all();
 
 }
 
@@ -1752,4 +1762,19 @@ HRESULT CAudioDecoder::UpdateStartTime()
     
     m_rtNextFrameStart = _I64_MIN;
     return S_OK;
+}
+
+void CAudioDecoder::avlog(void*,int,const char* szFormat, va_list Args)
+{
+    char szMessage[2048];
+
+    int result=_vsnprintf(szMessage,2048, szFormat, Args);
+    if(result==-1)
+    {
+        OutputDebugString("DebugString too long, truncated!!\n");
+    }
+    else
+    {
+        OutputDebugString(szMessage);
+    }
 }
