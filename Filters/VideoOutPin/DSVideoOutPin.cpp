@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.7 2007-12-03 07:54:26 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.8 2007-12-30 15:33:29 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.7  2007/12/03 07:54:26  adcockj
+// Interim checkin will be tidied up later
+//
 // Revision 1.6  2007/10/20 14:55:49  adcockj
 // Better EVR Connections
 //
@@ -926,6 +929,7 @@ HRESULT CDSVideoOutPin::ReconnectOther()
         vih->dwPictAspectRatioY = m_AspectY;
         Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
+        SetRect(&vih->rcTarget, 0, 0, 0, 0);
     }
 
     bmi->biXPelsPerMeter = m_Width * m_AspectY;
@@ -1112,7 +1116,7 @@ HRESULT CDSVideoOutPin::AdjustRenderersMediaType()
         bmi = &vih->bmiHeader;
         vih->AvgTimePerFrame = m_AvgTimePerFrame;
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
-        SetRect(&vih->rcTarget, 0, 0, 0, 0);
+        //SetRect(&vih->rcTarget, 0, 0, 0, 0);
    }
     else if(m_InternalMT.formattype == FORMAT_VideoInfo2)
     {
@@ -1123,7 +1127,7 @@ HRESULT CDSVideoOutPin::AdjustRenderersMediaType()
         vih->dwPictAspectRatioY = m_AspectY;
         Simplify(vih->dwPictAspectRatioX, vih->dwPictAspectRatioY);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
-        SetRect(&vih->rcTarget, 0, 0, 0, 0);
+        //SetRect(&vih->rcTarget, 0, 0, 0, 0);
    }
 
     bmi->biXPelsPerMeter = m_Width * m_AspectY;
