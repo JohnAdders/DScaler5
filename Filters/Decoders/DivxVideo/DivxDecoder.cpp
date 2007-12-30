@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.20 2007-12-15 14:49:29 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.21 2007-12-30 15:32:04 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2007/12/15 14:49:29  adcockj
+// Start code fixes for h264
+// Deactivate made safer
+//
 // Revision 1.19  2007/12/11 18:07:36  adcockj
 // try this for timestamp issues
 //
@@ -559,9 +563,16 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
         m_VideoOutPin->SetAvgTimePerFrame(m_AvgTimePerFrame);
 
-        m_FourCC = UpperFourCC(bih->biCompression);
-        m_CodecID = lookupCodec(m_FourCC);
-        
+        if(bih->biCompression != 0)
+		{
+			m_FourCC = UpperFourCC(bih->biCompression);
+		}
+		else
+		{
+			m_FourCC = UpperFourCC(pMediaType->subtype.Data1);
+		}
+		m_CodecID = lookupCodec(m_FourCC);
+	        
         if(m_CodecID == CODEC_ID_NONE)
         {
             return E_UNEXPECTED;
@@ -618,12 +629,14 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
             }
             else
             {
-                // return early if until we get an SPS start code
+				LOG(DBGLOG_ALL, ("Start code %x %x %x %x %x\n", pSampleProperties->pbBuffer[0], pSampleProperties->pbBuffer[1], pSampleProperties->pbBuffer[2], pSampleProperties->pbBuffer[3], pSampleProperties->pbBuffer[4]));
+                // return early if until we get the sync point flag
 				if(m_CodecContext->codec_tag == MAKEFOURCC('A', 'V', 'C', '1'))
 				{
 					if(pSampleProperties->pbBuffer[0] != 0 ||
 						pSampleProperties->pbBuffer[1] != 0 ||
 						pSampleProperties->pbBuffer[2] != 0 ||
+						//pSampleProperties->pbBuffer[3] != 0x01 ||
 						pSampleProperties->pbBuffer[4] != 0x67)
 					{
 						return S_OK;
@@ -1188,7 +1201,7 @@ int CDivxDecoder::InternalGetBuffer(struct AVCodecContext *c, AVFrame *pic)
 {
 	int RetVal = m_OldGetBuffer(c, pic);
 	CFrameBuffer* FrameBuffer = GetNextBuffer();
-    LOG(DBGLOG_FLOW, ("Get ref - %d type - %d age - %d cpn - %d\n", pic->reference, pic->type,  pic->age, pic->coded_picture_number));
+    LOG(DBGLOG_ALL, ("Get ref - %d type - %d age - %d cpn - %d\n", pic->reference, pic->type,  pic->age, pic->coded_picture_number));
 	if(pic->reference)
 	{
 		FrameBuffer->m_rtStartCoded = m_LastInputTime;

@@ -9,6 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoOutPin", "..\..\VideoO
 		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DivxVideo", "DivxVideo2005.vcproj", "{514BBF2F-B9E5-4D01-94DE-563236588058}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AC92CAEE-0134-42A6-8F11-AC7948AB8E87} = {AC92CAEE-0134-42A6-8F11-AC7948AB8E87}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -27,6 +32,10 @@ Global
 		{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}.Debug|Win32.Build.0 = Debug|Win32
 		{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}.Release|Win32.ActiveCfg = Release|Win32
 		{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}.Release|Win32.Build.0 = Release|Win32
+		{514BBF2F-B9E5-4D01-94DE-563236588058}.Debug|Win32.ActiveCfg = Debug|Win32
+		{514BBF2F-B9E5-4D01-94DE-563236588058}.Debug|Win32.Build.0 = Debug|Win32
+		{514BBF2F-B9E5-4D01-94DE-563236588058}.Release|Win32.ActiveCfg = Release|Win32
+		{514BBF2F-B9E5-4D01-94DE-563236588058}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
