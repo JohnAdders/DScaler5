@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder_SubPic.cpp,v 1.20 2007-07-03 17:06:35 adcockj Exp $
+// $Id: MpegDecoder_SubPic.cpp,v 1.21 2007-12-30 15:32:42 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -39,6 +39,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.20  2007/07/03 17:06:35  adcockj
+// Fix for hightlist display on subpictures
+//
 // Revision 1.19  2006/02/07 17:40:31  adcockj
 // added subtitle move option
 //
@@ -200,7 +203,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                 LOG(DBGLOG_FLOW,("hli: %I64d - %I64d, (%x,%x) (%d,%d) - (%d,%d) %d\n", 
                     NewHighlight->rtStart, NewHighlight->rtStop,
                     pSPHLI->StartPTM, pSPHLI->EndPTM,
-                    pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY, &NewHighlight->m_Hi));
+                    pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY, m_HighlightList.size()));
             }
         }
         break;
@@ -242,6 +245,7 @@ void CMpegDecoder::ForceDelivery()
             LOG(DBGLOG_ALL, ("Refresh Image\n"));
         }
         DroppedFramesBefore = m_VideoOutPin->GetDroppedFrames();
+        Deliver(true);
         Deliver(true);
         DroppedFramesAfter = m_VideoOutPin->GetDroppedFrames();
     }
