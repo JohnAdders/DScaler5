@@ -148,7 +148,7 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     ASFContext *asf = s->priv_data;
     GUID g;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     AVStream *st;
     ASFStream *asf_st;
     int size, i;
@@ -582,12 +582,12 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
 static int asf_get_packet(AVFormatContext *s)
 {
     ASFContext *asf = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     uint32_t packet_length, padsize;
     int rsize = 8;
     int c, d, e, off;
 
-    off= (url_ftell(&s->pb) - s->data_offset) % asf->packet_size + 3;
+    off= (url_ftell(s->pb) - s->data_offset) % asf->packet_size + 3;
 
     c=d=e=-1;
     while(off-- > 0){
@@ -658,7 +658,7 @@ static int asf_get_packet(AVFormatContext *s)
  */
 static int asf_read_frame_header(AVFormatContext *s){
     ASFContext *asf = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int rsize = 1;
     int num = get_byte(pb);
     int64_t ts0, ts1;
@@ -694,7 +694,7 @@ static int asf_read_frame_header(AVFormatContext *s){
             url_fskip(pb, asf->packet_replic_size - 8);
         rsize += asf->packet_replic_size; // FIXME - check validity
     } else if (asf->packet_replic_size==1){
-        // multipacket - frag_offset is begining timestamp
+        // multipacket - frag_offset is beginning timestamp
         asf->packet_time_start = asf->packet_frag_offset;
         asf->packet_frag_offset = 0;
         asf->packet_frag_timestamp = asf->packet_timestamp;
@@ -731,7 +731,7 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
 {
     ASFContext *asf = s->priv_data;
     ASFStream *asf_st = 0;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     //static int pc = 0;
     for (;;) {
         if(url_feof(pb))
@@ -745,7 +745,7 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
             /* fail safe */
             url_fskip(pb, ret);
 
-            asf->packet_pos= url_ftell(&s->pb);
+            asf->packet_pos= url_ftell(s->pb);
             if (asf->data_object_size != (uint64_t)-1 &&
                 (asf->packet_pos - asf->data_object_offset >= asf->data_object_size))
                 return AVERROR(EIO); /* Do not exceed the size of the data object */
@@ -778,7 +778,7 @@ static int asf_read_packet(AVFormatContext *s, AVPacket *pkt)
         asf_st = asf->asf_st;
 
         if (asf->packet_replic_size == 1) {
-            // frag_offset is here used as the begining timestamp
+            // frag_offset is here used as the beginning timestamp
             asf->packet_frag_timestamp = asf->packet_time_start;
             asf->packet_time_start += asf->packet_time_delta;
             asf->packet_obj_size = asf->packet_frag_size = get_byte(pb);
@@ -968,7 +968,7 @@ static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos,
 
     pos= (pos+asf->packet_size-1-s->data_offset)/asf->packet_size*asf->packet_size+ s->data_offset;
     *ppos= pos;
-    url_fseek(&s->pb, pos, SEEK_SET);
+    url_fseek(s->pb, pos, SEEK_SET);
 
 //printf("asf_read_pts\n");
     asf_reset_header(s);
@@ -1012,21 +1012,21 @@ static void asf_build_simple_index(AVFormatContext *s, int stream_index)
     int i;
     int pct,ict;
 
-    current_pos = url_ftell(&s->pb);
+    current_pos = url_ftell(s->pb);
 
-    url_fseek(&s->pb, asf->data_object_offset + asf->data_object_size, SEEK_SET);
-    get_guid(&s->pb, &g);
+    url_fseek(s->pb, asf->data_object_offset + asf->data_object_size, SEEK_SET);
+    get_guid(s->pb, &g);
     if (!memcmp(&g, &index_guid, sizeof(GUID))) {
-        gsize = get_le64(&s->pb);
-        get_guid(&s->pb, &g);
-        itime=get_le64(&s->pb);
-        pct=get_le32(&s->pb);
-        ict=get_le32(&s->pb);
+        gsize = get_le64(s->pb);
+        get_guid(s->pb, &g);
+        itime=get_le64(s->pb);
+        pct=get_le32(s->pb);
+        ict=get_le32(s->pb);
         av_log(NULL, AV_LOG_DEBUG, "itime:0x%"PRIx64", pct:%d, ict:%d\n",itime,pct,ict);
 
         for (i=0;i<ict;i++){
-            int pktnum=get_le32(&s->pb);
-            int pktct =get_le16(&s->pb);
+            int pktnum=get_le32(s->pb);
+            int pktct =get_le16(s->pb);
             av_log(NULL, AV_LOG_DEBUG, "pktnum:%d, pktct:%d\n", pktnum, pktct);
 
             pos=s->data_offset + asf->packet_size*(int64_t)pktnum;
@@ -1036,7 +1036,7 @@ static void asf_build_simple_index(AVFormatContext *s, int stream_index)
         }
         asf->index_read= 1;
     }
-    url_fseek(&s->pb, current_pos, SEEK_SET);
+    url_fseek(s->pb, current_pos, SEEK_SET);
 }
 
 static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int flags)
@@ -1048,6 +1048,15 @@ static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int 
 
     if (asf->packet_size <= 0)
         return -1;
+
+    /* Try using the protocol's read_seek if available */
+    if(s->pb) {
+        int ret = av_url_read_fseek(s->pb, stream_index, pts, flags);
+        if(ret >= 0)
+            asf_reset_header(s);
+        if (ret != AVERROR(ENOSYS))
+            return ret;
+    }
 
     if (!asf->index_read)
         asf_build_simple_index(s, stream_index);
@@ -1066,10 +1075,10 @@ static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int 
 
     // various attempts to find key frame have failed so far
     //    asf_reset_header(s);
-    //    url_fseek(&s->pb, pos, SEEK_SET);
+    //    url_fseek(s->pb, pos, SEEK_SET);
     //    key_pos = pos;
     //     for(i=0;i<16;i++){
-    //         pos = url_ftell(&s->pb);
+    //         pos = url_ftell(s->pb);
     //         if (av_read_frame(s, &pkt) < 0){
     //             av_log(s, AV_LOG_INFO, "seek failed\n");
     //             return -1;
@@ -1087,7 +1096,7 @@ static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int 
 
         /* do the seek */
         av_log(NULL, AV_LOG_DEBUG, "SEEKTO: %"PRId64"\n", pos);
-        url_fseek(&s->pb, pos, SEEK_SET);
+        url_fseek(s->pb, pos, SEEK_SET);
     }
     asf_reset_header(s);
     return 0;

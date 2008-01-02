@@ -407,9 +407,9 @@ typedef struct DSPContext {
 
     /* vc1 functions */
     void (*vc1_inv_trans_8x8)(DCTELEM *b);
-    void (*vc1_inv_trans_8x4)(DCTELEM *b, int n);
-    void (*vc1_inv_trans_4x8)(DCTELEM *b, int n);
-    void (*vc1_inv_trans_4x4)(DCTELEM *b, int n);
+    void (*vc1_inv_trans_8x4)(uint8_t *dest, int line_size, DCTELEM *block);
+    void (*vc1_inv_trans_4x8)(uint8_t *dest, int line_size, DCTELEM *block);
+    void (*vc1_inv_trans_4x4)(uint8_t *dest, int line_size, DCTELEM *block);
     void (*vc1_v_overlap)(uint8_t* src, int stride);
     void (*vc1_h_overlap)(uint8_t* src, int stride);
     /* put 8x8 block with bicubic interpolation and quarterpel precision
@@ -656,13 +656,13 @@ void ff_mdct_calc(MDCTContext *s, FFTSample *out,
                const FFTSample *input, FFTSample *tmp);
 void ff_mdct_end(MDCTContext *s);
 
-#define WARPER8_16(name8, name16)\
+#define WRAPPER8_16(name8, name16)\
 static int name16(void /*MpegEncContext*/ *s, uint8_t *dst, uint8_t *src, int stride, int h){\
     return name8(s, dst           , src           , stride, h)\
           +name8(s, dst+8         , src+8         , stride, h);\
 }
 
-#define WARPER8_16_SQ(name8, name16)\
+#define WRAPPER8_16_SQ(name8, name16)\
 static int name16(void /*MpegEncContext*/ *s, uint8_t *dst, uint8_t *src, int stride, int h){\
     int score=0;\
     score +=name8(s, dst           , src           , stride, 8);\

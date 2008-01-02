@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "dsputil_mmx.h"
 
 /***********************************/
 /* IDCT */
@@ -363,7 +364,7 @@ static void ff_h264_idct8_dc_add_mmx2(uint8_t *dst, int16_t *block, int stride)
         "paddusb %%mm3              , %%mm1 \n\t"\
         "paddusb %%mm6              , %%mm2 \n\t"
 
-// in: mm0=p1 mm1=p0 mm2=q0 mm3=q1 mm7=(tc&mask) %8=mm_bone
+// in: mm0=p1 mm1=p0 mm2=q0 mm3=q1 mm7=(tc&mask) %8=ff_bone
 // out: (q1addr) = av_clip( (q2+((p0+q0+1)>>1))>>1, q1-tc0, q1+tc0 )
 // clobbers: q2, tmp, tc0
 #define H264_DEBLOCK_Q1(p1, q2, q2addr, q1addr, tc0, tmp)\
@@ -429,7 +430,7 @@ static inline void h264_loop_filter_luma_mmx2(uint8_t *pix, int stride, int alph
         : "=m"(*tmp0)
         : "r"(pix-3*stride), "r"(pix), "r"((long)stride),
           "m"(*tmp0/*unused*/), "m"(*(uint32_t*)tc0), "m"(alpha1), "m"(beta1),
-          "m"(mm_bone)
+          "m"(ff_bone)
     );
 }
 
@@ -476,7 +477,7 @@ static inline void h264_loop_filter_chroma_mmx2(uint8_t *pix, int stride, int al
 
         :: "r"(pix-2*stride), "r"(pix), "r"((long)stride),
            "r"(*(uint32_t*)tc0),
-           "m"(alpha1), "m"(beta1), "m"(mm_bone), "m"(ff_pb_3F)
+           "m"(alpha1), "m"(beta1), "m"(ff_bone), "m"(ff_pb_3F)
     );
 }
 
@@ -526,7 +527,7 @@ static inline void h264_loop_filter_chroma_intra_mmx2(uint8_t *pix, int stride, 
         "movq    %%mm1,   (%0,%2)   \n\t"
         "movq    %%mm2,   (%1)      \n\t"
         :: "r"(pix-2*stride), "r"(pix), "r"((long)stride),
-           "m"(alpha1), "m"(beta1), "m"(mm_bone)
+           "m"(alpha1), "m"(beta1), "m"(ff_bone)
     );
 }
 
@@ -1377,6 +1378,16 @@ H264_MC(avg_, 16,mmx2)
 #define H264_CHROMA_MC2_TMPL put_h264_chroma_mc2_mmx2
 #define H264_CHROMA_MC8_MV0 put_pixels8_mmx
 #include "dsputil_h264_template_mmx.c"
+
+static void put_h264_chroma_mc8_mmx_rnd(uint8_t *dst/*align 8*/, uint8_t *src/*align 1*/, int stride, int h, int x, int y)
+{
+    put_h264_chroma_mc8_mmx(dst, src, stride, h, x, y, 1);
+}
+static void put_h264_chroma_mc8_mmx_nornd(uint8_t *dst/*align 8*/, uint8_t *src/*align 1*/, int stride, int h, int x, int y)
+{
+    put_h264_chroma_mc8_mmx(dst, src, stride, h, x, y, 0);
+}
+
 #undef H264_CHROMA_OP
 #undef H264_CHROMA_OP4
 #undef H264_CHROMA_MC8_TMPL
@@ -1392,6 +1403,10 @@ H264_MC(avg_, 16,mmx2)
 #define H264_CHROMA_MC2_TMPL avg_h264_chroma_mc2_mmx2
 #define H264_CHROMA_MC8_MV0 avg_pixels8_mmx2
 #include "dsputil_h264_template_mmx.c"
+static void avg_h264_chroma_mc8_mmx2_rnd(uint8_t *dst/*align 8*/, uint8_t *src/*align 1*/, int stride, int h, int x, int y)
+{
+    avg_h264_chroma_mc8_mmx2(dst, src, stride, h, x, y, 1);
+}
 #undef H264_CHROMA_OP
 #undef H264_CHROMA_OP4
 #undef H264_CHROMA_MC8_TMPL
@@ -1406,6 +1421,10 @@ H264_MC(avg_, 16,mmx2)
 #define H264_CHROMA_MC4_TMPL avg_h264_chroma_mc4_3dnow
 #define H264_CHROMA_MC8_MV0 avg_pixels8_3dnow
 #include "dsputil_h264_template_mmx.c"
+static void avg_h264_chroma_mc8_3dnow_rnd(uint8_t *dst/*align 8*/, uint8_t *src/*align 1*/, int stride, int h, int x, int y)
+{
+    avg_h264_chroma_mc8_3dnow(dst, src, stride, h, x, y, 1);
+}
 #undef H264_CHROMA_OP
 #undef H264_CHROMA_OP4
 #undef H264_CHROMA_MC8_TMPL

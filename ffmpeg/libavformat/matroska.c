@@ -21,7 +21,7 @@
 
 #include "matroska.h"
 
-CodecTags ff_mkv_codec_tags[]={
+const CodecTags ff_mkv_codec_tags[]={
 //    {"V_MS/VFW/FOURCC"  , CODEC_ID_NONE},
     {"V_UNCOMPRESSED"   , CODEC_ID_RAWVIDEO},
     {"V_MPEG4/ISO/ASP"  , CODEC_ID_MPEG4},
@@ -62,10 +62,10 @@ CodecTags ff_mkv_codec_tags[]={
 
     {"S_TEXT/UTF8"      , CODEC_ID_TEXT},
     {"S_TEXT/ASCII"     , CODEC_ID_TEXT},
-    {"S_TEXT/ASS"       , CODEC_ID_TEXT},
-    {"S_TEXT/SSA"       , CODEC_ID_TEXT},
-    {"S_ASS"            , CODEC_ID_TEXT},
-    {"S_SSA"            , CODEC_ID_TEXT},
+    {"S_TEXT/ASS"       , CODEC_ID_SSA},
+    {"S_TEXT/SSA"       , CODEC_ID_SSA},
+    {"S_ASS"            , CODEC_ID_SSA},
+    {"S_SSA"            , CODEC_ID_SSA},
     {"S_VOBSUB"         , CODEC_ID_DVD_SUBTITLE},
 
     {NULL               , CODEC_ID_NONE}

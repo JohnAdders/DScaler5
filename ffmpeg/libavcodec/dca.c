@@ -646,7 +646,7 @@ static void qmf_32_subbands(DCAContext * s, int chans,
                             float samples_in[32][8], float *samples_out,
                             float scale, float bias)
 {
-    float *prCoeff;
+    const float *prCoeff;
     int i, j, k;
     float praXin[33], *raXin = &praXin[1];
 
@@ -659,9 +659,9 @@ static void qmf_32_subbands(DCAContext * s, int chans,
 
     /* Select filter */
     if (!s->multirate_inter)    /* Non-perfect reconstruction */
-        prCoeff = (float *) fir_32bands_nonperfect;
+        prCoeff = fir_32bands_nonperfect;
     else                        /* Perfect reconstruction */
-        prCoeff = (float *) fir_32bands_perfect;
+        prCoeff = fir_32bands_perfect;
 
     /* Reconstructed channel sample index */
     for (subindex = 0; subindex < 8; subindex++) {
@@ -1159,23 +1159,12 @@ static int dca_decode_frame(AVCodecContext * avctx,
     avctx->bit_rate = s->bit_rate;
 
     channels = s->prim_channels + !!s->lfe;
-    avctx->channels = avctx->request_channels;
-    if(avctx->channels == 0) {
-        avctx->channels = channels;
-    } else if(channels < avctx->channels) {
-        av_log(avctx, AV_LOG_WARNING, "DTS source channels are less than "
-               "specified: output to %d channels.\n", channels);
-        avctx->channels = channels;
-    }
-    if(avctx->channels == 2) {
+    if(avctx->request_channels == 2 && s->prim_channels > 2) {
+        channels = 2;
         s->output = DCA_STEREO;
-    } else if(avctx->channels != channels) {
-        av_log(avctx, AV_LOG_ERROR, "Cannot downmix DTS to %d channels.\n",
-               avctx->channels);
-        return -1;
     }
 
-    channels = avctx->channels;
+    avctx->channels = channels;
     if(*data_size < (s->sample_blocks / 8) * 256 * sizeof(int16_t) * channels)
         return -1;
     *data_size = 0;

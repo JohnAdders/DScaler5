@@ -322,6 +322,14 @@ static int mov_write_wave_tag(ByteIOContext *pb, MOVTrack* track)
     return updateSize (pb, pos);
 }
 
+static int mov_write_glbl_tag(ByteIOContext *pb, MOVTrack* track)
+{
+    put_be32(pb, track->vosLen+8);
+    put_tag(pb, "glbl");
+    put_buffer(pb, track->vosData, track->vosLen);
+    return 8+track->vosLen;
+}
+
 static int mov_write_audio_tag(ByteIOContext *pb, MOVTrack* track)
 {
     offset_t pos = url_ftell(pb);
@@ -376,6 +384,8 @@ static int mov_write_audio_tag(ByteIOContext *pb, MOVTrack* track)
         mov_write_esds_tag(pb, track);
     else if(track->enc->codec_id == CODEC_ID_AMR_NB)
         mov_write_amr_tag(pb, track);
+    else if(track->vosLen > 0)
+        mov_write_glbl_tag(pb, track);
 
     return updateSize (pb, pos);
 }
@@ -442,24 +452,27 @@ static uint8_t *avc_find_startcode( uint8_t *p, uint8_t *end )
     return end + 3;
 }
 
-static void avc_parse_nal_units(uint8_t **buf, int *size)
+static int avc_parse_nal_units(uint8_t **buf, int *size)
 {
-    ByteIOContext pb;
+    ByteIOContext *pb;
     uint8_t *p = *buf;
     uint8_t *end = p + *size;
     uint8_t *nal_start, *nal_end;
+    int ret = url_open_dyn_buf(&pb);
+    if(ret < 0)
+        return ret;
 
-    url_open_dyn_buf(&pb);
     nal_start = avc_find_startcode(p, end);
     while (nal_start < end) {
         while(!*(nal_start++));
         nal_end = avc_find_startcode(nal_start, end);
-        put_be32(&pb, nal_end - nal_start);
-        put_buffer(&pb, nal_start, nal_end - nal_start);
+        put_be32(pb, nal_end - nal_start);
+        put_buffer(pb, nal_start, nal_end - nal_start);
         nal_start = nal_end;
     }
     av_freep(buf);
-    *size = url_close_dyn_buf(&pb, buf);
+    *size = url_close_dyn_buf(pb, buf);
+    return 0;
 }
 
 static int mov_write_avcc_tag(ByteIOContext *pb, MOVTrack *track)
@@ -550,7 +563,10 @@ static int mov_write_avid_tag(ByteIOContext *pb, MOVTrack *track)
         put_be32(pb, track->enc->height);
         put_be32(pb, 1); /* unknown */
         put_be32(pb, 0); /* unknown */
-        put_be32(pb, 5); /* unknown */
+        if (track->enc->height == 1080)
+            put_be32(pb, 5); /* unknown */
+        else
+            put_be32(pb, 6); /* unknown */
     }
     /* padding */
     for (i = 0; i < 10; i++)
@@ -670,6 +686,8 @@ static int mov_write_video_tag(ByteIOContext *pb, MOVTrack* track)
         mov_write_avcc_tag(pb, track);
     else if(track->enc->codec_id == CODEC_ID_DNXHD)
         mov_write_avid_tag(pb, track);
+    else if(track->vosLen > 0)
+        mov_write_glbl_tag(pb, track);
 
     return updateSize (pb, pos);
 }
@@ -1508,11 +1526,11 @@ static void mov_write_uuidprof_tag(ByteIOContext *pb, AVFormatContext *s)
 
 static int mov_write_header(AVFormatContext *s)
 {
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     MOVContext *mov = s->priv_data;
     int i;
 
-    if (url_is_streamed(&s->pb)) {
+    if (url_is_streamed(s->pb)) {
         av_log(s, AV_LOG_ERROR, "muxer does not support non seekable output\n");
         return -1;
     }
@@ -1579,13 +1597,13 @@ static int mov_write_header(AVFormatContext *s)
 static int mov_write_packet(AVFormatContext *s, AVPacket *pkt)
 {
     MOVContext *mov = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     MOVTrack *trk = &mov->tracks[pkt->stream_index];
     AVCodecContext *enc = trk->enc;
     unsigned int samplesInChunk = 0;
     int size= pkt->size;
 
-    if (url_is_streamed(&s->pb)) return 0; /* Can't handle that */
+    if (url_is_streamed(s->pb)) return 0; /* Can't handle that */
     if (!size) return 0; /* Discard 0 sized packets */
 
     if (enc->codec_id == CODEC_ID_AMR_NB) {
@@ -1663,7 +1681,7 @@ static int mov_write_packet(AVFormatContext *s, AVPacket *pkt)
 static int mov_write_trailer(AVFormatContext *s)
 {
     MOVContext *mov = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int res = 0;
     int i;
 

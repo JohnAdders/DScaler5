@@ -23,14 +23,12 @@
  */
 
 #include "dsputil.h"
+#include "dsputil_mmx.h"
 #include "mpegvideo.h"
 #include "avcodec.h"
 #include "x86_cpu.h"
 
 extern uint16_t inv_zigzag_direct16[64];
-
-static const unsigned long long int mm_wabs __attribute__ ((aligned(8))) = 0xffffffffffffffffULL;
-static const unsigned long long int mm_wone __attribute__ ((aligned(8))) = 0x0001000100010001ULL;
 
 
 static void dct_unquantize_h263_intra_mmx(MpegEncContext *s,
@@ -179,7 +177,7 @@ asm volatile(
                 if (level < -2048 || level > 2047)
                     fprintf(stderr, "unquant error %d %d\n", i, level);
 #endif
-  We can suppose that result of two multiplications can't be greate of 0xFFFF
+  We can suppose that result of two multiplications can't be greater than 0xFFFF
   i.e. is 16-bit, so we use here only PMULLW instruction and can avoid
   a complex multiplication.
 =====================================================

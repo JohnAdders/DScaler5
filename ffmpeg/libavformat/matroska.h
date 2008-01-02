@@ -98,7 +98,7 @@
 #define MATROSKA_ID_VIDEOFLAGINTERLACED 0x9A
 #define MATROSKA_ID_VIDEOSTEREOMODE 0x53B9
 #define MATROSKA_ID_VIDEOASPECTRATIO 0x54B3
-#define MATROSKA_ID_VIDEOCOLOURSPACE 0x2EB524
+#define MATROSKA_ID_VIDEOCOLORSPACE 0x2EB524
 
 /* IDs in the trackaudio master */
 #define MATROSKA_ID_AUDIOSAMPLINGFREQ 0xB5
@@ -191,6 +191,6 @@ typedef struct CodecTags{
 /* max. depth in the EBML tree structure */
 #define EBML_MAX_DEPTH 16
 
-extern CodecTags ff_mkv_codec_tags[];
+extern const CodecTags ff_mkv_codec_tags[];
 
 #endif /* FFMPEG_MATROSKA_H */

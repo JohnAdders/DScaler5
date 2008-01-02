@@ -90,8 +90,8 @@ static int process_audio_header_elements(AVFormatContext *s)
 {
     int inHeader = 1;
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
-    int compression_type = -1, revision = -1;
+    ByteIOContext *pb = s->pb;
+    int compression_type = -1, revision = -1, revision2 = -1;
 
     ea->bytes = 2;
     ea->sample_rate = -1;
@@ -136,6 +136,10 @@ static int process_audio_header_elements(AVFormatContext *s)
                     av_log (s, AV_LOG_INFO, "exited audio subheader\n");
                     inSubheader = 0;
                     break;
+                case 0xA0:
+                    revision2 = read_arbitary(pb);
+                    av_log (s, AV_LOG_INFO, "revision2 (element 0xA0) set to 0x%08x\n", revision2);
+                    break;
                 case 0xFF:
                     av_log (s, AV_LOG_INFO, "end of header block reached (within audio subheader)\n");
                     inSubheader = 0;
@@ -165,8 +169,15 @@ static int process_audio_header_elements(AVFormatContext *s)
         case  1: ea->audio_codec = CODEC_ID_ADPCM_EA_R1; break;
         case  2: ea->audio_codec = CODEC_ID_ADPCM_EA_R2; break;
         case  3: ea->audio_codec = CODEC_ID_ADPCM_EA_R3; break;
+        case -1: break;
         default:
             av_log(s, AV_LOG_ERROR, "unsupported stream type; revision=%i\n", revision);
+            return 0;
+        }
+        switch (revision2) {
+        case  8: ea->audio_codec = CODEC_ID_PCM_S16LE_PLANAR; break;
+        default:
+            av_log(s, AV_LOG_ERROR, "unsupported stream type; revision2=%i\n", revision2);
             return 0;
         }
         break;
@@ -188,7 +199,7 @@ static int process_audio_header_elements(AVFormatContext *s)
 static int process_audio_header_eacs(AVFormatContext *s)
 {
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int compression_type;
 
     ea->sample_rate  = ea->big_endian ? get_be32(pb) : get_le32(pb);
@@ -220,7 +231,7 @@ static int process_audio_header_eacs(AVFormatContext *s)
 static int process_audio_header_sead(AVFormatContext *s)
 {
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
 
     ea->sample_rate  = get_le32(pb);
     ea->bytes        = get_le32(pb);  /* 1=8-bit, 2=16-bit */
@@ -233,7 +244,7 @@ static int process_audio_header_sead(AVFormatContext *s)
 static int process_video_header_vp6(AVFormatContext *s)
 {
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
 
     url_fskip(pb, 16);
     ea->time_base.den = get_le32(pb);
@@ -250,7 +261,7 @@ static int process_video_header_vp6(AVFormatContext *s)
 static int process_ea_header(AVFormatContext *s) {
     uint32_t blockid, size = 0;
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int i;
 
     for (i=0; i<5 && (!ea->audio_codec || !ea->video_codec); i++) {
@@ -370,7 +381,7 @@ static int ea_read_packet(AVFormatContext *s,
                           AVPacket *pkt)
 {
     EaDemuxContext *ea = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int ret = 0;
     int packet_read = 0;
     unsigned int chunk_type, chunk_size;
@@ -392,6 +403,9 @@ static int ea_read_packet(AVFormatContext *s,
             if (!ea->audio_codec) {
                 url_fskip(pb, chunk_size);
                 break;
+            } else if (ea->audio_codec == CODEC_ID_PCM_S16LE_PLANAR) {
+                url_fskip(pb, 12);  /* planar header */
+                chunk_size -= 12;
             }
             ret = av_get_packet(pb, pkt, chunk_size);
             if (ret != chunk_size)

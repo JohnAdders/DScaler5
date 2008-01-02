@@ -171,23 +171,12 @@ static int dnxhd_encode_init(AVCodecContext *avctx)
     DNXHDEncContext *ctx = avctx->priv_data;
     int i, index;
 
-    if (avctx->flags & CODEC_FLAG_INTERLACED_DCT) {
-        if      (avctx->bit_rate == 120000000)
-            ctx->cid = 1242;
-        else if (avctx->bit_rate == 185000000)
-            ctx->cid = 1243;
-    } else {
-        if      (avctx->bit_rate == 120000000)
-            ctx->cid = 1237;
-        else if (avctx->bit_rate == 185000000)
-            ctx->cid = 1238;
-        else if (avctx->bit_rate ==  36000000)
-            ctx->cid = 1253;
-    }
-    if (!ctx->cid || avctx->width != 1920 || avctx->height != 1080 || avctx->pix_fmt != PIX_FMT_YUV422P) {
+    ctx->cid = ff_dnxhd_find_cid(avctx);
+    if (!ctx->cid || avctx->pix_fmt != PIX_FMT_YUV422P) {
         av_log(avctx, AV_LOG_ERROR, "video parameters incompatible with DNxHD\n");
         return -1;
     }
+    av_log(avctx, AV_LOG_DEBUG, "cid %d\n", ctx->cid);
 
     index = ff_dnxhd_get_cid_table(ctx->cid);
     ctx->cid_table = &ff_dnxhd_cid_table[index];
@@ -421,7 +410,7 @@ static av_always_inline void dnxhd_get_blocks(DNXHDEncContext *ctx, int mb_x, in
     dsp->get_pixels(ctx->blocks[2], ptr_u    , ctx->m.uvlinesize);
     dsp->get_pixels(ctx->blocks[3], ptr_v    , ctx->m.uvlinesize);
 
-    if (mb_y+1 == ctx->m.mb_height) {
+    if (mb_y+1 == ctx->m.mb_height && ctx->m.avctx->height == 1080) {
         if (ctx->interlaced) {
             dnxhd_get_pixels_4x8(ctx->blocks[4], ptr_y + ctx->dct_y_offset    , ctx->m.linesize);
             dnxhd_get_pixels_4x8(ctx->blocks[5], ptr_y + ctx->dct_y_offset + 8, ctx->m.linesize);
@@ -671,7 +660,7 @@ static int dnxhd_find_qscale(DNXHDEncContext *ctx)
         //        ctx->m.avctx->frame_number, qscale, bits, ctx->frame_bits, last_higher, last_lower);
         if (bits < ctx->frame_bits) {
             if (qscale == 1)
-                break;
+                return 1;
             if (last_higher == qscale - 1) {
                 qscale = last_higher;
                 break;
@@ -707,11 +696,11 @@ static int dnxhd_rc_cmp(const void *a, const void *b)
     return ((RCCMPEntry *)b)->value - ((RCCMPEntry *)a)->value;
 }
 
-static int dnxhd_encode_variance(AVCodecContext *avctx, DNXHDEncContext *ctx)
+static int dnxhd_encode_fast(AVCodecContext *avctx, DNXHDEncContext *ctx)
 {
     int max_bits = 0;
-    int x, y;
-    if (dnxhd_find_qscale(ctx) < 0)
+    int ret, x, y;
+    if ((ret = dnxhd_find_qscale(ctx)) < 0)
         return -1;
     for (y = 0; y < ctx->m.mb_height; y++) {
         for (x = 0; x < ctx->m.mb_width; x++) {
@@ -730,7 +719,7 @@ static int dnxhd_encode_variance(AVCodecContext *avctx, DNXHDEncContext *ctx)
         }
         max_bits += 31; //worst padding
     }
-    if (max_bits > ctx->frame_bits) {
+    if (!ret) {
         if (RC_VARIANCE)
             avctx->execute(avctx, dnxhd_mb_var_thread, (void**)&ctx->thread[0], NULL, avctx->thread_count);
         qsort(ctx->mb_cmp, ctx->m.mb_num, sizeof(RCEntry), dnxhd_rc_cmp);
@@ -789,7 +778,7 @@ static int dnxhd_encode_picture(AVCodecContext *avctx, unsigned char *buf, int b
     if (avctx->mb_decision == FF_MB_DECISION_RD)
         ret = dnxhd_encode_rdo(avctx, ctx);
     else
-        ret = dnxhd_encode_variance(avctx, ctx);
+        ret = dnxhd_encode_fast(avctx, ctx);
     if (ret < 0) {
         av_log(avctx, AV_LOG_ERROR, "picture could not fit ratecontrol constraints\n");
         return -1;

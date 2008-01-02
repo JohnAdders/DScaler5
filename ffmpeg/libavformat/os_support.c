@@ -23,16 +23,17 @@
 #include "avformat.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include "os_support.h"
 
+#ifdef CONFIG_NETWORK
 #ifndef HAVE_SYS_POLL_H
 #ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
-#else
+#elif defined (HAVE_SYS_SELECT_H)
 #include <sys/select.h>
 #endif
 #endif
 
-#ifdef CONFIG_NETWORK
 #include "network.h"
 
 #if !defined(HAVE_INET_ATON)

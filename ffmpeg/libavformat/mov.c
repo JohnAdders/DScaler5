@@ -115,13 +115,6 @@ typedef struct MOVContext {
     int64_t duration; /* duration of the longest track */
     int found_moov; /* when both 'moov' and 'mdat' sections has been found */
     int found_mdat; /* we suppose we have enough data to read the file */
-    int64_t mdat_offset;
-    int total_streams;
-    MOVStreamContext *streams[MAX_STREAMS];
-
-    const struct MOVParseTableEntry *parse_table; /* could be eventually used to change the table */
-    /* NOTE: for recursion save to/ restore from local variable! */
-
     AVPaletteControl palette_control;
     MOV_mdat_t *mdat_list;
     int mdat_count;
@@ -139,13 +132,13 @@ typedef struct MOVContext {
  0: continue to parse next atom
  -1: error occured, exit
  */
-typedef int (*mov_parse_function)(MOVContext *ctx, ByteIOContext *pb, MOV_atom_t atom);
-
 /* links atom IDs to parse functions */
 typedef struct MOVParseTableEntry {
     uint32_t type;
-    mov_parse_function func;
+    int (*parse)(MOVContext *ctx, ByteIOContext *pb, MOV_atom_t atom);
 } MOVParseTableEntry;
+
+static const MOVParseTableEntry mov_default_parse_table[];
 
 static int mov_read_default(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 {
@@ -160,7 +153,7 @@ static int mov_read_default(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
         atom.size = INT64_MAX;
     while(((total_size + 8) < atom.size) && !url_feof(pb) && !err) {
         a.size = atom.size;
-        a.type=0L;
+        a.type=0;
         if(atom.size >= 8) {
             a.size = get_be32(pb);
             a.type = get_le32(pb);
@@ -183,16 +176,18 @@ static int mov_read_default(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
             break;
         a.size = FFMIN(a.size, atom.size - total_size);
 
-        for (i = 0; c->parse_table[i].type != 0L
-             && c->parse_table[i].type != a.type; i++)
+        for (i = 0; mov_default_parse_table[i].type != 0
+             && mov_default_parse_table[i].type != a.type; i++)
             /* empty */;
 
-        if (c->parse_table[i].type == 0) { /* skip leaf atoms data */
+        if (mov_default_parse_table[i].type == 0) { /* skip leaf atoms data */
             url_fskip(pb, a.size);
         } else {
             offset_t start_pos = url_ftell(pb);
             int64_t left;
-            err = (c->parse_table[i].func)(c, pb, a);
+            err = mov_default_parse_table[i].parse(c, pb, a);
+            if (c->found_moov && c->found_mdat)
+                break;
             left = a.size - url_ftell(pb) + start_pos;
             if (left > 0) /* skip garbage at atom end */
                 url_fskip(pb, left);
@@ -323,7 +318,6 @@ static int mov_read_mdat(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
     c->mdat_list[c->mdat_count].size = atom.size;
     c->mdat_count++;
     c->found_mdat=1;
-    c->mdat_offset = atom.offset;
     if(c->found_moov)
         return 1; /* found both, just go */
     url_fskip(pb, atom.size);
@@ -345,9 +339,8 @@ static int mov_read_ftyp(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 /* this atom should contain all header atoms */
 static int mov_read_moov(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 {
-    int err;
-
-    err = mov_read_default(c, pb, atom);
+    if (mov_read_default(c, pb, atom) < 0)
+        return -1;
     /* we parsed the 'moov' atom, we can terminate the parsing as soon as we find the 'mdat' */
     /* so we don't parse the whole file if over a network */
     c->found_moov=1;
@@ -505,13 +498,18 @@ static int mov_read_wave(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
         } else
             url_fskip(pb, atom.size);
     } else if (atom.size > 8) { /* to read frma, esds atoms */
-        mov_read_default(c, pb, atom);
+        if (mov_read_default(c, pb, atom) < 0)
+            return -1;
     } else
         url_fskip(pb, atom.size);
     return 0;
 }
 
-static int mov_read_avcC(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
+/**
+ * This function reads atom content and puts data in extradata without tag
+ * nor size unlike mov_read_extradata.
+ */
+static int mov_read_glbl(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 {
     AVStream *st = c->fc->streams[c->fc->nb_streams-1];
 
@@ -572,14 +570,14 @@ static int mov_read_stsd(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
     uint8_t codec_name[32];
 
     /* for palette traversal */
-    int color_depth;
-    int color_start;
-    int color_count;
-    int color_end;
+    unsigned int color_depth;
+    unsigned int color_start;
+    unsigned int color_count;
+    unsigned int color_end;
     int color_index;
     int color_dec;
     int color_greyscale;
-    unsigned char *color_table;
+    const uint8_t *color_table;
     int j;
     unsigned char r, g, b;
 
@@ -660,9 +658,7 @@ static int mov_read_stsd(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
             /* if the depth is 2, 4, or 8 bpp, file is palettized */
             if ((color_depth == 2) || (color_depth == 4) ||
                 (color_depth == 8)) {
-
                 if (color_greyscale) {
-
                     /* compute the greyscale palette */
                     color_count = 1 << color_depth;
                     color_index = 255;
@@ -675,9 +671,7 @@ static int mov_read_stsd(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
                         if (color_index < 0)
                             color_index = 0;
                     }
-
                 } else if (st->codec->color_table_id & 0x08) {
-
                     /* if flag bit 3 is set, use the default palette */
                     color_count = 1 << color_depth;
                     if (color_depth == 2)
@@ -694,30 +688,30 @@ static int mov_read_stsd(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
                         c->palette_control.palette[j] =
                             (r << 16) | (g << 8) | (b);
                     }
-
                 } else {
-
                     /* load the palette from the file */
                     color_start = get_be32(pb);
                     color_count = get_be16(pb);
                     color_end = get_be16(pb);
-                    for (j = color_start; j <= color_end; j++) {
-                        /* each R, G, or B component is 16 bits;
-                         * only use the top 8 bits; skip alpha bytes
-                         * up front */
-                        get_byte(pb);
-                        get_byte(pb);
-                        r = get_byte(pb);
-                        get_byte(pb);
-                        g = get_byte(pb);
-                        get_byte(pb);
-                        b = get_byte(pb);
-                        get_byte(pb);
-                        c->palette_control.palette[j] =
-                            (r << 16) | (g << 8) | (b);
+                    if ((color_start <= 255) &&
+                        (color_end <= 255)) {
+                        for (j = color_start; j <= color_end; j++) {
+                            /* each R, G, or B component is 16 bits;
+                             * only use the top 8 bits; skip alpha bytes
+                             * up front */
+                            get_byte(pb);
+                            get_byte(pb);
+                            r = get_byte(pb);
+                            get_byte(pb);
+                            g = get_byte(pb);
+                            get_byte(pb);
+                            b = get_byte(pb);
+                            get_byte(pb);
+                            c->palette_control.palette[j] =
+                                (r << 16) | (g << 8) | (b);
+                        }
                     }
                 }
-
                 st->codec->palctrl = &c->palette_control;
                 st->codec->palctrl->palette_changed = 1;
             } else
@@ -789,9 +783,10 @@ static int mov_read_stsd(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
         }
         /* this will read extra atoms at the end (wave, alac, damr, avcC, SMI ...) */
         a.size = size - (url_ftell(pb) - start_pos);
-        if (a.size > 8)
-            mov_read_default(c, pb, a);
-        else if (a.size > 0)
+        if (a.size > 8) {
+            if (mov_read_default(c, pb, a) < 0)
+                return -1;
+        } else if (a.size > 0)
             url_fskip(pb, a.size);
     }
 
@@ -963,7 +958,8 @@ static int mov_read_stts(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 
     sc->stts_count = entries;
     sc->stts_data = av_malloc(entries * sizeof(MOV_stts_t));
-
+    if (!sc->stts_data)
+        return -1;
     dprintf(c->fc, "track[%i].stts.entries = %i\n", c->fc->nb_streams-1, entries);
 
     sc->time_rate=0;
@@ -1005,7 +1001,8 @@ static int mov_read_ctts(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 
     sc->ctts_count = entries;
     sc->ctts_data = av_malloc(entries * sizeof(MOV_stts_t));
-
+    if (!sc->ctts_data)
+        return -1;
     dprintf(c->fc, "track[%i].ctts.entries = %i\n", c->fc->nb_streams-1, entries);
 
     for(i=0; i<entries; i++) {
@@ -1042,7 +1039,6 @@ static int mov_read_trak(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
     st->priv_data = sc;
     st->codec->codec_type = CODEC_TYPE_DATA;
     st->start_time = 0; /* XXX: check */
-    c->streams[c->fc->nb_streams-1] = sc;
 
     return mov_read_default(c, pb, atom);
 }
@@ -1210,18 +1206,19 @@ static int mov_read_cmov(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 /* edit list atom */
 static int mov_read_elst(MOVContext *c, ByteIOContext *pb, MOV_atom_t atom)
 {
+    MOVStreamContext *sc = c->fc->streams[c->fc->nb_streams-1]->priv_data;
     int i, edit_count;
 
     get_byte(pb); /* version */
     get_byte(pb); get_byte(pb); get_byte(pb); /* flags */
-    edit_count= c->streams[c->fc->nb_streams-1]->edit_count = get_be32(pb);     /* entries */
+    edit_count= sc->edit_count = get_be32(pb);     /* entries */
 
     for(i=0; i<edit_count; i++){
         get_be32(pb); /* Track duration */
         get_be32(pb); /* Media time */
         get_be32(pb); /* Media rate */
     }
-    dprintf(c->fc, "track[%i].edit_count = %i\n", c->fc->nb_streams-1, c->streams[c->fc->nb_streams-1]->edit_count);
+    dprintf(c->fc, "track[%i].edit_count = %i\n", c->fc->nb_streams-1, sc->edit_count);
     return 0;
 }
 
@@ -1234,6 +1231,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 { MKTAG( 'e', 'n', 'd', 'a' ), mov_read_enda },
 { MKTAG( 'f', 'i', 'e', 'l' ), mov_read_extradata },
 { MKTAG( 'f', 't', 'y', 'p' ), mov_read_ftyp },
+{ MKTAG( 'g', 'l', 'b', 'l' ), mov_read_glbl },
 { MKTAG( 'h', 'd', 'l', 'r' ), mov_read_hdlr },
 { MKTAG( 'j', 'p', '2', 'h' ), mov_read_extradata },
 { MKTAG( 'm', 'd', 'a', 't' ), mov_read_mdat },
@@ -1244,7 +1242,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 { MKTAG( 'm', 'v', 'h', 'd' ), mov_read_mvhd },
 { MKTAG( 'S', 'M', 'I', ' ' ), mov_read_smi }, /* Sorenson extension ??? */
 { MKTAG( 'a', 'l', 'a', 'c' ), mov_read_extradata }, /* alac specific atom */
-{ MKTAG( 'a', 'v', 'c', 'C' ), mov_read_avcC },
+{ MKTAG( 'a', 'v', 'c', 'C' ), mov_read_glbl },
 { MKTAG( 's', 't', 'b', 'l' ), mov_read_default },
 { MKTAG( 's', 't', 'c', 'o' ), mov_read_stco },
 { MKTAG( 's', 't', 's', 'c' ), mov_read_stsc },
@@ -1259,7 +1257,7 @@ static const MOVParseTableEntry mov_default_parse_table[] = {
 { MKTAG( 'e', 's', 'd', 's' ), mov_read_esds },
 { MKTAG( 'w', 'i', 'd', 'e' ), mov_read_wide }, /* place holder */
 { MKTAG( 'c', 'm', 'o', 'v' ), mov_read_cmov },
-{ 0L, NULL }
+{ 0, NULL }
 };
 
 /* XXX: is it sufficient ? */
@@ -1356,7 +1354,6 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
         }
     } else { /* read whole chunk */
         unsigned int chunk_samples, chunk_size, chunk_duration;
-
         for (i = 0; i < sc->chunk_count; i++) {
             current_offset = sc->chunk_offsets[i];
             if (stsc_index + 1 < sc->sample_to_chunk_sz && i + 1 == sc->sample_to_chunk[stsc_index + 1].first)
@@ -1369,9 +1366,8 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
                 chunk_size = chunk_samples * sc->bytes_per_frame / sc->samples_per_frame;
             else { /* workaround to find nearest next chunk offset */
                 chunk_size = INT_MAX;
-                for (j = 0; j < mov->total_streams; j++) {
-                    MOVStreamContext *msc = mov->streams[j];
-
+                for (j = 0; j < mov->fc->nb_streams; j++) {
+                    MOVStreamContext *msc = mov->fc->streams[j]->priv_data;
                     for (k = msc->next_chunk; k < msc->chunk_count; k++) {
                         if (msc->chunk_offsets[k] > current_offset && msc->chunk_offsets[k] - current_offset < chunk_size) {
                             chunk_size = msc->chunk_offsets[k] - current_offset;
@@ -1389,8 +1385,9 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
                             chunk_size = mov->mdat_list[j].offset + mov->mdat_list[j].size - current_offset;
                     }
                 assert(chunk_size != INT_MAX);
-                for (j = 0; j < mov->total_streams; j++) {
-                    mov->streams[j]->next_chunk = 0;
+                for (j = 0; j < mov->fc->nb_streams; j++) {
+                    MOVStreamContext *msc = mov->fc->streams[j]->priv_data;
+                    msc->next_chunk = 0;
                 }
             }
             av_add_index_entry(st, current_offset, current_dts, chunk_size, 0, AVINDEX_KEYFRAME);
@@ -1423,12 +1420,11 @@ static void mov_build_index(MOVContext *mov, AVStream *st)
 static int mov_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     MOVContext *mov = s->priv_data;
-    ByteIOContext *pb = &s->pb;
+    ByteIOContext *pb = s->pb;
     int i, err;
     MOV_atom_t atom = { 0, 0, 0 };
 
     mov->fc = s;
-    mov->parse_table = mov_default_parse_table;
 
     if(!url_is_streamed(pb)) /* .mov and .mp4 aren't streamable anyway (only progressive download if moov is before mdat) */
         atom.size = url_fsize(pb);
@@ -1444,15 +1440,9 @@ static int mov_read_header(AVFormatContext *s, AVFormatParameters *ap)
     }
     dprintf(mov->fc, "on_parse_exit_offset=%d\n", (int) url_ftell(pb));
 
-    /* some cleanup : make sure we are on the mdat atom */
-    if(!url_is_streamed(pb) && (url_ftell(pb) != mov->mdat_offset))
-        url_fseek(pb, mov->mdat_offset, SEEK_SET);
-
-    mov->total_streams = s->nb_streams;
-
-    for(i=0; i<mov->total_streams; i++) {
-        MOVStreamContext *sc = mov->streams[i];
+    for(i=0; i<s->nb_streams; i++) {
         AVStream *st = s->streams[i];
+        MOVStreamContext *sc = st->priv_data;
         /* sanity checks */
         if(!sc->stts_count || !sc->chunk_count || !sc->sample_to_chunk_sz ||
            (!sc->sample_size && !sc->sample_count)){
@@ -1477,13 +1467,14 @@ static int mov_read_header(AVFormatContext *s, AVFormatParameters *ap)
         mov_build_index(mov, st);
     }
 
-    for(i=0; i<mov->total_streams; i++) {
+    for(i=0; i<s->nb_streams; i++) {
+        MOVStreamContext *sc = s->streams[i]->priv_data;
         /* Do not need those anymore. */
-        av_freep(&mov->streams[i]->chunk_offsets);
-        av_freep(&mov->streams[i]->sample_to_chunk);
-        av_freep(&mov->streams[i]->sample_sizes);
-        av_freep(&mov->streams[i]->keyframes);
-        av_freep(&mov->streams[i]->stts_data);
+        av_freep(&sc->chunk_offsets);
+        av_freep(&sc->sample_to_chunk);
+        av_freep(&sc->sample_sizes);
+        av_freep(&sc->keyframes);
+        av_freep(&sc->stts_data);
     }
     av_freep(&mov->mdat_list);
     return 0;
@@ -1497,15 +1488,17 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
     int64_t best_dts = INT64_MAX;
     int i;
 
-    for (i = 0; i < mov->total_streams; i++) {
-        MOVStreamContext *msc = mov->streams[i];
-
-        if (s->streams[i]->discard != AVDISCARD_ALL && msc->current_sample < msc->sample_count) {
-            AVIndexEntry *current_sample = &s->streams[i]->index_entries[msc->current_sample];
+    for (i = 0; i < s->nb_streams; i++) {
+        AVStream *st = s->streams[i];
+        MOVStreamContext *msc = st->priv_data;
+        if (st->discard != AVDISCARD_ALL && msc->current_sample < msc->sample_count) {
+            AVIndexEntry *current_sample = &st->index_entries[msc->current_sample];
             int64_t dts = av_rescale(current_sample->timestamp * (int64_t)msc->time_rate, AV_TIME_BASE, msc->time_scale);
-
             dprintf(s, "stream %d, sample %d, dts %"PRId64"\n", i, msc->current_sample, dts);
-            if (dts < best_dts) {
+            if (!sample || (url_is_streamed(s->pb) && current_sample->pos < sample->pos) ||
+                (!url_is_streamed(s->pb) &&
+                 ((FFABS(best_dts - dts) <= AV_TIME_BASE && current_sample->pos < sample->pos) ||
+                  (FFABS(best_dts - dts) > AV_TIME_BASE && dts < best_dts)))) {
                 sample = current_sample;
                 best_dts = dts;
                 sc = msc;
@@ -1516,7 +1509,7 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
         return -1;
     /* must be done just before reading, to avoid infinite loop on sample */
     sc->current_sample++;
-    if (sample->pos >= url_fsize(&s->pb)) {
+    if (url_fseek(s->pb, sample->pos, SEEK_SET) != sample->pos) {
         av_log(mov->fc, AV_LOG_ERROR, "stream %d, offset 0x%"PRIx64": partial file\n", sc->ffindex, sample->pos);
         return -1;
     }
@@ -1526,8 +1519,7 @@ static int mov_read_packet(AVFormatContext *s, AVPacket *pkt)
         dprintf(s, "dv audio pkt size %d\n", pkt->size);
     } else {
 #endif
-        url_fseek(&s->pb, sample->pos, SEEK_SET);
-        av_get_packet(&s->pb, pkt, sample->size);
+        av_get_packet(s->pb, pkt, sample->size);
 #ifdef CONFIG_DV_DEMUXER
         if (mov->dv_demux) {
             void *pkt_destruct_func = pkt->destruct;
@@ -1617,9 +1609,9 @@ static int mov_read_close(AVFormatContext *s)
 {
     int i;
     MOVContext *mov = s->priv_data;
-    for(i=0; i<mov->total_streams; i++) {
-        av_freep(&mov->streams[i]->ctts_data);
-        av_freep(&mov->streams[i]);
+    for(i=0; i<s->nb_streams; i++) {
+        MOVStreamContext *sc = s->streams[i]->priv_data;
+        av_freep(&sc->ctts_data);
     }
     if(mov->dv_demux){
         for(i=0; i<mov->dv_fctx->nb_streams; i++){

@@ -604,12 +604,19 @@ static void rtsp_parse_transport(RTSPHeader *reply, const char *p)
                      "/", &p);
         if (*p == '/')
             p++;
-        get_word_sep(profile, sizeof(profile), "/;,", &p);
-        lower_transport[0] = '\0';
-        if (*p == '/') {
-            p++;
-            get_word_sep(lower_transport, sizeof(lower_transport),
-                         ";,", &p);
+        if (!strcasecmp (transport_protocol, "rtp")) {
+            get_word_sep(profile, sizeof(profile), "/;,", &p);
+            lower_transport[0] = '\0';
+            /* rtp/avp/<protocol> */
+            if (*p == '/') {
+                p++;
+                get_word_sep(lower_transport, sizeof(lower_transport),
+                             ";,", &p);
+                }
+        } else if (!strcasecmp (transport_protocol, "x-pn-tng")) {
+            /* x-pn-tng/<protocol> */
+            get_word_sep(lower_transport, sizeof(lower_transport), "/;,", &p);
+            profile[0] = '\0';
         }
         if (!strcasecmp(lower_transport, "TCP"))
             th->protocol = RTSP_PROTOCOL_RTP_TCP;
@@ -1130,7 +1137,7 @@ static int udp_read_packet(AVFormatContext *s, RTSPStream **prtsp_st,
 
     for(;;) {
         if (url_interrupt_cb())
-            return -1;
+            return AVERROR(EINTR);
         FD_ZERO(&rfds);
         fd_max = -1;
         for(i = 0; i < rt->nb_rtsp_streams; i++) {
@@ -1196,7 +1203,7 @@ static int rtsp_read_packet(AVFormatContext *s,
         break;
     }
     if (len < 0)
-        return AVERROR(EIO);
+        return len;
     ret = rtp_parse_packet(rtsp_st->rtp_ctx, pkt, buf, len);
     if (ret < 0)
         goto redo;
@@ -1351,7 +1358,7 @@ static int sdp_read_header(AVFormatContext *s,
     /* read the whole sdp file */
     /* XXX: better loading */
     content = av_malloc(SDP_MAX_SIZE);
-    size = get_buffer(&s->pb, content, SDP_MAX_SIZE - 1);
+    size = get_buffer(s->pb, content, SDP_MAX_SIZE - 1);
     if (size <= 0) {
         av_free(content);
         return AVERROR_INVALIDDATA;
@@ -1435,12 +1442,12 @@ static int redir_probe(AVProbeData *pd)
     return 0;
 }
 
-/* called from utils.c */
-int redir_open(AVFormatContext **ic_ptr, ByteIOContext *f)
+static int redir_read_header(AVFormatContext *s, AVFormatParameters *ap)
 {
     char buf[4096], *q;
     int c;
     AVFormatContext *ic = NULL;
+    ByteIOContext *f = s->pb;
 
     /* parse each URL and try to open it */
     c = url_fgetc(f);
@@ -1468,11 +1475,13 @@ int redir_open(AVFormatContext **ic_ptr, ByteIOContext *f)
         if (av_open_input_file(&ic, buf, NULL, 0, NULL) == 0)
             break;
     }
-    *ic_ptr = ic;
     if (!ic)
         return AVERROR(EIO);
-    else
-        return 0;
+
+    *s = *ic;
+    url_fclose(f);
+
+    return 0;
 }
 
 AVInputFormat redir_demuxer = {
@@ -1480,7 +1489,7 @@ AVInputFormat redir_demuxer = {
     "Redirector format",
     0,
     redir_probe,
-    NULL,
+    redir_read_header,
     NULL,
     NULL,
 };

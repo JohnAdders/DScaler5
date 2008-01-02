@@ -1935,7 +1935,7 @@ typedef struct ConvertEntry {
 
    - PIX_FMT_422 must convert to and from PIX_FMT_422P.
 
-   The other conversion functions are just optimisations for common cases.
+   The other conversion functions are just optimizations for common cases.
 */
 static const ConvertEntry convert_table[PIX_FMT_NB][PIX_FMT_NB] = {
     [PIX_FMT_YUV420P] = {
@@ -2555,6 +2555,8 @@ int img_convert(AVPicture *dst, int dst_pix_fmt,
         else
             int_pix_fmt = PIX_FMT_RGB24;
     }
+    if (src_pix_fmt == int_pix_fmt)
+        return -1;
     if (avpicture_alloc(tmp, int_pix_fmt, dst_width, dst_height) < 0)
         return -1;
     ret = -1;

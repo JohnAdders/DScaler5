@@ -1,4 +1,5 @@
 version <next>
+- The "device" muxers and demuxers are now in a new libavdevice library
 - DV50 AKA DVCPRO50 encoder, decoder, muxer and demuxer
 - TechSmith Camtasia (TSCC) video decoder
 - IBM Ultimotion (ULTI) video decoder
@@ -89,7 +90,7 @@ version <next>
 - codebook generator
 - RoQ video encoder
 - QTRLE encoder
-- OS/2 support removed
+- OS/2 support removed and restored again
 - AC-3 decoder
 - NUT muxer (since r10052)
 - Matroska muxer
@@ -102,8 +103,10 @@ version <next>
 - Nellymoser ASAO decoder
 - Beam Software SIFF demuxer and decoder
 - libvorbis Vorbis decoding removed in favor of native decoder
-- IntraX8 (J-Frame) sub-decoder for WMV2 and VC-1
-- OGG muxer
+- IntraX8 (J-Frame) subdecoder for WMV2 and VC-1
+- Ogg muxer
+- PC Paintbrush PCX decoder
+- Sun Rasterfile decoder
 
 version 0.4.9-pre1:
 
@@ -382,7 +385,7 @@ version 0.4.0:
 - added timeshifting support for live feeds (option ?date=xxx in the
   URL)
 - added high quality image resize code with polyphase filter (need
-  mmx/see optimisation). Enable multiple image size support in ffserver.
+  mmx/see optimization). Enable multiple image size support in ffserver.
 - added multi live feed support in ffserver
 - suppressed master feature from ffserver (it should be done with an
   external program which opens the .ffm url and writes it to another

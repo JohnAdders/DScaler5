@@ -285,7 +285,7 @@ static void v_resample4_mmx(uint8_t *dst, int dst_width, const uint8_t *src,
 }
 #endif /* HAVE_MMX */
 
-/* slow version to handle limit cases. Does not need optimisation */
+/* slow version to handle limit cases. Does not need optimization */
 static void h_resample_slow(uint8_t *dst, int dst_width,
                             const uint8_t *src, int src_width,
                             int src_start, int src_incr, int16_t *filters)
@@ -391,7 +391,7 @@ static void component_resample(ImgReSampleContext *s,
             h_resample(new_line, owidth,
                        src_line, iwidth, - FCENTER * POS_FRAC, s->h_incr,
                        &s->h_filters[0][0]);
-            /* handle ring buffer wraping */
+            /* handle ring buffer wrapping */
             if (ring_y >= LINE_BUF_HEIGHT) {
                 memcpy(s->line_buf + (ring_y - LINE_BUF_HEIGHT) * owidth,
                        new_line, owidth);

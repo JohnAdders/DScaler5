@@ -22,6 +22,7 @@
 #include <math.h>
 #include <limits.h>
 #include "avformat.h"
+#include "avdevice.h"
 #include "rtsp.h"
 #include "swscale.h"
 #include "avstring.h"
@@ -1694,10 +1695,12 @@ static int stream_component_open(VideoState *is, int stream_index)
     if (enc->codec_type == CODEC_TYPE_AUDIO) {
         wanted_spec.freq = enc->sample_rate;
         wanted_spec.format = AUDIO_S16SYS;
-        /* hack for AC3. XXX: suppress that */
-        if (enc->channels > 2)
-            enc->channels = 2;
-        wanted_spec.channels = enc->channels;
+        if(enc->channels > 2) {
+            wanted_spec.channels = 2;
+            enc->request_channels = 2;
+        } else {
+            wanted_spec.channels = enc->channels;
+        }
         wanted_spec.silence = 0;
         wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
         wanted_spec.callback = sdl_audio_callback;
@@ -1912,7 +1915,8 @@ static int decode_thread(void *arg)
         ret = -1;
         goto fail;
     }
-    ic->pb.eof_reached= 0; //FIXME hack, ffplay maybe should not use url_feof() to test for the end
+    if(ic->pb)
+        ic->pb->eof_reached= 0; //FIXME hack, ffplay maybe should not use url_feof() to test for the end
 
     /* if seeking requested, we execute it */
     if (start_time != AV_NOPTS_VALUE) {
@@ -1980,7 +1984,7 @@ static int decode_thread(void *arg)
 #if defined(CONFIG_RTSP_DEMUXER) || defined(CONFIG_MMSH_PROTOCOL)
         if (is->paused &&
                 (!strcmp(ic->iformat->name, "rtsp") ||
-                 !strcmp(url_fileno(&ic->pb)->prot->name, "mmsh"))) {
+                 (ic->pb && !strcmp(url_fileno(ic->pb)->prot->name, "mmsh")))) {
             /* wait 10 ms to avoid trying to get another packet */
             /* XXX: horrible */
             SDL_Delay(10);
@@ -2023,14 +2027,14 @@ static int decode_thread(void *arg)
         if (is->audioq.size > MAX_AUDIOQ_SIZE ||
             is->videoq.size > MAX_VIDEOQ_SIZE ||
             is->subtitleq.size > MAX_SUBTITLEQ_SIZE ||
-            url_feof(&ic->pb)) {
+            url_feof(ic->pb)) {
             /* wait 10 ms */
             SDL_Delay(10);
             continue;
         }
         ret = av_read_frame(ic, pkt);
         if (ret < 0) {
-            if (url_ferror(&ic->pb) == 0) {
+            if (url_ferror(ic->pb) == 0) {
                 SDL_Delay(100); /* wait for user event */
                 continue;
             } else
@@ -2282,7 +2286,7 @@ static void event_loop(void)
             do_seek:
                 if (cur_stream) {
                     if (seek_by_bytes) {
-                        pos = url_ftell(&cur_stream->ic->pb);
+                        pos = url_ftell(cur_stream->ic->pb);
                         if (cur_stream->ic->bit_rate)
                             incr *= cur_stream->ic->bit_rate / 60.0;
                         else
@@ -2420,7 +2424,7 @@ static void opt_seek(const char *arg)
 
 static void opt_debug(const char *arg)
 {
-    av_log_level = 99;
+    av_log_set_level(99);
     debug = atoi(arg);
 }
 
@@ -2516,6 +2520,8 @@ int main(int argc, char **argv)
     int flags;
 
     /* register all codecs, demux and protocols */
+    avcodec_register_all();
+    avdevice_register_all();
     av_register_all();
 
     show_banner(program_name, program_birth_year);

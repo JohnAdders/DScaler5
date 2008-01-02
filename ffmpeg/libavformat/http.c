@@ -21,6 +21,7 @@
 #include "avformat.h"
 #include <unistd.h>
 #include "network.h"
+#include "os_support.h"
 
 #include "base64.h"
 #include "avstring.h"
@@ -246,7 +247,6 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
     s->off = 0;
     s->filesize = -1;
     if (post) {
-        usleep(1000*1000);
         return 0;
     }
 

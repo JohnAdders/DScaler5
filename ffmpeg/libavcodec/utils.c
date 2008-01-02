@@ -126,6 +126,11 @@ static void do_free(void)
 /* encoder management */
 AVCodec *first_avcodec = NULL;
 
+AVCodec *av_codec_next(AVCodec *c){
+    if(c) return c->next;
+    else  return first_avcodec;
+}
+
 void register_avcodec(AVCodec *format)
 {
     AVCodec **p;
@@ -559,7 +564,7 @@ static const AVOption options[]={
 {"rc_eq", "set rate control equation", OFFSET(rc_eq), FF_OPT_TYPE_STRING, DEFAULT, CHAR_MIN, CHAR_MAX, V|E},
 {"maxrate", "set max video bitrate tolerance (in bits/s)", OFFSET(rc_max_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
 {"minrate", "set min video bitrate tolerance (in bits/s)", OFFSET(rc_min_rate), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
-{"bufsize", "set ratecontrol buffer size (in bits)", OFFSET(rc_buffer_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, V|E},
+{"bufsize", "set ratecontrol buffer size (in bits)", OFFSET(rc_buffer_size), FF_OPT_TYPE_INT, DEFAULT, INT_MIN, INT_MAX, A|V|E},
 {"rc_buf_aggressivity", "currently useless", OFFSET(rc_buffer_aggressivity), FF_OPT_TYPE_FLOAT, 1.0, FLT_MIN, FLT_MAX, V|E},
 {"i_qfactor", "qp factor between p and i frames", OFFSET(i_quant_factor), FF_OPT_TYPE_FLOAT, -0.8, -FLT_MAX, FLT_MAX, V|E},
 {"i_qoffset", "qp offset between p and i frames", OFFSET(i_quant_offset), FF_OPT_TYPE_FLOAT, 0.0, -FLT_MAX, FLT_MAX, V|E},
@@ -756,6 +761,7 @@ static const AVOption options[]={
 {"drop_frame_timecode", NULL, 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_DROP_FRAME_TIMECODE, INT_MIN, INT_MAX, V|E, "flags2"},
 {"non_linear_q", "use non linear quantizer", 0, FF_OPT_TYPE_CONST, CODEC_FLAG2_NON_LINEAR_QUANT, INT_MIN, INT_MAX, V|E, "flags2"},
 {"request_channels", "set desired number of audio channels", OFFSET(request_channels), FF_OPT_TYPE_INT, DEFAULT, 0, INT_MAX, A|D},
+{"drc_scale", "percentage of dynamic range compression to apply", OFFSET(drc_scale), FF_OPT_TYPE_FLOAT, 1.0, 0.0, 1.0, A|D},
 {NULL},
 };
 
@@ -842,7 +848,7 @@ int attribute_align_arg avcodec_open(AVCodecContext *avctx, AVCodec *codec)
         goto end;
     }
 
-    if(avctx->codec)
+    if(avctx->codec || !codec)
         goto end;
 
     if (codec->priv_data_size > 0) {
@@ -1134,7 +1140,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
                      " [PAR %d:%d DAR %d:%d]",
                      enc->sample_aspect_ratio.num, enc->sample_aspect_ratio.den,
                      display_aspect_ratio.num, display_aspect_ratio.den);
-            if(av_log_level >= AV_LOG_DEBUG){
+            if(av_log_get_level() >= AV_LOG_DEBUG){
                 int g= ff_gcd(enc->time_base.num, enc->time_base.den);
                 snprintf(buf + strlen(buf), buf_size - strlen(buf),
                      ", %d/%d",
@@ -1189,6 +1195,7 @@ void avcodec_string(char *buf, int buf_size, AVCodecContext *enc, int encode)
             break;
         case CODEC_ID_PCM_S16LE:
         case CODEC_ID_PCM_S16BE:
+        case CODEC_ID_PCM_S16LE_PLANAR:
         case CODEC_ID_PCM_U16LE:
         case CODEC_ID_PCM_U16BE:
             bitrate = enc->sample_rate * enc->channels * 16;
@@ -1314,6 +1321,7 @@ int av_get_bits_per_sample(enum CodecID codec_id){
         return 8;
     case CODEC_ID_PCM_S16BE:
     case CODEC_ID_PCM_S16LE:
+    case CODEC_ID_PCM_S16LE_PLANAR:
     case CODEC_ID_PCM_U16BE:
     case CODEC_ID_PCM_U16LE:
         return 16;

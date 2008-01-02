@@ -29,6 +29,8 @@ typedef struct AVSHA1 {
     uint32_t state[5];
 } AVSHA1;
 
+const int av_sha1_size = sizeof(AVSHA1);
+
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 
 /* (R0+R1), R2, R3, R4 are the different operations used in SHA1 */
@@ -138,7 +140,7 @@ void av_sha1_final(AVSHA1* ctx, uint8_t digest[20]){
     while ((ctx->count & 63) != 56) {
         av_sha1_update(ctx, "", 1);
     }
-    av_sha1_update(ctx, &finalcount, 8);  /* Should cause a transform() */
+    av_sha1_update(ctx, (uint8_t *)&finalcount, 8); /* Should cause a transform() */
     for(i=0; i<5; i++)
         ((uint32_t*)digest)[i]= be2me_32(ctx->state[i]);
 }
@@ -149,7 +151,7 @@ void av_sha1_final(AVSHA1* ctx, uint8_t digest[20]){
 #include <stdio.h>
 #undef printf
 
-int main(){
+int main(void){
     int i, k;
     AVSHA1 ctx;
     unsigned char digest[20];

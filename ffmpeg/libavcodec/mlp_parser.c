@@ -66,8 +66,8 @@ static int crc_init = 0;
 static AVCRC crc_2D[1024];
 
 /** MLP uses checksums that seem to be based on the standard CRC algorithm,
- *  but not (in implementation terms, the table lookup and XOR are reversedi).
- *  We can implement this behaviour using a standard av_crc on all but the
+ *  but not (in implementation terms, the table lookup and XOR are reversed).
+ *  We can implement this behavior using a standard av_crc on all but the
  *  last element, then XOR that with the last element.
  */
 
@@ -167,7 +167,6 @@ typedef struct MLPParseContext
     int bytes_left;
 
     int in_sync;
-    uint64_t state;
 
     int num_substreams;
 } MLPParseContext;
@@ -180,58 +179,51 @@ static int mlp_parse(AVCodecParserContext *s,
     MLPParseContext *mp = s->priv_data;
     int sync_present;
     uint8_t parity_bits;
-    int next, offset = 0;
-    int i, p;
+    int next;
+    int i, p = 0;
 
     *poutbuf_size = 0;
+    if (buf_size == 0)
+        return 0;
 
     if (!mp->in_sync) {
         // Not in sync - find a major sync header
 
         for (i = 0; i < buf_size; i++) {
-            mp->state = (mp->state << 8) | buf[i];
-            if ((mp->state & 0xfffffffe) == 0xf8726fba) {
+            mp->pc.state = (mp->pc.state << 8) | buf[i];
+            if ((mp->pc.state & 0xfffffffe) == 0xf8726fba) {
                 mp->in_sync = 1;
+                mp->bytes_left = 0;
                 break;
             }
         }
 
-        if (!mp->in_sync)
+        if (!mp->in_sync) {
+            ff_combine_frame(&mp->pc, END_NOT_FOUND, &buf, &buf_size);
             return buf_size;
-
-        mp->bytes_left = (mp->state >> 47) & 0x1ffe;
-        i -= 7;
-        if (i < 0) {
-            uint8_t tmpbuf[7];
-            const uint8_t *tmpbufp = tmpbuf;
-            int overread = -i;
-            mp->bytes_left -= overread;
-
-            for (i = 0; i < overread; i++)
-                tmpbuf[i] = mp->state >> ((7 - i) * 8);
-
-            ff_combine_frame(&mp->pc, END_NOT_FOUND, &tmpbufp, &overread);
-        } else if (i > 0) {
-            offset = i;
-            buf += i;
-            buf_size -= i;
         }
-        mp->state = 0;
+
+        ff_combine_frame(&mp->pc, i - 7, &buf, &buf_size);
+
+        return i - 7;
     }
 
     if (mp->bytes_left == 0) {
         // Find length of this packet
 
-        for (i = 0; (mp->state & 0x10000) == 0 && i < buf_size; i++) {
-            mp->state = (mp->state << 8) | buf[i];
+        /* Copy overread bytes from last frame into buffer. */
+        for(; mp->pc.overread>0; mp->pc.overread--) {
+            mp->pc.buffer[mp->pc.index++]= mp->pc.buffer[mp->pc.overread_index++];
         }
 
-        if ((mp->state & 0x10000) == 0) {
+        if (mp->pc.index + buf_size < 2) {
             ff_combine_frame(&mp->pc, END_NOT_FOUND, &buf, &buf_size);
             return buf_size;
         }
 
-        mp->bytes_left = (mp->state & 0xfff) * 2;
+        mp->bytes_left = ((mp->pc.index > 0 ? mp->pc.buffer[0] : buf[0]) << 8)
+                       |  (mp->pc.index > 1 ? mp->pc.buffer[1] : buf[1-mp->pc.index]);
+        mp->bytes_left = (mp->bytes_left & 0xfff) * 2;
         mp->bytes_left -= mp->pc.index;
     }
 
@@ -239,41 +231,36 @@ static int mlp_parse(AVCodecParserContext *s,
 
     if (ff_combine_frame(&mp->pc, next, &buf, &buf_size) < 0) {
         mp->bytes_left -= buf_size;
-        return buf_size + offset;
+        return buf_size;
     }
 
     mp->bytes_left = 0;
-    mp->state = 1;
 
     sync_present = (AV_RB32(buf + 4) & 0xfffffffe) == 0xf8726fba;
 
     if (!sync_present) {
-        // First nibble of a frame is a parity check of the first few nibbles
-        // Only check when this isn't a sync frame - syncs have a checksum
+        // First nibble of a frame is a parity check of the first few nibbles.
+        // Only check when this isn't a sync frame - syncs have a checksum.
 
         parity_bits = 0;
-        for (p = 0; p < 4; p++)
-            parity_bits ^= buf[p];
-        for (i = 0; i < mp->num_substreams; i++) {
-            parity_bits ^= buf[p];
-            parity_bits ^= buf[p+1];
+        for (i = 0; i <= mp->num_substreams; i++) {
+            parity_bits ^= buf[p++];
+            parity_bits ^= buf[p++];
 
-            if (buf[p] & 0x80) {
-                parity_bits ^= buf[p+2];
-                parity_bits ^= buf[p+3];
-                p += 2;
+            if (i == 0 || buf[p-2] & 0x80) {
+                parity_bits ^= buf[p++];
+                parity_bits ^= buf[p++];
             }
-            p += 2;
         }
 
         if ((((parity_bits >> 4) ^ parity_bits) & 0xF) != 0xF) {
-            av_log(NULL, AV_LOG_INFO, "mlpparse: parity check failed\n");
+            av_log(avctx, AV_LOG_INFO, "mlpparse: Parity check failed.\n");
             goto lost_sync;
         }
     } else {
         MLPHeaderInfo mh;
 
-        if (ff_mlp_read_major_sync(NULL, &mh, buf + 4, buf_size - 4) < 0)
+        if (ff_mlp_read_major_sync(avctx, &mh, buf + 4, buf_size - 4) < 0)
             goto lost_sync;
 
 #ifdef CONFIG_AUDIO_NONSHORT
@@ -304,11 +291,10 @@ static int mlp_parse(AVCodecParserContext *s,
     *poutbuf = buf;
     *poutbuf_size = buf_size;
 
-    return next + offset;
+    return next;
 
 lost_sync:
     mp->in_sync = 0;
-    mp->state = 0;
     return -1;
 }
 

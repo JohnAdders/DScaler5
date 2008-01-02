@@ -28,9 +28,8 @@ typedef struct PTXContext {
 static int ptx_init(AVCodecContext *avctx) {
     PTXContext *s = avctx->priv_data;
 
-    avcodec_get_frame_defaults((AVFrame*)&s->picture);
-    avctx->coded_frame= (AVFrame*)&s->picture;
-    s->picture.data[0] = NULL;
+    avcodec_get_frame_defaults(&s->picture);
+    avctx->coded_frame= &s->picture;
 
     return 0;
 }
@@ -39,7 +38,7 @@ static int ptx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
                             uint8_t *buf, int buf_size) {
     PTXContext * const s = avctx->priv_data;
     AVFrame *picture = data;
-    AVFrame * const p = (AVFrame *)&s->picture;
+    AVFrame * const p = &s->picture;
     unsigned int offset, w, h, y, stride, bytes_per_pixel;
     uint8_t *ptr;
 
@@ -89,7 +88,7 @@ static int ptx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
         buf += w*bytes_per_pixel;
     }
 
-    *picture = *(AVFrame *)&s->picture;
+    *picture = s->picture;
     *data_size = sizeof(AVPicture);
 
     return offset + w*h*bytes_per_pixel;

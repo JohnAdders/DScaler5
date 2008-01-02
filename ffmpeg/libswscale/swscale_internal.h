@@ -21,6 +21,8 @@
 #ifndef FFMPEG_SWSCALE_INTERNAL_H
 #define FFMPEG_SWSCALE_INTERNAL_H
 
+#include "config.h"
+
 #ifdef HAVE_ALTIVEC_H
 #include <altivec.h>
 #endif
@@ -40,8 +42,8 @@ typedef struct SwsContext{
     AVClass *av_class;
 
     /**
-     *
-     * Note the src,dst,srcStride,dstStride will be copied, in the sws_scale() warper so they can freely be modified here
+     * Note that src, dst, srcStride, dstStride will be copied in the
+     * sws_scale() wrapper so they can be freely modified here.
      */
     SwsFunc swScale;
     int srcW, srcH, dstH;
@@ -180,6 +182,13 @@ typedef struct SwsContext{
 
 SwsFunc yuv2rgb_get_func_ptr (SwsContext *c);
 int yuv2rgb_c_init_tables (SwsContext *c, const int inv_table[4], int fullRange, int brightness, int contrast, int saturation);
+
+void yuv2rgb_altivec_init_tables (SwsContext *c, const int inv_table[4],int brightness,int contrast, int saturation);
+SwsFunc yuv2rgb_init_altivec (SwsContext *c);
+void altivec_yuv2packedX (SwsContext *c,
+                          int16_t *lumFilter, int16_t **lumSrc, int lumFilterSize,
+                          int16_t *chrFilter, int16_t **chrSrc, int chrFilterSize,
+                          uint8_t *dest, int dstW, int dstY);
 
 char *sws_format_name(int format);
 

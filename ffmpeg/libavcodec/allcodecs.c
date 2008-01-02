@@ -118,6 +118,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER (NUV, nuv);
     REGISTER_ENCODER (PAM, pam);
     REGISTER_ENCODER (PBM, pbm);
+    REGISTER_DECODER (PCX, pcx);
     REGISTER_ENCODER (PGM, pgm);
     REGISTER_ENCODER (PGMYUV, pgmyuv);
     REGISTER_ENCDEC  (PNG, png);
@@ -136,6 +137,7 @@ void avcodec_register_all(void)
     REGISTER_DECODER (SMC, smc);
     REGISTER_ENCDEC  (SNOW, snow);
     REGISTER_DECODER (SP5X, sp5x);
+    REGISTER_DECODER (SUNRAST, sunrast);
     REGISTER_ENCDEC  (SVQ1, svq1);
     REGISTER_DECODER (SVQ3, svq3);
     REGISTER_ENCDEC  (TARGA, targa);
@@ -178,12 +180,10 @@ void avcodec_register_all(void)
     REGISTER_DECODER (COOK, cook);
     REGISTER_DECODER (DCA, dca);
     REGISTER_DECODER (DSICINAUDIO, dsicinaudio);
-	REGISTER_DECODER (EAC3, eac3);
     REGISTER_ENCDEC  (FLAC, flac);
     REGISTER_DECODER (IMC, imc);
     REGISTER_DECODER (MACE3, mace3);
     REGISTER_DECODER (MACE6, mace6);
-    REGISTER_DECODER (MLP, mlp);
     REGISTER_ENCDEC  (MP2, mp2);
     REGISTER_DECODER (MP3, mp3);
     REGISTER_DECODER (MP3ADU, mp3adu);
@@ -213,6 +213,7 @@ void avcodec_register_all(void)
     REGISTER_ENCDEC  (PCM_S8, pcm_s8);
     REGISTER_ENCDEC  (PCM_S16BE, pcm_s16be);
     REGISTER_ENCDEC  (PCM_S16LE, pcm_s16le);
+    REGISTER_DECODER (PCM_S16LE_PLANAR, pcm_s16le_planar);
     REGISTER_ENCDEC  (PCM_S24BE, pcm_s24be);
     REGISTER_ENCDEC  (PCM_S24DAUD, pcm_s24daud);
     REGISTER_ENCDEC  (PCM_S24LE, pcm_s24le);
@@ -286,7 +287,6 @@ void avcodec_register_all(void)
     REGISTER_PARSER  (DCA, dca);
     REGISTER_PARSER  (DVBSUB, dvbsub);
     REGISTER_PARSER  (DVDSUB, dvdsub);
-	REGISTER_PARSER  (EAC3, eac3);
     REGISTER_PARSER  (H261, h261);
     REGISTER_PARSER  (H263, h263);
     REGISTER_PARSER  (H264, h264);
