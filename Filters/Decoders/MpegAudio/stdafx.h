@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: stdafx.h,v 1.4 2006-10-06 13:46:19 adcockj Exp $
+// $Id: stdafx.h,v 1.5 2008-01-02 07:10:32 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DScalerFilter.dll - DirectShow filter for deinterlacing and video processing
 // Copyright (c) 2003 John Adcock
@@ -28,7 +28,7 @@
 
 #define STRICT
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0400
+#define _WIN32_WINNT 0x0501
 #endif
 
 #include <windows.h>

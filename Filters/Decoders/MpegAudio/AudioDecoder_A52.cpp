@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.15 2007-12-20 18:24:55 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.16 2008-01-02 07:10:32 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.15  2007/12/20 18:24:55  adcockj
+// Interim Checkin of adding EAC3 decoding
+//
 // Revision 1.14  2006/03/08 17:13:28  adcockj
 // added aac decoding
 //
@@ -195,6 +198,16 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 #endif
 
+typedef void (CONV_FUNC16)(BYTE*&, short);
+
+static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    Convert16ToFloat,
+    Convert16To32,
+    Convert16To24,
+    Convert16To16,
+};
+
 int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bool* isEAC3)
 {
     static int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,
@@ -256,23 +269,23 @@ int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bo
         int numblks;
         switch(numblkscod)
         {
-        case 0x00:
+        case 0:
             numblks = 1;
             break;
-        case 0x01:
+        case 1:
             numblks = 2;
             break;
-        case 0x10:
+        case 2:
             numblks = 3;
             break;
-        case 0x11:
+        case 3:
             numblks = 6;
             break;
         }
         acmod = (buf[4] >> 1) & 0x07;
         *flags = acmod | ((buf[4] & 0x01) ? A52_LFE : 0);
 
-    	return (((buf[2] & 0x07) << 8) + buf[3] + 1) * numblks * 2;
+    	return (((buf[2] & 0x07) << 8) + buf[3] + 1) * 2;
     }
     else
     {
@@ -358,7 +371,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                 {
                     if(m_CodecContext == NULL)
                     {
-                        m_Codec = ffmpeg::avcodec_find_decoder(ffmpeg::CODEC_ID_EAC3);
+                        m_Codec = ffmpeg::avcodec_find_decoder(ffmpeg::CODEC_ID_AC3);
                         if(m_Codec == NULL)
                         {
                             return E_UNEXPECTED;
@@ -367,7 +380,25 @@ HRESULT CAudioDecoder::ProcessAC3()
                         m_CodecContext->sample_rate = sample_rate;
                         int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
-                        m_CodecContext->channels = scmap.nChannels;
+                        switch(GetParamEnum(SPEAKERCONFIG))
+                        {
+                        case SPCFG_STEREO:
+                        case SPCFG_DOLBY:
+							m_CodecContext->request_channels = min(scmap.nChannels, 2);
+                            break;
+                        case SPCFG_2F2R:
+							m_CodecContext->request_channels = min(scmap.nChannels, 4);
+                            break;
+                        case SPCFG_2F2R1S:
+							m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            break;
+                        case SPCFG_3F2R:
+							m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            break;
+                        case SPCFG_3F2R1S:
+							m_CodecContext->request_channels = min(scmap.nChannels, 6);
+                            break;
+                        }
 
                         if (ffmpeg::avcodec_open(m_CodecContext, m_Codec) < 0)
                         {
@@ -381,10 +412,34 @@ HRESULT CAudioDecoder::ProcessAC3()
                     static std::vector<int16_t> samples(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 16);
                     int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
 
-                    int decodedBytes =  ffmpeg::avcodec_decode_audio(m_CodecContext, pSamples, &frameSize, p, size);
-                    frameSize = decodedBytes;
+                    int decodedBytes =  ffmpeg::avcodec_decode_audio2(m_CodecContext, pSamples, &frameSize, p, size);
+                    CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
                     if(decodedBytes > 0)
                     {
+                        for(int j = 0; j < frameSize / 2 / m_CodecContext->request_channels; j++)
+                        {
+                            if(m_BytesLeftInBuffer == 0)
+                            {
+                                hr = GetOutputSampleAndPointer();
+                                CHECK(hr);
+                            }
+
+                            for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
+                            {
+                                pConvFunc(m_pDataOut, *pSamples++);
+                            }
+
+                            m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                            ASSERT(m_BytesLeftInBuffer >=0);
+                            if(m_BytesLeftInBuffer == 0)
+                            {
+                                hr = Deliver(false);
+                                if(hr != S_OK)
+                                {
+                                    return hr;
+                                }
+                            }
+                        }
                     }
                 }
                 else

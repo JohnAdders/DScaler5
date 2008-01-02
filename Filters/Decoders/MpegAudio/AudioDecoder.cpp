@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder.cpp,v 1.55 2007-12-20 18:24:54 adcockj Exp $
+// $Id: AudioDecoder.cpp,v 1.56 2008-01-02 07:10:32 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -40,6 +40,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.55  2007/12/20 18:24:54  adcockj
+// Interim Checkin of adding EAC3 decoding
+//
 // Revision 1.54  2006/03/08 17:13:28  adcockj
 // added aac decoding
 //
@@ -296,10 +299,9 @@ CAudioDecoder::CAudioDecoder() :
 	m_ratechange.Rate = 10000;
     m_ratechange.StartTime = -1;
 
-    ffmpeg::av_log_set_callback(avlog);
     ffmpeg::avcodec_init();
     ffmpeg::avcodec_register_all();
-
+    ffmpeg::av_log_set_callback(avlog);
 }
 
 CAudioDecoder::~CAudioDecoder()
