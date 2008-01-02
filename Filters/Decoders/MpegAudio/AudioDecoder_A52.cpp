@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: AudioDecoder_A52.cpp,v 1.16 2008-01-02 07:10:32 adcockj Exp $
+// $Id: AudioDecoder_A52.cpp,v 1.17 2008-01-02 17:52:54 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2004 John Adcock
@@ -31,6 +31,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.16  2008/01/02 07:10:32  adcockj
+// interim eac3 code
+//
 // Revision 1.15  2007/12/20 18:24:55  adcockj
 // Interim Checkin of adding EAC3 decoding
 //
@@ -208,6 +211,16 @@ static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] =
     Convert16To16,
 };
 
+typedef void (CONV_FUNC_FLOAT)(BYTE*&, float);
+
+static CONV_FUNC_FLOAT* pConvFuncsFloat[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+{
+    ConvertFloatToFloat,
+    ConvertFloatTo32,
+    ConvertFloatTo24,
+    ConvertFloatTo16,
+};
+
 int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bool* isEAC3)
 {
     static int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,
@@ -378,6 +391,14 @@ HRESULT CAudioDecoder::ProcessAC3()
                         }
                         m_CodecContext = ffmpeg::avcodec_alloc_context();
                         m_CodecContext->sample_rate = sample_rate;
+                        if(GetParamBool(DYNAMICRANGECONTROL))
+                        {
+                            //m_CodecContext->drc_scale = 1.0;
+                        }
+                        else
+                        {
+                            //m_CodecContext->drc_scale = 0.0;
+                        }
                         int scmapidx = min(flags&A52_CHANNEL_MASK, countof(s_scmap_ac3)/2);
                         scmap_t& scmap = s_scmap_ac3[scmapidx + ((flags&A52_LFE)?(countof(s_scmap_ac3)/2):0)];
                         switch(GetParamEnum(SPEAKERCONFIG))
@@ -413,30 +434,62 @@ HRESULT CAudioDecoder::ProcessAC3()
                     int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
 
                     int decodedBytes =  ffmpeg::avcodec_decode_audio2(m_CodecContext, pSamples, &frameSize, p, size);
-                    CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
                     if(decodedBytes > 0)
                     {
-                        for(int j = 0; j < frameSize / 2 / m_CodecContext->request_channels; j++)
+                        if(m_CodecContext->sample_fmt == ffmpeg::SAMPLE_FMT_FLT)
                         {
-                            if(m_BytesLeftInBuffer == 0)
+                            CONV_FUNC_FLOAT* pConvFunc = pConvFuncsFloat[m_OutputSampleType];
+                            float* pfSamples = (float*)pSamples;
+                            for(int j = 0; j < frameSize / 4 / m_CodecContext->request_channels; j++)
                             {
-                                hr = GetOutputSampleAndPointer();
-                                CHECK(hr);
-                            }
-
-                            for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
-                            {
-                                pConvFunc(m_pDataOut, *pSamples++);
-                            }
-
-                            m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
-                            ASSERT(m_BytesLeftInBuffer >=0);
-                            if(m_BytesLeftInBuffer == 0)
-                            {
-                                hr = Deliver(false);
-                                if(hr != S_OK)
+                                if(m_BytesLeftInBuffer == 0)
                                 {
-                                    return hr;
+                                    hr = GetOutputSampleAndPointer();
+                                    CHECK(hr);
+                                }
+
+                                for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
+                                {
+                                    pConvFunc(m_pDataOut, *pfSamples++);
+                                }
+
+                                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                                ASSERT(m_BytesLeftInBuffer >=0);
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = Deliver(false);
+                                    if(hr != S_OK)
+                                    {
+                                        return hr;
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
+                            for(int j = 0; j < frameSize / 2 / m_CodecContext->request_channels; j++)
+                            {
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = GetOutputSampleAndPointer();
+                                    CHECK(hr);
+                                }
+
+                                for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
+                                {
+                                    pConvFunc(m_pDataOut, *pSamples++);
+                                }
+
+                                m_BytesLeftInBuffer -= m_ChannelsRequested * m_SampleSize;
+                                ASSERT(m_BytesLeftInBuffer >=0);
+                                if(m_BytesLeftInBuffer == 0)
+                                {
+                                    hr = Deliver(false);
+                                    if(hr != S_OK)
+                                    {
+                                        return hr;
+                                    }
                                 }
                             }
                         }

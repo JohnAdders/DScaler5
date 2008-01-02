@@ -56,7 +56,6 @@ static void log_missing_feature(AVCodecContext *avctx, const char *log){
             "mailing list.\n", log);
 }
 
-#if 0
 static void spectral_extension(AC3DecodeContext *s){
     //Now turned off, because there are no samples for testing it.
     int copystartmant, copyendmant, copyindex, insertindex;
@@ -67,6 +66,10 @@ static void spectral_extension(AC3DecodeContext *s){
     float rmsenergy[AC3_MAX_CHANNELS][18];
 
     //XXX spxbandtable[bnd] = 25 + 12 * bnd ?
+    static int spxbandtable[] = 
+    {
+        25, 37, 49, 61, 73, 85, 97, 109, 121, 133, 145, 157, 169, 181, 193, 205, 217, 229
+    };
 
     copystartmant = spxbandtable[s->spxstrtf];
     copyendmant = spxbandtable[s->spxbegf];
@@ -150,9 +153,9 @@ static void spectral_extension(AC3DecodeContext *s){
             nscale = rmsenergy[ch][bnd] * nblendfact[ch][bnd];
             sscale = sblendfact[ch][bnd];
             for (bin = 0; bin < s->spxbndsztab[bnd]; bin++){
-                //TODO generate noise()
+                float noise = av_random_real1(&s->dith_state) - 0.5;
                 s->transform_coeffs[ch][spxmant] =
-                    s->transform_coeffs[ch][spxmant] * sscale + noise() * nscale;
+                    s->transform_coeffs[ch][spxmant] * sscale + noise * nscale;
                 spxmant++;
             }
         }
@@ -167,7 +170,6 @@ static void spectral_extension(AC3DecodeContext *s){
         }
     }
 }
-#endif
 
 static void get_transform_coeffs_aht_ch(AC3DecodeContext *s, int ch){
     int bin, blk, gs;
@@ -663,9 +665,10 @@ int ff_eac3_parse_audio_block(AC3DecodeContext *s, const int blk){
     if ((!blk) || get_bits1(gbc)) {
         s->spxinu = get_bits1(gbc);
         if (s->spxinu) {
+#if 0
             log_missing_feature(s->avctx, "Spectral extension");
             return -1;
-#if 0
+#endif
             if (s->channel_mode == AC3_CHMODE_MONO) {
                 s->chinspx[1] = 1;
             } else {
@@ -719,7 +722,6 @@ int ff_eac3_parse_audio_block(AC3DecodeContext *s, const int blk){
                     s->spxbndsztab[s->nspxbnds - 1] += 12;
                 }
             }
-#endif
         } else {
             /* !spxinu */
             for (ch = 1; ch <= s->fbw_channels; ch++) {
@@ -729,7 +731,6 @@ int ff_eac3_parse_audio_block(AC3DecodeContext *s, const int blk){
         }
     }
 
-#if 0
     /* Spectral extension coordinates */
     if (s->spxinu) {
         for (ch = 1; ch <= s->fbw_channels; ch++) {
@@ -768,7 +769,6 @@ int ff_eac3_parse_audio_block(AC3DecodeContext *s, const int blk){
             }
         }
     }
-#endif
 
     /* Coupling strategy and enhanced coupling strategy information */
     if (s->cpl_strategy_exists[blk]) {
@@ -1137,11 +1137,9 @@ int ff_eac3_parse_audio_block(AC3DecodeContext *s, const int blk){
     if(!s->dither_all)
         ff_ac3_remove_dithering(s);
 
-#if 0
     //apply spectral extension
     if (s->spxinu)
         spectral_extension(s);
-#endif
 
     return 0;
 }

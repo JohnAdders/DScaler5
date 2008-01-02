@@ -219,6 +219,10 @@ static int ac3_decode_init(AVCodecContext *avctx)
     dsputil_init(&s->dsp, avctx);
     av_init_random(0, &s->dith_state);
 
+#ifdef CONFIG_AUDIO_NONSHORT
+        s->add_bias = 0.0f;
+        s->mul_bias = 1.0f;
+#else
     /* set bias values for float to int16 conversion */
     if(s->dsp.float_to_int16 == ff_float_to_int16_c) {
         s->add_bias = 385.0f;
@@ -227,7 +231,7 @@ static int ac3_decode_init(AVCodecContext *avctx)
         s->add_bias = 0.0f;
         s->mul_bias = 32767.0f;
     }
-
+#endif
     return 0;
 }
 
@@ -984,7 +988,11 @@ static int parse_audio_block(AC3DecodeContext *s, int blk)
 static int ac3_decode_frame(AVCodecContext * avctx, void *data, int *data_size, uint8_t *buf, int buf_size)
 {
     AC3DecodeContext *s = avctx->priv_data;
+#ifdef CONFIG_AUDIO_NONSHORT
+    float *out_samples = (float *)data;
+#else
     int16_t *out_samples = (int16_t *)data;
+#endif
     int i, blk, ch, err;
 
     /* initialize the GetBitContext with the start of valid AC-3 Frame */
@@ -1066,6 +1074,13 @@ static int ac3_decode_frame(AVCodecContext * avctx, void *data, int *data_size, 
             ff_ac3_downmix(s);
         }
 
+#ifdef CONFIG_AUDIO_NONSHORT
+    	s->avctx->sample_fmt = SAMPLE_FMT_FLT;
+        /* convert to float */
+        for (i = 0; i < 256; i++)
+            for (ch = 0; ch < s->out_channels; ch++)
+                *(out_samples++) = s->output[ch][i];
+#else
         /* convert float to 16-bit integer */
         for(ch=0; ch<s->out_channels; ch++) {
             for(i=0; i<256; i++) {
@@ -1078,8 +1093,9 @@ static int ac3_decode_frame(AVCodecContext * avctx, void *data, int *data_size, 
         for (i = 0; i < 256; i++)
             for (ch = 0; ch < s->out_channels; ch++)
                 *(out_samples++) = s->int_output[ch][i];
+#endif
     }
-    *data_size =  s->num_blocks * 256 * avctx->channels * sizeof (int16_t);
+    *data_size =  s->num_blocks * 256 * s->out_channels * av_get_bits_per_sample_format(avctx->sample_fmt) / 8;
     return s->frame_size;
 }
 
