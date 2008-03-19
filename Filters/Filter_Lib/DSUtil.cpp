@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.4 2007-11-30 18:06:48 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.5 2008-03-19 18:09:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.4  2007/11/30 18:06:48  adcockj
+// Initial go at h264 support
+//
 // Revision 1.3  2004/11/25 17:22:10  adcockj
 // Fixed some more connection issues
 //
@@ -120,7 +123,7 @@ const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
 
 
 
-bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
+bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary, int& pitch)
 {
     w = h = arx = ary = 0;
     RECT* pSourceRect = NULL;
@@ -128,7 +131,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     if(pmt->formattype == FORMAT_VideoInfo || pmt->formattype == FORMAT_MPEGVideo)
     {
         VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pmt->pbFormat;
-        w = vih->bmiHeader.biWidth;
+        pitch = w = vih->bmiHeader.biWidth;
         h = vih->bmiHeader.biHeight;
         arx = w * vih->bmiHeader.biYPelsPerMeter;
         ary = h * vih->bmiHeader.biXPelsPerMeter;
@@ -137,7 +140,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     else if(pmt->formattype == FORMAT_VideoInfo2 || pmt->formattype == FORMAT_MPEG2_VIDEO)
     {
         VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pmt->pbFormat;
-        w = vih->bmiHeader.biWidth;
+        pitch = w = vih->bmiHeader.biWidth;
         h = vih->bmiHeader.biHeight;
         arx = vih->dwPictAspectRatioX;
         ary = vih->dwPictAspectRatioY;
@@ -145,7 +148,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary)
     }
     else
     {
-        w = 720;
+        pitch = w = 720;
         h = 480;
         arx = 4;
         ary = 3;

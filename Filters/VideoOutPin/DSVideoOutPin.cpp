@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.8 2007-12-30 15:33:29 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.9 2008-03-19 18:09:11 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.8  2007/12/30 15:33:29  adcockj
+// EVR connect fixes
+//
 // Revision 1.7  2007/12/03 07:54:26  adcockj
 // Interim checkin will be tidied up later
 //
@@ -1067,9 +1070,9 @@ HRESULT CDSVideoOutPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME
 
 void CDSVideoOutPin::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType)
 {
-    int wout = 0, hout = 0;
+    int wout = 0, hout = 0, pitch = 0;
     long arxout = 0, aryout = 0; 
-    ExtractDim(pMediaType, wout, hout, arxout, aryout); 
+    ExtractDim(pMediaType, wout, hout, arxout, aryout, pitch); 
     if(wout == m_Width && abs(hout) == m_Height &&
         arxout == m_AspectX &&
         aryout == m_AspectY)
@@ -1180,22 +1183,22 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     {
         return S_FALSE;
     }
-    int wout = 0, hout = 0;
+    int wout = 0, hout = 0, pitch = 0;
     long arxout = 0, aryout = 0;
-    ExtractDim(pmt, wout, hout, arxout, aryout);
+    ExtractDim(pmt, wout, hout, arxout, aryout, pitch);
     if(m_InsideReconnect)
     {
-        m_PitchWidth = wout;
+        m_PitchWidth = pitch;
         m_PitchHeight = hout;
+    }
+    if(abs(wout) != abs(m_Width) || abs(hout) != abs(m_Height))
+    {
+        return S_FALSE;
     }
     else
     {
-        if(abs(wout) != abs(m_Width) || abs(hout) != abs(m_Height))
-        {
-            return S_FALSE;
-        }
+        return S_OK;
     }
-    return S_OK;
 }
 
 void CDSVideoOutPin::SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame)

@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DivxDecoder.cpp,v 1.21 2007-12-30 15:32:04 adcockj Exp $
+// $Id: DivxDecoder.cpp,v 1.22 2008-03-19 18:09:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // DivxVideo.dll - DirectShow filter for decoding Divx streams
 // Copyright (c) 2004 John Adcock
@@ -25,6 +25,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.21  2007/12/30 15:32:04  adcockj
+// Various fixes
+//
 // Revision 1.20  2007/12/15 14:49:29  adcockj
 // Start code fixes for h264
 // Deactivate made safer
@@ -339,9 +342,9 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     }
     else if(pPin == m_VideoOutPin)
     {
-        int wout = 0, hout = 0;
+        int wout = 0, hout = 0, pitch = 0;
         long arxout = 0, aryout = 0;
-        Result = (ExtractDim(pmt, wout, hout, arxout, aryout) && 
+        Result = (ExtractDim(pmt, wout, hout, arxout, aryout, pitch) && 
                   (pmt->majortype == MEDIATYPE_Video) && 
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
@@ -452,7 +455,8 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_DivxWidth = m_DivxHeight = 0;
         m_ARDivxX = 4; 
         m_ARDivxY = 3;
-        ExtractDim(pMediaType, m_DivxWidth, m_DivxHeight, m_ARDivxX, m_ARDivxY);
+        int pitch = 0;
+        ExtractDim(pMediaType, m_DivxWidth, m_DivxHeight, m_ARDivxX, m_ARDivxY, pitch);
 
         BITMAPINFOHEADER* bih = NULL;
         m_ExtraSize = 0;

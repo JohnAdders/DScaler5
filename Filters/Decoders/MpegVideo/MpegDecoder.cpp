@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: MpegDecoder.cpp,v 1.77 2007-12-15 14:49:29 adcockj Exp $
+// $Id: MpegDecoder.cpp,v 1.78 2008-03-19 18:09:10 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -44,6 +44,10 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.77  2007/12/15 14:49:29  adcockj
+// Start code fixes for h264
+// Deactivate made safer
+//
 // Revision 1.76  2007/10/19 17:05:49  adcockj
 // Added Support for setting new color info flags
 //
@@ -1003,7 +1007,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_ARMpegX = 4; 
         m_ARMpegY = 3;
         m_ARAdjustX = m_ARAdjustY = 1;
-        ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY);
+        int pitch = 0;
+        ExtractDim(pMediaType, m_MpegWidth, m_MpegHeight, m_ARMpegX, m_ARMpegY, pitch);
         m_MpegHeight = abs(m_MpegHeight);
         m_ControlFlags = 0;
         m_PanAndScanDVD = false;
