@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.cpp,v 1.9 2008-03-19 18:09:11 adcockj Exp $
+// $Id: DSVideoOutPin.cpp,v 1.10 2008-03-28 18:07:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.9  2008/03/19 18:09:11  adcockj
+// Add better support for getting pitch as well as video width
+//
 // Revision 1.8  2007/12/30 15:33:29  adcockj
 // EVR connect fixes
 //
@@ -624,8 +627,6 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         (m_AspectY != m_CurrentAspectY))
     {
         m_InsideReconnect = true;
-        m_PitchWidth = 0;
-        m_PitchHeight = 0;
 
         switch(m_ConnectedType)
         {
@@ -748,32 +749,27 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
         LOG(DBGLOG_FLOW, ("EndFlush %08x\n", hr));
         CHECK(hr);
 
+        SetType(&m_InternalMT);
 
-        hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
+        m_InsideReconnect = true;
+        hr = m_ConnectedPin->ReceiveConnection(this, GetMediaType());
+        m_InsideReconnect = false;
         LOG(DBGLOG_FLOW, ("ReceiveConnection %08x\n", hr));
 
+        m_InsideReconnect = true;
         hr = m_MemInputPin->NotifyAllocator(m_Allocator.GetNonAddRefedInterface(), FALSE);
+        m_InsideReconnect = false;
         CHECK(hr);
+
+        // reset bmi for code below
+        // in case we have had a pitch change
+        bmi = ExtractBIH(GetMediaType());
+
 
         ALLOCATOR_PROPERTIES AllocatorProps;
         hr = m_Allocator->GetProperties(&AllocatorProps);
         LOG(DBGLOG_FLOW, ("GetProperties %08x\n", hr));
         CHECK(hr);
-        if(m_PitchWidth != 0 && (bmi->biWidth != m_PitchWidth || bmi->biHeight != m_PitchHeight))
-		{
-			bmi->biWidth = max(m_PitchWidth, bmi->biWidth);
-			if(m_PitchHeight > 0)
-			{
-	            bmi->biHeight = max(m_PitchHeight, abs(bmi->biHeight));
-			}
-			else
-			{
-	            bmi->biHeight = min(m_PitchHeight, -abs(bmi->biHeight));
-			}
-            bmi->biSizeImage = abs(bmi->biHeight)*bmi->biWidth*bmi->biBitCount>>3;
-            m_InternalMT.lSampleSize = bmi->biSizeImage;
-            m_NeedToAttachFormat = true;
-        }
         // if the new type would be greater than the old one then
         // we need to reconnect otherwise just attach the type to the next sample
         if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
@@ -879,25 +875,21 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
         hr = m_Allocator->Decommit();
         CHECK(hr);
 
-        hr = NegotiateAllocator(NULL, &m_InternalMT);
+        hr = SetType(&m_InternalMT);
+        CHECK(hr);
+        
+        m_InsideReconnect = true;
+        hr = NegotiateAllocator(NULL);
+        m_InsideReconnect = false;
         CHECK(hr);
 
-        hr = m_ConnectedPin->ReceiveConnection(this, &m_InternalMT);
+        m_InsideReconnect = true;
+        hr = m_ConnectedPin->ReceiveConnection(this, GetMediaType());
+        m_InsideReconnect = false;
         CHECK(hr);
 
         hr = m_Allocator->Commit();
         CHECK(hr);
-
-        if(m_PitchWidth != 0)
-        {
-            bmi->biWidth = m_PitchWidth;
-            bmi->biHeight = m_PitchHeight;
-            bmi->biSizeImage = m_Height*bmi->biWidth*bmi->biBitCount>>3;
-            m_InternalMT.lSampleSize = bmi->biSizeImage;
-
-            m_NeedToAttachFormat = true; 
-        }
-
     }
     else
     {
@@ -1186,17 +1178,22 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     int wout = 0, hout = 0, pitch = 0;
     long arxout = 0, aryout = 0;
     ExtractDim(pmt, wout, hout, arxout, aryout, pitch);
-    if(m_InsideReconnect)
-    {
-        m_PitchWidth = pitch;
-        m_PitchHeight = hout;
-    }
     if(abs(wout) != abs(m_Width) || abs(hout) != abs(m_Height))
     {
         return S_FALSE;
     }
     else
     {
+        if(m_InsideReconnect)
+        {
+            // if we are in the middle of a reconnection then we need to
+            // accept pitch changes from upstream
+            if(pitch > wout)
+            {
+                SetType(pmt);
+                m_NeedToAttachFormat = true; 
+            }
+        }
         return S_OK;
     }
 }
@@ -1219,6 +1216,15 @@ void CDSVideoOutPin::SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame)
         }
     }
 }
+
+STDMETHODIMP CDSVideoOutPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+{
+    m_InsideReconnect = true;
+    HRESULT hr = CDSOutputPin::Connect(pReceivePin, pmt);
+    m_InsideReconnect = false;
+    return hr;
+}
+
 
 CDSVideoOutPin::OUT_TYPE CDSVideoOutPin::GetConnectedType()
 {

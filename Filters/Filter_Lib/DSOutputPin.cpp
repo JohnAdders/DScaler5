@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSOutputPin.cpp,v 1.24 2007-11-30 18:06:48 adcockj Exp $
+// $Id: DSOutputPin.cpp,v 1.25 2008-03-28 18:07:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2003 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,6 +20,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.24  2007/11/30 18:06:48  adcockj
+// Initial go at h264 support
+//
 // Revision 1.23  2004/11/25 17:22:10  adcockj
 // Fixed some more connection issues
 //
@@ -184,15 +187,19 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         hr = pReceivePin->ReceiveConnection(this, &ProposedType);
         if(SUCCEEDED(hr))
         {
-            hr = NegotiateAllocator(pReceivePin, &ProposedType);    
+            hr = SetType(&ProposedType);
             if(SUCCEEDED(hr))
             {
-                break;
-            }
-            else
-            {
-                hr = pReceivePin->Disconnect();
-                CHECK(hr);
+                hr = NegotiateAllocator(pReceivePin);    
+                if(SUCCEEDED(hr))
+                {
+                    break;
+                }
+                else
+                {
+                    hr = pReceivePin->Disconnect();
+                    CHECK(hr);
+                }
             }
         }
         
@@ -492,7 +499,7 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
     HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
 	if(hr == VFW_E_SIZENOTSET)
 	{
-		hr = NegotiateAllocator(NULL, &m_ConnectedMediaType);
+		hr = NegotiateAllocator(NULL);
         CHECK(hr);
 	    hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
 	}
@@ -575,7 +582,7 @@ HRESULT CDSOutputPin::Deactivate()
     return hr;
 }
 
-HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin)
 {
     HRESULT hr = S_OK;
 
@@ -587,7 +594,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_MemInputPin->GetAllocator(m_Allocator.GetReleasedInterfaceReference());
         if(m_Allocator)
         {
-            hr = NegotiateBufferSize(pReceivePin, pmt);
+            hr = NegotiateBufferSize(pReceivePin);
             if(FAILED(hr))
             {
                 LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -600,7 +607,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         {
             m_Allocator = m_MyMemAlloc;
             
-            hr = NegotiateBufferSize(pReceivePin, pmt);
+            hr = NegotiateBufferSize(pReceivePin);
             if(FAILED(hr))
             {
                 LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -635,7 +642,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
         hr = m_Allocator->Decommit();
         CHECK(hr);
 
-        hr = NegotiateBufferSize(pReceivePin, pmt);
+        hr = NegotiateBufferSize(pReceivePin);
         if(FAILED(hr))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -648,7 +655,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin, const AM_MEDIA_TYPE 
     return hr;
 }
 
-HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
+HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin)
 {
     HRESULT hr = S_OK;
 
@@ -675,9 +682,6 @@ HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin, const AM_MEDIA_TYPE
         }
     }
 
-    hr = SetType(pmt);
-    CHECK(hr);
-
     ALLOCATOR_PROPERTIES PropsWeWant;
     ZeroMemory(&PropsWeWant, sizeof(PropsWeWant));
 
@@ -690,9 +694,9 @@ HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin, const AM_MEDIA_TYPE
     Props.cBuffers = max(Props.cBuffers, PropsWeWant.cBuffers);
 
     // handle fixed sized buffers
-    if(pmt->bFixedSizeSamples)
+    if(GetMediaType()->bFixedSizeSamples)
     {
-        Props.cbBuffer = max(Props.cbBuffer, (long)pmt->lSampleSize);
+        Props.cbBuffer = max(Props.cbBuffer, (long)GetMediaType()->lSampleSize);
     }
 
     ZeroMemory(&PropsAct, sizeof(PropsAct));

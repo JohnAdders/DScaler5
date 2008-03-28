@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSUtil.cpp,v 1.5 2008-03-19 18:09:11 adcockj Exp $
+// $Id: DSUtil.cpp,v 1.6 2008-03-28 18:07:58 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003 Gabest
@@ -27,6 +27,9 @@
 // CVS Log
 //
 // $Log: not supported by cvs2svn $
+// Revision 1.5  2008/03/19 18:09:11  adcockj
+// Add better support for getting pitch as well as video width
+//
 // Revision 1.4  2007/11/30 18:06:48  adcockj
 // Initial go at h264 support
 //
@@ -92,7 +95,8 @@ CLSID GetCLSID(IPin* pPin)
 {
     return(GetCLSID(GetFilterFromPin(pPin)));
 }
-const BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
+
+BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
 {
     if(pmt)
     {

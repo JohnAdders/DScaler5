@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// $Id: DSVideoOutPin.h,v 1.2 2005-10-05 14:30:42 adcockj Exp $
+// $Id: DSVideoOutPin.h,v 1.3 2008-03-28 18:07:59 adcockj Exp $
 ///////////////////////////////////////////////////////////////////////////////
 // Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,8 +40,9 @@ public:
     CDSVideoOutPin();
     ~CDSVideoOutPin();
 
-    STDMETHODIMP QueryAccept(const AM_MEDIA_TYPE *pmt);
+    STDMETHOD(QueryAccept)(const AM_MEDIA_TYPE *pmt);
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
+    STDMETHOD(Connect)(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
     HRESULT NotifyConnected();
 	void OnConnectToVMR7();
 	void OnConnectToVMR9();
@@ -110,8 +111,6 @@ private:
     long m_CurrentAspectX;
     long m_CurrentAspectY;
     bool m_InsideReconnect;
-    long m_PitchWidth;
-    long m_PitchHeight;
     REFERENCE_TIME m_AvgTimePerFrame;
     int GetDroppedFrames(IPin* InputPin);
     AM_MEDIA_TYPE m_InternalMT;
