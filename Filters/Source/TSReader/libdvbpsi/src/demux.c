@@ -2,7 +2,7 @@
  * demux.c: DVB subtables demux functions.
  *----------------------------------------------------------------------------
  * (c)2001-2002 VideoLAN
- * $Id: demux.c,v 1.1 2004-10-26 16:27:09 adcockj Exp $
+ * $Id$
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * $Id: stream.c,v 1.1 2004-02-13 12:22:21 adcockj Exp $
+ * $Id$
  */
 
 # ifdef HAVE_CONFIG_H

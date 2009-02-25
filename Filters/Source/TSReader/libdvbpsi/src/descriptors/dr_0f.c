@@ -1,7 +1,7 @@
 /*****************************************************************************
  * dr_0f.c
  * (c)2001-2002 VideoLAN
- * $Id: dr_0f.c,v 1.1 2004-10-26 16:27:10 adcockj Exp $
+ * $Id$
  *
  * Authors: Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *

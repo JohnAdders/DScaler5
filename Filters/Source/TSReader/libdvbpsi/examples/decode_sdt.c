@@ -2,7 +2,7 @@
  * decode_sdt.c: SDT decoder example
  *----------------------------------------------------------------------------
  * (c)2001-2002 VideoLAN
- * $Id: decode_sdt.c,v 1.1 2004-10-26 16:27:09 adcockj Exp $
+ * $Id$
  *
  * Authors: Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *          Johan Bilien <jobi@via.ecp.fr>

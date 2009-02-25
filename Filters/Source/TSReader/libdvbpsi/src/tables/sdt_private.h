@@ -2,7 +2,7 @@
  * sdt_private.h: private SDT structures
  *----------------------------------------------------------------------------
  * (c)2001-2002 VideoLAN
- * $Id: sdt_private.h,v 1.1 2004-10-26 16:27:10 adcockj Exp $
+ * $Id$
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *

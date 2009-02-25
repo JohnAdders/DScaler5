@@ -2,7 +2,7 @@
  * dvbpsi_private.h: main private header
  *----------------------------------------------------------------------------
  * (c)2001-2002 VideoLAN
- * $Id: dvbpsi_private.h,v 1.1 2004-10-26 16:27:09 adcockj Exp $
+ * $Id$
  *
  * Authors: Arnaud de Bossoreille de Ribou <bozo@via.ecp.fr>
  *
