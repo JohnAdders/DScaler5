@@ -50,7 +50,7 @@
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Features">
-		<param name="Local" value="Features.HTM">
+		<param name="Local" value="Features.htm">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
@@ -66,7 +66,7 @@
 	</UL>
 	<LI> <OBJECT type="text/sitemap">
 		<param name="Name" value="Developer Information">
-		<param name="Local" value="Developer.HTM">
+		<param name="Local" value="Developer.htm">
 		</OBJECT>
 	<UL>
 		<LI> <OBJECT type="text/sitemap">
