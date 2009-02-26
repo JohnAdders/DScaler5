@@ -51,7 +51,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\Debug/AudioDetect.dll" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\..\..\Debug/AudioDetect.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug
 TargetPath=\source\deinterlace\DScaler5\Debug\AudioDetect.dll
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\..\..\Release/AudioDetect.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\..\..\Release/AudioDetect.dll"
 # Begin Custom Build - Performing registration
 OutDir=.\Release
 TargetPath=\source\deinterlace\DScaler5\Release\AudioDetect.dll

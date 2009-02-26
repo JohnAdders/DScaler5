@@ -47,7 +47,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="..\..\DeCSS\Release\DeCSS.lib"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/MpegVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -117,7 +117,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="..\..\DeCSS\Debug\DeCSS.lib"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/MpegVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"

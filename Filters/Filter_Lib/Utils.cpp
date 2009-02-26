@@ -19,9 +19,15 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
+// uncomment for descriptive help messages instead of raw HRESULTS
+//#define HAVE_DXSDK
+
 #include "stdafx.h"
 #include "Utils.h"
+#ifdef HAVE_DXSDK
 #include <dxerr9.h>
+#pragma comment(lib, "dxerr9.lib")
+#endif
 
 #ifdef _DEBUG
 int CurrentDebugLevel = DBGLOG_FLOW;
@@ -330,7 +336,11 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
     //DXGetErrorString9 seems to be a bit better at returning a string for a
     //hresult but instead it only returns strings like
     //VFW_E_INVALID_MEDIA_TYPE but that shoud be enough
+#ifdef HAVE_DXSDK
     const TCHAR *ErrorMsg=DXGetErrorString9(hr);
+#else
+    const TCHAR *ErrorMsg=NULL;
+#endif
     if(ErrorMsg!=NULL)
     {           
         String816 ErrorText(ErrorMsg);

@@ -47,7 +47,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				Outputs="$(OutDir)\regsvr32.trg"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/TVSourceFilter.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -116,7 +116,7 @@ echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;
 				Outputs="$(OutDir)\regsvr32.trg"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/TVSourceFilter.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"

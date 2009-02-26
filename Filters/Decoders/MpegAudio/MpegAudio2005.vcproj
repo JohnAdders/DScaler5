@@ -76,7 +76,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -175,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -272,7 +272,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -371,7 +371,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/MpegAudio.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

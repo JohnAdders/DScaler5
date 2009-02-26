@@ -78,7 +78,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/LTCG"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Release/DivxVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -178,7 +178,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dxerr9.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
 				OutputFile="..\..\..\Debug/DivxVideo.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
