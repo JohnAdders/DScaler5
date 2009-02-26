@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/03/05 15:56:14  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.2  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.2  2003/05/21 13:41:11  adcockj
-// Added new deinterlace methods
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -42,7 +27,7 @@
 #define _WIN32_WINNT 0x0400
 #endif
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <windowsx.h>
 

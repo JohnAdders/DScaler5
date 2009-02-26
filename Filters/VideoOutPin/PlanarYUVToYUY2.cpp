@@ -27,46 +27,6 @@
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2005/04/14 11:21:07  adcockj
-// First stage of code reorganisation
-//
-// Revision 1.1  2004/10/28 15:52:24  adcockj
-// Moved video output pin code into new class
-//
-// Revision 1.7  2004/08/06 08:38:54  adcockj
-// Added optional YV12 output type
-//
-// Revision 1.6  2004/07/16 15:58:01  adcockj
-// Fixed compilation issues under .NET
-// Changed name of filter
-// Some performance improvements to libmpeg2
-//
-// Revision 1.5  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.4  2004/03/08 17:04:02  adcockj
-// Removed all inline assembler to remove dependence on MS compilers
-//
-// Revision 1.3  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.2  2004/02/10 13:24:12  adcockj
-// Lots of bug fixes + corrected interlaced YV12 upconversion
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-//  Notes: 
-///////////////////////////////////////////////////////////////////////////////
 //  - BitBltFromI420ToRGB is from VirtualDub
 //  - The core assembly function of CCpuID is from DVD2AVI
 //  (- vd.cpp/h should be renamed to something more sensible already :)
@@ -134,13 +94,13 @@ bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, B
 
 
     for(y = 0; y < h; y+=2, srcu += srcpitch, srcv += srcpitch, dstuv += dstpitch)
-	{
-		for(int x(0); x < pitch; ++x)
-		{
-			dstuv[2*x] = srcu[x]; 
-			dstuv[2*x + 1] = srcv[x];
-		}
-	}
+    {
+        for(int x(0); x < pitch; ++x)
+        {
+            dstuv[2*x] = srcu[x]; 
+            dstuv[2*x + 1] = srcv[x];
+        }
+    }
 
     if(CpuFeatureFlags & FEATURE_MMX)
         EndMMX();

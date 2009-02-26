@@ -18,13 +18,6 @@
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2006/10/06 17:00:35  adcockj
-// Added new filter for TV from files
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "TVSource.h"

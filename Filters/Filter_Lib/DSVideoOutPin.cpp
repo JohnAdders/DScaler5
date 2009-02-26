@@ -17,46 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.12  2005/03/10 09:03:58  adcockj
-// test for for PAL interlacing
-//
-// Revision 1.11  2005/02/03 15:34:40  adcockj
-// better vmr connections
-//
-// Revision 1.10  2005/01/04 17:53:44  adcockj
-// added option to force dscalewr filter to be loaded2
-//
-// Revision 1.9  2004/12/06 18:05:00  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.8  2004/11/26 15:03:52  adcockj
-// fixed reconnection issue with old video renderer
-//
-// Revision 1.7  2004/11/25 17:22:10  adcockj
-// Fixed some more connection issues
-//
-// Revision 1.6  2004/11/18 07:40:57  adcockj
-// a few test bug fixes
-//
-// Revision 1.5  2004/11/06 14:07:01  adcockj
-// Fixes for WM10 and seeking
-//
-// Revision 1.4  2004/11/02 16:57:24  adcockj
-// fix for crashing problem on exit
-//
-// Revision 1.3  2004/11/01 14:09:39  adcockj
-// More DScaler filter insipred changes
-//
-// Revision 1.2  2004/10/31 14:20:39  adcockj
-// fixed issues with settings dialog
-//
-// Revision 1.1  2004/10/28 16:00:48  adcockj
-// added new files
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DSVideoOutPin.h"

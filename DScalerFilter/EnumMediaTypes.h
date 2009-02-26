@@ -31,15 +31,15 @@ public:
 
 
 class ATL_NO_VTABLE CEnumMediaTypes : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IEnumMediaTypes
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IEnumMediaTypes
 {
 public:
-	CEnumMediaTypes();
-	~CEnumMediaTypes();
+    CEnumMediaTypes();
+    ~CEnumMediaTypes();
 
 BEGIN_COM_MAP(CEnumMediaTypes)
-	COM_INTERFACE_ENTRY(IEnumMediaTypes)
+    COM_INTERFACE_ENTRY(IEnumMediaTypes)
 END_COM_MAP()
 
 // IEnumMediaTypes

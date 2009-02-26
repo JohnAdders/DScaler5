@@ -57,7 +57,7 @@ static inline uint32_t bitstream_get (dts_state_t * state, uint32_t num_bits)
 
     if (num_bits < state->bits_left) {
         result = (state->current_word << (32 - state->bits_left))
-				      >> (32 - num_bits);
+                      >> (32 - num_bits);
 
         state->bits_left -= num_bits;
         return result;

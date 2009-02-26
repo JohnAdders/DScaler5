@@ -45,17 +45,17 @@ extern uint8_t mpeg2_clip[3840 * 2 + 256];
 #define CLIP(i) ((mpeg2_clip + 3840)[i])
 
 #if 0
-#define BUTTERFLY(t0,t1,W0,W1,d0,d1)	\
-do {					\
-    t0 = W0 * d0 + W1 * d1;			\
-    t1 = W0 * d1 - W1 * d0;			\
+#define BUTTERFLY(t0,t1,W0,W1,d0,d1)    \
+do {                    \
+    t0 = W0 * d0 + W1 * d1;            \
+    t1 = W0 * d1 - W1 * d0;            \
 } while (0)
 #else
-#define BUTTERFLY(t0,t1,W0,W1,d0,d1)	\
-do {					\
-    int_fast32_t tmp = W0 * (d0 + d1);	\
-    t0 = tmp + (W1 - W0) * d1;		\
-    t1 = tmp - (W1 + W0) * d0;		\
+#define BUTTERFLY(t0,t1,W0,W1,d0,d1)    \
+do {                    \
+    int_fast32_t tmp = W0 * (d0 + d1);    \
+    t0 = tmp + (W1 - W0) * d1;        \
+    t1 = tmp - (W1 + W0) * d0;        \
 } while (0)
 #endif
 
@@ -71,14 +71,14 @@ static void inline idct_row (int16_t * const block)
 
     /* shortcut */
     if (likely (!((l & ~0xffffUL) | r))) {
-	uint64_t tmp = (uint16_t) (l >> 1);
-	tmp |= tmp << 16;
-	tmp |= tmp << 32;
-	((int32_t *)block)[0] = tmp;
-	((int32_t *)block)[1] = tmp;
-	((int32_t *)block)[2] = tmp;
-	((int32_t *)block)[3] = tmp;
-	return;
+    uint64_t tmp = (uint16_t) (l >> 1);
+    tmp |= tmp << 16;
+    tmp |= tmp << 32;
+    ((int32_t *)block)[0] = tmp;
+    ((int32_t *)block)[1] = tmp;
+    ((int32_t *)block)[2] = tmp;
+    ((int32_t *)block)[3] = tmp;
+    return;
     }
 
     d0 = (sextw (l) << 11) + 2048;
@@ -163,130 +163,130 @@ void mpeg2_idct_copy_mvi (int16_t * block, uint8_t * dest, const int stride)
     int i;
 
     for (i = 0; i < 8; i++)
-	idct_row (block + 8 * i);
+    idct_row (block + 8 * i);
 
     for (i = 0; i < 8; i++)
-	idct_col (block + i);
+    idct_col (block + i);
 
-    clampmask = zap (-1, 0xaa);	/* 0x00ff00ff00ff00ff */
+    clampmask = zap (-1, 0xaa);    /* 0x00ff00ff00ff00ff */
     do {
-	uint64_t shorts0, shorts1;
+    uint64_t shorts0, shorts1;
 
-	shorts0 = ldq (block);
-	shorts0 = maxsw4 (shorts0, 0);
-	shorts0 = minsw4 (shorts0, clampmask);
-	stl (pkwb (shorts0), dest);
+    shorts0 = ldq (block);
+    shorts0 = maxsw4 (shorts0, 0);
+    shorts0 = minsw4 (shorts0, clampmask);
+    stl (pkwb (shorts0), dest);
 
-	shorts1 = ldq (block + 4);
-	shorts1 = maxsw4 (shorts1, 0);
-	shorts1 = minsw4 (shorts1, clampmask);
-	stl (pkwb (shorts1), dest + 4);
+    shorts1 = ldq (block + 4);
+    shorts1 = maxsw4 (shorts1, 0);
+    shorts1 = minsw4 (shorts1, clampmask);
+    stl (pkwb (shorts1), dest + 4);
 
-	stq (0, block);
-	stq (0, block + 4);
+    stq (0, block);
+    stq (0, block + 4);
 
-	dest += stride;
-	block += 8;
+    dest += stride;
+    block += 8;
     } while (--i);
 }
 
 void mpeg2_idct_add_mvi (const int last, int16_t * block,
-			 uint8_t * dest, const int stride)
+             uint8_t * dest, const int stride)
 {
     uint64_t clampmask;
     uint64_t signmask;
     int i;
 
     if (last != 129 || (block[0] & (7 << 4)) == (4 << 4)) {
-	for (i = 0; i < 8; i++)
-	    idct_row (block + 8 * i);
-	for (i = 0; i < 8; i++)
-	    idct_col (block + i);
-	clampmask = zap (-1, 0xaa);	/* 0x00ff00ff00ff00ff */
-	signmask = zap (-1, 0x33);
-	signmask ^= signmask >> 1;	/* 0x8000800080008000 */
+    for (i = 0; i < 8; i++)
+        idct_row (block + 8 * i);
+    for (i = 0; i < 8; i++)
+        idct_col (block + i);
+    clampmask = zap (-1, 0xaa);    /* 0x00ff00ff00ff00ff */
+    signmask = zap (-1, 0x33);
+    signmask ^= signmask >> 1;    /* 0x8000800080008000 */
 
-	do {
-	    uint64_t shorts0, pix0, signs0;
-	    uint64_t shorts1, pix1, signs1;
+    do {
+        uint64_t shorts0, pix0, signs0;
+        uint64_t shorts1, pix1, signs1;
 
-	    shorts0 = ldq (block);
-	    shorts1 = ldq (block + 4);
+        shorts0 = ldq (block);
+        shorts1 = ldq (block + 4);
 
-	    pix0 = unpkbw (ldl (dest));
-	    /* signed subword add (MMX paddw).  */
-	    signs0 = shorts0 & signmask;
-	    shorts0 &= ~signmask;
-	    shorts0 += pix0;
-	    shorts0 ^= signs0;
-	    /* clamp. */
-	    shorts0 = maxsw4 (shorts0, 0);
-	    shorts0 = minsw4 (shorts0, clampmask);	
+        pix0 = unpkbw (ldl (dest));
+        /* signed subword add (MMX paddw).  */
+        signs0 = shorts0 & signmask;
+        shorts0 &= ~signmask;
+        shorts0 += pix0;
+        shorts0 ^= signs0;
+        /* clamp. */
+        shorts0 = maxsw4 (shorts0, 0);
+        shorts0 = minsw4 (shorts0, clampmask);    
 
-	    /* next 4.  */
-	    pix1 = unpkbw (ldl (dest + 4));
-	    signs1 = shorts1 & signmask;
-	    shorts1 &= ~signmask;
-	    shorts1 += pix1;
-	    shorts1 ^= signs1;
-	    shorts1 = maxsw4 (shorts1, 0);
-	    shorts1 = minsw4 (shorts1, clampmask);
+        /* next 4.  */
+        pix1 = unpkbw (ldl (dest + 4));
+        signs1 = shorts1 & signmask;
+        shorts1 &= ~signmask;
+        shorts1 += pix1;
+        shorts1 ^= signs1;
+        shorts1 = maxsw4 (shorts1, 0);
+        shorts1 = minsw4 (shorts1, clampmask);
 
-	    stl (pkwb (shorts0), dest);
-	    stl (pkwb (shorts1), dest + 4);
-	    stq (0, block);
-	    stq (0, block + 4);
+        stl (pkwb (shorts0), dest);
+        stl (pkwb (shorts1), dest + 4);
+        stq (0, block);
+        stq (0, block + 4);
 
-	    dest += stride;
-	    block += 8;
-	} while (--i);
+        dest += stride;
+        block += 8;
+    } while (--i);
     } else {
-	int DC;
-	uint64_t p0, p1, p2, p3, p4, p5, p6, p7;
-	uint64_t DCs;
+    int DC;
+    uint64_t p0, p1, p2, p3, p4, p5, p6, p7;
+    uint64_t DCs;
 
-	DC = (block[0] + 64) >> 7;
-	block[0] = block[63] = 0;
+    DC = (block[0] + 64) >> 7;
+    block[0] = block[63] = 0;
 
-	p0 = ldq (dest + 0 * stride);
-	p1 = ldq (dest + 1 * stride);
-	p2 = ldq (dest + 2 * stride);
-	p3 = ldq (dest + 3 * stride);
-	p4 = ldq (dest + 4 * stride);
-	p5 = ldq (dest + 5 * stride);
-	p6 = ldq (dest + 6 * stride);
-	p7 = ldq (dest + 7 * stride);
+    p0 = ldq (dest + 0 * stride);
+    p1 = ldq (dest + 1 * stride);
+    p2 = ldq (dest + 2 * stride);
+    p3 = ldq (dest + 3 * stride);
+    p4 = ldq (dest + 4 * stride);
+    p5 = ldq (dest + 5 * stride);
+    p6 = ldq (dest + 6 * stride);
+    p7 = ldq (dest + 7 * stride);
 
-	if (DC > 0) {
-	    DCs = BYTE_VEC (likely (DC <= 255) ? DC : 255);
-	    p0 += minub8 (DCs, ~p0);
-	    p1 += minub8 (DCs, ~p1);
-	    p2 += minub8 (DCs, ~p2);
-	    p3 += minub8 (DCs, ~p3);
-	    p4 += minub8 (DCs, ~p4);
-	    p5 += minub8 (DCs, ~p5);
-	    p6 += minub8 (DCs, ~p6);
-	    p7 += minub8 (DCs, ~p7);
-	} else {
-	    DCs = BYTE_VEC (likely (-DC <= 255) ? -DC : 255);
-	    p0 -= minub8 (DCs, p0);
-	    p1 -= minub8 (DCs, p1);
-	    p2 -= minub8 (DCs, p2);
-	    p3 -= minub8 (DCs, p3);
-	    p4 -= minub8 (DCs, p4);
-	    p5 -= minub8 (DCs, p5);
-	    p6 -= minub8 (DCs, p6);
-	    p7 -= minub8 (DCs, p7);
-	}
+    if (DC > 0) {
+        DCs = BYTE_VEC (likely (DC <= 255) ? DC : 255);
+        p0 += minub8 (DCs, ~p0);
+        p1 += minub8 (DCs, ~p1);
+        p2 += minub8 (DCs, ~p2);
+        p3 += minub8 (DCs, ~p3);
+        p4 += minub8 (DCs, ~p4);
+        p5 += minub8 (DCs, ~p5);
+        p6 += minub8 (DCs, ~p6);
+        p7 += minub8 (DCs, ~p7);
+    } else {
+        DCs = BYTE_VEC (likely (-DC <= 255) ? -DC : 255);
+        p0 -= minub8 (DCs, p0);
+        p1 -= minub8 (DCs, p1);
+        p2 -= minub8 (DCs, p2);
+        p3 -= minub8 (DCs, p3);
+        p4 -= minub8 (DCs, p4);
+        p5 -= minub8 (DCs, p5);
+        p6 -= minub8 (DCs, p6);
+        p7 -= minub8 (DCs, p7);
+    }
 
-	stq (p0, dest + 0 * stride);
-	stq (p1, dest + 1 * stride);
-	stq (p2, dest + 2 * stride);
-	stq (p3, dest + 3 * stride);
-	stq (p4, dest + 4 * stride);
-	stq (p5, dest + 5 * stride);
-	stq (p6, dest + 6 * stride);
-	stq (p7, dest + 7 * stride);
+    stq (p0, dest + 0 * stride);
+    stq (p1, dest + 1 * stride);
+    stq (p2, dest + 2 * stride);
+    stq (p3, dest + 3 * stride);
+    stq (p4, dest + 4 * stride);
+    stq (p5, dest + 5 * stride);
+    stq (p6, dest + 6 * stride);
+    stq (p7, dest + 7 * stride);
     }
 }
 
@@ -295,70 +295,70 @@ void mpeg2_idct_copy_alpha (int16_t * block, uint8_t * dest, const int stride)
     int i;
 
     for (i = 0; i < 8; i++)
-	idct_row (block + 8 * i);
+    idct_row (block + 8 * i);
     for (i = 0; i < 8; i++)
-	idct_col (block + i);
+    idct_col (block + i);
     do {
-	dest[0] = CLIP (block[0]);
-	dest[1] = CLIP (block[1]);
-	dest[2] = CLIP (block[2]);
-	dest[3] = CLIP (block[3]);
-	dest[4] = CLIP (block[4]);
-	dest[5] = CLIP (block[5]);
-	dest[6] = CLIP (block[6]);
-	dest[7] = CLIP (block[7]);
+    dest[0] = CLIP (block[0]);
+    dest[1] = CLIP (block[1]);
+    dest[2] = CLIP (block[2]);
+    dest[3] = CLIP (block[3]);
+    dest[4] = CLIP (block[4]);
+    dest[5] = CLIP (block[5]);
+    dest[6] = CLIP (block[6]);
+    dest[7] = CLIP (block[7]);
 
-	stq(0, block);
-	stq(0, block + 4);
+    stq(0, block);
+    stq(0, block + 4);
 
-	dest += stride;
-	block += 8;
+    dest += stride;
+    block += 8;
     } while (--i);
 }
 
 void mpeg2_idct_add_alpha (const int last, int16_t * block,
-			   uint8_t * dest, const int stride)
+               uint8_t * dest, const int stride)
 {
     int i;
 
     if (last != 129 || (block[0] & (7 << 4)) == (4 << 4)) {
-	for (i = 0; i < 8; i++)
-	    idct_row (block + 8 * i);
-	for (i = 0; i < 8; i++)
-	    idct_col (block + i);
-	do {
-	    dest[0] = CLIP (block[0] + dest[0]);
-	    dest[1] = CLIP (block[1] + dest[1]);
-	    dest[2] = CLIP (block[2] + dest[2]);
-	    dest[3] = CLIP (block[3] + dest[3]);
-	    dest[4] = CLIP (block[4] + dest[4]);
-	    dest[5] = CLIP (block[5] + dest[5]);
-	    dest[6] = CLIP (block[6] + dest[6]);
-	    dest[7] = CLIP (block[7] + dest[7]);
+    for (i = 0; i < 8; i++)
+        idct_row (block + 8 * i);
+    for (i = 0; i < 8; i++)
+        idct_col (block + i);
+    do {
+        dest[0] = CLIP (block[0] + dest[0]);
+        dest[1] = CLIP (block[1] + dest[1]);
+        dest[2] = CLIP (block[2] + dest[2]);
+        dest[3] = CLIP (block[3] + dest[3]);
+        dest[4] = CLIP (block[4] + dest[4]);
+        dest[5] = CLIP (block[5] + dest[5]);
+        dest[6] = CLIP (block[6] + dest[6]);
+        dest[7] = CLIP (block[7] + dest[7]);
 
-	    stq(0, block);
-	    stq(0, block + 4);
+        stq(0, block);
+        stq(0, block + 4);
 
-	    dest += stride;
-	    block += 8;
-	} while (--i);
+        dest += stride;
+        block += 8;
+    } while (--i);
     } else {
-	int DC;
+    int DC;
 
-	DC = (block[0] + 64) >> 7;
-	block[0] = block[63] = 0;
-	i = 8;
-	do {
-	    dest[0] = CLIP (DC + dest[0]);
-	    dest[1] = CLIP (DC + dest[1]);
-	    dest[2] = CLIP (DC + dest[2]);
-	    dest[3] = CLIP (DC + dest[3]);
-	    dest[4] = CLIP (DC + dest[4]);
-	    dest[5] = CLIP (DC + dest[5]);
-	    dest[6] = CLIP (DC + dest[6]);
-	    dest[7] = CLIP (DC + dest[7]);
-	    dest += stride;
-	} while (--i);
+    DC = (block[0] + 64) >> 7;
+    block[0] = block[63] = 0;
+    i = 8;
+    do {
+        dest[0] = CLIP (DC + dest[0]);
+        dest[1] = CLIP (DC + dest[1]);
+        dest[2] = CLIP (DC + dest[2]);
+        dest[3] = CLIP (DC + dest[3]);
+        dest[4] = CLIP (DC + dest[4]);
+        dest[5] = CLIP (DC + dest[5]);
+        dest[6] = CLIP (DC + dest[6]);
+        dest[7] = CLIP (DC + dest[7]);
+        dest += stride;
+    } while (--i);
     }
 }
 
@@ -369,10 +369,10 @@ void mpeg2_idct_alpha_init (void)
     int i, j;
 
     for (i = 0; i < 64; i++) {
-	j = mpeg2_scan_norm[i];
-	mpeg2_scan_norm[i] = ((j & 0x36) >> 1) | ((j & 0x09) << 2);
-	j = mpeg2_scan_alt[i];
-	mpeg2_scan_alt[i] = ((j & 0x36) >> 1) | ((j & 0x09) << 2);
+    j = mpeg2_scan_norm[i];
+    mpeg2_scan_norm[i] = ((j & 0x36) >> 1) | ((j & 0x09) << 2);
+    j = mpeg2_scan_alt[i];
+    mpeg2_scan_alt[i] = ((j & 0x36) >> 1) | ((j & 0x09) << 2);
     }
 }
 

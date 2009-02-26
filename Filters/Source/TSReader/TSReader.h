@@ -55,10 +55,10 @@ IMPLEMENT_AGGREGATABLE_UNKNOWN(CTSReader)
 IMPLEMENT_GENERIC_CLASS_FACTORY(CTSReader)
 IMPLEMENT_CREATE_AGGREGATABLE_INSTANCE(CTSReader)
 BEGIN_INTERFACE_TABLE(CTSReader)
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -68,7 +68,7 @@ BEGIN_INTERFACE_TABLE(CTSReader)
 END_INTERFACE_TABLE()
 
 public:
-	CTSReader();
+    CTSReader();
     ~CTSReader();
 
 
@@ -88,7 +88,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 // IFileSourceFilter
@@ -139,8 +139,8 @@ private:
     HRESULT PushFile(HANDLE hFile);
     HANDLE m_ThreadStopEvent;
     HANDLE m_WorkerThread;
-	HRESULT m_ThreadRetCode;
-	DWORD m_ThreadId;
+    HRESULT m_ThreadRetCode;
+    DWORD m_ThreadId;
     static void StaticUpdatePAT(void* p_zero, dvbpsi_pat_t* p_pat);
     void UpdatePAT(dvbpsi_pat_t* p_pat);
     HRESULT AnalyseFile();

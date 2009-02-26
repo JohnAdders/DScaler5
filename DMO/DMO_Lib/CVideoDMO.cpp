@@ -17,38 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.8  2004/12/06 18:04:54  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.7  2004/08/31 16:33:39  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.6  2004/03/15 17:17:04  adcockj
-// Basic registry saving support
-//
-// Revision 1.5  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.4  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.3  2003/09/19 16:12:13  adcockj
-// Further improvements
-//
-// Revision 1.2  2003/05/21 17:06:00  adcockj
-// Added new filter
-//
-// Revision 1.1  2003/05/20 16:52:56  adcockj
-// Added new files
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "params.h"
@@ -57,7 +25,7 @@
 
 
 CVideoDMO::CVideoDMO(LPCWSTR Name, long FieldsToBuffer, long FieldsDelay, eVideoFilterPosition Position) :
-	CDMO(Name),
+    CDMO(Name),
     m_NumFieldsToBuffer(FieldsToBuffer),
     m_FieldsDelay(FieldsDelay),
     m_Position(Position)
@@ -132,17 +100,17 @@ HRESULT CVideoDMO::InternalDiscontinuity(DWORD dwInputStreamIndex)
     }
     else
     {
-		if(m_NumFieldsToBuffer > 1)
-		{
-			m_InternalState = STATE_START;
-		}
-		else
-		{
-			m_InternalState = STATE_RUNNING;
-		}
-	}
+        if(m_NumFieldsToBuffer > 1)
+        {
+            m_InternalState = STATE_START;
+        }
+        else
+        {
+            m_InternalState = STATE_RUNNING;
+        }
+    }
 
-	return S_OK;
+    return S_OK;
 }
 
 /////////////////////////
@@ -187,17 +155,17 @@ STDMETHODIMP CVideoDMO::InternalFlush(void)
         m_IncomingFields[i].Clear();
     }
 
-	m_FieldsInBuffer = 0;
-	if(m_NumFieldsToBuffer > 1)
-	{
-		m_InternalState = STATE_START;
-	}
-	else
-	{
-		m_InternalState = STATE_RUNNING;
-	}
+    m_FieldsInBuffer = 0;
+    if(m_NumFieldsToBuffer > 1)
+    {
+        m_InternalState = STATE_START;
+    }
+    else
+    {
+        m_InternalState = STATE_RUNNING;
+    }
     m_StartFieldsDone = 0;
-	return S_OK;
+    return S_OK;
 }
 
 ////////////////////////////////////
@@ -254,27 +222,27 @@ STDMETHODIMP CVideoDMO::InternalFlush(void)
 //
 STDMETHODIMP CVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pulSizeMaxLookahead, DWORD *pulSizeAlignment)
 {
-	// We don't have to do any validation, because it is all done in the base class
+    // We don't have to do any validation, because it is all done in the base class
 
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = InputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = InputType(0);
     
     if(pmt->majortype == MEDIATYPE_Video &&
         pmt->formattype == FORMAT_VIDEOINFO2)
     {
-	    *pcbSize = pmt->lSampleSize;
+        *pcbSize = pmt->lSampleSize;
         // work out a sensible look ahead amount
         // this is the number of frames we need ahead
         VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
         if(Format->dwInterlaceFlags & AMINTERLACE_IsInterlaced)
         {
-	        *pulSizeMaxLookahead = pmt->lSampleSize * (m_FieldsDelay * 2 + 1) / 2;	
-	        *pulSizeAlignment = 1;		// no alignment requirement
+            *pulSizeMaxLookahead = pmt->lSampleSize * (m_FieldsDelay * 2 + 1) / 2;    
+            *pulSizeAlignment = 1;        // no alignment requirement
         }
         else
         {
-	        *pulSizeMaxLookahead = pmt->lSampleSize * m_FieldsDelay;
+            *pulSizeMaxLookahead = pmt->lSampleSize * m_FieldsDelay;
         }
     }
     else
@@ -283,7 +251,7 @@ STDMETHODIMP CVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD
         hr = E_FAIL;
     }
 
-	return hr;
+    return hr;
 }
 
 
@@ -339,14 +307,14 @@ STDMETHODIMP CVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD
 STDMETHODIMP CVideoDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pulSizeAlignment)
 {
     // We don't have to do any validation, because it is all done in the base class
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = OutputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = OutputType(0);
 
     if(pmt->majortype == MEDIATYPE_Video)
     {
-	    *pcbSize = pmt->lSampleSize;
-	    *pulSizeAlignment = 1;
+        *pcbSize = pmt->lSampleSize;
+        *pulSizeAlignment = 1;
     }
     else
     {
@@ -403,7 +371,7 @@ STDMETHODIMP CVideoDMO::InternalAcceptingInput(DWORD dwInputStreamIndex)
 
 STDMETHODIMP CVideoDMO::InternalFreeStreamingResources(void)
 {
-	return S_OK;
+    return S_OK;
 }
 ////////////////////////////////////////
 //
@@ -442,12 +410,12 @@ HRESULT CVideoDMO::InternalGetInputStreamInfo(DWORD dwInputStreamIndex, DWORD *p
     {
         return E_POINTER;
     }
-	*pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
-	*pdwFlags |= DMO_INPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
-	*pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
+    *pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags |= DMO_INPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
+    *pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
     if(m_NumFieldsToBuffer > 1)
     {
-    	*pdwFlags |= DMO_INPUT_STREAMF_HOLDS_BUFFERS;
+        *pdwFlags |= DMO_INPUT_STREAMF_HOLDS_BUFFERS;
     }
     return S_OK;
 }
@@ -483,11 +451,11 @@ HRESULT CVideoDMO::InternalGetOutputStreamInfo(DWORD dwOutputStreamIndex, DWORD 
     {
         return E_POINTER;
     }
-	*pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
     *pdwFlags |= DMO_OUTPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
     *pdwFlags |= DMO_OUTPUT_STREAMF_FIXED_SAMPLE_SIZE;
     *pdwFlags |= DMO_OUTPUT_STREAMF_DISCARDABLE;
-	return S_OK;
+    return S_OK;
 }
 
 void CVideoDMO::RemoveOneFieldFromBuffer()

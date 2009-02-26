@@ -18,16 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2004/09/13 14:28:45  adcockj
-// Connection changes and crash fixes
-//
-// Revision 1.1  2004/09/10 16:55:46  adcockj
-// Initial version of spdif input filter
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "AudioDetect.h"
 #include "EnumPins.h"
@@ -42,7 +32,7 @@ CAudioDetect::CAudioDetect() :
 {
     InitMediaType(&m_InternalMT);
 
-	m_NeedToAttachFormat = false;
+    m_NeedToAttachFormat = false;
 
     LOG(DBGLOG_FLOW, ("CAudioDetect::CreatePins\n"));
     
@@ -62,15 +52,15 @@ CAudioDetect::CAudioDetect() :
     m_AudioOutPin->AddRef();
     m_AudioOutPin->SetupObject(this, L"Output");
 
-	m_StreamType = STREAM_PCM;
-	m_SamplesPerSec = 48000;
+    m_StreamType = STREAM_PCM;
+    m_SamplesPerSec = 48000;
     m_BufferStartTime = 0;
 }
 
 CAudioDetect::~CAudioDetect()
 {
     LOG(DBGLOG_FLOW, ("CAudioDetect::~CAudioDetect\n"));
-	// don't clear media type as we use our own storage for format
+    // don't clear media type as we use our own storage for format
 }
 
 STDMETHODIMP CAudioDetect::GetClassID(CLSID __RPC_FAR *pClassID)
@@ -86,24 +76,24 @@ STDMETHODIMP CAudioDetect::GetClassID(CLSID __RPC_FAR *pClassID)
 
 HRESULT CAudioDetect::ParamChanged(DWORD dwParamIndex)
 {
-	switch(dwParamIndex)
-	{
-	case DETECT_TYPE:
-		switch(GetParamEnum(DETECT_TYPE))
-		{
-		case DETECT_AUTO:
-		case DETECT_FORCE_PCM:
-			m_StreamType = STREAM_PCM;
-			break;
-		case DETECT_FORCE_DTS:
-			m_StreamType = STREAM_DTS;
-			break;
-		case DETECT_FORCE_AC3:
-			m_StreamType = STREAM_AC3;
-			break;
-		}
-		CreateInternalMediaType();
-	}
+    switch(dwParamIndex)
+    {
+    case DETECT_TYPE:
+        switch(GetParamEnum(DETECT_TYPE))
+        {
+        case DETECT_AUTO:
+        case DETECT_FORCE_PCM:
+            m_StreamType = STREAM_PCM;
+            break;
+        case DETECT_FORCE_DTS:
+            m_StreamType = STREAM_DTS;
+            break;
+        case DETECT_FORCE_AC3:
+            m_StreamType = STREAM_AC3;
+            break;
+        }
+        CreateInternalMediaType();
+    }
     return S_OK;
 }
 
@@ -175,13 +165,13 @@ HRESULT CAudioDetect::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDS
     {
         pProps->cBuffers = 3;
         pProps->cbAlign = 1;
-		pProps->cbBuffer = 8192;
+        pProps->cbBuffer = 8192;
         return S_OK;
     }
     else if(pPin == m_AudioOutPin)
     {
-	    pProps->cBuffers = 3;
-		pProps->cbBuffer = 2048;
+        pProps->cBuffers = 3;
+        pProps->cbBuffer = 2048;
         pProps->cbAlign = 1;
         return S_OK;
     }
@@ -254,25 +244,25 @@ bool CAudioDetect::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
 
         result &= !!(pmt->subtype == MEDIASUBTYPE_PCM);
 
-		WAVEFORMATEX* wf = (WAVEFORMATEX*)pmt->pbFormat;
+        WAVEFORMATEX* wf = (WAVEFORMATEX*)pmt->pbFormat;
 
-		if(wf != NULL)
-		{
-			result &= !!(wf->nChannels == 2);
+        if(wf != NULL)
+        {
+            result &= !!(wf->nChannels == 2);
 
-			result &= !!(wf->nBlockAlign == 4);
+            result &= !!(wf->nBlockAlign == 4);
 
-			result &= !!(wf->nSamplesPerSec <= 48000);
-		}
-		else
-		{
-			result = false;
-		}
+            result &= !!(wf->nSamplesPerSec <= 48000);
+        }
+        else
+        {
+            result = false;
+        }
     }
-	else if(pPin == m_AudioOutPin)
-	{
-		result = true;
-	}
+    else if(pPin == m_AudioOutPin)
+    {
+        result = true;
+    }
     return result;
 }
 
@@ -280,9 +270,9 @@ HRESULT CAudioDetect::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 {
     if(pPin == m_AudioInPin)
     {
-		WAVEFORMATEX* wf = (WAVEFORMATEX*)pMediaType->pbFormat;
-		m_SamplesPerSec = wf->nSamplesPerSec;
-		CreateInternalMediaType();
+        WAVEFORMATEX* wf = (WAVEFORMATEX*)pMediaType->pbFormat;
+        m_SamplesPerSec = wf->nSamplesPerSec;
+        CreateInternalMediaType();
     }
     else if(pPin == m_AudioOutPin)
     {
@@ -292,8 +282,8 @@ HRESULT CAudioDetect::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
 
 HRESULT CAudioDetect::NotifyConnected(CDSBasePin* pPin)
 {
-	if(pPin == m_AudioInPin)
-	{
+    if(pPin == m_AudioInPin)
+    {
         SI(IAMStreamConfig) StreamConfig = pPin->m_ConnectedPin;
         if(StreamConfig)
         {
@@ -309,9 +299,9 @@ HRESULT CAudioDetect::NotifyConnected(CDSBasePin* pPin)
                 CHECK(hr);
             }
         }
-		m_StreamType = STREAM_PCM;
-		CreateInternalMediaType();
-	}
+        m_StreamType = STREAM_PCM;
+        CreateInternalMediaType();
+    }
     return S_OK;
 }
 
@@ -322,7 +312,7 @@ HRESULT CAudioDetect::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
         if(!m_AudioInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
         if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
+        if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
         
         return CopyMediaType(pmt, &m_InternalMT);
     }
@@ -336,34 +326,34 @@ HRESULT CAudioDetect::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 void CAudioDetect::CreateInternalMediaType()
 {
     m_InternalMT.majortype = MEDIATYPE_Audio;
-	switch(m_StreamType)
-	{
+    switch(m_StreamType)
+    {
     case STREAM_SILENCE:
-	case STREAM_PCM:
-	    m_InternalMT.subtype = MEDIASUBTYPE_DVD_LPCM_AUDIO;
-		break;
-	case STREAM_AC3:
-	    m_InternalMT.subtype = MEDIASUBTYPE_DOLBY_AC3;
-		break;
-	case STREAM_DTS:
-	    m_InternalMT.subtype = MEDIASUBTYPE_DTS;
-		break;
-	}
+    case STREAM_PCM:
+        m_InternalMT.subtype = MEDIASUBTYPE_DVD_LPCM_AUDIO;
+        break;
+    case STREAM_AC3:
+        m_InternalMT.subtype = MEDIASUBTYPE_DOLBY_AC3;
+        break;
+    case STREAM_DTS:
+        m_InternalMT.subtype = MEDIASUBTYPE_DTS;
+        break;
+    }
     m_InternalMT.formattype = FORMAT_WaveFormatEx;
 
     m_InternalWF.nSamplesPerSec = m_SamplesPerSec;
     m_InternalWF.nChannels = 2;
     m_InternalWF.nBlockAlign = 2 * 16 / 8;
     m_InternalWF.nAvgBytesPerSec = m_SamplesPerSec * m_InternalWF.nBlockAlign;
-	m_InternalWF.wBitsPerSample = 16;
-	m_InternalWF.cbSize = 0;
+    m_InternalWF.wBitsPerSample = 16;
+    m_InternalWF.cbSize = 0;
 
     m_InternalWF.wFormatTag = (WORD)m_InternalMT.subtype.Data1;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWF);
     m_InternalMT.pbFormat = (BYTE*)&m_InternalWF; 
 
-	m_NeedToAttachFormat = true;
+    m_NeedToAttachFormat = true;
 }
 
 
@@ -377,13 +367,13 @@ HRESULT CAudioDetect::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     // if there was a discontinuity then we need to ask for the buffer
     // differently 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	{
-		m_IsDiscontinuity = true;
-	}
+    {
+        m_IsDiscontinuity = true;
+    }
 
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	long len = pSampleProperties->lActual;
+    long len = pSampleProperties->lActual;
     BYTE* pDataIn = pSampleProperties->pbBuffer;
     int tmp = m_buff.size();
     m_buff.resize(m_buff.size() + len);
@@ -400,54 +390,54 @@ HRESULT CAudioDetect::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     // worst case is that we are two bytes in to one 0x1800 long structure
     while(SUCCEEDED(hr) && m_buff.size() >= 0x3010)
     {
-	    switch(m_StreamType)
-	    {
-	    case STREAM_PCM:
-		    hr = ProcessPCM();
-		    break;
-	    case STREAM_AC3:
-		    hr = ProcessAC3();
-		    break;
-	    case STREAM_DTS:
-		    hr = ProcessDTS();
-		    break;
-	    case STREAM_SILENCE:
-		    hr = ProcessSilence();
-		    break;
-	    }
+        switch(m_StreamType)
+        {
+        case STREAM_PCM:
+            hr = ProcessPCM();
+            break;
+        case STREAM_AC3:
+            hr = ProcessAC3();
+            break;
+        case STREAM_DTS:
+            hr = ProcessDTS();
+            break;
+        case STREAM_SILENCE:
+            hr = ProcessSilence();
+            break;
+        }
     }
-	return hr;
+    return hr;
 }
 
 HRESULT CAudioDetect::LookForSync()
 {
     for(DWORD i = 0; i < m_buff.size(); i += 4)
-	{
-		DWORD PosSync = *(DWORD*)&m_buff[i];
-		if(PosSync == 0xe8001fff)
-		{
-			m_StreamType = STREAM_DTS;
-			break;
-		}
-		else if(PosSync == 0x00e8ff1f)
-		{
-			m_StreamType = STREAM_DTS;
-			break;
-		}
-		else if(PosSync == 0x80017ffe)
-		{
-			m_StreamType = STREAM_DTS;
-			break;
-		}
-		else if(PosSync == 0x0180fe7f)
-		{
-			m_StreamType = STREAM_DTS;
-			break;
-		}
-		else
-		{
-			;
-		}
+    {
+        DWORD PosSync = *(DWORD*)&m_buff[i];
+        if(PosSync == 0xe8001fff)
+        {
+            m_StreamType = STREAM_DTS;
+            break;
+        }
+        else if(PosSync == 0x00e8ff1f)
+        {
+            m_StreamType = STREAM_DTS;
+            break;
+        }
+        else if(PosSync == 0x80017ffe)
+        {
+            m_StreamType = STREAM_DTS;
+            break;
+        }
+        else if(PosSync == 0x0180fe7f)
+        {
+            m_StreamType = STREAM_DTS;
+            break;
+        }
+        else
+        {
+            ;
+        }
     }
     return S_OK;
 }
@@ -477,7 +467,7 @@ HRESULT CAudioDetect::ProcessPCM()
             ++pTest;
         }
         pData += 0x1800 / 2;
-	}
+    }
     
     int ByteToChuck = (BYTE*)pData - (BYTE*)&m_buff[0];
     if(ByteToChuck != 0)
@@ -487,7 +477,7 @@ HRESULT CAudioDetect::ProcessPCM()
         m_buff.resize(Size);
         m_BufferStartTime += ByteToChuck * 10000000i64  / (m_SamplesPerSec * 4);
     }
-	return hr;
+    return hr;
 }
 
 HRESULT CAudioDetect::ProcessSilence()
@@ -505,7 +495,7 @@ HRESULT CAudioDetect::ProcessSilence()
             ++pTest;
         }
         pData += 0x1800 / 2;
-	}
+    }
     
     int ByteToChuck = (BYTE*)pData - (BYTE*)&m_buff[0];
     if(ByteToChuck != 0)
@@ -514,50 +504,50 @@ HRESULT CAudioDetect::ProcessSilence()
         memmove(&m_buff[0], pData, Size);
         m_buff.resize(Size);
     }
-	return hr;
+    return hr;
 }
 
 
 HRESULT CAudioDetect::ProcessAC3()
 {
-	WORD* pDataIn = (WORD*)&m_buff[0];
-	DWORD lenIn = m_buff.size();
+    WORD* pDataIn = (WORD*)&m_buff[0];
+    DWORD lenIn = m_buff.size();
     HRESULT hr = S_OK;
-	while(lenIn >= 0x1800)
-	{
+    while(lenIn >= 0x1800)
+    {
         if(pDataIn[0] != 0xf872 || pDataIn[1] != 0x4e1f)
         {
-        	m_StreamType = STREAM_PCM;
+            m_StreamType = STREAM_PCM;
             CreateInternalMediaType();
             if(lenIn > 0)
-	        {
-		        memmove(&m_buff[0], pDataIn, lenIn);
-	        }
-	        m_buff.resize(lenIn);
+            {
+                memmove(&m_buff[0], pDataIn, lenIn);
+            }
+            m_buff.resize(lenIn);
 
             return hr;
         }
         if(pDataIn[2] != 0x0001)
         {
             ChangeTypeBasedOnSpdifType(pDataIn[2]);
-	        if(lenIn > 0)
-	        {
-		        memmove(&m_buff[0], pDataIn, lenIn);
-	        }
-	        m_buff.resize(lenIn);
+            if(lenIn > 0)
+            {
+                memmove(&m_buff[0], pDataIn, lenIn);
+            }
+            m_buff.resize(lenIn);
             return hr;
         }
         DWORD Size = pDataIn[3] >> 3;
 
         SI(IMediaSample) pOut;
-		BYTE* pDataOut = NULL;
+        BYTE* pDataOut = NULL;
 
-		hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, Size);
-		CHECK(hr);
+        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, Size);
+        CHECK(hr);
 
         _swab((char*)pDataIn + 8, (char*)pDataOut, Size);
 
-		hr = Deliver(pOut.GetNonAddRefedInterface());
+        hr = Deliver(pOut.GetNonAddRefedInterface());
         if(hr != S_OK)
         {
             return hr;
@@ -565,27 +555,27 @@ HRESULT CAudioDetect::ProcessAC3()
         pDataIn += 0x1800 / 2;
         lenIn -= 0x1800;
         m_BufferStartTime += 0x1800 * 10000000i64  / (m_SamplesPerSec * 4);
-	}
+    }
 
-	if(lenIn > 0)
-	{
-		memmove(&m_buff[0], pDataIn, lenIn);
-	}
-	m_buff.resize(lenIn);
+    if(lenIn > 0)
+    {
+        memmove(&m_buff[0], pDataIn, lenIn);
+    }
+    m_buff.resize(lenIn);
 
-	return hr;
+    return hr;
 }
 
 HRESULT CAudioDetect::ProcessDTS()
 {
-	WORD* pDataIn = (WORD*)&m_buff[0];
-	DWORD lenIn = m_buff.size();
+    WORD* pDataIn = (WORD*)&m_buff[0];
+    DWORD lenIn = m_buff.size();
     HRESULT hr = S_OK;
-	while(lenIn >= 0x800)
-	{
+    while(lenIn >= 0x800)
+    {
         if(pDataIn[0] != 0xf872 || pDataIn[1] != 0x4e1f)
         {
-        	m_StreamType = STREAM_PCM;
+            m_StreamType = STREAM_PCM;
             CreateInternalMediaType();
             return hr;
         }
@@ -597,29 +587,29 @@ HRESULT CAudioDetect::ProcessDTS()
         DWORD Size = pDataIn[3] >> 3;
 
         SI(IMediaSample) pOut;
-		BYTE* pDataOut = NULL;
+        BYTE* pDataOut = NULL;
 
-		hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, Size);
-		CHECK(hr);
+        hr = GetOutputSampleAndPointer(pOut.GetReleasedInterfaceReference(), &pDataOut, Size);
+        CHECK(hr);
 
         _swab((char*)pDataIn + 8, (char*)pDataOut, Size);
 
-		hr = Deliver(pOut.GetNonAddRefedInterface());
+        hr = Deliver(pOut.GetNonAddRefedInterface());
         if(hr != S_OK)
         {
             return hr;
         }
         pDataIn += 0x800 / 2;
         lenIn -= 0x800;
-	}
+    }
 
-	if(lenIn > 0)
-	{
-		memmove(&m_buff[0], pDataIn, lenIn);
-	}
-	m_buff.resize(lenIn);
+    if(lenIn > 0)
+    {
+        memmove(&m_buff[0], pDataIn, lenIn);
+    }
+    m_buff.resize(lenIn);
 
-	return hr;
+    return hr;
 }
 
 
@@ -654,29 +644,29 @@ HRESULT CAudioDetect::Deliver(IMediaSample* pOut)
     HRESULT hr = S_OK;
 
 
-	pOut->SetPreroll(FALSE);
-	pOut->SetSyncPoint(TRUE);
+    pOut->SetPreroll(FALSE);
+    pOut->SetSyncPoint(TRUE);
     if(m_BufferStartTime != 0)
     {
         pOut->SetTime(&m_BufferStartTime, NULL);
     }
 
-	if(m_NeedToAttachFormat)
-	{
-		m_AudioOutPin->SetType(&m_InternalMT);
-		pOut->SetMediaType(&m_InternalMT);
-		pOut->SetDiscontinuity(TRUE); 
-	}
-	else
-	{
-		pOut->SetDiscontinuity(m_IsDiscontinuity); 
-	}
+    if(m_NeedToAttachFormat)
+    {
+        m_AudioOutPin->SetType(&m_InternalMT);
+        pOut->SetMediaType(&m_InternalMT);
+        pOut->SetDiscontinuity(TRUE); 
+    }
+    else
+    {
+        pOut->SetDiscontinuity(m_IsDiscontinuity); 
+    }
 
-	m_IsDiscontinuity = false;
+    m_IsDiscontinuity = false;
 
-	hr = m_AudioOutPin->SendSample(pOut);
+    hr = m_AudioOutPin->SendSample(pOut);
 
-	m_NeedToAttachFormat = false;
+    m_NeedToAttachFormat = false;
     return hr;
 }
 

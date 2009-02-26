@@ -29,27 +29,27 @@ EXTERN_C const CLSID CLSID_GenDMOPropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CGenDMOPropPage
 class ATL_NO_VTABLE CGenDMOPropPage :
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public CComCoClass<CGenDMOPropPage, &CLSID_GenDMOPropPage>,
-	public IPropertyPageImpl<CGenDMOPropPage>,
-	public CDialogImpl<CGenDMOPropPage>
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public CComCoClass<CGenDMOPropPage, &CLSID_GenDMOPropPage>,
+    public IPropertyPageImpl<CGenDMOPropPage>,
+    public CDialogImpl<CGenDMOPropPage>
 {
 public:
-	CGenDMOPropPage();
+    CGenDMOPropPage();
     ~CGenDMOPropPage();
 
-	enum {IDD = IDD_GENDMOPROPPAGE};
+    enum {IDD = IDD_GENDMOPROPPAGE};
 
 DECLARE_REGISTRY_RESOURCEID(IDR_GENDMOPROPPAGE)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CGenDMOPropPage) 
-	COM_INTERFACE_ENTRY(IPropertyPage)
+    COM_INTERFACE_ENTRY(IPropertyPage)
 END_COM_MAP()
 
 BEGIN_MSG_MAP(CGenDMOPropPage)
-	COMMAND_HANDLER(IDC_PARAMETERLIST, LBN_SELCHANGE, OnListSelChange)
+    COMMAND_HANDLER(IDC_PARAMETERLIST, LBN_SELCHANGE, OnListSelChange)
     COMMAND_HANDLER(IDC_EDIT, EN_CHANGE, OnEditChange);
     COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
     COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
@@ -63,10 +63,10 @@ END_MSG_MAP()
     LRESULT OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
     LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
 
-	STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
-	STDMETHOD(Apply)(void);
+    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
+    STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
-	STDMETHOD(Deactivate)(void);
+    STDMETHOD(Deactivate)(void);
     BOOL HasAnythingChanged();
     void SetDirty(BOOL bDirty);
 
@@ -95,7 +95,7 @@ private:
     CWindow m_Scrollbar;
     CWindow m_Combo;
     CWindow m_DefaultsBtn;
-	CWindow m_BoolDesc;
+    CWindow m_BoolDesc;
     MP_DATA* m_Params;
     MP_PARAMINFO* m_ParamInfos;
     WCHAR** m_ParamTexts;

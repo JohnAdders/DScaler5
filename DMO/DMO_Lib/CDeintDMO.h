@@ -17,30 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.6  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.5  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.4  2003/07/25 16:00:54  adcockj
-// Remove 704 stuff
-//
-// Revision 1.3  2003/05/21 13:41:11  adcockj
-// Added new deinterlace methods
-//
-// Revision 1.2  2003/05/20 16:50:57  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once 
 
@@ -54,15 +30,15 @@ class CDeintDMO :
 {
 
 public:
-    CDeintDMO(LPCWSTR Name, long FieldsToBuffer, long FieldsDelay, long Complexity);	// Constructor
-	~CDeintDMO();	// Destructor
+    CDeintDMO(LPCWSTR Name, long FieldsToBuffer, long FieldsDelay, long Complexity);    // Constructor
+    ~CDeintDMO();    // Destructor
 
 protected:
-	//IMediaObjectImpl Methods   
-	STDMETHOD(InternalProcessInput)(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength);
-	STDMETHOD(InternalProcessOutput)(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus);
+    //IMediaObjectImpl Methods   
+    STDMETHOD(InternalProcessInput)(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength);
+    STDMETHOD(InternalProcessOutput)(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus);
     HRESULT InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt);
-	HRESULT InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt);
+    HRESULT InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt);
     HRESULT InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt);
     HRESULT InternalCheckOutputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt);
 

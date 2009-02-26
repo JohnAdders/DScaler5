@@ -155,18 +155,18 @@ typedef struct
     qmf_t Xcodec[2][MAX_NTSRHFG][32];
 
 #ifdef DRM
-	int8_t lcstereo_flag;
-	uint8_t bs_dataextra;
+    int8_t lcstereo_flag;
+    uint8_t bs_dataextra;
     uint8_t Is_DRM_SBR;
 #ifdef DRM_PS
     drm_ps_info drm_ps;
 #endif
 #endif
 
-	uint8_t numTimeSlotsRate;
-	uint8_t numTimeSlots;
-	uint8_t tHFGen;
-	uint8_t tHFAdj;
+    uint8_t numTimeSlotsRate;
+    uint8_t numTimeSlots;
+    uint8_t tHFGen;
+    uint8_t tHFAdj;
 
 #ifdef PS_DEC
     ps_info ps;
@@ -217,9 +217,9 @@ typedef struct
 sbr_info *sbrDecodeInit(uint16_t framelength, uint8_t id_aac,
                         uint32_t sample_rate
 #ifdef DRM
-						, uint8_t IsDRM
+                        , uint8_t IsDRM
 #endif
-						);
+                        );
 void sbrDecodeEnd(sbr_info *sbr);
 
 uint8_t sbrDecodeCoupleFrame(sbr_info *sbr, real_t *left_chan, real_t *right_chan,

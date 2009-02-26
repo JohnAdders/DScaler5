@@ -30,23 +30,23 @@ class COutputPin;
 /////////////////////////////////////////////////////////////////////////////
 // CInputPin
 class ATL_NO_VTABLE CInputPin : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IPin,
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IPin,
     public IMemInputPin,
     public IPinConnection,
     public IUpdateMediaTypes,
     public IInterlacedBufferStack
 {
 public:
-	CInputPin();
-	~CInputPin();
+    CInputPin();
+    ~CInputPin();
 
 
 BEGIN_COM_MAP(CInputPin)
-	COM_INTERFACE_ENTRY(IPin)
+    COM_INTERFACE_ENTRY(IPin)
     COM_INTERFACE_ENTRY(IMemInputPin)
     COM_INTERFACE_ENTRY(IPinConnection)
-	COM_INTERFACE_ENTRY(IInterlacedBufferStack)
+    COM_INTERFACE_ENTRY(IInterlacedBufferStack)
 END_COM_MAP()
 
 // IPin
@@ -113,37 +113,37 @@ public:
     BOOL m_Block;
     HANDLE m_BlockEvent;
     ALLOCATOR_PROPERTIES m_AllocatorProperties;
-	DWORD m_dwFlags;
-	CComPtr<IMemAllocator> m_MyMemAlloc;
-	REFERENCE_TIME m_ExpectedStartIn;
-	REFERENCE_TIME m_LastStartEnd;
+    DWORD m_dwFlags;
+    CComPtr<IMemAllocator> m_MyMemAlloc;
+    REFERENCE_TIME m_ExpectedStartIn;
+    REFERENCE_TIME m_LastStartEnd;
     REFERENCE_TIME m_FieldTiming;
-	BYTE m_Counter;
+    BYTE m_Counter;
 protected:
     class CField: public IInterlacedField
     {
     public:
-		CField(){};
-		~CField(){};
-	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	    STDMETHOD(SetLength)(DWORD cbLength);
+        CField(){};
+        ~CField(){};
+        STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+        STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+        STDMETHOD(SetLength)(DWORD cbLength);
         STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
-		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
-		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
-		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
-		void Clear()
-		{
-			IsTopLine = FALSE;
-			m_Sample.Release();
-		};
-		const CField& operator=(const CField& RHS)
-		{
-			IsTopLine = RHS.IsTopLine;
-			m_Sample = RHS.m_Sample;
+        STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+        ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+        ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+        void Clear()
+        {
+            IsTopLine = FALSE;
+            m_Sample.Release();
+        };
+        const CField& operator=(const CField& RHS)
+        {
+            IsTopLine = RHS.IsTopLine;
+            m_Sample = RHS.m_Sample;
             m_EndTime = RHS.m_EndTime;
-			return *this;
-		}
+            return *this;
+        }
     public:
         BOOL IsTopLine;
         CComPtr<IMediaSample> m_Sample;
@@ -184,14 +184,14 @@ private:
     HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     HRESULT SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
     BOOL IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt);
-	void FixupMediaType(AM_MEDIA_TYPE *pmt);
+    void FixupMediaType(AM_MEDIA_TYPE *pmt);
     void CheckForBlocking();
     HRESULT InternalReceive(IMediaSample *InSample);
     HRESULT InternalProcessOutput(BOOL HurryUp);
     HRESULT CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType);
     HRESULT UpdateMediaTypeInFilters();
     HRESULT GetOutputSample(IMediaSample** OutSample);
-	BOOL WorkOutWhoWeAreTalkingTo(IPin* pConnector);
+    BOOL WorkOutWhoWeAreTalkingTo(IPin* pConnector);
     DWORD m_NextFieldNumber;
 
     HRESULT PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties);

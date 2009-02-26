@@ -17,30 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.6  2004/03/15 17:17:03  adcockj
-// Basic registry saving support
-//
-// Revision 1.5  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.4  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.3  2003/05/22 06:43:48  adcockj
-// Minor Fixes to Major bugs
-//
-// Revision 1.2  2003/05/21 17:05:59  adcockj
-// Added new filter
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"
@@ -50,7 +26,7 @@
 
 
 CSimpleInPlaceVideoDMO::CSimpleInPlaceVideoDMO(LPCWSTR Name, eVideoFilterPosition Position) :
-	CDMO(Name),
+    CDMO(Name),
     m_Position(Position),
     m_bValidTime(FALSE),
     m_bSync(FALSE)
@@ -113,7 +89,7 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::get_NumFieldsBuffered(DWORD* pFieldsBuffere
 //
 HRESULT CSimpleInPlaceVideoDMO::InternalDiscontinuity(DWORD dwInputStreamIndex)
 {
-	return S_OK;
+    return S_OK;
 }
 
 /////////////////////////
@@ -154,7 +130,7 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalFlush(void)
 {
     // Just clear out the buffers
     m_Buffer.Detach();
-	return S_OK;
+    return S_OK;
 }
 
 ////////////////////////////////////
@@ -211,16 +187,16 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalFlush(void)
 //
 STDMETHODIMP CSimpleInPlaceVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pulSizeMaxLookahead, DWORD *pulSizeAlignment)
 {
-	// We don't have to do any validation, because it is all done in the base class
+    // We don't have to do any validation, because it is all done in the base class
 
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = InputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = InputType(0);
     
     if(pmt->majortype == MEDIATYPE_Video)
     {
-	    *pcbSize = pmt->lSampleSize;
-	    *pulSizeMaxLookahead = pmt->lSampleSize;
+        *pcbSize = pmt->lSampleSize;
+        *pulSizeMaxLookahead = pmt->lSampleSize;
     }
     else
     {
@@ -228,7 +204,7 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStrea
         hr = E_FAIL;
     }
 
-	return hr;
+    return hr;
 }
 
 
@@ -284,14 +260,14 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalGetInputSizeInfo(DWORD dwInputStrea
 STDMETHODIMP CSimpleInPlaceVideoDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pulSizeAlignment)
 {
     // We don't have to do any validation, because it is all done in the base class
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = OutputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = OutputType(0);
 
     if(pmt->majortype == MEDIATYPE_Video)
     {
-	    *pcbSize = pmt->lSampleSize;
-	    *pulSizeAlignment = 1;
+        *pcbSize = pmt->lSampleSize;
+        *pulSizeAlignment = 1;
     }
     else
     {
@@ -333,7 +309,7 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalAcceptingInput(DWORD dwInputStreamI
 
 STDMETHODIMP CSimpleInPlaceVideoDMO::InternalFreeStreamingResources(void)
 {
-	return S_OK;
+    return S_OK;
 }
 
 ////////////////////////////////////////
@@ -373,9 +349,9 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetInputStreamInfo(DWORD dwInputStreamIn
     {
         return E_POINTER;
     }
-	*pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
-	*pdwFlags |= DMO_INPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
-	*pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
+    *pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags |= DMO_INPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
+    *pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
     return S_OK;
 }
 
@@ -410,10 +386,10 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputStreamInfo(DWORD dwOutputStream
     {
         return E_POINTER;
     }
-	*pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
     *pdwFlags |= DMO_OUTPUT_STREAMF_SINGLE_SAMPLE_PER_BUFFER;
     *pdwFlags |= DMO_OUTPUT_STREAMF_FIXED_SAMPLE_SIZE;
-	return S_OK;
+    return S_OK;
 }
 
 ///////////////////////////////////////
@@ -623,16 +599,16 @@ STDMETHODIMP CSimpleInPlaceVideoDMO::InternalProcessOutput(DWORD dwFlags, DWORD 
 
 HRESULT CSimpleInPlaceVideoDMO::InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	// Check that we're being given
+    // Check that we're being given
     // video in a videoinfoheader2 
-	if((NULL == pmt) ||
-		(MEDIATYPE_Video != pmt->majortype) ||
-		(FORMAT_VIDEOINFO2 != pmt->formattype))
-	{
-		return DMO_E_INVALIDTYPE;
-	}
+    if((NULL == pmt) ||
+        (MEDIATYPE_Video != pmt->majortype) ||
+        (FORMAT_VIDEOINFO2 != pmt->formattype))
+    {
+        return DMO_E_INVALIDTYPE;
+    }
 
     if (OutputTypeSet(0))
     {
@@ -653,22 +629,22 @@ HRESULT CSimpleInPlaceVideoDMO::InternalCheckInputType(DWORD dwInputStreamIndex,
         }
     }
     
-	return hr;
+    return hr;
 }
 
 
 HRESULT CSimpleInPlaceVideoDMO::InternalCheckOutputType(DWORD dwOutputStreamIndex,const DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	// Check that we're being given
+    // Check that we're being given
     // video in a videoinfoheader2 
-	if((NULL == pmt) ||
-		(MEDIATYPE_Video != pmt->majortype) ||
-		(FORMAT_VIDEOINFO2 != pmt->formattype))
-	{
-		return DMO_E_INVALIDTYPE;
-	}
+    if((NULL == pmt) ||
+        (MEDIATYPE_Video != pmt->majortype) ||
+        (FORMAT_VIDEOINFO2 != pmt->formattype))
+    {
+        return DMO_E_INVALIDTYPE;
+    }
 
     if (InputTypeSet(0))
     {
@@ -688,12 +664,12 @@ HRESULT CSimpleInPlaceVideoDMO::InternalCheckOutputType(DWORD dwOutputStreamInde
             return DMO_E_INVALIDTYPE;
         }
     }
-	return hr;
+    return hr;
 }
 
 HRESULT CSimpleInPlaceVideoDMO::InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     // if output is connected then we prefer that one
     // with the change in interlaced flags
@@ -710,25 +686,25 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetInputType(DWORD dwInputStreamIndex, D
         }
         else
         {
-    		return DMO_E_NO_MORE_ITEMS;
+            return DMO_E_NO_MORE_ITEMS;
         }
     }
 
 
-	if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
-	{
+    if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
+    {
         // If pmt is NULL, and the type index is in range, we return S_OK
         if (pmt == NULL)
         {
             return S_OK;
         }
 
-	    hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
+        hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
 
-	    if (SUCCEEDED(hr))
-	    {
-		    pmt->majortype = MEDIATYPE_Video;
-		    pmt->formattype = FORMAT_VIDEOINFO2;
+        if (SUCCEEDED(hr))
+        {
+            pmt->majortype = MEDIATYPE_Video;
+            pmt->formattype = FORMAT_VIDEOINFO2;
 
             VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
             ZeroMemory(Format, sizeof(VIDEOINFOHEADER2));
@@ -749,13 +725,13 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetInputType(DWORD dwInputStreamIndex, D
             switch(dwTypeIndex)
             {
             case 0:
-    		    pmt->subtype = MEDIASUBTYPE_YUY2;
+                pmt->subtype = MEDIASUBTYPE_YUY2;
                 Format->bmiHeader.biBitCount = 16;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'U', 'Y', '2');
                 Format->bmiHeader.biSizeImage = 576*768*2;
                 break;
             case 1:
-    		    pmt->subtype = MEDIASUBTYPE_YV12;
+                pmt->subtype = MEDIASUBTYPE_YV12;
                 Format->bmiHeader.biBitCount = 12;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
                 Format->bmiHeader.biSizeImage = 576*768*3/2;
@@ -763,19 +739,19 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetInputType(DWORD dwInputStreamIndex, D
             default:
                 break;
             }
-	    }
+        }
     }
     else
     {
-		return DMO_E_NO_MORE_ITEMS;
-	}
+        return DMO_E_NO_MORE_ITEMS;
+    }
 
-	return hr;
+    return hr;
 }
 
 HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     // if output is connected then we prefer that one
     // with the change in interlaced flags
@@ -796,24 +772,24 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputType(DWORD dwOutputStreamIndex,
         }
         else
         {
-    		return DMO_E_NO_MORE_ITEMS;
+            return DMO_E_NO_MORE_ITEMS;
         }
     }
 
-	if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
-	{
+    if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
+    {
         // If pmt is NULL, and the type index is in range, we return S_OK
         if (pmt == NULL)
         {
             return S_OK;
         }
 
-	    hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
+        hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
 
-	    if (SUCCEEDED(hr))
-	    {
-		    pmt->majortype = MEDIATYPE_Video;
-		    pmt->formattype = FORMAT_VIDEOINFO2;
+        if (SUCCEEDED(hr))
+        {
+            pmt->majortype = MEDIATYPE_Video;
+            pmt->formattype = FORMAT_VIDEOINFO2;
             VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
             ZeroMemory(Format, sizeof(VIDEOINFOHEADER2));
             if(m_Position < IS_DEINT)
@@ -833,13 +809,13 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputType(DWORD dwOutputStreamIndex,
             switch(dwTypeIndex)
             {
             case 0:
-    		    pmt->subtype = MEDIASUBTYPE_YUY2;
+                pmt->subtype = MEDIASUBTYPE_YUY2;
                 Format->bmiHeader.biBitCount = 16;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'U', 'Y', '2');
                 Format->bmiHeader.biSizeImage = 576*768*2;
                 break;
             case 1:
-    		    pmt->subtype = MEDIASUBTYPE_YV12;
+                pmt->subtype = MEDIASUBTYPE_YV12;
                 Format->bmiHeader.biBitCount = 12;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
                 Format->bmiHeader.biSizeImage = 576*768*3/2;
@@ -847,14 +823,14 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputType(DWORD dwOutputStreamIndex,
             default:
                 break;
             }
-	    }
+        }
     }
     else
     {
-		return DMO_E_NO_MORE_ITEMS;
-	}
+        return DMO_E_NO_MORE_ITEMS;
+    }
 
-	return hr;
+    return hr;
 }
 
 ////////////////////////////
@@ -881,18 +857,18 @@ HRESULT CSimpleInPlaceVideoDMO::InternalGetOutputType(DWORD dwOutputStreamIndex,
 //
 HRESULT CSimpleInPlaceVideoDMO::GetLatency(REFERENCE_TIME *pLatencyTime)
 {
-	// Check the input arguments;
-	if (!pLatencyTime)
-	{
-		return E_POINTER;
-	}
+    // Check the input arguments;
+    if (!pLatencyTime)
+    {
+        return E_POINTER;
+    }
 
     // \todo: Calculate some reasonable average latency if this DMO is going to
     // be used with DirectShow. For now, 5 is used as the default latency.
 
-	*pLatencyTime= static_cast<REFERENCE_TIME>(5);
+    *pLatencyTime= static_cast<REFERENCE_TIME>(5);
 
-	return S_OK;
+    return S_OK;
 }
 
 /////////////////////
@@ -917,14 +893,14 @@ HRESULT CSimpleInPlaceVideoDMO::GetLatency(REFERENCE_TIME *pLatencyTime)
 //
 HRESULT CSimpleInPlaceVideoDMO::Clone(IMediaObjectInPlace **ppMediaObject)
 {
-	// Check the input pointer
-	if (!ppMediaObject)
-	{
-		return E_POINTER;
-	}
+    // Check the input pointer
+    if (!ppMediaObject)
+    {
+        return E_POINTER;
+    }
 
     // \todo implement if required
-	return E_NOTIMPL;
+    return E_NOTIMPL;
 }
 
 

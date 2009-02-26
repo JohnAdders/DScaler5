@@ -17,27 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.5  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.4  2003/09/30 16:59:26  adcockj
-// Improved handling of small format changes
-//
-// Revision 1.3  2003/07/18 09:26:34  adcockj
-// Corrections to assembler files (does not compile)
-//
-// Revision 1.2  2003/05/22 06:43:48  adcockj
-// Minor Fixes to Major bugs
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 
@@ -53,33 +32,33 @@
 
 STDAPI DMODllRegisterVideoDMO(LPCWSTR Name, const CLSID& Clsid)
 {
-	// Register ourself as a Video effect DMO
-	DMO_PARTIAL_MEDIATYPE mt[2];
-	mt[0].type    = MEDIATYPE_Video;
-	mt[0].subtype = MEDIASUBTYPE_YUY2;
-	mt[1].type    = MEDIATYPE_Video;
-	mt[1].subtype = MEDIASUBTYPE_YV12;
+    // Register ourself as a Video effect DMO
+    DMO_PARTIAL_MEDIATYPE mt[2];
+    mt[0].type    = MEDIATYPE_Video;
+    mt[0].subtype = MEDIASUBTYPE_YUY2;
+    mt[1].type    = MEDIATYPE_Video;
+    mt[1].subtype = MEDIASUBTYPE_YV12;
 
-	HRESULT hr = DMORegister(Name,
-							 Clsid, 
-							 DMOCATEGORY_VIDEO_EFFECT,
-							 0,
-							 2,
-							 &mt[0],
-							 2,
-							 &mt[0]);
+    HRESULT hr = DMORegister(Name,
+                             Clsid, 
+                             DMOCATEGORY_VIDEO_EFFECT,
+                             0,
+                             2,
+                             &mt[0],
+                             2,
+                             &mt[0]);
 
-	return hr;
+    return hr;
 }
 
 STDAPI DMODllRegisterAudioDMO(LPCWSTR Name, const CLSID& Clsid, bool IsFloat)
 {
-	// Register ourself as a PCM audio effect DMO
-	DMO_PARTIAL_MEDIATYPE mt;
-	mt.type = MEDIATYPE_Audio;
+    // Register ourself as a PCM audio effect DMO
+    DMO_PARTIAL_MEDIATYPE mt;
+    mt.type = MEDIATYPE_Audio;
     if(IsFloat)
     {
-	    mt.subtype = MEDIASUBTYPE_PCM;
+        mt.subtype = MEDIASUBTYPE_PCM;
     }
     else
     {
@@ -87,37 +66,37 @@ STDAPI DMODllRegisterAudioDMO(LPCWSTR Name, const CLSID& Clsid, bool IsFloat)
     }
     
 
-	HRESULT hr = DMORegister(Name,
-							 Clsid, 
-							 DMOCATEGORY_AUDIO_EFFECT,
-							 0,
-							 1,
-							 &mt,
-							 1,
-							 &mt);
-	// registers object
-	return hr;
+    HRESULT hr = DMORegister(Name,
+                             Clsid, 
+                             DMOCATEGORY_AUDIO_EFFECT,
+                             0,
+                             1,
+                             &mt,
+                             1,
+                             &mt);
+    // registers object
+    return hr;
 }
 
 STDAPI DMODllRegisterDeintDMO(LPCWSTR Name, const CLSID& Clsid)
 {
-	// Register ourself as a video DMO
-	DMO_PARTIAL_MEDIATYPE mt[2];
-	mt[0].type    = MEDIATYPE_Video;
-	mt[0].subtype = MEDIASUBTYPE_YUY2;
-	mt[1].type    = MEDIATYPE_Video;
-	mt[1].subtype = MEDIASUBTYPE_YV12;
+    // Register ourself as a video DMO
+    DMO_PARTIAL_MEDIATYPE mt[2];
+    mt[0].type    = MEDIATYPE_Video;
+    mt[0].subtype = MEDIASUBTYPE_YUY2;
+    mt[1].type    = MEDIATYPE_Video;
+    mt[1].subtype = MEDIASUBTYPE_YV12;
 
-	HRESULT hr = DMORegister(Name,
-							 Clsid, 
-							 DMOCATEGORY_VIDEO_EFFECT,
-							 0,
-							 2,
-							 &mt[0],
-							 2,
-							 &mt[0]);
+    HRESULT hr = DMORegister(Name,
+                             Clsid, 
+                             DMOCATEGORY_VIDEO_EFFECT,
+                             0,
+                             2,
+                             &mt[0],
+                             2,
+                             &mt[0]);
 
-	return hr;
+    return hr;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -125,21 +104,21 @@ STDAPI DMODllRegisterDeintDMO(LPCWSTR Name, const CLSID& Clsid)
 
 STDAPI DMODllUnregisterVideoDMO(const CLSID& Clsid)
 {
-   	DMOUnregister(Clsid, DMOCATEGORY_VIDEO_EFFECT);
-	return S_OK;
+       DMOUnregister(Clsid, DMOCATEGORY_VIDEO_EFFECT);
+    return S_OK;
 }
 
 STDAPI DMODllUnregisterAudioDMO(const CLSID& Clsid)
 {
-   	DMOUnregister(Clsid, DMOCATEGORY_AUDIO_EFFECT);
-	return S_OK;
+       DMOUnregister(Clsid, DMOCATEGORY_AUDIO_EFFECT);
+    return S_OK;
 }
 
 STDAPI DMODllUnregisterDeintDMO(const CLSID& Clsid)
 {
     // \todo create special category
-   	DMOUnregister(Clsid, DMOCATEGORY_VIDEO_EFFECT);
-	return S_OK;
+       DMOUnregister(Clsid, DMOCATEGORY_VIDEO_EFFECT);
+    return S_OK;
 }
 
 

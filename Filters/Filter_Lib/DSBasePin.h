@@ -29,7 +29,7 @@ class CDSBaseFilter;
 /////////////////////////////////////////////////////////////////////////////
 // CInputPin
 class CDSBasePin : 
-	public IPin,
+    public IPin,
     public IUpdateMediaTypes,
     public IKsPropertySet,
     public IQualityControl,
@@ -37,8 +37,8 @@ class CDSBasePin :
 {
 
 public:
-	CDSBasePin(PIN_DIRECTION Direction);
-	virtual ~CDSBasePin();
+    CDSBasePin(PIN_DIRECTION Direction);
+    virtual ~CDSBasePin();
     void SetupObject(CDSBaseFilter* Filter, LPWSTR PinId);
 
 public:
@@ -71,8 +71,8 @@ public:
     HRESULT SetType(const AM_MEDIA_TYPE* pmt);
     bool IsConnected() {return m_ConnectedPin?true:false;};
     const AM_MEDIA_TYPE* GetMediaType() {return &m_ConnectedMediaType;};
-	HRESULT GetConnectedFilterCLSID(CLSID* pClsid);
-	IBaseFilter* GetConnectedFilter();
+    HRESULT GetConnectedFilterCLSID(CLSID* pClsid);
+    IBaseFilter* GetConnectedFilter();
 
 public:
     CDSBaseFilter* m_Filter;
@@ -85,6 +85,6 @@ public:
 protected:
     virtual void InternalDisconnect() = 0;
 protected:
-	SI(IMemAllocator) m_MyMemAlloc;
+    SI(IMemAllocator) m_MyMemAlloc;
 };
 

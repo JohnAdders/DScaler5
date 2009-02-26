@@ -17,35 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.7  2004/12/06 18:04:54  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.6  2004/08/31 16:33:39  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.5  2004/03/15 17:17:04  adcockj
-// Basic registry saving support
-//
-// Revision 1.4  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.3  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.2  2003/05/21 17:06:00  adcockj
-// Added new filter
-//
-// Revision 1.1  2003/05/20 16:52:56  adcockj
-// Added new files
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once 
 
@@ -57,24 +28,24 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDMO
 class CVideoDMO : 
-	public CDMO,
-	public IDScalerVideoFilterPlugin,
+    public CDMO,
+    public IDScalerVideoFilterPlugin,
     public IInterlacedBufferStack
 {
 public:
     CVideoDMO(LPCWSTR Name, long FieldsToBuffer, long FieldsDelay, eVideoFilterPosition Position);
-	virtual ~CVideoDMO();
+    virtual ~CVideoDMO();
 
 //IMediaObjectImpl Methods   
 protected:
-	STDMETHOD(InternalDiscontinuity)(DWORD dwInputStreamIndex);
+    STDMETHOD(InternalDiscontinuity)(DWORD dwInputStreamIndex);
     STDMETHOD(InternalFlush)(void);
-	STDMETHOD(InternalFreeStreamingResources)(void);
+    STDMETHOD(InternalFreeStreamingResources)(void);
     STDMETHOD(InternalGetInputSizeInfo)(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pcbMaxLookahead, DWORD *pcbAlignment);
-	STDMETHOD(InternalGetOutputSizeInfo)(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment);
+    STDMETHOD(InternalGetOutputSizeInfo)(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment);
     STDMETHOD(InternalGetInputStreamInfo)(DWORD dwInputStreamIndex, DWORD *pdwFlags);
     STDMETHOD(InternalGetOutputStreamInfo)(DWORD dwInputStreamIndex, DWORD *pdwFlags);
-	STDMETHOD(InternalAcceptingInput)(DWORD dwInputStreamIndex);
+    STDMETHOD(InternalAcceptingInput)(DWORD dwInputStreamIndex);
 
 // IDScalerVideoFilterPlugin
 public:
@@ -98,36 +69,36 @@ protected:
     class CField: public IInterlacedField
     {
     public:
-		CField();
-		~CField(){};
-	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	    STDMETHOD(SetLength)(DWORD cbLength);
+        CField();
+        ~CField(){};
+        STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+        STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+        STDMETHOD(SetLength)(DWORD cbLength);
         STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
         STDMETHOD(get_Hint)(eDetectionHint* HintValue);
         STDMETHOD(get_FieldNumber)(DWORD* FieldNumber);
-		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
-		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
-		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
-		void Clear()
-		{
-			m_IsTopLine = FALSE;
-			m_StartTime = 0;
-			m_Length = 0;
+        STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+        ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+        ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+        void Clear()
+        {
+            m_IsTopLine = FALSE;
+            m_StartTime = 0;
+            m_Length = 0;
             m_Hint = HINT_NONE;
             m_FieldNumber = 0;
-			m_Buffer.Detach();
-		};
-		const CField& operator=(const CField& RHS)
-		{
-			m_IsTopLine = RHS.m_IsTopLine;
-			m_StartTime = RHS.m_StartTime;
-			m_Length = RHS.m_Length;
-			m_Buffer = RHS.m_Buffer;
-			m_Hint = RHS.m_Hint;
+            m_Buffer.Detach();
+        };
+        const CField& operator=(const CField& RHS)
+        {
+            m_IsTopLine = RHS.m_IsTopLine;
+            m_StartTime = RHS.m_StartTime;
+            m_Length = RHS.m_Length;
+            m_Buffer = RHS.m_Buffer;
+            m_Hint = RHS.m_Hint;
             m_FieldNumber = RHS.m_FieldNumber;
-			return *this;
-		}
+            return *this;
+        }
     public:
         BOOL m_IsTopLine;
         eDetectionHint m_Hint;

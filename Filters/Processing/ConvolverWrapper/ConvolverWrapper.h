@@ -39,17 +39,17 @@ interface IConvolver : IUnknown
 {
 public:
 
-	virtual HRESULT STDMETHODCALLTYPE get_wetmix(double *pVal) = 0;
-	virtual HRESULT STDMETHODCALLTYPE put_wetmix(double newVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_wetmix(double *pVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE put_wetmix(double newVal) = 0;
 
-	virtual HRESULT STDMETHODCALLTYPE get_filterfilename(TCHAR* *pVal) = 0;
-	virtual HRESULT STDMETHODCALLTYPE put_filterfilename(TCHAR* newVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_filterfilename(TCHAR* *pVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE put_filterfilename(TCHAR* newVal) = 0;
 
-	virtual HRESULT STDMETHODCALLTYPE get_attenuation(double *pVal) = 0;
-	virtual HRESULT STDMETHODCALLTYPE put_attenuation(double newVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE get_attenuation(double *pVal) = 0;
+    virtual HRESULT STDMETHODCALLTYPE put_attenuation(double newVal) = 0;
 
-	virtual double	decode_Attenuationdb(const DWORD dwValue) = 0;
-	virtual DWORD	encode_Attenuationdb(const double fValue) = 0;
+    virtual double    decode_Attenuationdb(const DWORD dwValue) = 0;
+    virtual DWORD    encode_Attenuationdb(const double fValue) = 0;
 
 };
 
@@ -62,10 +62,10 @@ class CConvolverWrapper :
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CConvolverWrapper, "{6105E395-1C5A-4b3e-9701-FB71C2523AB6}", "Convolver Wrapper Class", "Filter.ConvolverWrapper.1", "Filter.ConvolverWrapper", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -75,7 +75,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CConvolverWrapper, "{6105E395-1C5A-4b3e-9701-FB71
 END_INTERFACE_TABLE()
 
 public:
-	CConvolverWrapper();
+    CConvolverWrapper();
     ~CConvolverWrapper();
 
 BEGIN_PARAM_LIST()
@@ -89,7 +89,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
     STDMETHOD(GetPages)(CAUUID *pPages);
@@ -97,16 +97,16 @@ public:
 // IConvolver
 public:
     HRESULT STDMETHODCALLTYPE get_wetmix(double *pVal);
-	HRESULT STDMETHODCALLTYPE put_wetmix(double newVal);
+    HRESULT STDMETHODCALLTYPE put_wetmix(double newVal);
 
-	HRESULT STDMETHODCALLTYPE get_filterfilename(TCHAR* *pVal);
-	HRESULT STDMETHODCALLTYPE put_filterfilename(TCHAR* newVal);
+    HRESULT STDMETHODCALLTYPE get_filterfilename(TCHAR* *pVal);
+    HRESULT STDMETHODCALLTYPE put_filterfilename(TCHAR* newVal);
 
-	HRESULT STDMETHODCALLTYPE get_attenuation(double *pVal);
-	HRESULT STDMETHODCALLTYPE put_attenuation(double newVal);
+    HRESULT STDMETHODCALLTYPE get_attenuation(double *pVal);
+    HRESULT STDMETHODCALLTYPE put_attenuation(double newVal);
 
-	double	decode_Attenuationdb(const DWORD dwValue);
-	DWORD	encode_Attenuationdb(const double fValue);
+    double    decode_Attenuationdb(const DWORD dwValue);
+    DWORD    encode_Attenuationdb(const double fValue);
 
 public:
     HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin);
@@ -133,7 +133,7 @@ protected:
     HRESULT CheckConvolver();
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText);
-	void CreateInternalMediaType();
+    void CreateInternalMediaType();
     SI(IMediaObject) m_Convolver;
     SI(IConvolver) m_ConvolverPrivate;
 

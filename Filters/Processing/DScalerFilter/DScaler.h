@@ -35,11 +35,11 @@ class CDScaler :
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CDScaler, "{0D71870A-7563-11D7-B84A-0002A5623377}", "DScaler Filter Class", "Filter.DScaler.1", "Filter.DScaler", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IInterlacedBufferStack)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IInterlacedBufferStack)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -49,7 +49,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CDScaler, "{0D71870A-7563-11D7-B84A-0002A5623377}
 END_INTERFACE_TABLE()
 
 public:
-	CDScaler();
+    CDScaler();
     ~CDScaler();
 
 
@@ -74,11 +74,11 @@ END_STATISTICS_LIST()
         ASPECTINCREASEX,
         ASPECTINCREASEY,
         INPUTISANAMORPHIC,
-		DEINTERLACEMODE,
-		MANUALPULLDOWN,
-		PULLDOWNMODE,
-		PULLDOWNINDEX,
-		FILMDETECTMODE,
+        DEINTERLACEMODE,
+        MANUALPULLDOWN,
+        PULLDOWNMODE,
+        PULLDOWNINDEX,
+        FILMDETECTMODE,
         PARAMS_LASTONE,
     };
 
@@ -90,7 +90,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 // IInterlacedBufferStack
@@ -103,7 +103,7 @@ public:
 
 // IHaveStatistics
 public:
-	STDMETHOD(get_StatisticValue)(DWORD Index, BSTR* StatName);
+    STDMETHOD(get_StatisticValue)(DWORD Index, BSTR* StatName);
 
 public:
     HRESULT NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin* pPin);
@@ -132,7 +132,7 @@ public:
     std::vector<IMediaObject*> m_FilmDetectors;
     SI(IDeinterlace) m_CurrentDeinterlacingMethod;
     SI(IFilmDetect) m_CurrentFilmDetectMethod;
-	REFERENCE_TIME m_StartTime;
+    REFERENCE_TIME m_StartTime;
     std::wstring m_DeinterlaceNames;
     std::wstring m_FilmDetectorNames;
     DWORD m_NumberOfFieldsToBuffer;
@@ -148,7 +148,7 @@ private:
     HRESULT LoadDMOs();
     void UnloadDMOs();
     void EmptyList(std::list<IMediaObject*>& List);
-	void EmptyVector(std::vector<IMediaObject*>& Vector);
+    void EmptyVector(std::vector<IMediaObject*>& Vector);
     HRESULT RebuildProcessingLine();
     HRESULT UpdateTypes();
     HRESULT UpdateTypes(IMediaObject* pDMO);
@@ -174,59 +174,59 @@ protected:
     class CField: public IInterlacedField
     {
     public:
-		CField(){};
-		~CField(){};
-	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	    STDMETHOD(SetLength)(DWORD cbLength);
+        CField(){};
+        ~CField(){};
+        STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+        STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+        STDMETHOD(SetLength)(DWORD cbLength);
         STDMETHOD(get_TopFieldFirst)(BOOLEAN* TopFieldFirst);
-		STDMETHOD(get_Hint)(eDetectionHint *HintValue);
+        STDMETHOD(get_Hint)(eDetectionHint *HintValue);
         STDMETHOD(get_FieldNumber)(DWORD* FieldNumber);
-		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
-		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
-		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
-		void Clear()
-		{
-			m_IsTopLine = FALSE;
+        STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+        ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+        ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+        void Clear()
+        {
+            m_IsTopLine = FALSE;
             m_EndTime = 0;
             m_FieldNumber = 0;
-			m_Sample.Detach();
-			m_Hint = HINT_NONE;
-		};
-		const CField& operator=(const CField& RHS)
-		{
-			m_IsTopLine = RHS.m_IsTopLine;
-			m_Sample = RHS.m_Sample;
+            m_Sample.Detach();
+            m_Hint = HINT_NONE;
+        };
+        const CField& operator=(const CField& RHS)
+        {
+            m_IsTopLine = RHS.m_IsTopLine;
+            m_Sample = RHS.m_Sample;
             m_EndTime = RHS.m_EndTime;
             m_FieldNumber = RHS.m_FieldNumber;
-			m_Hint = RHS.m_Hint;
-			return *this;
-		}
+            m_Hint = RHS.m_Hint;
+            return *this;
+        }
     public:
         BOOL m_IsTopLine;
         SI(IMediaSample) m_Sample;
         REFERENCE_TIME m_EndTime;
         DWORD m_FieldNumber;
-		eDetectionHint m_Hint;
+        eDetectionHint m_Hint;
     };
 
     // leave plenty of room in case
-	// we get odd field numbers
+    // we get odd field numbers
     CField m_IncomingFields[9];
     DWORD m_FieldsInBuffer;
 
     class CMap: public IMediaBuffer
     {
     public: 
-		CMap();
-		~CMap();
-	    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	    STDMETHOD(SetLength)(DWORD cbLength);
-		STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
-		ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
-		ULONG STDMETHODCALLTYPE Release(void) {return 1;};
-		void ReAlloc(DWORD NewLength);
+        CMap();
+        ~CMap();
+        STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+        STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+        STDMETHOD(SetLength)(DWORD cbLength);
+        STDMETHOD(QueryInterface)(const IID& iid, void** pInf) {*pInf = NULL; return S_OK;};
+        ULONG STDMETHODCALLTYPE AddRef(void) {return 1;};
+        ULONG STDMETHODCALLTYPE Release(void) {return 1;};
+        void ReAlloc(DWORD NewLength);
         void Clear();
         BYTE* GetMap() {return m_Map;};
     public:
@@ -250,7 +250,7 @@ private:
     DWORD m_DetectedPulldownIndex;
     eDeinterlaceType m_DetectedPulldownType;
     DWORD m_NextFieldNumber;
-	REFERENCE_TIME m_LastStartEnd;
+    REFERENCE_TIME m_LastStartEnd;
     REFERENCE_TIME m_FieldTiming;
     CMap m_MovementMap;
     long m_CatchUpModulo;

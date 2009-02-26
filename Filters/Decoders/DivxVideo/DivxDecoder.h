@@ -26,15 +26,15 @@
 
 extern "C"
 {
-	#ifdef  _MSC_VER
-		#pragma warning(disable: 4244)
-	#endif
+    #ifdef  _MSC_VER
+        #pragma warning(disable: 4244)
+    #endif
 
-	#include "avcodec.h"
+    #include "avcodec.h"
 
-	#ifdef  _MSC_VER
-		#pragma warning(default: 4244)
-	#endif
+    #ifdef  _MSC_VER
+        #pragma warning(default: 4244)
+    #endif
 }
 
 DEFINE_GUID(CLSID_CDivxDecoder, 0x4775acfd, 0x8fe4, 0x483d, 0x96, 0x2b, 0xaf, 0x4b, 0x5e, 0x74, 0xb3, 0xbf);
@@ -82,7 +82,7 @@ END_PARAM_LIST()
         DEINTMODE,
         VIDEODELAY,
         DOACCURATEASPECT,
-		OUTPUTSPACE,
+        OUTPUTSPACE,
     };
 
 public:
@@ -143,7 +143,7 @@ private:
     bool m_fFilm;
     CCanLock m_DeliverLock;
     CodecID m_CodecID;
-	std::vector<BYTE> m_ExtraData;
+    std::vector<BYTE> m_ExtraData;
     int m_ExtraSize;
     long m_NalSize;
     DWORD m_FourCC;

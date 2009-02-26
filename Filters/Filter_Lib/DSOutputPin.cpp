@@ -17,101 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.24  2007/11/30 18:06:48  adcockj
-// Initial go at h264 support
-//
-// Revision 1.23  2004/11/25 17:22:10  adcockj
-// Fixed some more connection issues
-//
-// Revision 1.22  2004/11/07 09:12:05  adcockj
-// fixed connection issue
-//
-// Revision 1.21  2004/11/06 14:07:01  adcockj
-// Fixes for WM10 and seeking
-//
-// Revision 1.20  2004/11/02 17:59:56  adcockj
-// fix for vmr9 issues
-//
-// Revision 1.19  2004/09/23 14:27:59  adcockj
-// preliminary fixed for reconnection issues
-//
-// Revision 1.18  2004/09/10 15:35:57  adcockj
-// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
-//
-// Revision 1.17  2004/08/31 16:33:42  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.16  2004/07/26 17:08:13  adcockj
-// Force use of fixed size output buffers to work around issues with Wave renderer
-//
-// Revision 1.15  2004/07/20 16:37:57  adcockj
-// Fixes for main issues raised in testing of 0.0.1
-//  - Improved parameter handling
-//  - Fixed some overlay issues
-//  - Auto aspect ratio with VMR
-//  - Fixed some overlay stutters
-//  - Fixed some push filter issues
-//  - ffdshow and DirectVobSub connection issues
-//
-// Added
-//  - Hardcode for PAL setting for ffdshow
-//  - Added choice of IDCT for testing
-//
-// Revision 1.14  2004/07/07 14:09:01  adcockj
-// removed tabs
-//
-// Revision 1.13  2004/07/01 16:12:47  adcockj
-// First attempt at better handling of audio when the output is connected to a
-// filter that can't cope with dynamic changes.
-//
-// Revision 1.12  2004/05/06 06:38:07  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.11  2004/04/29 16:16:46  adcockj
-// Yet more reconnection fixes
-//
-// Revision 1.10  2004/04/20 16:30:31  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.9  2004/04/16 16:19:44  adcockj
-// Better reconnection and improved AFD support
-//
-// Revision 1.8  2004/03/08 17:20:05  adcockj
-// Minor bug fixes
-//
-// Revision 1.7  2004/03/05 15:56:29  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.6  2004/02/29 13:47:49  adcockj
-// Format change fixes
-// Minor library updates
-//
-// Revision 1.5  2004/02/27 17:08:16  adcockj
-// Improved locking at state changes
-// Better error handling at state changes
-//
-// Revision 1.4  2004/02/25 17:14:03  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.3  2004/02/16 17:25:02  adcockj
-// Fix build errors, locking problems and DVD compatability
-//
-// Revision 1.2  2004/02/12 17:06:45  adcockj
-// Libary Tidy up
-// Fix for stopping problems
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DSOutputPin.h"
@@ -497,12 +402,12 @@ HRESULT CDSOutputPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* 
 
     // get a sample to output to
     HRESULT hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
-	if(hr == VFW_E_SIZENOTSET)
-	{
-		hr = NegotiateAllocator(NULL);
+    if(hr == VFW_E_SIZENOTSET)
+    {
+        hr = NegotiateAllocator(NULL);
         CHECK(hr);
-	    hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
-	}
+        hr = m_Allocator->GetBuffer(OutSample, rtStart, rtStop, dwFlags);
+    }
     if(FAILED(hr))
     {
         if(m_Filter->m_State == State_Stopped)
@@ -563,10 +468,10 @@ HRESULT CDSOutputPin::Activate()
                 hr = m_Allocator->Commit();
             }
         }
-		if(FAILED(hr))
-		{
+        if(FAILED(hr))
+        {
             LogBadHRESULT(hr, __FILE__, __LINE__);
-		}
+        }
     }
     return hr;
 }
@@ -611,7 +516,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin)
             if(FAILED(hr))
             {
                 LogBadHRESULT(hr, __FILE__, __LINE__);
-		        m_Allocator.Detach();
+                m_Allocator.Detach();
                 return VFW_E_NO_TRANSPORT;
             }
         }
@@ -620,7 +525,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin)
         if(FAILED(hr))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
-		    m_Allocator.Detach();
+            m_Allocator.Detach();
             return VFW_E_NO_TRANSPORT;
         }
 

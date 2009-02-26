@@ -27,52 +27,6 @@
 // program see http://sf.net/projects/guliverkli/ for more details
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.12  2006/03/08 17:13:28  adcockj
-// added aac decoding
-//
-// Revision 1.11  2004/10/27 12:10:55  adcockj
-// checked over Laurent's changes
-//
-// Revision 1.10  2004/08/03 08:55:56  adcockj
-// Fixes for seeking issues
-//
-// Revision 1.9  2004/07/29 08:31:31  adcockj
-// Fix for LPCM
-//
-// Revision 1.8  2004/07/28 13:59:30  adcockj
-// spdif fixes
-//
-// Revision 1.7  2004/07/26 17:08:13  adcockj
-// Force use of fixed size output buffers to work around issues with Wave renderer
-//
-// Revision 1.6  2004/07/16 15:45:19  adcockj
-// Fixed compilation issues under .NET
-// Improved (hopefully) handling of negative times and preroll
-// Changed name of filter
-//
-// Revision 1.5  2004/07/07 14:08:10  adcockj
-// Improved format change handling to cope with more situations
-// Removed tabs
-//
-// Revision 1.4  2004/07/01 21:16:55  adcockj
-// Another load of fixes to recent changes
-//
-// Revision 1.3  2004/07/01 16:12:47  adcockj
-// First attempt at better handling of audio when the output is connected to a
-// filter that can't cope with dynamic changes.
-//
-// Revision 1.2  2004/03/11 16:51:23  adcockj
-// Improve LPCM support
-//
-// Revision 1.1  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"

@@ -17,19 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/12/15 13:04:08  adcockj
-// added simple statistics display
-//
-// Revision 1.2  2004/12/13 16:59:56  adcockj
-// flag based film detection
-//
-// Revision 1.1  2004/09/10 15:40:00  adcockj
-// Added stub project for film detection
-//
-/////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include <initguid.h>
 #include "FD_DScaler.h"
@@ -188,14 +175,14 @@ HRESULT CFD_DScaler::ParamChanged(DWORD dwParamIndex)
 
 HRESULT CFD_DScaler::GetClassID(CLSID *pClsid)
 {
-	// Check for valid pointer
-	if( NULL == pClsid )
-	{
-		return E_POINTER;
-	}
+    // Check for valid pointer
+    if( NULL == pClsid )
+    {
+        return E_POINTER;
+    }
 
-	*pClsid = CLSID_CFD_DScaler;
-	return S_OK;
+    *pClsid = CLSID_CFD_DScaler;
+    return S_OK;
 
 } // GetClassID
 
@@ -264,35 +251,35 @@ IMPLEMENT_DLL_MODULE_ROUTINES()
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
-	if (DLL_PROCESS_ATTACH == dwReason)
-	{
+    if (DLL_PROCESS_ATTACH == dwReason)
+    {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
-	}
-	else if (DLL_PROCESS_DETACH == dwReason)
+        DisableThreadLibraryCalls(hInstance);
+    }
+    else if (DLL_PROCESS_DETACH == dwReason)
     {
     }
-	return TRUE;    // ok
+    return TRUE;    // ok
 }
 
 STDAPI DllRegisterServer()
 {
     HRESULT hr = DMODllRegisterDeintDMO(L"DScaler Film Detect", CLSID_CFD_DScaler);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
 STDAPI DllUnregisterServer()
 {
     HRESULT hr = DMODllUnregisterDeintDMO(CLSID_CFD_DScaler);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
 

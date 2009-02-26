@@ -22,11 +22,11 @@
 #pragma once
 
 class CInputMemAlloc : 
-	public IMemAllocator
+    public IMemAllocator
 {
 public:
-	CInputMemAlloc();
-	~CInputMemAlloc();
+    CInputMemAlloc();
+    ~CInputMemAlloc();
 
 IMPLEMENT_UNKNOWN(CInputMemAlloc);
 
@@ -41,5 +41,5 @@ END_INTERFACE_TABLE()
     STDMETHOD(GetBuffer)(IMediaSample **ppBuffer, REFERENCE_TIME *pStartTime, REFERENCE_TIME *pEndTime, DWORD dwFlags);
     STDMETHOD(ReleaseBuffer)(IMediaSample *pBuffer);
 private:
-	SI(IMemAllocator) m_MemAlloc;
+    SI(IMemAllocator) m_MemAlloc;
 };

@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/03/15 17:17:05  adcockj
-// Basic registry saving support
-//
-// Revision 1.2  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/05/21 17:06:01  adcockj
-// Added new filter
-//
-/////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include <initguid.h>
 #include "Video_Gamma.h"
@@ -55,14 +40,14 @@ HRESULT CVideo_Gamma::ParamChanged(DWORD dwParamIndex)
 
 HRESULT CVideo_Gamma::GetClassID(CLSID *pClsid)
 {
-	// Check for valid pointer
-	if( NULL == pClsid )
-	{
-		return E_POINTER;
-	}
+    // Check for valid pointer
+    if( NULL == pClsid )
+    {
+        return E_POINTER;
+    }
 
-	*pClsid = CLSID_CVideo_Gamma;
-	return S_OK;
+    *pClsid = CLSID_CVideo_Gamma;
+    return S_OK;
 
 } // GetClassID
 
@@ -131,35 +116,35 @@ IMPLEMENT_DLL_MODULE_ROUTINES()
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
-	if (DLL_PROCESS_ATTACH == dwReason)
-	{
+    if (DLL_PROCESS_ATTACH == dwReason)
+    {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
-	}
-	else if (DLL_PROCESS_DETACH == dwReason)
+        DisableThreadLibraryCalls(hInstance);
+    }
+    else if (DLL_PROCESS_DETACH == dwReason)
     {
     }
-	return TRUE;    // ok
+    return TRUE;    // ok
 }
 
 STDAPI DllRegisterServer()
 {
     HRESULT hr = DMODllRegisterDeintDMO(L"Gamma", CLSID_CVideo_Gamma);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
 STDAPI DllUnregisterServer()
 {
     HRESULT hr = DMODllUnregisterDeintDMO(CLSID_CVideo_Gamma);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
 

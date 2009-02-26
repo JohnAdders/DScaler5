@@ -29,33 +29,33 @@ EXTERN_C const CLSID CLSID_LicensePropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CLicensePropPage
 class ATL_NO_VTABLE CLicensePropPage :
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public CComCoClass<CLicensePropPage, &CLSID_LicensePropPage>,
-	public IPropertyPageImpl<CLicensePropPage>,
-	public CDialogImpl<CLicensePropPage>
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public CComCoClass<CLicensePropPage, &CLSID_LicensePropPage>,
+    public IPropertyPageImpl<CLicensePropPage>,
+    public CDialogImpl<CLicensePropPage>
 {
 public:
-	CLicensePropPage();
+    CLicensePropPage();
 
-	enum {IDD = IDD_LICENSEPROPPAGE};
+    enum {IDD = IDD_LICENSEPROPPAGE};
 
 DECLARE_REGISTRY_RESOURCEID(IDR_LICENSEPROPPAGE)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CLicensePropPage) 
-	COM_INTERFACE_ENTRY(IPropertyPage)
+    COM_INTERFACE_ENTRY(IPropertyPage)
 END_COM_MAP()
 
 BEGIN_MSG_MAP(CLicensePropPage)
-	CHAIN_MSG_MAP(IPropertyPageImpl<CLicensePropPage>)
+    CHAIN_MSG_MAP(IPropertyPageImpl<CLicensePropPage>)
 END_MSG_MAP()
 // Handler prototypes:
 //  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 //  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 //  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
 
-	STDMETHOD(Apply)(void);
+    STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
     STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 

@@ -18,74 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.22  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.21  2003/09/30 16:59:26  adcockj
-// Improved handling of small format changes
-//
-// Revision 1.20  2003/09/28 15:08:07  adcockj
-// optimization fix and minor changes
-//
-// Revision 1.19  2003/09/19 16:12:14  adcockj
-// Further improvements
-//
-// Revision 1.17  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.16  2003/07/25 16:00:55  adcockj
-// Remove 704 stuff
-//
-// Revision 1.15  2003/05/20 16:50:59  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.14  2003/05/19 07:02:24  adcockj
-// Patches from Torbjorn to extend logging
-//
-// Revision 1.13  2003/05/17 11:29:35  adcockj
-// Fixed crashing
-//
-// Revision 1.12  2003/05/10 13:21:31  adcockj
-// Bug fixes
-//
-// Revision 1.11  2003/05/09 15:51:05  adcockj
-// Code tidy up
-// Added aspect ratio parameters
-//
-// Revision 1.10  2003/05/09 07:03:26  adcockj
-// Bug fixes for new format code
-//
-// Revision 1.9  2003/05/08 15:58:38  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.8  2003/05/06 16:38:01  adcockj
-// Changed to fixed size output buffer and changed connection handling
-//
-// Revision 1.7  2003/05/06 07:00:30  adcockj
-// Some cahnges from Torbjorn also some other attempted fixes
-//
-// Revision 1.6  2003/05/02 16:05:23  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.5  2003/05/02 10:51:49  adcockj
-// Improved Allocator negotiation and added stub for Block
-//
-// Revision 1.4  2003/05/02 07:03:13  adcockj
-// Some minor changes most not really improvements
-//
-// Revision 1.3  2003/05/01 18:15:17  adcockj
-// Moved IMedaiSeeking to output pin
-//
-// Revision 1.2  2003/05/01 16:22:24  adcockj
-// Dynamic connection test code
-//
-// Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "OutputPin.h"
@@ -476,52 +408,52 @@ STDMETHODIMP COutputPin::Notify(IBaseFilter *pSelf, Quality q)
     // \todo see what we get sent here and work out how to handle some
     // of the more common messages
     // in the mean time just pass the messages upstream
-	if(q.Type == Famine)
-	{
-		//if(q.Late > 400000)
-		{
-			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
-			if(QualityControl != NULL)
-			{
+    if(q.Type == Famine)
+    {
+        //if(q.Late > 400000)
+        {
+            CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
+            if(QualityControl != NULL)
+            {
                 LOG(DBGLOG_ALL, ("Coped With Famine - %d\n", q.Late));
-				return QualityControl->Notify(pSelf, q);
-			}
-			else
-			{
+                return QualityControl->Notify(pSelf, q);
+            }
+            else
+            {
                 LOG(DBGLOG_ALL, ("Ignored Famine - %d\n", q.Late));
-				return E_NOTIMPL;
-			}
-		}
-		//else
-		{
-			return S_OK;
-		}
-	}
-	if(q.Type == Flood)
-	{
-		//if(q.Late > 400000)
-		{
-			CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
-			if(QualityControl != NULL)
-			{
+                return E_NOTIMPL;
+            }
+        }
+        //else
+        {
+            return S_OK;
+        }
+    }
+    if(q.Type == Flood)
+    {
+        //if(q.Late > 400000)
+        {
+            CComQIPtr<IQualityControl> QualityControl = m_InputPin->m_ConnectedPin;
+            if(QualityControl != NULL)
+            {
                 LOG(DBGLOG_ALL, ("Coped With Flood - %d\n", q.Late));
-				return QualityControl->Notify(pSelf, q);
-			}
-			else
-			{
+                return QualityControl->Notify(pSelf, q);
+            }
+            else
+            {
                 LOG(DBGLOG_ALL, ("Ignored Flood - %d\n", q.Late));
-				return E_NOTIMPL;
-			}
-		}
-		//else
-		{
-			return S_OK;
-		}
-	}
-	else
-	{
-		return S_OK;
-	}
+                return E_NOTIMPL;
+            }
+        }
+        //else
+        {
+            return S_OK;
+        }
+    }
+    else
+    {
+        return S_OK;
+    }
 }
 
 STDMETHODIMP COutputPin::SetSink(IQualityControl *piqc)
@@ -754,7 +686,7 @@ STDMETHODIMP COutputPin::GetPreroll(LONGLONG *pllPreroll)
 HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MEDIA_TYPE* NewType)
 {
     BITMAPINFOHEADER* BitmapInfo = NULL;
-	LPRECT pSourceRect;
+    LPRECT pSourceRect;
     NewType->majortype = MEDIATYPE_Video;
     NewType->subtype = InputType->subtype;
     NewType->bFixedSizeSamples = TRUE;
@@ -776,7 +708,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     {
         VIDEOINFOHEADER2* OldFormat = (VIDEOINFOHEADER2*)InputType->pbFormat;
         BitmapInfo = &OldFormat->bmiHeader;
-		pSourceRect = &OldFormat->rcSource;
+        pSourceRect = &OldFormat->rcSource;
         NewFormat->dwPictAspectRatioX = OldFormat->dwPictAspectRatioX;
         NewFormat->dwPictAspectRatioY = OldFormat->dwPictAspectRatioY;
         NewFormat->dwBitRate = OldFormat->dwBitRate * 2;
@@ -788,11 +720,11 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
         NewType->pbFormat =(BYTE*)NewFormat;
         VIDEOINFOHEADER* OldFormat = (VIDEOINFOHEADER*)InputType->pbFormat;
         BitmapInfo = &OldFormat->bmiHeader;
-		pSourceRect = &OldFormat->rcSource;
+        pSourceRect = &OldFormat->rcSource;
 
         // if the input format is a known TV style one then
         // it should be assumed to be 4:3
-		if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
+        if((BitmapInfo->biWidth == 704 || BitmapInfo->biWidth == 720 || BitmapInfo->biWidth == 768) &&
             (BitmapInfo->biHeight == 480 || BitmapInfo->biHeight == 576))
         {
             NewFormat->dwPictAspectRatioX = 4;
@@ -831,19 +763,19 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     long Height = BitmapInfo->biHeight; 
     long Width;
 
-	if(Height == 576)
-	{
-		NewFormat->AvgTimePerFrame = 200000;
-	}
+    if(Height == 576)
+    {
+        NewFormat->AvgTimePerFrame = 200000;
+    }
 
-	if(pSourceRect->right > 0)
-	{
-		Width = pSourceRect->right;
-	}
-	else
-	{
-		Width = BitmapInfo->biWidth;
-	}
+    if(pSourceRect->right > 0)
+    {
+        Width = pSourceRect->right;
+    }
+    else
+    {
+        Width = BitmapInfo->biWidth;
+    }
 
     if((Width == 704) && (Height == 480 || Height == 576))
     {

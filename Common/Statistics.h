@@ -53,7 +53,7 @@ public:
         return S_OK;
     }
 
-	STDMETHOD(get_StatisticName)(DWORD Index, BSTR* StatName)
+    STDMETHOD(get_StatisticName)(DWORD Index, BSTR* StatName)
     {
         DWORD Count(0);
         StatisticsInfo* pInfo = _GetStatsList(&Count);

@@ -27,64 +27,6 @@
 // program see http://sf.net/projects/guliverkli/ for more details
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.16  2008/01/02 07:10:32  adcockj
-// interim eac3 code
-//
-// Revision 1.15  2007/12/20 18:24:55  adcockj
-// Interim Checkin of adding EAC3 decoding
-//
-// Revision 1.14  2006/03/08 17:13:28  adcockj
-// added aac decoding
-//
-// Revision 1.13  2004/10/27 12:10:55  adcockj
-// checked over Laurent's changes
-//
-// Revision 1.12  2004/08/16 16:08:45  adcockj
-// timestamp fixes
-//
-// Revision 1.11  2004/08/03 08:55:56  adcockj
-// Fixes for seeking issues
-//
-// Revision 1.10  2004/07/28 13:59:29  adcockj
-// spdif fixes
-//
-// Revision 1.9  2004/07/27 16:53:21  adcockj
-// Some spdif fixes
-//
-// Revision 1.8  2004/07/26 17:08:13  adcockj
-// Force use of fixed size output buffers to work around issues with Wave renderer
-//
-// Revision 1.7  2004/07/07 14:08:10  adcockj
-// Improved format change handling to cope with more situations
-// Removed tabs
-//
-// Revision 1.6  2004/07/01 16:12:47  adcockj
-// First attempt at better handling of audio when the output is connected to a
-// filter that can't cope with dynamic changes.
-//
-// Revision 1.5  2004/04/08 19:02:44  adcockj
-// Zero out unused memory when using spdif
-//
-// Revision 1.4  2004/04/06 16:46:11  adcockj
-// DVD Test Annex Compatability fixes
-//
-// Revision 1.3  2004/03/25 18:01:30  adcockj
-// Fixed issues with downmixing
-//
-// Revision 1.2  2004/02/27 17:04:38  adcockj
-// Added support for fixed point libraries
-// Added dither to 16 conversions
-// Changes to support library fixes
-//
-// Revision 1.1  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
@@ -224,16 +166,16 @@ static CONV_FUNC_FLOAT* pConvFuncsFloat[CAudioDecoder::OUTSAMPLE_LASTONE] =
 int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bool* isEAC3)
 {
     static int rate[] = { 32,  40,  48,  56,  64,  80,  96, 112,
-			 128, 160, 192, 224, 256, 320, 384, 448,
-			 512, 576, 640};
+             128, 160, 192, 224, 256, 320, 384, 448,
+             512, 576, 640};
     static uint8_t lfeon[8] = {0x10, 0x10, 0x04, 0x04, 0x04, 0x01, 0x04, 0x01};
     int frmsizecod;
     int bitrate;
     int half;
     int acmod;
 
-    if ((buf[0] != 0x0b) || (buf[1] != 0x77))	/* syncword */
-	return 0;
+    if ((buf[0] != 0x0b) || (buf[1] != 0x77))    /* syncword */
+    return 0;
 
     int bsid = buf[5] >> 3;
 
@@ -298,7 +240,7 @@ int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bo
         acmod = (buf[4] >> 1) & 0x07;
         *flags = acmod | ((buf[4] & 0x01) ? A52_LFE : 0);
 
-    	return (((buf[2] & 0x07) << 8) + buf[3] + 1) * 2;
+        return (((buf[2] & 0x07) << 8) + buf[3] + 1) * 2;
     }
     else
     {
@@ -326,27 +268,27 @@ int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bo
         /* acmod, dsurmod and lfeon */
         acmod = buf[6] >> 5;
         *flags = ((((buf[6] & 0xf8) == 0x50) ? A52_DOLBY : acmod) |
-	          ((buf[6] & lfeon[acmod]) ? A52_LFE : 0));
+              ((buf[6] & lfeon[acmod]) ? A52_LFE : 0));
 
         frmsizecod = buf[4] & 63;
         if (frmsizecod >= 38)
-	    return 0;
+        return 0;
         bitrate = rate [frmsizecod >> 1];
         *bit_rate = (bitrate * 1000) >> half;
 
         switch (buf[4] & 0xc0) 
         {
         case 0:
-	        *sample_rate = 48000 >> half;
-	        return 4 * bitrate;
+            *sample_rate = 48000 >> half;
+            return 4 * bitrate;
         case 0x40:
-	        *sample_rate = 44100 >> half;
-	        return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
+            *sample_rate = 44100 >> half;
+            return 2 * (320 * bitrate / 147 + (frmsizecod & 1));
         case 0x80:
-	        *sample_rate = 32000 >> half;
-	        return 6 * bitrate;
+            *sample_rate = 32000 >> half;
+            return 6 * bitrate;
         default:
-	        return 0;
+            return 0;
         }
     }
 }
@@ -405,19 +347,19 @@ HRESULT CAudioDecoder::ProcessAC3()
                         {
                         case SPCFG_STEREO:
                         case SPCFG_DOLBY:
-							m_CodecContext->request_channels = min(scmap.nChannels, 2);
+                            m_CodecContext->request_channels = min(scmap.nChannels, 2);
                             break;
                         case SPCFG_2F2R:
-							m_CodecContext->request_channels = min(scmap.nChannels, 4);
+                            m_CodecContext->request_channels = min(scmap.nChannels, 4);
                             break;
                         case SPCFG_2F2R1S:
-							m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            m_CodecContext->request_channels = min(scmap.nChannels, 5);
                             break;
                         case SPCFG_3F2R:
-							m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            m_CodecContext->request_channels = min(scmap.nChannels, 5);
                             break;
                         case SPCFG_3F2R1S:
-							m_CodecContext->request_channels = min(scmap.nChannels, 6);
+                            m_CodecContext->request_channels = min(scmap.nChannels, 6);
                             break;
                         }
 

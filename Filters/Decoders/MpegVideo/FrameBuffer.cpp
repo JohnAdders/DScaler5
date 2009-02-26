@@ -18,16 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2004/02/29 19:05:44  adcockj
-// Fix release build crash
-//
-// Revision 1.1  2004/02/25 17:17:25  adcockj
-// New class to support buffer management
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "MpegDecoder.h"

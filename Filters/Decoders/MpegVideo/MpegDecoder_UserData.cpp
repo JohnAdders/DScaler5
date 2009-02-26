@@ -18,41 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.9  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.8  2004/05/12 17:01:04  adcockj
-// Hopefully correct treatment of timestamps at last
-//
-// Revision 1.7  2004/05/10 06:40:42  adcockj
-// Fixes for better compatability with PES streams
-//
-// Revision 1.6  2004/05/06 06:38:07  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.5  2004/04/16 16:19:44  adcockj
-// Better reconnection and improved AFD support
-//
-// Revision 1.4  2004/04/14 16:31:34  adcockj
-// Subpicture fixes, AFD started and minor fixes
-//
-// Revision 1.3  2004/04/13 06:23:42  adcockj
-// Start to improve aspect handling
-//
-// Revision 1.2  2004/02/29 13:47:48  adcockj
-// Format change fixes
-// Minor library updates
-//
-// Revision 1.1  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
@@ -80,19 +45,19 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
         }
 
 
-		hr = pSample->SetActualDataLength(UserDataLen + 4);
-		if(SUCCEEDED(hr))
-		{
-			*(DWORD*)pData = 0xb2010000;
-			memcpy(pData + 4, UserData, UserDataLen);
+        hr = pSample->SetActualDataLength(UserDataLen + 4);
+        if(SUCCEEDED(hr))
+        {
+            *(DWORD*)pData = 0xb2010000;
+            memcpy(pData + 4, UserData, UserDataLen);
 
-			hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
-			CHECK(hr);
-		}			
-		else
-		{
+            hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
+            CHECK(hr);
+        }            
+        else
+        {
             LOG(DBGLOG_FLOW, ("Too much CC data got %d to fit in %d \n", UserDataLen + 4, pSample->GetSize()));
-		}
+        }
     }
     // process Active Format Description
     // see http://www.dtg.org.uk/publications/books/afd.pdf

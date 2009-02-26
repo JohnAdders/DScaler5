@@ -111,10 +111,10 @@ class SmartInterface
     void SafeRelease(void)
     {
         if (m_pif)
-		{
+        {
             m_pif->Release();
-			m_pif = 0;
-		}
+            m_pif = 0;
+        }
     }
 
 public:
@@ -472,10 +472,10 @@ class SmartInterface<IUnknown, &IID_IUnknown>
     void SafeRelease(void)
     {
         if (m_pif)
-		{
+        {
             m_pif->Release();
-			m_pif = 0;
-		}
+            m_pif = 0;
+        }
     }
 
 public:

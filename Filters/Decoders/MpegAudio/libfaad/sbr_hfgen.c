@@ -131,7 +131,7 @@ void hf_generation(sbr_info *sbr, qmf_t Xlow[MAX_NTSRHFG][32],
                 IM(a1) = MUL_C(IM(alpha_1[p]), bw2);
 #endif
 
-				for (l = first; l < last; l++)
+                for (l = first; l < last; l++)
                 {
                     QMF_RE(Xhigh[l + offset][k]) = QMF_RE(Xlow[l + offset][p]);
 #ifndef SBR_LOW_POWER

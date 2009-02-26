@@ -22,12 +22,12 @@
 #pragma once
 
 class CInputMemAlloc : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IMemAllocator
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IMemAllocator
 {
 public:
-	CInputMemAlloc();
-	~CInputMemAlloc();
+    CInputMemAlloc();
+    ~CInputMemAlloc();
 
 BEGIN_COM_MAP(CInputMemAlloc)
     COM_INTERFACE_ENTRY(IMemAllocator)
@@ -40,5 +40,5 @@ END_COM_MAP()
     STDMETHOD(GetBuffer)(IMediaSample **ppBuffer, REFERENCE_TIME *pStartTime, REFERENCE_TIME *pEndTime, DWORD dwFlags);
     STDMETHOD(ReleaseBuffer)(IMediaSample *pBuffer);
 private:
-	CComPtr<IMemAllocator> m_MemAlloc;
+    CComPtr<IMemAllocator> m_MemAlloc;
 };

@@ -44,9 +44,9 @@ public:
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
     STDMETHOD(Connect)(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt);
     HRESULT NotifyConnected();
-	void OnConnectToVMR7();
-	void OnConnectToVMR9();
-	void OnConnectToOverlay();
+    void OnConnectToVMR7();
+    void OnConnectToVMR9();
+    void OnConnectToOverlay();
     HRESULT CheckForReconnection();
     HRESULT ReconnectVMR();
     HRESULT ReconnectOverlay();

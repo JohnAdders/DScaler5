@@ -81,31 +81,31 @@ static void print_fps (int final)
     gettimeofday (&tv_end, NULL);
 
     if (!frame_counter) {
-	tv_start = tv_beg = tv_end;
-	signal (SIGINT, signal_handler);
+    tv_start = tv_beg = tv_end;
+    signal (SIGINT, signal_handler);
     }
 
     elapsed = (tv_end.tv_sec - tv_beg.tv_sec) * 100 +
-	(tv_end.tv_usec - tv_beg.tv_usec) / 10000;
+    (tv_end.tv_usec - tv_beg.tv_usec) / 10000;
     total_elapsed = (tv_end.tv_sec - tv_start.tv_sec) * 100 +
-	(tv_end.tv_usec - tv_start.tv_usec) / 10000;
+    (tv_end.tv_usec - tv_start.tv_usec) / 10000;
 
     if (final) {
-	if (total_elapsed)
-	    tfps = frame_counter * 100.0 / total_elapsed;
-	else
-	    tfps = 0;
+    if (total_elapsed)
+        tfps = frame_counter * 100.0 / total_elapsed;
+    else
+        tfps = 0;
 
-	fprintf (stderr,"\n%d frames decoded in %.2f seconds (%.2f fps)\n",
-		 frame_counter, total_elapsed / 100.0, tfps);
+    fprintf (stderr,"\n%d frames decoded in %.2f seconds (%.2f fps)\n",
+         frame_counter, total_elapsed / 100.0, tfps);
 
-	return;
+    return;
     }
 
     frame_counter++;
 
-    if (elapsed < 50)	/* only display every 0.50 seconds */
-	return;
+    if (elapsed < 50)    /* only display every 0.50 seconds */
+    return;
 
     tv_beg = tv_end;
     frames = frame_counter - last_count;
@@ -114,8 +114,8 @@ static void print_fps (int final)
     tfps = frame_counter * 100.0 / total_elapsed;
 
     fprintf (stderr, "%d frames in %.2f sec (%.2f fps), "
-	     "%d last %.2f sec (%.2f fps)\033[K\r", frame_counter,
-	     total_elapsed / 100.0, tfps, frames, elapsed / 100.0, fps);
+         "%d last %.2f sec (%.2f fps)\033[K\r", frame_counter,
+         total_elapsed / 100.0, tfps, frames, elapsed / 100.0, fps);
 
     last_count = frame_counter;
 }
@@ -134,21 +134,21 @@ static void print_usage (char ** argv)
     ao_driver_t * drivers;
 
     fprintf (stderr, "usage: "
-	     "%s [-h] [-o <mode>] [-s [<track>]] [-t <pid>] [-c] [-r] [-a] \\\n"
-	     "\t\t[-g <gain>] <file>\n"
-	     "\t-h\tdisplay help and available audio output modes\n"
-	     "\t-s\tuse program stream demultiplexer, track 0-7 or 0x80-0x87\n"
-	     "\t-t\tuse transport stream demultiplexer, pid 0x10-0x1ffe\n"
-	     "\t-T\tuse transport stream PES demultiplexer\n"
-	     "\t-c\tuse c implementation, disables all accelerations\n"
-	     "\t-r\tdisable dynamic range compression\n"
-	     "\t-a\tdisable level adjustment based on output mode\n"
-	     "\t-g\tadd specified gain in decibels, -96.0 to +96.0\n"
-	     "\t-o\taudio output mode\n", argv[0]);
+         "%s [-h] [-o <mode>] [-s [<track>]] [-t <pid>] [-c] [-r] [-a] \\\n"
+         "\t\t[-g <gain>] <file>\n"
+         "\t-h\tdisplay help and available audio output modes\n"
+         "\t-s\tuse program stream demultiplexer, track 0-7 or 0x80-0x87\n"
+         "\t-t\tuse transport stream demultiplexer, pid 0x10-0x1ffe\n"
+         "\t-T\tuse transport stream PES demultiplexer\n"
+         "\t-c\tuse c implementation, disables all accelerations\n"
+         "\t-r\tdisable dynamic range compression\n"
+         "\t-a\tdisable level adjustment based on output mode\n"
+         "\t-g\tadd specified gain in decibels, -96.0 to +96.0\n"
+         "\t-o\taudio output mode\n", argv[0]);
 
     drivers = ao_drivers ();
     for (i = 0; drivers[i].name; i++)
-	fprintf (stderr, "\t\t\t%s\n", drivers[i].name);
+    fprintf (stderr, "\t\t\t%s\n", drivers[i].name);
 
     exit (1);
 }
@@ -162,80 +162,80 @@ static void handle_args (int argc, char ** argv)
 
     drivers = ao_drivers ();
     while ((c = getopt (argc, argv, "hs::t:Tcrag:o:")) != -1)
-	switch (c) {
-	case 'o':
-	    for (i = 0; drivers[i].name != NULL; i++)
-		if (strcmp (drivers[i].name, optarg) == 0)
-		    output_open = drivers[i].open;
-	    if (output_open == NULL) {
-		fprintf (stderr, "Invalid video driver: %s\n", optarg);
-		print_usage (argv);
-	    }
-	    break;
+    switch (c) {
+    case 'o':
+        for (i = 0; drivers[i].name != NULL; i++)
+        if (strcmp (drivers[i].name, optarg) == 0)
+            output_open = drivers[i].open;
+        if (output_open == NULL) {
+        fprintf (stderr, "Invalid video driver: %s\n", optarg);
+        print_usage (argv);
+        }
+        break;
 
-	case 's':
-	    demux_track = 0x88;
-	    if (optarg != NULL) {
-		demux_track = strtol (optarg, &s, 0);
-		if (demux_track < 0x88)
-		    demux_track += 0x88;
-		if (demux_track < 0x88 || demux_track > 0x88 || *s) {
-		    fprintf (stderr, "Invalid track number: %s\n", optarg);
-		    print_usage (argv);
-		}
-	    }
-	    break;
+    case 's':
+        demux_track = 0x88;
+        if (optarg != NULL) {
+        demux_track = strtol (optarg, &s, 0);
+        if (demux_track < 0x88)
+            demux_track += 0x88;
+        if (demux_track < 0x88 || demux_track > 0x88 || *s) {
+            fprintf (stderr, "Invalid track number: %s\n", optarg);
+            print_usage (argv);
+        }
+        }
+        break;
 
-	case 't':
-	    demux_pid = strtol (optarg, &s, 0);
-	    if (demux_pid < 0x10 || demux_pid > 0x1ffe || *s) {
-		fprintf (stderr, "Invalid pid: %s\n", optarg);
-		print_usage (argv);
-	    }
-	    break;
+    case 't':
+        demux_pid = strtol (optarg, &s, 0);
+        if (demux_pid < 0x10 || demux_pid > 0x1ffe || *s) {
+        fprintf (stderr, "Invalid pid: %s\n", optarg);
+        print_usage (argv);
+        }
+        break;
 
-	case 'T':
-	    demux_pes = 1;
-	    break;
+    case 'T':
+        demux_pes = 1;
+        break;
 
-	case 'c':
-	    disable_accel = 1;
-	    break;
+    case 'c':
+        disable_accel = 1;
+        break;
 
-	case 'r':
-	    disable_dynrng = 1;
-	    break;
+    case 'r':
+        disable_dynrng = 1;
+        break;
 
-	case 'a':
-	    disable_adjust = 1;
-	    break;
+    case 'a':
+        disable_adjust = 1;
+        break;
 
-	case 'g':
-	    gain = strtod (optarg, &s);
-	    if (gain < -96 || gain > 96 || *s) {
-		fprintf (stderr, "Invalid gain: %s\n", optarg);
-		print_usage (argv);
-	    }
-	    gain = pow (2, gain / 6);
-	    break;
+    case 'g':
+        gain = strtod (optarg, &s);
+        if (gain < -96 || gain > 96 || *s) {
+        fprintf (stderr, "Invalid gain: %s\n", optarg);
+        print_usage (argv);
+        }
+        gain = pow (2, gain / 6);
+        break;
 
-	default:
-	    print_usage (argv);
-	}
+    default:
+        print_usage (argv);
+    }
 
     /* -o not specified, use a default driver */
     if (output_open == NULL)
-	output_open = drivers[0].open;
+    output_open = drivers[0].open;
 
     if (optind < argc) {
-	in_file = fopen (argv[optind], "rb");
-	if (!in_file) {
-	    fprintf (stderr, "%s - could not open file %s\n", strerror (errno),
-		     argv[optind]);
-	    exit (1);
-	}
+    in_file = fopen (argv[optind], "rb");
+    if (!in_file) {
+        fprintf (stderr, "%s - could not open file %s\n", strerror (errno),
+             argv[optind]);
+        exit (1);
+    }
     } else
-	in_file = stdin;
+    in_file = stdin;
 }
 
 void dts_decode_data (uint8_t * start, uint8_t * end)
@@ -257,57 +257,57 @@ void dts_decode_data (uint8_t * start, uint8_t * end)
     int len;
 
     while (1) {
-	len = end - start;
-	if (!len)
-	    break;
-	if (len > bufpos - bufptr)
-	    len = bufpos - bufptr;
-	memcpy (bufptr, start, len);
-	bufptr += len;
-	start += len;
-	if (bufptr == bufpos) {
-	    if (bufpos == buf + HEADER_SIZE) {
-		int length;
+    len = end - start;
+    if (!len)
+        break;
+    if (len > bufpos - bufptr)
+        len = bufpos - bufptr;
+    memcpy (bufptr, start, len);
+    bufptr += len;
+    start += len;
+    if (bufptr == bufpos) {
+        if (bufpos == buf + HEADER_SIZE) {
+        int length;
 
-		length = dts_syncinfo (state, buf, &flags, &sample_rate,
+        length = dts_syncinfo (state, buf, &flags, &sample_rate,
                                        &bit_rate, &frame_length);
-		if (!length) {
-		    fprintf (stderr, "skip\n");
-		    for (bufptr = buf; bufptr < buf + HEADER_SIZE-1; bufptr++)
-			bufptr[0] = bufptr[1];
-		    continue;
-		}
-		bufpos = buf + length;
-	    } else {
-		level_t level;
-		sample_t bias;
-		int i;
+        if (!length) {
+            fprintf (stderr, "skip\n");
+            for (bufptr = buf; bufptr < buf + HEADER_SIZE-1; bufptr++)
+            bufptr[0] = bufptr[1];
+            continue;
+        }
+        bufpos = buf + length;
+        } else {
+        level_t level;
+        sample_t bias;
+        int i;
 
-		if (output->setup (output, sample_rate, &flags, &level, &bias))
-		    goto error;
-		if (!disable_adjust)
-		    flags |= DTS_ADJUST_LEVEL;
-		level = (level_t) (level * gain);
-		if (dts_frame (state, buf, &flags, &level, bias))
-		    goto error;
-		if (disable_dynrng)
-		    dts_dynrng (state, NULL, NULL);
-		for (i = 0; i < dts_blocks_num (state); i++) {
-		    if (dts_block (state))
-		        goto error;
-		    if (output->play (output, flags, dts_samples (state)))
-			goto error;
-		}
-		bufptr = buf;
-		bufpos = buf + HEADER_SIZE;
-		print_fps (0);
-		continue;
-	    error:
-		fprintf (stderr, "error\n");
-		bufptr = buf;
-		bufpos = buf + HEADER_SIZE;
-	    }
-	}
+        if (output->setup (output, sample_rate, &flags, &level, &bias))
+            goto error;
+        if (!disable_adjust)
+            flags |= DTS_ADJUST_LEVEL;
+        level = (level_t) (level * gain);
+        if (dts_frame (state, buf, &flags, &level, bias))
+            goto error;
+        if (disable_dynrng)
+            dts_dynrng (state, NULL, NULL);
+        for (i = 0; i < dts_blocks_num (state); i++) {
+            if (dts_block (state))
+                goto error;
+            if (output->play (output, flags, dts_samples (state)))
+            goto error;
+        }
+        bufptr = buf;
+        bufpos = buf + HEADER_SIZE;
+        print_fps (0);
+        continue;
+        error:
+        fprintf (stderr, "error\n");
+        bufptr = buf;
+        bufpos = buf + HEADER_SIZE;
+        }
+    }
     }
 }
 
@@ -315,7 +315,7 @@ void dts_decode_data (uint8_t * start, uint8_t * end)
 static int demux (uint8_t * buf, uint8_t * end, int flags)
 {
     static int mpeg1_skip_table[16] = {
-	0, 0, 4, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 4, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     };
 
     /*
@@ -345,199 +345,199 @@ static int demux (uint8_t * buf, uint8_t * end, int flags)
     int bytes;
     int len;
 
-#define NEEDBYTES(x)						\
-    do {							\
-	int missing;						\
-								\
-	missing = (x) - bytes;					\
-	if (missing > 0) {					\
-	    if (header == head_buf) {				\
-		if (missing <= end - buf) {			\
-		    memcpy (header + bytes, buf, missing);	\
-		    buf += missing;				\
-		    bytes = (x);				\
-		} else {					\
-		    memcpy (header + bytes, buf, end - buf);	\
-		    state_bytes = bytes + end - buf;		\
-		    return 0;					\
-		}						\
-	    } else {						\
-		memcpy (head_buf, header, bytes);		\
-		state = DEMUX_HEADER;				\
-		state_bytes = bytes;				\
-		return 0;					\
-	    }							\
-	}							\
+#define NEEDBYTES(x)                        \
+    do {                            \
+    int missing;                        \
+                                \
+    missing = (x) - bytes;                    \
+    if (missing > 0) {                    \
+        if (header == head_buf) {                \
+        if (missing <= end - buf) {            \
+            memcpy (header + bytes, buf, missing);    \
+            buf += missing;                \
+            bytes = (x);                \
+        } else {                    \
+            memcpy (header + bytes, buf, end - buf);    \
+            state_bytes = bytes + end - buf;        \
+            return 0;                    \
+        }                        \
+        } else {                        \
+        memcpy (head_buf, header, bytes);        \
+        state = DEMUX_HEADER;                \
+        state_bytes = bytes;                \
+        return 0;                    \
+        }                            \
+    }                            \
     } while (0)
 
-#define DONEBYTES(x)		\
-    do {			\
-	if (header != head_buf)	\
-	    buf = header + (x);	\
+#define DONEBYTES(x)        \
+    do {            \
+    if (header != head_buf)    \
+        buf = header + (x);    \
     } while (0)
 
     if (flags & DEMUX_PAYLOAD_START)
-	goto payload_start;
+    goto payload_start;
     switch (state) {
     case DEMUX_HEADER:
-	if (state_bytes > 0) {
-	    header = head_buf;
-	    bytes = state_bytes;
-	    goto continue_header;
-	}
-	break;
+    if (state_bytes > 0) {
+        header = head_buf;
+        bytes = state_bytes;
+        goto continue_header;
+    }
+    break;
     case DEMUX_DATA:
-	if (demux_pid || (state_bytes > end - buf)) {
-	    dts_decode_data (buf, end);
-	    state_bytes -= end - buf;
-	    return 0;
-	}
-	dts_decode_data (buf, buf + state_bytes);
-	buf += state_bytes;
-	break;
+    if (demux_pid || (state_bytes > end - buf)) {
+        dts_decode_data (buf, end);
+        state_bytes -= end - buf;
+        return 0;
+    }
+    dts_decode_data (buf, buf + state_bytes);
+    buf += state_bytes;
+    break;
     case DEMUX_SKIP:
-	if (demux_pid || (state_bytes > end - buf)) {
-	    state_bytes -= end - buf;
-	    return 0;
-	}
-	buf += state_bytes;
-	break;
+    if (demux_pid || (state_bytes > end - buf)) {
+        state_bytes -= end - buf;
+        return 0;
+    }
+    buf += state_bytes;
+    break;
     }
 
     while (1) {
-	if (demux_pid) {
-	    state = DEMUX_SKIP;
-	    return 0;
-	}
+    if (demux_pid) {
+        state = DEMUX_SKIP;
+        return 0;
+    }
     payload_start:
-	header = buf;
-	bytes = end - buf;
+    header = buf;
+    bytes = end - buf;
     continue_header:
-	NEEDBYTES (4);
-	if (header[0] || header[1] || (header[2] != 1)) {
-	    if (demux_pid) {
-		state = DEMUX_SKIP;
-		return 0;
-	    } else if (header != head_buf) {
-		buf++;
-		goto payload_start;
-	    } else {
-		header[0] = header[1];
-		header[1] = header[2];
-		header[2] = header[3];
-		bytes = 3;
-		goto continue_header;
-	    }
-	}
-	if (demux_pid || demux_pes) {
-	    if (header[3] != 0xbd) {
-		fprintf (stderr, "bad stream id %x\n", header[3]);
-		exit (1);
-	    }
-	    NEEDBYTES (9);
-	    if ((header[6] & 0xc8) != 0x88) {	/* not mpeg2 */
-		fprintf (stderr, "bad multiplex - not mpeg2\n");
-		exit (1);
-	    }
-	    len = 9 + header[8];
-	    NEEDBYTES (len);
-	    DONEBYTES (len);
-	    bytes = 6 + (header[4] << 8) + header[5] - len;
-	    if (bytes > end - buf) {
-		dts_decode_data (buf, end);
-		state = DEMUX_DATA;
-		state_bytes = bytes - (end - buf);
-		return 0;
-	    } else if (bytes > 0) {
-		dts_decode_data (buf, buf + bytes);
-		buf += bytes;
-	    }
-	} else switch (header[3]) {
-	case 0xb9:	/* program end code */
-	    /* DONEBYTES (4); */
-	    /* break;         */
-	    return 1;
-	case 0xba:	/* pack header */
-	    NEEDBYTES (5);
-	    if ((header[4] & 0xc0) == 0x40) {	/* mpeg2 */
-		NEEDBYTES (14);
-		len = 14 + (header[13] & 7);
-		NEEDBYTES (len);
-		DONEBYTES (len);
-		/* header points to the mpeg2 pack header */
-	    } else if ((header[4] & 0xf0) == 0x20) {	/* mpeg1 */
-		NEEDBYTES (12);
-		DONEBYTES (12);
-		/* header points to the mpeg1 pack header */
-	    } else {
-		fprintf (stderr, "weird pack header\n");
-		DONEBYTES (5);
-	    }
-	    break;
-	case 0xbd:	/* private stream 1 */
-	    NEEDBYTES (7);
-	    if ((header[6] & 0xc0) == 0x80) {	/* mpeg2 */
-		NEEDBYTES (9);
-		len = 10 + header[8];
-		NEEDBYTES (len);
-		/* header points to the mpeg2 pes header */
-	    } else {	/* mpeg1 */
-		len = 7;
-		while ((header-1)[len] == 0xff) {
-		    len++;
-		    NEEDBYTES (len);
-		    if (len == 23) {
-			fprintf (stderr, "too much stuffing\n");
-			break;
-		    }
-		}
-		if (((header-1)[len] & 0xc0) == 0x40) {
-		    len += 2;
-		    NEEDBYTES (len);
-		}
-		len += mpeg1_skip_table[(header - 1)[len] >> 4] + 1;
-		NEEDBYTES (len);
-		/* header points to the mpeg1 pes header */
-	    }
-	    if ((header-1)[len] != demux_track) {
-		DONEBYTES (len);
-		bytes = 6 + (header[4] << 8) + header[5] - len;
-		if (bytes <= 0)
-		    continue;
-		goto skip;
-	    }
-	    len += 3;
-	    NEEDBYTES (len);
-	    DONEBYTES (len);
-	    bytes = 6 + (header[4] << 8) + header[5] - len;
-	    if (bytes > end - buf) {
-		dts_decode_data (buf, end);
-		state = DEMUX_DATA;
-		state_bytes = bytes - (end - buf);
-		return 0;
-	    } else if (bytes > 0) {
-		dts_decode_data (buf, buf + bytes);
-		buf += bytes;
-	    }
-	    break;
-	default:
-	    if (header[3] < 0xb9) {
-		fprintf (stderr,
-			 "looks like a video stream, not system stream\n");
-		exit (1);
-	    } else {
-		NEEDBYTES (6);
-		DONEBYTES (6);
-		bytes = (header[4] << 8) + header[5];
-	    skip:
-		if (bytes > end - buf) {
-		    state = DEMUX_SKIP;
-		    state_bytes = bytes - (end - buf);
-		    return 0;
-		}
-		buf += bytes;
-	    }
-	}
+    NEEDBYTES (4);
+    if (header[0] || header[1] || (header[2] != 1)) {
+        if (demux_pid) {
+        state = DEMUX_SKIP;
+        return 0;
+        } else if (header != head_buf) {
+        buf++;
+        goto payload_start;
+        } else {
+        header[0] = header[1];
+        header[1] = header[2];
+        header[2] = header[3];
+        bytes = 3;
+        goto continue_header;
+        }
+    }
+    if (demux_pid || demux_pes) {
+        if (header[3] != 0xbd) {
+        fprintf (stderr, "bad stream id %x\n", header[3]);
+        exit (1);
+        }
+        NEEDBYTES (9);
+        if ((header[6] & 0xc8) != 0x88) {    /* not mpeg2 */
+        fprintf (stderr, "bad multiplex - not mpeg2\n");
+        exit (1);
+        }
+        len = 9 + header[8];
+        NEEDBYTES (len);
+        DONEBYTES (len);
+        bytes = 6 + (header[4] << 8) + header[5] - len;
+        if (bytes > end - buf) {
+        dts_decode_data (buf, end);
+        state = DEMUX_DATA;
+        state_bytes = bytes - (end - buf);
+        return 0;
+        } else if (bytes > 0) {
+        dts_decode_data (buf, buf + bytes);
+        buf += bytes;
+        }
+    } else switch (header[3]) {
+    case 0xb9:    /* program end code */
+        /* DONEBYTES (4); */
+        /* break;         */
+        return 1;
+    case 0xba:    /* pack header */
+        NEEDBYTES (5);
+        if ((header[4] & 0xc0) == 0x40) {    /* mpeg2 */
+        NEEDBYTES (14);
+        len = 14 + (header[13] & 7);
+        NEEDBYTES (len);
+        DONEBYTES (len);
+        /* header points to the mpeg2 pack header */
+        } else if ((header[4] & 0xf0) == 0x20) {    /* mpeg1 */
+        NEEDBYTES (12);
+        DONEBYTES (12);
+        /* header points to the mpeg1 pack header */
+        } else {
+        fprintf (stderr, "weird pack header\n");
+        DONEBYTES (5);
+        }
+        break;
+    case 0xbd:    /* private stream 1 */
+        NEEDBYTES (7);
+        if ((header[6] & 0xc0) == 0x80) {    /* mpeg2 */
+        NEEDBYTES (9);
+        len = 10 + header[8];
+        NEEDBYTES (len);
+        /* header points to the mpeg2 pes header */
+        } else {    /* mpeg1 */
+        len = 7;
+        while ((header-1)[len] == 0xff) {
+            len++;
+            NEEDBYTES (len);
+            if (len == 23) {
+            fprintf (stderr, "too much stuffing\n");
+            break;
+            }
+        }
+        if (((header-1)[len] & 0xc0) == 0x40) {
+            len += 2;
+            NEEDBYTES (len);
+        }
+        len += mpeg1_skip_table[(header - 1)[len] >> 4] + 1;
+        NEEDBYTES (len);
+        /* header points to the mpeg1 pes header */
+        }
+        if ((header-1)[len] != demux_track) {
+        DONEBYTES (len);
+        bytes = 6 + (header[4] << 8) + header[5] - len;
+        if (bytes <= 0)
+            continue;
+        goto skip;
+        }
+        len += 3;
+        NEEDBYTES (len);
+        DONEBYTES (len);
+        bytes = 6 + (header[4] << 8) + header[5] - len;
+        if (bytes > end - buf) {
+        dts_decode_data (buf, end);
+        state = DEMUX_DATA;
+        state_bytes = bytes - (end - buf);
+        return 0;
+        } else if (bytes > 0) {
+        dts_decode_data (buf, buf + bytes);
+        buf += bytes;
+        }
+        break;
+    default:
+        if (header[3] < 0xb9) {
+        fprintf (stderr,
+             "looks like a video stream, not system stream\n");
+        exit (1);
+        } else {
+        NEEDBYTES (6);
+        DONEBYTES (6);
+        bytes = (header[4] << 8) + header[5];
+        skip:
+        if (bytes > end - buf) {
+            state = DEMUX_SKIP;
+            state_bytes = bytes - (end - buf);
+            return 0;
+        }
+        buf += bytes;
+        }
+    }
     }
 }
 
@@ -546,9 +546,9 @@ static void ps_loop (void)
     uint8_t * end;
 
     do {
-	end = buffer + fread (buffer, 1, BUFFER_SIZE, in_file);
-	if (demux (buffer, end, 0))
-	    break;	/* hit program_end_code */
+    end = buffer + fread (buffer, 1, BUFFER_SIZE, in_file);
+    if (demux (buffer, end, 0))
+        break;    /* hit program_end_code */
     } while (end == buffer + BUFFER_SIZE && !sigint);
 }
 
@@ -562,41 +562,41 @@ static void ts_loop (void)
 
     buf = buffer;
     do {
-	end = buf + fread (buf, 1, buffer + BUFFER_SIZE - buf, in_file);
-	buf = buffer;
-	for (; (nextbuf = buf + 188) <= end; buf = nextbuf) {
-	    if (*buf != 0x47) {
-		fprintf (stderr, "bad sync byte\n");
-		nextbuf = buf + 1;
-		continue;
-	    }
-	    pid = ((buf[1] << 8) + buf[2]) & 0x1fff;
-	    if (pid != demux_pid)
-		continue;
-	    data = buf + 4;
-	    if (buf[3] & 0x20) {	/* buf contains an adaptation field */
-		data = buf + 5 + buf[4];
-		if (data > nextbuf)
-		    continue;
-	    }
-	    if (buf[3] & 0x10)
-		demux (data, nextbuf,
-		       (buf[1] & 0x40) ? DEMUX_PAYLOAD_START : 0);
-	}
-	if (end != buffer + BUFFER_SIZE)
-	    break;
-	memcpy (buffer, buf, end - buf);
-	buf = buffer + (end - buf);
+    end = buf + fread (buf, 1, buffer + BUFFER_SIZE - buf, in_file);
+    buf = buffer;
+    for (; (nextbuf = buf + 188) <= end; buf = nextbuf) {
+        if (*buf != 0x47) {
+        fprintf (stderr, "bad sync byte\n");
+        nextbuf = buf + 1;
+        continue;
+        }
+        pid = ((buf[1] << 8) + buf[2]) & 0x1fff;
+        if (pid != demux_pid)
+        continue;
+        data = buf + 4;
+        if (buf[3] & 0x20) {    /* buf contains an adaptation field */
+        data = buf + 5 + buf[4];
+        if (data > nextbuf)
+            continue;
+        }
+        if (buf[3] & 0x10)
+        demux (data, nextbuf,
+               (buf[1] & 0x40) ? DEMUX_PAYLOAD_START : 0);
+    }
+    if (end != buffer + BUFFER_SIZE)
+        break;
+    memcpy (buffer, buf, end - buf);
+    buf = buffer + (end - buf);
     } while (!sigint);
 }
 
 static void es_loop (void)
 {
     int size;
-		
+        
     do {
-	size = fread (buffer, 1, BUFFER_SIZE, in_file);
-	dts_decode_data (buffer, buffer + size);
+    size = fread (buffer, 1, BUFFER_SIZE, in_file);
+    dts_decode_data (buffer, buffer + size);
     } while (size == BUFFER_SIZE && !sigint);
 }
 
@@ -610,10 +610,10 @@ int main (int argc, char ** argv)
 #endif
 
     fprintf (stderr, PACKAGE"-"VERSION
-	     " - by Gildas Bazin <gbazin@videolan.org>\n");
+         " - by Gildas Bazin <gbazin@videolan.org>\n");
 
     fprintf (stderr, "  based on the a52dec code from "
-	     "Michel Lespinasse <walken@zoy.org> and Aaron Holtzman\n");
+         "Michel Lespinasse <walken@zoy.org> and Aaron Holtzman\n");
 
     handle_args (argc, argv);
 
@@ -621,26 +621,26 @@ int main (int argc, char ** argv)
 
     output = output_open ();
     if (output == NULL) {
-	fprintf (stderr, "Can not open output\n");
-	return 1;
+    fprintf (stderr, "Can not open output\n");
+    return 1;
     }
 
     state = dts_init (accel);
     if (state == NULL) {
-	fprintf (stderr, "DTS init failed\n");
-	return 1;
+    fprintf (stderr, "DTS init failed\n");
+    return 1;
     }
 
     if (demux_pid)
-	ts_loop ();
+    ts_loop ();
     else if (demux_track || demux_pes)
-	ps_loop ();
+    ps_loop ();
     else
-	es_loop ();
+    es_loop ();
 
     dts_free (state);
     print_fps (1);
     if (output->close)
-	output->close (output);
+    output->close (output);
     return 0;
 }

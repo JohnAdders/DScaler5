@@ -40,269 +40,6 @@
 //  - Removed own deinterlacing and set media type so that VMR can deinterlace
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.77  2007/12/15 14:49:29  adcockj
-// Start code fixes for h264
-// Deactivate made safer
-//
-// Revision 1.76  2007/10/19 17:05:49  adcockj
-// Added Support for setting new color info flags
-//
-// Revision 1.75  2007/06/25 17:05:04  adcockj
-// Fixed ATSC CC ording issues by improving handling of picture data
-//
-// Revision 1.74  2007/02/22 07:18:55  adcockj
-// added support for analog blanking for 544 widths
-//
-// Revision 1.73  2005/10/05 16:21:16  adcockj
-// get NV12 mode connection working
-//
-// Revision 1.72  2005/10/05 14:30:42  adcockj
-// implemented NV12 just to see if we get connection, will produce corrupted output at present
-//
-// Revision 1.71  2005/03/20 14:18:14  adcockj
-// aspect fixes and new deinterlacing test parameter
-//
-// Revision 1.70  2005/03/08 13:35:09  adcockj
-// Better handling of square pixel formats
-// Turn off quality control
-//
-// Revision 1.69  2005/03/04 17:54:37  adcockj
-// Menu fixes & added rate stuff locking
-//
-// Revision 1.68  2005/02/17 09:31:45  adcockj
-// Added analog blanking option
-// Removed force Dscaler filter option
-// Another proposed fix for menus
-//
-// Revision 1.67  2005/02/09 07:27:32  adcockj
-// fixed buffer handling on reset
-//
-// Revision 1.66  2005/02/08 15:32:34  adcockj
-// Added CSS handling
-//
-// Revision 1.65  2005/02/03 13:40:54  adcockj
-// Improved seek support
-//
-// Revision 1.64  2005/01/21 13:54:45  adcockj
-// Reset some test changes and added soem clock monitoring code
-//
-// Revision 1.63  2005/01/04 17:53:43  adcockj
-// added option to force dscalewr filter to be loaded2
-//
-// Revision 1.62  2004/12/20 08:51:52  adcockj
-// added back statistics
-//
-// Revision 1.61  2004/12/13 16:59:57  adcockj
-// flag based film detection
-//
-// Revision 1.60  2004/12/12 20:35:15  adcockj
-// fixed leak
-//
-// Revision 1.59  2004/12/06 18:04:58  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.58  2004/11/27 22:15:22  adcockj
-// whoops, shouldn't have checked in css tests
-//
-// Revision 1.57  2004/11/26 15:15:03  adcockj
-// Fixed overlay stutter
-//
-// Revision 1.56  2004/11/25 17:22:10  adcockj
-// Fixed some more connection issues
-//
-// Revision 1.55  2004/11/18 07:40:56  adcockj
-// a few test bug fixes
-//
-// Revision 1.54  2004/11/09 17:20:38  adcockj
-// Stutter fix
-//
-// Revision 1.53  2004/11/06 14:36:09  adcockj
-// VS6 project update
-//
-// Revision 1.52  2004/11/05 16:58:31  adcockj
-// Fix for use with other containers
-//
-// Revision 1.51  2004/11/01 14:09:38  adcockj
-// More DScaler filter insipred changes
-//
-// Revision 1.50  2004/10/31 14:19:49  adcockj
-// fixed issues with avgtimeperframe
-//
-// Revision 1.49  2004/10/28 15:52:24  adcockj
-// Moved video output pin code into new class
-//
-// Revision 1.48  2004/10/28 09:05:25  adcockj
-// Fixed issue with negative settings
-//
-// Revision 1.47  2004/10/26 16:23:44  adcockj
-// Improve subpicture performance
-//
-// Revision 1.46  2004/10/22 07:34:40  adcockj
-// fix for some connection issues
-//
-// Revision 1.45  2004/10/21 18:51:41  adcockj
-// Simple VMR compatable quality control
-//
-// Revision 1.44  2004/09/27 20:59:17  adcockj
-// Not fully tested MCE fixes
-//
-// Revision 1.43  2004/09/23 14:27:58  adcockj
-// preliminary fixed for reconnection issues
-//
-// Revision 1.42  2004/09/13 14:28:44  adcockj
-// Connection changes and crash fixes
-//
-// Revision 1.41  2004/09/10 15:35:57  adcockj
-// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
-//
-// Revision 1.40  2004/08/31 16:33:41  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.39  2004/08/06 08:38:53  adcockj
-// Added optional YV12 output type
-//
-// Revision 1.38  2004/08/03 08:55:56  adcockj
-// Fixes for seeking issues
-//
-// Revision 1.37  2004/07/29 13:44:59  adcockj
-// More fixes for Laurent's issues
-//
-// Revision 1.36  2004/07/29 08:31:07  adcockj
-// Fixed issue with 100% CPU with MPC and overlay
-//
-// Revision 1.35  2004/07/28 16:32:34  adcockj
-// Fixes Blight's problems from the forum
-//
-// Revision 1.34  2004/07/23 21:00:12  adcockj
-// Fixed compilation problem in VS6
-//
-// Revision 1.33  2004/07/21 15:05:24  adcockj
-// Fixed some issues with ff & rew
-//
-// Revision 1.32  2004/07/20 16:37:48  adcockj
-// Fixes for main issues raised in testing of 0.0.1
-//  - Improved parameter handling
-//  - Fixed some overlay issues
-//  - Auto aspect ratio with VMR
-//  - Fixed some overlay stutters
-//  - Fixed some push filter issues
-//  - ffdshow and DirectVobSub connection issues
-//
-// Added
-//  - Hardcode for PAL setting for ffdshow
-//  - Added choice of IDCT for testing
-//
-// Revision 1.31  2004/07/16 15:58:01  adcockj
-// Fixed compilation issues under .NET
-// Changed name of filter
-// Some performance improvements to libmpeg2
-//
-// Revision 1.30  2004/07/11 14:36:00  adcockj
-// Improved performance under debug
-//
-// Revision 1.29  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.28  2004/05/25 16:59:29  adcockj
-// fixed issues with new buffered pin
-//
-// Revision 1.27  2004/05/24 06:29:26  adcockj
-// Interim buffer fix
-//
-// Revision 1.26  2004/05/12 17:01:03  adcockj
-// Hopefully correct treatment of timestamps at last
-//
-// Revision 1.25  2004/05/10 16:48:50  adcockj
-// Imporved handling of sequence changes
-//
-// Revision 1.24  2004/05/10 06:40:27  adcockj
-// Fixes for better compatability with PES streams
-//
-// Revision 1.23  2004/05/06 06:38:06  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.22  2004/04/29 16:16:45  adcockj
-// Yet more reconnection fixes
-//
-// Revision 1.21  2004/04/28 16:32:36  adcockj
-// Better dynamic connection
-//
-// Revision 1.20  2004/04/20 16:30:16  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.19  2004/04/16 16:19:44  adcockj
-// Better reconnection and improved AFD support
-//
-// Revision 1.18  2004/04/14 16:31:34  adcockj
-// Subpicture fixes, AFD started and minor fixes
-//
-// Revision 1.17  2004/04/13 06:23:42  adcockj
-// Start to improve aspect handling
-//
-// Revision 1.16  2004/04/08 16:41:57  adcockj
-// Tidy up subpicture support
-//
-// Revision 1.15  2004/04/06 16:46:12  adcockj
-// DVD Test Annex Compatability fixes
-//
-// Revision 1.14  2004/03/15 17:16:02  adcockj
-// Better PES header handling - Inspired by Gabest's latest MPC patch
-//
-// Revision 1.13  2004/03/11 16:52:21  adcockj
-// Improved subpicture drawing with different video widths/heights
-//
-// Revision 1.12  2004/03/08 17:04:01  adcockj
-// Removed all inline assembler to remove dependence on MS compilers
-//
-// Revision 1.11  2004/03/02 07:54:57  adcockj
-// Slightly improved discontinity handling
-//
-// Revision 1.10  2004/02/29 19:06:36  adcockj
-// Futher dynamic format change fix
-//
-// Revision 1.9  2004/02/29 13:47:48  adcockj
-// Format change fixes
-// Minor library updates
-//
-// Revision 1.8  2004/02/27 17:07:01  adcockj
-// Fixes for improved handling of two way dynamic format changes
-// Support for library fixes
-//
-// Revision 1.7  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.6  2004/02/16 17:25:01  adcockj
-// Fix build errors, locking problems and DVD compatability
-//
-// Revision 1.5  2004/02/12 17:06:45  adcockj
-// Libary Tidy up
-// Fix for stopping problems
-//
-// Revision 1.4  2004/02/10 13:24:12  adcockj
-// Lots of bug fixes + corrected interlaced YV12 upconversion
-//
-// Revision 1.3  2004/02/09 07:57:33  adcockj
-// Stopping big fix
-// Timestamps issue test fix
-//
-// Revision 1.2  2004/02/06 16:41:41  adcockj
-// Added frame smoothing and forced subs parameters
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "MpegDecoder.h"
@@ -587,25 +324,25 @@ HRESULT CMpegDecoder::Get(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceD
 
 HRESULT CMpegDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 {
-	// temporary quality control
-	// basically let the renderer do quality control
-	// except when we are showing stills (normally these
-	// only occur in DVD menus) in which case
-	// we eat the quality control messages
-	// and just say we have coped, this should
-	// make the renderer dispaly all our updates
-	// to stills which should reduce the problems
-	// you can get with quality control interfering
-	// with updates to subpicture frames on still pages
-	if(m_LastPictureWasStill)
-	{
-		return S_OK;
-	}
-	else
-	{
+    // temporary quality control
+    // basically let the renderer do quality control
+    // except when we are showing stills (normally these
+    // only occur in DVD menus) in which case
+    // we eat the quality control messages
+    // and just say we have coped, this should
+    // make the renderer dispaly all our updates
+    // to stills which should reduce the problems
+    // you can get with quality control interfering
+    // with updates to subpicture frames on still pages
+    if(m_LastPictureWasStill)
+    {
+        return S_OK;
+    }
+    else
+    {
         LOG(DBGLOG_FLOW, ("Quality Message type %d prop %d late %d\n", q.Type, q.Proportion, q.Late));
-		return E_FAIL;
-	}
+        return E_FAIL;
+    }
 
     Sleep(10);
     if(pPin == m_VideoOutPin)
@@ -935,16 +672,16 @@ HRESULT CMpegDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         if(!m_VideoInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
-		DWORD VideoFlags = 0;
-		switch(GetParamEnum(OUTPUTSPACE))
-		{
-		case SPACE_YUY2:
-			VideoFlags |= VIDEOTYPEFLAG_FORCE_YUY2;
-			break;
-		case SPACE_YV12:
-			VideoFlags |= VIDEOTYPEFLAG_FORCE_YV12;
-			break;
-		}
+        DWORD VideoFlags = 0;
+        switch(GetParamEnum(OUTPUTSPACE))
+        {
+        case SPACE_YUY2:
+            VideoFlags |= VIDEOTYPEFLAG_FORCE_YUY2;
+            break;
+        case SPACE_YV12:
+            VideoFlags |= VIDEOTYPEFLAG_FORCE_YV12;
+            break;
+        }
         VideoFlags |= (GetParamBool(FIELD1FIRST))?VIDEOTYPEFLAG_SET_FIELD1FIRST:0;
         return m_VideoOutPin->CreateSuitableMediaType(pmt, TypeNum, VideoFlags, m_ControlFlags);
     }
@@ -1023,8 +760,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         {
             VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pMediaType->pbFormat;
             m_ControlFlags = vih->dwControlFlags & 0x000F;
-        	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
-		}
+            m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
+        }
         else if(pMediaType->formattype == FORMAT_MPEG2_VIDEO)
         {
             MPEG2VIDEOINFO* mvih = (MPEG2VIDEOINFO*)pMediaType->pbFormat;
@@ -1046,13 +783,13 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             }
             m_VideoOutPin->SetAvgTimePerFrame(mvih->hdr.AvgTimePerFrame);
         }
-		else if(pMediaType->formattype == FORMAT_MPEGVideo ||
-					pMediaType->formattype == FORMAT_VideoInfo)
-		{
+        else if(pMediaType->formattype == FORMAT_MPEGVideo ||
+                    pMediaType->formattype == FORMAT_VideoInfo)
+        {
             VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pMediaType->pbFormat;
             m_ControlFlags = 0;
-        	m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
-		}
+            m_VideoOutPin->SetAvgTimePerFrame(vih->AvgTimePerFrame);
+        }
 
         m_ControlFlags += GetParamEnum(NOMINALRANGE) << 12;
         m_ControlFlags += GetParamEnum(TRANSFERMATRIX) << 15;
@@ -1391,7 +1128,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
 // blocked out code for monitoring current graph clock.
 #ifdef _NOT_DEFINED_
-	REFERENCE_TIME Now = 0;
+    REFERENCE_TIME Now = 0;
     static REFERENCE_TIME Last = 0;
     LARGE_INTEGER Freq;
     LARGE_INTEGER Now2;
@@ -1588,8 +1325,8 @@ void CMpegDecoder::ResetMpeg2Decoder()
 
     if(m_dec != NULL)
     {
-		mpeg2_reset(m_dec, 1);
-		//mpeg2_close(m_dec);
+        mpeg2_reset(m_dec, 1);
+        //mpeg2_close(m_dec);
         //m_dec = mpeg2_init();
         for(int i(0); i < NUM_BUFFERS; ++i)
         {
@@ -2067,7 +1804,7 @@ void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
     long OriginalHeight = m_OutputHeight;
     m_OutputHeight = m_OutputHeight * XAdjust;
     m_OutputHeight /= YAdjust;
-	m_OutputHeight &= ~1;
+    m_OutputHeight &= ~1;
     m_ARAdjustX = YAdjust;
     m_ARAdjustY = XAdjust;
     
@@ -2082,7 +1819,7 @@ void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
     long OriginalWidth = m_OutputWidth;
     m_OutputWidth = m_OutputWidth * XAdjust;
     m_OutputWidth /= YAdjust;
-	m_OutputWidth &= ~1;
+    m_OutputWidth &= ~1;
     m_ARAdjustX = XAdjust;
     m_ARAdjustY = YAdjust;
     

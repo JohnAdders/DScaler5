@@ -30,19 +30,19 @@ public:
 /////////////////////////////////////////////////////////////////////////////
 // CDScaler
 class CEnumPins : 
-	public IEnumPins
+    public IEnumPins
 {
 public:
 
 IMPLEMENT_UNKNOWN(CEnumPins)
 
 BEGIN_INTERFACE_TABLE(CEnumPins)
-	IMPLEMENTS_INTERFACE(IEnumPins)
+    IMPLEMENTS_INTERFACE(IEnumPins)
 END_INTERFACE_TABLE()
 
 public:
-	CEnumPins();
-	~CEnumPins();
+    CEnumPins();
+    ~CEnumPins();
 
 // IBaseFilter
 public:

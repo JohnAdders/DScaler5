@@ -18,37 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.9  2003/09/30 16:59:26  adcockj
-// Improved handling of small format changes
-//
-// Revision 1.8  2003/05/19 07:02:24  adcockj
-// Patches from Torbjorn to extend logging
-//
-// Revision 1.7  2003/05/09 07:03:26  adcockj
-// Bug fixes for new format code
-//
-// Revision 1.6  2003/05/08 15:58:38  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.5  2003/05/06 07:00:30  adcockj
-// Some cahnges from Torbjorn also some other attempted fixes
-//
-// Revision 1.4  2003/05/02 16:05:23  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.3  2003/05/02 07:03:14  adcockj
-// Some minor changes most not really improvements
-//
-// Revision 1.2  2003/05/01 16:21:53  adcockj
-// Better pUnk handling in media type
-//
-// Revision 1.1.1.1  2003/04/30 13:01:22  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "Utils.h"

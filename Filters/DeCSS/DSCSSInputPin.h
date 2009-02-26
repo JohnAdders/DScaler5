@@ -36,16 +36,16 @@ public:
 IMPLEMENT_UNKNOWN(CDSCSSInputPin)
 
 BEGIN_INTERFACE_TABLE(CDSCSSInputPin)
-	IMPLEMENTS_INTERFACE(IPin)
-	IMPLEMENTS_INTERFACE(IMemInputPin)
+    IMPLEMENTS_INTERFACE(IPin)
+    IMPLEMENTS_INTERFACE(IMemInputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
-	IMPLEMENTS_INTERFACE(IPinConnection)
-	IMPLEMENTS_INTERFACE(IKsPropertySet)
+    IMPLEMENTS_INTERFACE(IPinConnection)
+    IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()
 
 public:
-	CDSCSSInputPin();
-	~CDSCSSInputPin();
+    CDSCSSInputPin();
+    ~CDSCSSInputPin();
 
     // IKsPropertySet
     STDMETHOD(Set)(REFGUID guidPropSet, DWORD dwPropID, LPVOID pInstanceData, DWORD cbInstanceData, LPVOID pPropData, DWORD cbPropData);
@@ -54,9 +54,9 @@ public:
 
 protected:
     HRESULT GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties);
-	int m_varient;
-	BYTE m_Challenge[10], m_KeyCheck[5], m_Key[10];
-	BYTE m_DiscKey[6], m_TitleKey[6];
+    int m_varient;
+    BYTE m_Challenge[10], m_KeyCheck[5], m_Key[10];
+    BYTE m_DiscKey[6], m_TitleKey[6];
 };
 
 #else

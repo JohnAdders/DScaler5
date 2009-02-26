@@ -18,75 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.19  2004/11/04 16:09:41  adcockj
-// Made settings changes always go to the registry
-//
-// Revision 1.18  2004/10/31 14:20:39  adcockj
-// fixed issues with settings dialog
-//
-// Revision 1.17  2004/10/29 11:49:23  adcockj
-// Added load from registry button
-//
-// Revision 1.16  2004/10/29 11:39:34  adcockj
-// Added  restore defaults button
-//
-// Revision 1.15  2004/07/30 20:13:20  adcockj
-// Make property page behave sensibly when there are multiple changes
-//
-// Revision 1.14  2004/07/24 21:45:51  adcockj
-// Fixed asset errors (thanks Torbjörn)
-//
-// Revision 1.13  2004/07/20 16:37:57  adcockj
-// Fixes for main issues raised in testing of 0.0.1
-//  - Improved parameter handling
-//  - Fixed some overlay issues
-//  - Auto aspect ratio with VMR
-//  - Fixed some overlay stutters
-//  - Fixed some push filter issues
-//  - ffdshow and DirectVobSub connection issues
-//
-// Added
-//  - Hardcode for PAL setting for ffdshow
-//  - Added choice of IDCT for testing
-//
-// Revision 1.12  2004/07/01 21:16:55  adcockj
-// Another load of fixes to recent changes
-//
-// Revision 1.11  2004/07/01 16:12:48  adcockj
-// First attempt at better handling of audio when the output is connected to a
-// filter that can't cope with dynamic changes.
-//
-// Revision 1.10  2004/05/10 16:50:26  adcockj
-// Added apply before save defaults to make UI a bit more intuituve
-//
-// Revision 1.9  2004/03/15 17:17:06  adcockj
-// Basic registry saving support
-//
-// Revision 1.8  2003/07/21 08:44:41  adcockj
-// Added HScroll patch from Torbjorn
-//
-// Revision 1.7  2003/05/17 11:29:36  adcockj
-// Fixed crashing
-//
-// Revision 1.6  2003/05/16 16:27:45  adcockj
-// Added a bit of a safety for the property page
-//
-// Revision 1.5  2003/05/07 16:27:03  adcockj
-// fixes for odd behaviour with multiple pages
-//
-// Revision 1.4  2003/05/06 07:01:05  adcockj
-// Fixes for crashing with multiple pages
-//
-// Revision 1.3  2003/05/02 15:52:25  adcockj
-// Initial limited version of Generic prop page
-//
-// Revision 1.2  2003/05/01 12:34:41  adcockj
-// Added headers and new license page
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "GenDMOProp.h"
@@ -136,7 +67,7 @@ STDMETHODIMP CGenDMOPropPage::Deactivate()
     m_Scrollbar.Detach();
     m_Combo.Detach();
     m_DefaultsBtn.Detach();
-	m_BoolDesc.Detach();
+    m_BoolDesc.Detach();
 
     return IPropertyPageImpl<CGenDMOPropPage>::Deactivate();
 }
@@ -274,14 +205,14 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
         m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
         m_Combo.Attach(GetDlgItem(IDC_COMBO));
         m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
-		m_BoolDesc.Attach(GetDlgItem(IDC_BOOLDESC));
+        m_BoolDesc.Attach(GetDlgItem(IDC_BOOLDESC));
 
         m_EditBox.ShowWindow(SW_HIDE);
         m_CheckBox.ShowWindow(SW_HIDE);
         m_Slider.ShowWindow(SW_HIDE);
         m_Scrollbar.ShowWindow(SW_HIDE);
         m_Combo.ShowWindow(SW_HIDE);
-		m_BoolDesc.ShowWindow(SW_HIDE);
+        m_BoolDesc.ShowWindow(SW_HIDE);
 
         if(!m_SaveDefaults)
         {
@@ -340,7 +271,7 @@ void CGenDMOPropPage::SetupControls()
     m_Slider.ShowWindow(SW_HIDE);
     m_Scrollbar.ShowWindow(SW_HIDE);
     m_Combo.ShowWindow(SW_HIDE);
-	m_BoolDesc.ShowWindow(SW_HIDE);
+    m_BoolDesc.ShowWindow(SW_HIDE);
 
     if(m_CurrentParam > m_NumParams)
     {
@@ -367,8 +298,8 @@ void CGenDMOPropPage::SetupControls()
         break;
     case MPT_BOOL:
         m_CheckBox.ShowWindow(SW_SHOW);
-		m_BoolDesc.ShowWindow(SW_SHOW);
-		SendMessageW(m_BoolDesc.m_hWnd, WM_SETTEXT, 0, (LPARAM)CurParamText);
+        m_BoolDesc.ShowWindow(SW_SHOW);
+        SendMessageW(m_BoolDesc.m_hWnd, WM_SETTEXT, 0, (LPARAM)CurParamText);
         SetupBoolValue();
         break;
     case MPT_ENUM:
@@ -594,6 +525,6 @@ LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*w
 
     SetupControls();
     SetDirty(HasAnythingChanged());
-	return 0;
+    return 0;
 }
 

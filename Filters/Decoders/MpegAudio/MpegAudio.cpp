@@ -18,31 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.6  2005/02/17 09:28:09  adcockj
-// Added extra type to work aroung bug in MPC with dvr-ms files
-//
-// Revision 1.5  2004/07/16 15:45:19  adcockj
-// Fixed compilation issues under .NET
-// Improved (hopefully) handling of negative times and preroll
-// Changed name of filter
-//
-// Revision 1.4  2004/07/07 14:08:10  adcockj
-// Improved format change handling to cope with more situations
-// Removed tabs
-//
-// Revision 1.3  2004/03/05 15:56:14  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.2  2004/02/17 16:39:59  adcockj
-// Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
-//
-// Revision 1.1  2004/02/13 12:22:17  adcockj
-// Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
@@ -122,18 +97,18 @@ STDAPI DllRegisterServer(void)
         {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
         {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
         {&MEDIATYPE_Audio, &MEDIASUBTYPE_DVD_LPCM_AUDIO},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_AAC},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_AAC},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_AAC},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_AAC},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MP4A},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MP4A},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MP4A},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_MP4A},
-	    {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_mp4a},
-	    {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_mp4a},
-	    {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_mp4a},
-	    {&MEDIATYPE_Audio, &MEDIASUBTYPE_mp4a},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_AAC},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_AAC},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_AAC},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_AAC},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MP4A},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MP4A},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MP4A},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_MP4A},
+        {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_mp4a},
+        {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_mp4a},
+        {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_mp4a},
+        {&MEDIATYPE_Audio, &MEDIASUBTYPE_mp4a},
     };
 
     REGPINTYPES OutputTypes[] = {   

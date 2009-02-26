@@ -18,18 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2004/03/01 13:05:05  adcockj
-// Included rounding within dither values
-//
-// Revision 1.1  2004/02/27 17:04:38  adcockj
-// Added support for fixed point libraries
-// Added dither to 16 conversions
-// Changes to support library fixes
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "Convert.h"

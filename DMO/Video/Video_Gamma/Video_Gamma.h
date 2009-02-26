@@ -17,13 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2003/05/21 17:06:01  adcockj
-// Added new filter
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -35,13 +28,13 @@
 DEFINE_GUID(CLSID_CVideo_Gamma, 0x99AE5B7F, 0x8B9C, 0x11d7, 0xB8, 0x51, 0x00, 0x02, 0xA5, 0x62, 0x33, 0x77);
 
 class CVideo_Gamma : 
-	public CSimpleInPlaceVideoDMO,
+    public CSimpleInPlaceVideoDMO,
     public IAmFreeSoftwareLicensed
 {
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CVideo_Gamma, "{99AE5B7F-8B9C-11d7-B851-0002A5623377}", "Video Gamma Class", "DMO.Video_Gamma.1", "DMO.Video_Gamma", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IMediaObject)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
@@ -64,12 +57,12 @@ public:
 
 // IAmFreeSoftwareLicensed
 public:
-	STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
-	STDMETHOD(get_Authors)(BSTR* Authors);
+    STDMETHOD(get_Name)(BSTR* Name);
+    STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_Authors)(BSTR* Authors);
 
 protected:
-	HRESULT ParamChanged(DWORD dwParamIndex);
+    HRESULT ParamChanged(DWORD dwParamIndex);
 private:
 };
 

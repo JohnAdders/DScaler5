@@ -149,7 +149,7 @@ mdct_info *faad_mdct_init(uint16_t N)
     uint16_t N_idx;
     real_t cangle, sangle, c, s, cold;
 #endif
-	real_t scale;
+    real_t scale;
 
     mdct_info *mdct = (mdct_info*)faad_malloc(sizeof(mdct_info));
 
@@ -471,9 +471,9 @@ void faad_mdct(mdct_info *mdct, real_t *X_in, real_t *X_out)
     uint16_t N8 = N >> 3;
 
 #ifndef FIXED_POINT
-	real_t scale = REAL_CONST(N);
+    real_t scale = REAL_CONST(N);
 #else
-	real_t scale = REAL_CONST(4.0/N);
+    real_t scale = REAL_CONST(4.0/N);
 #endif
 
     /* pre-FFT complex multiplication */

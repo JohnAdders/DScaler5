@@ -17,54 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.5  2004/09/10 15:35:57  adcockj
-// Bug fixes for problems found in 0.0.2 with MPEG-1 & overlay
-//
-// Revision 1.4  2004/08/03 08:55:57  adcockj
-// Fixes for seeking issues
-//
-// Revision 1.3  2004/07/07 14:09:01  adcockj
-// removed tabs
-//
-// Revision 1.2  2004/05/25 16:59:30  adcockj
-// fixed issues with new buffered pin
-//
-// Revision 1.1  2004/05/24 06:29:27  adcockj
-// Interim buffer fix
-//
-// Revision 1.8  2004/04/29 16:16:46  adcockj
-// Yet more reconnection fixes
-//
-// Revision 1.7  2004/04/20 16:30:31  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.6  2004/04/14 16:31:34  adcockj
-// Subpicture fixes, AFD started and minor fixes
-//
-// Revision 1.5  2004/02/27 17:08:16  adcockj
-// Improved locking at state changes
-// Better error handling at state changes
-//
-// Revision 1.4  2004/02/25 17:14:03  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.3  2004/02/12 17:06:45  adcockj
-// Libary Tidy up
-// Fix for stopping problems
-//
-// Revision 1.2  2004/02/10 13:24:12  adcockj
-// Lots of bug fixes + corrected interlaced YV12 upconversion
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DSBasePin.h"

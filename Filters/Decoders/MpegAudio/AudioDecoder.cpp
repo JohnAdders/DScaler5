@@ -36,196 +36,6 @@
 //  - Attempted to add support for different PCM types
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.55  2007/12/20 18:24:54  adcockj
-// Interim Checkin of adding EAC3 decoding
-//
-// Revision 1.54  2006/03/08 17:13:28  adcockj
-// added aac decoding
-//
-// Revision 1.53  2005/05/25 08:05:22  adcockj
-// fixed issue with no clock
-//
-// Revision 1.52  2005/04/14 11:21:05  adcockj
-// First stage of code reorganisation
-//
-// Revision 1.51  2005/03/20 14:17:34  adcockj
-// Better debug logging
-//
-// Revision 1.50  2005/03/08 13:22:02  adcockj
-// Added connection type option
-//
-// Revision 1.49  2005/02/17 09:28:09  adcockj
-// Added extra type to work aroung bug in MPC with dvr-ms files
-//
-// Revision 1.48  2005/02/08 15:32:34  adcockj
-// Added CSS handling
-//
-// Revision 1.47  2005/02/05 13:39:33  adcockj
-// fixed rate addition issues
-//
-// Revision 1.46  2005/02/03 13:36:49  adcockj
-// added rate change interface
-//
-// Revision 1.45  2005/01/21 13:52:42  adcockj
-// Discontinuity and preroll changes
-//
-// Revision 1.44  2004/10/31 14:19:10  adcockj
-// Comments clean
-//
-// Revision 1.43  2004/10/29 09:11:58  adcockj
-// Fixed spdif connection issue
-//
-// Revision 1.42  2004/10/27 12:10:55  adcockj
-// checked over Laurent's changes
-//
-// Revision 1.41  2004/10/24 16:24:28  laurentg
-// Negative delay added when doing S/PDIF passthrough
-//
-// Revision 1.40  2004/10/22 07:34:40  adcockj
-// fix for some connection issues
-//
-// Revision 1.39  2004/10/21 18:52:09  adcockj
-// Sync fixes
-//
-// Revision 1.38  2004/10/05 19:27:08  adcockj
-// Correct some stuttering/timing issues
-//
-// Revision 1.37  2004/09/23 14:27:57  adcockj
-// preliminary fixed for reconnection issues
-//
-// Revision 1.36  2004/08/31 16:33:40  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.35  2004/08/16 16:08:44  adcockj
-// timestamp fixes
-//
-// Revision 1.34  2004/08/03 18:47:40  adcockj
-// spdif fixes
-//
-// Revision 1.33  2004/08/03 08:55:56  adcockj
-// Fixes for seeking issues
-//
-// Revision 1.32  2004/07/31 18:52:09  adcockj
-// Test seeking fix
-//
-// Revision 1.31  2004/07/30 08:13:53  adcockj
-// Fix for spdif delay
-//
-// Revision 1.30  2004/07/29 13:44:59  adcockj
-// More fixes for Laurent's issues
-//
-// Revision 1.29  2004/07/29 10:26:54  adcockj
-// Fixes for audio issues reported by Laurent
-//
-// Revision 1.28  2004/07/28 13:59:29  adcockj
-// spdif fixes
-//
-// Revision 1.27  2004/07/27 16:53:20  adcockj
-// Some spdif fixes
-//
-// Revision 1.26  2004/07/26 17:24:43  adcockj
-// Fixed crashing
-//
-// Revision 1.25  2004/07/26 17:08:00  adcockj
-// Force use of fixed size output buffers to work around issues with Wave renderer
-//
-// Revision 1.24  2004/07/23 16:25:07  adcockj
-// Fix issues with changing buffer size with wave renderer to hopefully fix DTS problem
-//
-// Revision 1.23  2004/07/20 20:01:59  adcockj
-// Fixed accidental check in of test code
-//
-// Revision 1.22  2004/07/20 20:00:27  adcockj
-// Fixes for compilation under VS 6
-//
-// Revision 1.21  2004/07/20 16:37:48  adcockj
-// Fixes for main issues raised in testing of 0.0.1
-//  - Improved parameter handling
-//  - Fixed some overlay issues
-//  - Auto aspect ratio with VMR
-//  - Fixed some overlay stutters
-//  - Fixed some push filter issues
-//  - ffdshow and DirectVobSub connection issues
-//
-// Added
-//  - Hardcode for PAL setting for ffdshow
-//  - Added choice of IDCT for testing
-//
-// Revision 1.20  2004/07/16 15:45:19  adcockj
-// Fixed compilation issues under .NET
-// Improved (hopefully) handling of negative times and preroll
-// Changed name of filter
-//
-// Revision 1.19  2004/07/11 15:07:04  adcockj
-// Better connection logic with spdif
-//
-// Revision 1.18  2004/07/11 14:35:25  adcockj
-// Fixed spdif connections and some dts issues
-//
-// Revision 1.17  2004/07/07 14:08:10  adcockj
-// Improved format change handling to cope with more situations
-// Removed tabs
-//
-// Revision 1.16  2004/07/01 21:16:55  adcockj
-// Another load of fixes to recent changes
-//
-// Revision 1.15  2004/07/01 20:03:08  adcockj
-// Silly bugs fixed
-//
-// Revision 1.14  2004/07/01 16:12:47  adcockj
-// First attempt at better handling of audio when the output is connected to a
-// filter that can't cope with dynamic changes.
-//
-// Revision 1.13  2004/05/12 15:55:06  adcockj
-// Fixed issue with format changes during preroll
-//
-// Revision 1.12  2004/05/06 06:38:06  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.11  2004/04/20 16:30:06  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.10  2004/04/06 16:46:11  adcockj
-// DVD Test Annex Compatability fixes
-//
-// Revision 1.9  2004/03/25 18:01:30  adcockj
-// Fixed issues with downmixing
-//
-// Revision 1.8  2004/03/15 17:15:37  adcockj
-// Better PES header handling - Inspired by Gabest's latest MPC patch
-//
-// Revision 1.7  2004/03/11 16:51:20  adcockj
-// Improve LPCM support
-//
-// Revision 1.6  2004/02/29 13:47:47  adcockj
-// Format change fixes
-// Minor library updates
-//
-// Revision 1.5  2004/02/27 17:04:38  adcockj
-// Added support for fixed point libraries
-// Added dither to 16 conversions
-// Changes to support library fixes
-//
-// Revision 1.4  2004/02/25 17:14:01  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.3  2004/02/17 16:39:59  adcockj
-// Added dts analog support (based on dtsdec-0.0.1 and Gabest's patch to mpadecfilter)
-//
-// Revision 1.2  2004/02/16 17:25:00  adcockj
-// Fix build errors, locking problems and DVD compatability
-//
-// Revision 1.1  2004/02/13 12:22:17  adcockj
-// Initial check-in of audio decoder (based on mpadecfilter from guliverkli, libmad and liba52)
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
@@ -273,7 +83,7 @@ CAudioDecoder::CAudioDecoder() :
     m_ChannelsRequested = 2;
     m_CanReconnect = false;
     m_DownSample = false;
-	m_Preroll = false;
+    m_Preroll = false;
     m_BytesLeftInBuffer = 0;
     m_pDataOut = NULL;
     m_BufferSizeAtFrameStart = 0;
@@ -296,7 +106,7 @@ CAudioDecoder::CAudioDecoder() :
     m_rate.Rate = 10000;
     m_rate.StartTime = 0;
 
-	m_ratechange.Rate = 10000;
+    m_ratechange.Rate = 10000;
     m_ratechange.StartTime = -1;
 
     ffmpeg::avcodec_init();
@@ -395,10 +205,10 @@ HRESULT CAudioDecoder::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD
     {
         return SupportPropSetRate(dwPropID, pTypeSupport);
     }
-	else
-	{
+    else
+    {
         return E_NOTIMPL;
-	}
+    }
 }
 
 
@@ -452,7 +262,7 @@ HRESULT CAudioDecoder::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
         }
     }
     LOG(DBGLOG_FLOW, ("Coped With Flood - %d\n", q.Late));
-	return VFW_E_NOT_FOUND;
+    return VFW_E_NOT_FOUND;
 }
 
 
@@ -763,7 +573,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         LOG(DBGLOG_FLOW, ("Receive: %I64d - %I64d\n", pSampleProperties->tStart, m_rtNextFrameStart));
     }
 
-	m_Preroll = ((pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) == AM_SAMPLE_PREROLL);
+    m_Preroll = ((pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) == AM_SAMPLE_PREROLL);
 
     int tmp = m_buff.size();
     m_buff.resize(m_buff.size() + len);
@@ -914,21 +724,21 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
 {
     HRESULT hr = S_OK;
     REFERENCE_TIME rtDur = 10000000i64 * m_InternalMT.lSampleSize / (m_OutputSampleRate * m_ChannelsRequested * m_SampleSize);
-	REFERENCE_TIME rtStop = m_rtOutputStart + rtDur;
+    REFERENCE_TIME rtStop = m_rtOutputStart + rtDur;
 
-	REFERENCE_TIME rtStart = m_rtOutputStart;
+    REFERENCE_TIME rtStart = m_rtOutputStart;
     if(IsSpdif)
     {
         int DelayMs = GetParamInt(AUDIOTIMEOFFSET);
-		rtStart += DelayMs * 10000;
-		rtStop += DelayMs * 10000;
-	}
+        rtStart += DelayMs * 10000;
+        rtStop += DelayMs * 10000;
+    }
 
 // blocked out code for monitoring current graph clock.
 #ifdef _NOT_DEFINED_
     if(RefClock)
     {
-	    REFERENCE_TIME Now = 0;
+        REFERENCE_TIME Now = 0;
         static REFERENCE_TIME Last = 0;
         LARGE_INTEGER Freq;
         LARGE_INTEGER Now2;
@@ -944,39 +754,39 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
     }
 #endif
 
-	if(!m_Preroll && rtStop > 0)
-	{
+    if(!m_Preroll && rtStop > 0)
+    {
         m_CurrentOutputSample->SetTime(&rtStart, &rtStop);
-	    m_CurrentOutputSample->SetMediaTime(NULL, NULL);
+        m_CurrentOutputSample->SetMediaTime(NULL, NULL);
 
-	    LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
+        LOG(DBGLOG_FLOW, ("Deliver: %I64d - %I64d\n", m_rtOutputStart, rtDur));
 
-		m_CurrentOutputSample->SetPreroll(FALSE);
-		m_CurrentOutputSample->SetSyncPoint(TRUE);
+        m_CurrentOutputSample->SetPreroll(FALSE);
+        m_CurrentOutputSample->SetSyncPoint(TRUE);
 
-		if(m_NeedToAttachFormat)
-		{
-			m_AudioOutPin->SetType(&m_InternalMT);
-			m_CurrentOutputSample->SetMediaType(&m_InternalMT);
-			m_CurrentOutputSample->SetDiscontinuity(TRUE); 
-		}
-		else
-		{
-			m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
-		}
-	    
-		m_IsDiscontinuity = false;
+        if(m_NeedToAttachFormat)
+        {
+            m_AudioOutPin->SetType(&m_InternalMT);
+            m_CurrentOutputSample->SetMediaType(&m_InternalMT);
+            m_CurrentOutputSample->SetDiscontinuity(TRUE); 
+        }
+        else
+        {
+            m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
+        }
+        
+        m_IsDiscontinuity = false;
 
-		hr = m_AudioOutPin->SendSample(m_CurrentOutputSample.GetNonAddRefedInterface());
+        hr = m_AudioOutPin->SendSample(m_CurrentOutputSample.GetNonAddRefedInterface());
 
         m_CurrentOutputSample.Detach();
 
-		m_NeedToAttachFormat = false;
-	}
-	else
-	{
-		LOG(DBGLOG_FLOW, ("Preroll: %I64d - %I64d\n", m_rtOutputStart, rtDur));
-	}
+        m_NeedToAttachFormat = false;
+    }
+    else
+    {
+        LOG(DBGLOG_FLOW, ("Preroll: %I64d - %I64d\n", m_rtOutputStart, rtDur));
+    }
 
     if(hr == S_OK)
     {
@@ -1142,11 +952,11 @@ HRESULT CAudioDecoder::Activate()
     }
     else
     {
-		if(m_OutputSampleType == OUTSAMPLE_FLOAT && IsClockUpstream())
-		{
-			HRESULT hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
-			CHECK(hr);
-		}
+        if(m_OutputSampleType == OUTSAMPLE_FLOAT && IsClockUpstream())
+        {
+            HRESULT hr = CreateInternalPCMMediaType(m_InputSampleRate, m_ChannelsRequested, m_ChannelMask, 32);
+            CHECK(hr);
+        }
         m_AC3SilenceFrames = 0;
     }
 
@@ -1633,7 +1443,7 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
         hr = GetOutputSampleAndPointer();
         CHECK(hr);
     }
-	//m_AC3SilenceFrames = 0;
+    //m_AC3SilenceFrames = 0;
     if(m_AC3SilenceFrames == 0)
     {
         *m_pDataOut++ = (BYTE)HeaderWord;
@@ -1695,16 +1505,16 @@ HRESULT CAudioDecoder::SendDigitalData(WORD HeaderWord, short DigitalLength, lon
 
     if(BytesToGo > 0)
     {
-		if(m_BytesLeftInBuffer == 0)
-		{
-			hr = Deliver(true);
-			if(hr != S_OK)
-			{
-				return hr;
-			}
-			hr = GetOutputSampleAndPointer();
-			CHECK(hr);
-		}
+        if(m_BytesLeftInBuffer == 0)
+        {
+            hr = Deliver(true);
+            if(hr != S_OK)
+            {
+                return hr;
+            }
+            hr = GetOutputSampleAndPointer();
+            CHECK(hr);
+        }
 
         if (BytesToGo > m_BytesLeftInBuffer)
         {

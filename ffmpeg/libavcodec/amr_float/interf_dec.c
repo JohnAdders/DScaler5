@@ -230,7 +230,7 @@ enum Mode DecoderMMS( Word16 *param, UWord8 *stream, enum RXFrameType
       /* *frame_type = RX_SID_UPDATE; */
 
       /* speech mode indicator */
-	  *speech_mode = (*stream >> 4) && 0x07;
+      *speech_mode = (*stream >> 4) && 0x07;
 
    }
    else if ( mode == 15 ) {
@@ -692,7 +692,7 @@ void Decoder_Interface_Decode( void *st,
    mode = Decoder3GPP( prm, bits, &frame_type, &speech_mode );
 #else
    mode = DecoderMMS( prm, bits, &frame_type, &speech_mode, &q_bit );
-   if (!bfi)	bfi = 1 - q_bit;
+   if (!bfi)    bfi = 1 - q_bit;
 #endif
 
    /*

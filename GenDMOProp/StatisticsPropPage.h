@@ -29,29 +29,29 @@ EXTERN_C const CLSID CLSID_StatisticsPropPage;
 /////////////////////////////////////////////////////////////////////////////
 // CStatisticsPropPage
 class ATL_NO_VTABLE CStatisticsPropPage :
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public CComCoClass<CStatisticsPropPage, &CLSID_LicensePropPage>,
-	public IPropertyPageImpl<CStatisticsPropPage>,
-	public CDialogImpl<CStatisticsPropPage>
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public CComCoClass<CStatisticsPropPage, &CLSID_LicensePropPage>,
+    public IPropertyPageImpl<CStatisticsPropPage>,
+    public CDialogImpl<CStatisticsPropPage>
 {
 public:
-	CStatisticsPropPage();
+    CStatisticsPropPage();
 
-	enum {IDD = IDD_STATISTICSPROPPAGE};
+    enum {IDD = IDD_STATISTICSPROPPAGE};
 
 DECLARE_REGISTRY_RESOURCEID(IDR_STATISTICSPROPPAGE)
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CStatisticsPropPage) 
-	COM_INTERFACE_ENTRY(IPropertyPage)
+    COM_INTERFACE_ENTRY(IPropertyPage)
 END_COM_MAP()
 
 BEGIN_MSG_MAP(CStatisticsPropPage)
-	CHAIN_MSG_MAP(IPropertyPageImpl<CStatisticsPropPage>)
+    CHAIN_MSG_MAP(IPropertyPageImpl<CStatisticsPropPage>)
 END_MSG_MAP()
 
-	STDMETHOD(Apply)(void);
+    STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
     STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 

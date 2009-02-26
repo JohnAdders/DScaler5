@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.2  2003/08/21 16:17:57  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "params.h"
@@ -45,23 +30,23 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDMO
 CDMO::CDMO(LPCWSTR Name) :
-	CParams(Name)
+    CParams(Name)
 {
-	m_fDirty = TRUE;
-	m_fInitialized = FALSE;
+    m_fDirty = TRUE;
+    m_fInitialized = FALSE;
     m_ParentFilter = NULL;
 };
 
 CDMO::~CDMO()
 {
-	// Free streaming resources in case it hasn't been done by the client
-	InternalFreeStreamingResources();
+    // Free streaming resources in case it hasn't been done by the client
+    InternalFreeStreamingResources();
 };
 
 
 HRESULT CDMO::UpdateStatesInternal()
 {
-	return S_OK;
+    return S_OK;
 }
 
 
@@ -96,7 +81,7 @@ HRESULT CDMO::InternalDiscontinuity(DWORD dwInputStreamIndex)
     {
         return DMO_E_INVALIDSTREAMINDEX;
     }
-	return S_OK;
+    return S_OK;
 }
 
 ///////////////////////////////
@@ -133,15 +118,15 @@ HRESULT CDMO::InternalDiscontinuity(DWORD dwInputStreamIndex)
 //
 HRESULT CDMO::InternalAllocateStreamingResources(void)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	if( SUCCEEDED(hr) )
-	{
-		hr = UpdateStatesInternal();
-		m_fInitialized = TRUE;
-	}
+    if( SUCCEEDED(hr) )
+    {
+        hr = UpdateStatesInternal();
+        m_fInitialized = TRUE;
+    }
 
-	return hr;
+    return hr;
 }
 
 ////////////////////
@@ -171,7 +156,7 @@ HRESULT CDMO::InternalAllocateStreamingResources(void)
 //
 HRESULT CDMO::InternalFreeStreamingResources(void)
 {
-	return S_OK;
+    return S_OK;
 }
 
 
@@ -223,11 +208,11 @@ HRESULT CDMO::InternalGetInputMaxLatency(DWORD dwInputStreamIndex, REFERENCE_TIM
 {
 
 // TODO: Provide a good max latency if this DMO is going to be used with DirectShow.
-//		 For now, 30 is used as the default max latency.
+//         For now, 30 is used as the default max latency.
 
-	*prtMaxLatency = 30;
+    *prtMaxLatency = 30;
 
-	return S_OK;
+    return S_OK;
 }
 
 
@@ -256,8 +241,8 @@ HRESULT CDMO::InternalGetInputMaxLatency(DWORD dwInputStreamIndex, REFERENCE_TIM
 //
 HRESULT CDMO::InternalSetInputMaxLatency(DWORD dwInputStreamIndex, REFERENCE_TIME rtMaxLatency)
 {
-	// Method not implemented
-	return E_NOTIMPL;
+    // Method not implemented
+    return E_NOTIMPL;
 }
 
 
@@ -315,11 +300,11 @@ HRESULT CDMO::InternalSetInputMaxLatency(DWORD dwInputStreamIndex, REFERENCE_TIM
 //
 HRESULT CDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pulSizeMaxLookahead, DWORD *pulSizeAlignment)
 {
-	// We don't have to do any validation, because it is all done in the base class
+    // We don't have to do any validation, because it is all done in the base class
 
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = InputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = InputType(0);
     if(pmt->majortype == MEDIATYPE_Video)
     {
         // not yet implemented
@@ -327,10 +312,10 @@ HRESULT CDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize,
     }
     else if(pmt->majortype == MEDIATYPE_Audio)
     {
-	    const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
-	    *pcbSize = pwfx->nChannels * pwfx->wBitsPerSample / 8;
-	    *pulSizeMaxLookahead = 0;	// no look ahead
-	    *pulSizeAlignment = 1;		// no alignment requirement
+        const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
+        *pcbSize = pwfx->nChannels * pwfx->wBitsPerSample / 8;
+        *pulSizeMaxLookahead = 0;    // no look ahead
+        *pulSizeAlignment = 1;        // no alignment requirement
     }
     else
     {
@@ -338,7 +323,7 @@ HRESULT CDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize,
         hr = E_FAIL;
     }
 
-	return hr;
+    return hr;
 }
 
 
@@ -394,9 +379,9 @@ HRESULT CDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize,
 HRESULT CDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pulSizeAlignment)
 {
     // We don't have to do any validation, because it is all done in the base class
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = OutputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = OutputType(0);
     if(pmt->majortype == MEDIATYPE_Video)
     {
         // not yet implemented
@@ -404,9 +389,9 @@ HRESULT CDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSiz
     }
     else if(pmt->majortype == MEDIATYPE_Audio)
     {
-	    const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
-	    *pcbSize = pwfx->nChannels * pwfx->wBitsPerSample / 8;
-	    *pulSizeAlignment = 1;
+        const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
+        *pcbSize = pwfx->nChannels * pwfx->wBitsPerSample / 8;
+        *pulSizeAlignment = 1;
     }
     else
     {
@@ -451,8 +436,8 @@ HRESULT CDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSiz
 //
 HRESULT CDMO::InternalGetInputStreamInfo(DWORD dwInputStreamIndex, DWORD *pdwFlags)
 {
-	*pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
-	*pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
+    *pdwFlags = DMO_INPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags |= DMO_INPUT_STREAMF_FIXED_SAMPLE_SIZE;
 
     return S_OK;
 }
@@ -484,10 +469,10 @@ HRESULT CDMO::InternalGetInputStreamInfo(DWORD dwInputStreamIndex, DWORD *pdwFla
 //
 HRESULT CDMO::InternalGetOutputStreamInfo(DWORD dwOutputStreamIndex, DWORD *pdwFlags)
 {
-	*pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
-	*pdwFlags |= DMO_OUTPUT_STREAMF_FIXED_SAMPLE_SIZE;
+    *pdwFlags = DMO_OUTPUT_STREAMF_WHOLE_SAMPLES;
+    *pdwFlags |= DMO_OUTPUT_STREAMF_FIXED_SAMPLE_SIZE;
 
-	return S_OK;
+    return S_OK;
 }
 
 ///////////////

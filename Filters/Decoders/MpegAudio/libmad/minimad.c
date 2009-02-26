@@ -82,7 +82,7 @@ struct buffer {
 
 static
 enum mad_flow input(void *data,
-		    struct mad_stream *stream)
+            struct mad_stream *stream)
 {
   struct buffer *buffer = data;
 
@@ -128,8 +128,8 @@ signed int scale(mad_fixed_t sample)
 
 static
 enum mad_flow output(void *data,
-		     struct mad_header const *header,
-		     struct mad_pcm *pcm)
+             struct mad_header const *header,
+             struct mad_pcm *pcm)
 {
   unsigned int nchannels, nsamples;
   mad_fixed_t const *left_ch, *right_ch;
@@ -169,8 +169,8 @@ enum mad_flow output(void *data,
 
 static
 enum mad_flow error(void *data,
-		    struct mad_stream *stream,
-		    struct mad_frame *frame)
+            struct mad_stream *stream,
+            struct mad_frame *frame)
 {
   struct buffer *buffer = data;
 
@@ -207,8 +207,8 @@ int decode(unsigned char const *start, unsigned long length)
   /* configure input, output, and error functions */
 
   mad_decoder_init(&decoder, &buffer,
-		   input, 0 /* header */, 0 /* filter */, output,
-		   error, 0 /* message */);
+           input, 0 /* header */, 0 /* filter */, output,
+           error, 0 /* message */);
 
   /* start decoding */
 

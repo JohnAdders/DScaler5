@@ -25,28 +25,6 @@
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2004/10/28 15:52:24  adcockj
-// Moved video output pin code into new class
-//
-// Revision 1.3  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.2  2004/03/08 17:04:02  adcockj
-// Removed all inline assembler to remove dependence on MS compilers
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-//  Notes: 
-///////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"

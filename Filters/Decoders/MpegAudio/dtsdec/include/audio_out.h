@@ -25,7 +25,7 @@ typedef struct ao_instance_s ao_instance_t;
 
 struct ao_instance_s {
     int (* setup) (ao_instance_t * instance, int sample_rate, int * flags,
-		   level_t * level, sample_t * bias);
+           level_t * level, sample_t * bias);
     int (* play) (ao_instance_t * instance, int flags, sample_t * samples);
     void (* close) (ao_instance_t * instance);
 };

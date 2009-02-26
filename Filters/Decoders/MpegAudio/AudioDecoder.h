@@ -59,15 +59,15 @@ namespace ffmpeg
 {
     extern "C"
     {
-	    #ifdef  _MSC_VER
-		    #pragma warning(disable: 4244)
-	    #endif
+        #ifdef  _MSC_VER
+            #pragma warning(disable: 4244)
+        #endif
 
-	    #include "avcodec.h"
+        #include "avcodec.h"
 
-	    #ifdef  _MSC_VER
-		    #pragma warning(default: 4244)
-	    #endif
+        #ifdef  _MSC_VER
+            #pragma warning(default: 4244)
+        #endif
     }
 }
 
@@ -276,7 +276,7 @@ private:
     int m_ChannelsRequested;
     bool m_CanReconnect;
     bool m_DownSample;
-	bool m_Preroll;
+    bool m_Preroll;
     long m_BytesLeftInBuffer;
     SI(IMediaSample) m_CurrentOutputSample;
     BYTE* m_pDataOut;

@@ -18,13 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2003/05/01 12:34:40  adcockj
-// Added headers and new license page
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"

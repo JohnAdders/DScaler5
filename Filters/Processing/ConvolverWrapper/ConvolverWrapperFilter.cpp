@@ -18,13 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2004/09/10 16:55:46  adcockj
-// Initial version of spdif input filter
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "resource.h"
 #include <initguid.h>
@@ -51,7 +44,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
+        DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
@@ -77,7 +70,7 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
-	REGPINTYPES Types[] = {&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM };
+    REGPINTYPES Types[] = {&MEDIATYPE_Audio, &MEDIASUBTYPE_PCM };
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(Types), Types, 0, NULL, &GUID_NULL}, 
                               { REG_PINFLAG_B_OUTPUT , 1, countof(Types), Types, 0, NULL, &GUID_NULL}};

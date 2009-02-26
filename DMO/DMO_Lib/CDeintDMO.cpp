@@ -17,54 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.14  2004/03/15 17:17:03  adcockj
-// Basic registry saving support
-//
-// Revision 1.13  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.12  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.11  2003/09/24 16:33:00  adcockj
-// Bug fixes - starting to work now..
-//
-// Revision 1.10  2003/09/24 07:01:00  adcockj
-// fix some release issues
-//
-// Revision 1.9  2003/09/19 16:12:13  adcockj
-// Further improvements
-//
-// Revision 1.8  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.7  2003/07/25 16:00:54  adcockj
-// Remove 704 stuff
-//
-// Revision 1.6  2003/05/21 17:05:57  adcockj
-// Added new filter
-//
-// Revision 1.5  2003/05/21 13:41:11  adcockj
-// Added new deinterlace methods
-//
-// Revision 1.4  2003/05/20 16:50:57  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.3  2003/05/19 07:02:47  adcockj
-// Fixes suggested by Torbjorn to media types
-//
-// Revision 1.2  2003/05/17 11:29:35  adcockj
-// Fixed crashing
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "CDeintDMO.h"
 #include <uuids.h>
@@ -180,20 +132,20 @@ STDMETHODIMP CDeintDMO::InternalProcessInput(DWORD dwInputStreamIndex, IMediaBuf
     {
         return DMO_E_NOTACCEPTING;
     }
-	
+    
 
     if(m_FieldsInBuffer > 0)
     {
-		for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
-		{
-			m_IncomingFields[i + 2] = m_IncomingFields[i];
-		}
+        for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
+        {
+            m_IncomingFields[i + 2] = m_IncomingFields[i];
+        }
     }
 
 
     m_FieldsInBuffer += 2;
     m_IncomingFields[0].Clear();
-	m_IncomingFields[1].Clear();
+    m_IncomingFields[1].Clear();
 
     BYTE* pData;
     DWORD Length;
@@ -349,15 +301,15 @@ STDMETHODIMP CDeintDMO::InternalProcessOutput(DWORD dwFlags, DWORD cOutputBuffer
             {
                 ProcessSingleFrame(this, pOutputBuffer, 0);
             }
-			pOutputBuffers[0].rtTimestamp = m_IncomingFields[m_FieldsInBuffer - 1 - m_StartFieldsDone].m_StartTime;
-			pOutputBuffers[0].rtTimelength = m_IncomingFields[m_FieldsInBuffer - 1 - m_StartFieldsDone].m_Length;
+            pOutputBuffers[0].rtTimestamp = m_IncomingFields[m_FieldsInBuffer - 1 - m_StartFieldsDone].m_StartTime;
+            pOutputBuffers[0].rtTimelength = m_IncomingFields[m_FieldsInBuffer - 1 - m_StartFieldsDone].m_Length;
             ++m_StartFieldsDone;
-			hr = S_FALSE;
+            hr = S_FALSE;
         }
-		else
-		{
-			hr = S_FALSE;
-		}
+        else
+        {
+            hr = S_FALSE;
+        }
 
         // have we finished the beginning stuff
         if(m_StartFieldsDone = m_NumFieldsToBuffer - 1)
@@ -371,42 +323,15 @@ STDMETHODIMP CDeintDMO::InternalProcessOutput(DWORD dwFlags, DWORD cOutputBuffer
         }
         break;
     case STATE_RUNNING:
-		if(m_FieldsInBuffer >= m_NumFieldsToBuffer)
-		{
-			pOutputBuffers[0].rtTimestamp = m_IncomingFields[m_FieldsInBuffer - m_NumFieldsToBuffer + m_FieldsDelay].m_StartTime;
-			pOutputBuffers[0].rtTimelength = m_IncomingFields[m_FieldsInBuffer - m_NumFieldsToBuffer + m_FieldsDelay].m_Length;
-
-			if(pOutputBuffer != NULL)
-			{
-				Process(this, pOutputBuffer);
-				RemoveOneFieldFromBuffer();
-			}
-			else
-			{
-				// only discard data if we're asked to
-				if(dwFlags & DMO_PROCESS_OUTPUT_DISCARD_WHEN_NO_BUFFER)
-				{
-					RemoveOneFieldFromBuffer();
-				}
-			}
-		}
-		else
-		{
-			hr = S_FALSE;
-		}
-        IsMoreToDo = (m_FieldsInBuffer >= m_NumFieldsToBuffer);
-        break;
-    case STATE_FINISHING:
-        if(m_FieldsInBuffer > 0)
+        if(m_FieldsInBuffer >= m_NumFieldsToBuffer)
         {
-			pOutputBuffers[0].rtTimestamp = m_IncomingFields[0].m_StartTime;
-			pOutputBuffers[0].rtTimelength = m_IncomingFields[0].m_Length;
+            pOutputBuffers[0].rtTimestamp = m_IncomingFields[m_FieldsInBuffer - m_NumFieldsToBuffer + m_FieldsDelay].m_StartTime;
+            pOutputBuffers[0].rtTimelength = m_IncomingFields[m_FieldsInBuffer - m_NumFieldsToBuffer + m_FieldsDelay].m_Length;
 
-			if(pOutputBuffer != NULL)
+            if(pOutputBuffer != NULL)
             {
-                ProcessSingleFrame(this, pOutputBuffer, 0);
-    			RemoveOneFieldFromBuffer();
-				hr = S_FALSE;
+                Process(this, pOutputBuffer);
+                RemoveOneFieldFromBuffer();
             }
             else
             {
@@ -417,15 +342,42 @@ STDMETHODIMP CDeintDMO::InternalProcessOutput(DWORD dwFlags, DWORD cOutputBuffer
                 }
             }
         }
-		else
-		{
-			hr = S_FALSE;
-		}
+        else
+        {
+            hr = S_FALSE;
+        }
+        IsMoreToDo = (m_FieldsInBuffer >= m_NumFieldsToBuffer);
+        break;
+    case STATE_FINISHING:
+        if(m_FieldsInBuffer > 0)
+        {
+            pOutputBuffers[0].rtTimestamp = m_IncomingFields[0].m_StartTime;
+            pOutputBuffers[0].rtTimelength = m_IncomingFields[0].m_Length;
+
+            if(pOutputBuffer != NULL)
+            {
+                ProcessSingleFrame(this, pOutputBuffer, 0);
+                RemoveOneFieldFromBuffer();
+                hr = S_FALSE;
+            }
+            else
+            {
+                // only discard data if we're asked to
+                if(dwFlags & DMO_PROCESS_OUTPUT_DISCARD_WHEN_NO_BUFFER)
+                {
+                    RemoveOneFieldFromBuffer();
+                }
+            }
+        }
+        else
+        {
+            hr = S_FALSE;
+        }
         IsMoreToDo = (m_FieldsInBuffer > 0);
-		if(m_FieldsInBuffer == 0)
-		{
- 			m_InternalState = STATE_RUNNING;
-		}
+        if(m_FieldsInBuffer == 0)
+        {
+             m_InternalState = STATE_RUNNING;
+        }
         break;
     }
 
@@ -458,16 +410,16 @@ STDMETHODIMP CDeintDMO::get_ComplexityIndex(long* pComplexity)
 
 HRESULT CDeintDMO::InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	// Check that we're being given
+    // Check that we're being given
     // video in a videoinfoheader2 
-	if((NULL == pmt) ||
-		(MEDIATYPE_Video != pmt->majortype) ||
-		(FORMAT_VIDEOINFO2 != pmt->formattype))
-	{
-		return DMO_E_INVALIDTYPE;
-	}
+    if((NULL == pmt) ||
+        (MEDIATYPE_Video != pmt->majortype) ||
+        (FORMAT_VIDEOINFO2 != pmt->formattype))
+    {
+        return DMO_E_INVALIDTYPE;
+    }
 
     if (OutputTypeSet(0))
     {
@@ -497,22 +449,22 @@ HRESULT CDeintDMO::InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_ME
         return DMO_E_INVALIDTYPE;
     }
 
-	return hr;
+    return hr;
 }
 
 
 HRESULT CDeintDMO::InternalCheckOutputType(DWORD dwOutputStreamIndex,const DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	// Check that we're being given
+    // Check that we're being given
     // video in a videoinfoheader2 
-	if((NULL == pmt) ||
-		(MEDIATYPE_Video != pmt->majortype) ||
-		(FORMAT_VIDEOINFO2 != pmt->formattype))
-	{
-		return DMO_E_INVALIDTYPE;
-	}
+    if((NULL == pmt) ||
+        (MEDIATYPE_Video != pmt->majortype) ||
+        (FORMAT_VIDEOINFO2 != pmt->formattype))
+    {
+        return DMO_E_INVALIDTYPE;
+    }
 
     if (InputTypeSet(0))
     {
@@ -547,12 +499,12 @@ HRESULT CDeintDMO::InternalCheckOutputType(DWORD dwOutputStreamIndex,const DMO_M
         return DMO_E_INVALIDTYPE;
     }
 
-	return hr;
+    return hr;
 }
 
 HRESULT CDeintDMO::InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     // if output is connected then we prefer that one
     // with the change in interlaced flags
@@ -573,25 +525,25 @@ HRESULT CDeintDMO::InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIn
         }
         else
         {
-    		return DMO_E_NO_MORE_ITEMS;
+            return DMO_E_NO_MORE_ITEMS;
         }
     }
 
 
-	if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
-	{
+    if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
+    {
         // If pmt is NULL, and the type index is in range, we return S_OK
         if (pmt == NULL)
         {
             return S_OK;
         }
 
-	    hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
+        hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
 
-	    if (SUCCEEDED(hr))
-	    {
-		    pmt->majortype = MEDIATYPE_Video;
-		    pmt->formattype = FORMAT_VIDEOINFO2;
+        if (SUCCEEDED(hr))
+        {
+            pmt->majortype = MEDIATYPE_Video;
+            pmt->formattype = FORMAT_VIDEOINFO2;
 
             VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
             ZeroMemory(Format, sizeof(VIDEOINFOHEADER2));
@@ -605,13 +557,13 @@ HRESULT CDeintDMO::InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIn
             switch(dwTypeIndex)
             {
             case 0:
-    		    pmt->subtype = MEDIASUBTYPE_YUY2;
+                pmt->subtype = MEDIASUBTYPE_YUY2;
                 Format->bmiHeader.biBitCount = 16;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'U', 'Y', '2');
                 Format->bmiHeader.biSizeImage = 576*768*2;
                 break;
             case 1:
-    		    pmt->subtype = MEDIASUBTYPE_YV12;
+                pmt->subtype = MEDIASUBTYPE_YV12;
                 Format->bmiHeader.biBitCount = 12;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
                 Format->bmiHeader.biSizeImage = 576*768*3/2;
@@ -619,19 +571,19 @@ HRESULT CDeintDMO::InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIn
             default:
                 break;
             }
-	    }
+        }
     }
     else
     {
-		return DMO_E_NO_MORE_ITEMS;
-	}
+        return DMO_E_NO_MORE_ITEMS;
+    }
 
-	return hr;
+    return hr;
 }
 
 HRESULT CDeintDMO::InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     // if output is connected then we prefer that one
     // with the change in interlaced flags
@@ -652,24 +604,24 @@ HRESULT CDeintDMO::InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwType
         }
         else
         {
-    		return DMO_E_NO_MORE_ITEMS;
+            return DMO_E_NO_MORE_ITEMS;
         }
     }
 
-	if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
-	{
+    if (dwTypeIndex >= 0 && dwTypeIndex <= 2)
+    {
         // If pmt is NULL, and the type index is in range, we return S_OK
         if (pmt == NULL)
         {
             return S_OK;
         }
 
-	    hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
+        hr = MoInitMediaType(pmt, sizeof(VIDEOINFOHEADER2));
 
-	    if (SUCCEEDED(hr))
-	    {
-		    pmt->majortype = MEDIATYPE_Video;
-		    pmt->formattype = FORMAT_VIDEOINFO2;
+        if (SUCCEEDED(hr))
+        {
+            pmt->majortype = MEDIATYPE_Video;
+            pmt->formattype = FORMAT_VIDEOINFO2;
             VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
             ZeroMemory(Format, sizeof(VIDEOINFOHEADER2));
             Format->dwPictAspectRatioX = 4;
@@ -681,13 +633,13 @@ HRESULT CDeintDMO::InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwType
             switch(dwTypeIndex)
             {
             case 0:
-    		    pmt->subtype = MEDIASUBTYPE_YUY2;
+                pmt->subtype = MEDIASUBTYPE_YUY2;
                 Format->bmiHeader.biBitCount = 16;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'U', 'Y', '2');
                 Format->bmiHeader.biSizeImage = 576*768*2;
                 break;
             case 1:
-    		    pmt->subtype = MEDIASUBTYPE_YV12;
+                pmt->subtype = MEDIASUBTYPE_YV12;
                 Format->bmiHeader.biBitCount = 12;
                 Format->bmiHeader.biCompression = MAKEFOURCC('Y', 'V', '1', '2');
                 Format->bmiHeader.biSizeImage = 576*768*3/2;
@@ -695,14 +647,14 @@ HRESULT CDeintDMO::InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwType
             default:
                 break;
             }
-	    }
+        }
     }
     else
     {
-		return DMO_E_NO_MORE_ITEMS;
-	}
+        return DMO_E_NO_MORE_ITEMS;
+    }
 
-	return hr;
+    return hr;
 }
 
 HRESULT CDeintDMO::ProcessSingleFrame(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuffer, DWORD MidIndex)
@@ -747,15 +699,15 @@ HRESULT CDeintDMO::ProcessSingleFrame(IInterlacedBufferStack* Stack, IMediaBuffe
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right * 2;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth * 2;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right * 2;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth * 2;
+        }
 
         if(IsTopLine == TRUE)
         {
@@ -785,15 +737,15 @@ HRESULT CDeintDMO::ProcessSingleFrame(IInterlacedBufferStack* Stack, IMediaBuffe
     // worry about deinterlacing the luma and just copy the chroma
     else
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth;
+        }
 
         // process luma
         if(IsTopLine == TRUE)
@@ -828,15 +780,15 @@ HRESULT CDeintDMO::ProcessSingleFrame(IInterlacedBufferStack* Stack, IMediaBuffe
 
 void CDeintDMO::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
 {
-	DWORD LineLength;
-	if(InputInfo->rcSource.right > 0)
-	{
-		LineLength = InputInfo->rcSource.right / 2;
-	}
-	else
-	{
-		LineLength = InputInfo->bmiHeader.biWidth / 2;
-	}
+    DWORD LineLength;
+    if(InputInfo->rcSource.right > 0)
+    {
+        LineLength = InputInfo->rcSource.right / 2;
+    }
+    else
+    {
+        LineLength = InputInfo->bmiHeader.biWidth / 2;
+    }
     // copy V then U
     // there are biWidth / 2 x biHeight/2 of V 
     // followed by biWidth / 2 x biHeight/2 of U

@@ -49,10 +49,10 @@ IMPLEMENT_AGGREGATABLE_UNKNOWN(CTVSource)
 IMPLEMENT_GENERIC_CLASS_FACTORY(CTVSource)
 IMPLEMENT_CREATE_AGGREGATABLE_INSTANCE(CTVSource)
 BEGIN_INTERFACE_TABLE(CTVSource)
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -62,7 +62,7 @@ BEGIN_INTERFACE_TABLE(CTVSource)
 END_INTERFACE_TABLE()
 
 public:
-	CTVSource();
+    CTVSource();
     ~CTVSource();
 
 
@@ -82,7 +82,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 // IFileSourceFilter
@@ -132,8 +132,8 @@ private:
     HRESULT PushFile(HANDLE hFile);
     HANDLE m_ThreadStopEvent;
     HANDLE m_WorkerThread;
-	HRESULT m_ThreadRetCode;
-	DWORD m_ThreadId;
+    HRESULT m_ThreadRetCode;
+    DWORD m_ThreadId;
 };
 
 #define m_OutPin m_OutputPins[0]

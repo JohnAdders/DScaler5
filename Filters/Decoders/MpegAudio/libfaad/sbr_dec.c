@@ -47,7 +47,7 @@ static uint8_t sbr_save_prev_data(sbr_info *sbr, uint8_t ch);
 sbr_info *sbrDecodeInit(uint16_t framelength, uint8_t id_aac,
                         uint32_t sample_rate
 #ifdef DRM
-						, uint8_t IsDRM
+                        , uint8_t IsDRM
 #endif
                         )
 {

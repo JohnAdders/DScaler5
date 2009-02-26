@@ -17,10 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-/////////////////////////////////////////////////////////////////////////////
 
 
 // Summary:
@@ -32,7 +28,7 @@
 // V_PTR_WRITE(ptr,type)                 - A typed ptr w/o a dwSize which we will read/write
 // V_PTR_WRITE_OPT(ptr,type)             - An optional typed ptr w/o a dwSize which we will read/write
 // V_BUFPTR_READ(ptr,size)               - A variable-size buffer that we will read
-// V_BUFPTR_READ_OPT(ptr,size)			 - An optional variable-size buffer that we will read
+// V_BUFPTR_READ_OPT(ptr,size)             - An optional variable-size buffer that we will read
 // V_BUFPTR_WRITE(ptr,size)              - A variable-size buffer that we will read/write
 // V_BUFPTR_WRITE_OPT(ptr,size)          - An optional variable-size buffer that we will read/write
 // V_PTRPTR_WRITE(ptrptr)                - A pointer to a pointer to write to
@@ -42,8 +38,8 @@
 // V_INTERFACE(ptr)                      - A pointer to a COM interface
 // V_INTERFACE_OPT(ptr)                  - An optional pointer to a COM interface
 // V_REFGUID(ref)                        - A reference to a GUID (type REFGUID)
-// V_HWND(hwnd)							 - A window handle
-// V_HWNDOPT(hwnd)						 - An optional window handle
+// V_HWND(hwnd)                             - A window handle
+// V_HWNDOPT(hwnd)                         - An optional window handle
 //
 // For handling different versions of structures:
 // 
@@ -132,9 +128,9 @@
     return E_INVALIDARG; }
 
 #define RIP_E_HANDLE(h) \
-{	Trace(-1, "%s: Invalid handle " #h "\n", __szValidateInterfaceName); \
+{    Trace(-1, "%s: Invalid handle " #h "\n", __szValidateInterfaceName); \
     _RIP_BREAK \
-	return E_HANDLE; }
+    return E_HANDLE; }
     
 #define RIP_W_INVALIDSIZE(ptr) \
 {   Trace(-1, "%s: " #ptr "->dwSize matches no known structure size. Defaulting to oldest structure.\n", \
@@ -166,7 +162,7 @@
 #define V_INAME(x)
 #define RIP_E_POINTER(ptr)          { return E_POINTER; }
 #define RIP_E_INVALIDARG(ptr)       { return E_INVALIDARG; }
-#define RIP_E_HANDLE(h)	            { return E_HANDLE; }
+#define RIP_E_HANDLE(h)                { return E_HANDLE; }
 #define RIP_E_BLOCKVSDWSIZE(ptr)    { return E_INVALIDARG; }
 #define RIP_W_INVALIDSIZE(ptr)
 #define RIP_E_INVALIDSIZE(ptr)      { return E_INVALIDARG; }
@@ -187,13 +183,13 @@
 #define V_STRUCTPTR_READ(ptr,type) \
 {   V_ASSERT(offsetof(type, dwSize) == 0); \
     if (IsBadReadPtr(ptr, sizeof(DWORD)))               RIP_E_BLOCKVSDWSIZE(ptr); \
-	if (ptr->dwSize < sizeof(type))						RIP_E_INVALIDSIZE(ptr); \
+    if (ptr->dwSize < sizeof(type))                        RIP_E_INVALIDSIZE(ptr); \
     if (IsBadReadPtr(ptr, (ptr)->dwSize))               RIP_E_BLOCKVSDWSIZE(ptr); }
 
 #define V_STRUCTPTR_WRITE(ptr,type) \
 {   V_ASSERT(offsetof(type, dwSize) == 0); \
     if (IsBadReadPtr(ptr, sizeof(DWORD)))               RIP_E_BLOCKVSDWSIZE(ptr); \
-	if (ptr->dwSize < sizeof(type))						RIP_E_INVALIDSIZE(ptr); \
+    if (ptr->dwSize < sizeof(type))                        RIP_E_INVALIDSIZE(ptr); \
     if (IsBadWritePtr(ptr, (ptr)->dwSize))              RIP_E_BLOCKVSDWSIZE(ptr); }
 
 #define V_PTR_READ(ptr,type) \
@@ -217,13 +213,13 @@
 {   if (IsBadReadPtr(ptr, len))                         RIP_E_POINTER(ptr); }
 
 #define V_BUFPTR_READ_OPT(ptr,len) \
-{	if (ptr) V_BUFPTR_READ(ptr,len); }
+{    if (ptr) V_BUFPTR_READ(ptr,len); }
 
 #define V_BUFPTR_WRITE(ptr,len) \
 {   if (IsBadWritePtr(ptr, len))                        RIP_E_POINTER(ptr); }
 
 #define V_BUFPTR_WRITE_OPT(ptr,len) \
-{	if (ptr) V_BUFPTR_WRITE(ptr,len); }
+{    if (ptr) V_BUFPTR_WRITE(ptr,len); }
 
 // A pointer to a pointer (such as a pointer to an interface pointer) to return
 //
@@ -273,10 +269,10 @@ struct _V_GENERIC_INTERFACE
 // Validation for a window handle
 //
 #define V_HWND(h) \
-{	if (!IsWindow(h))									RIP_E_HANDLE(h); }	
+{    if (!IsWindow(h))                                    RIP_E_HANDLE(h); }    
 
 #define V_HWND_OPT(h) \
-{	if (h) if (!IsWindow(h))							RIP_E_HANDLE(h); }	
+{    if (h) if (!IsWindow(h))                            RIP_E_HANDLE(h); }    
 
 // Validation for multiple sized structs based on version
 //

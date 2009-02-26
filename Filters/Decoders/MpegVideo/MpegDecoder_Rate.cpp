@@ -33,41 +33,6 @@
 //  - Replaced Baseclasses with FilterLib
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.8  2005/02/17 09:31:48  adcockj
-// Added analog blanking option
-// Removed force Dscaler filter option
-// Another proposed fix for menus
-//
-// Revision 1.7  2005/02/03 13:40:55  adcockj
-// Improved seek support
-//
-// Revision 1.6  2004/07/21 15:05:25  adcockj
-// Fixed some issues with ff & rew
-//
-// Revision 1.5  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.4  2004/05/25 16:59:29  adcockj
-// fixed issues with new buffered pin
-//
-// Revision 1.3  2004/04/08 16:41:57  adcockj
-// Tidy up subpicture support
-//
-// Revision 1.2  2004/03/06 20:50:29  adcockj
-// Put in correct ff rate supported
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "MpegDecoder.h"
@@ -96,26 +61,26 @@ HRESULT CMpegDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
             LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
         }
         break;
-	case AM_RATE_UseRateVersion:
-		{
-			if(*(WORD*)pPropertyData == 0x0101)
-			{
-		        LOG(DBGLOG_FLOW, ("Rate Change 1.1\n"));
-				m_CorrectTS = true;
-				// todo get 1.1 working properly
-				return E_UNEXPECTED;
-			}
-			else if(*(WORD*)pPropertyData == 0x0100)
-			{
-	            LOG(DBGLOG_FLOW, ("Rate Change 1.0\n"));
-				m_CorrectTS = true;
-			}
-			else
-			{
-		        return E_UNEXPECTED;
-			}
-		}
-		break;
+    case AM_RATE_UseRateVersion:
+        {
+            if(*(WORD*)pPropertyData == 0x0101)
+            {
+                LOG(DBGLOG_FLOW, ("Rate Change 1.1\n"));
+                m_CorrectTS = true;
+                // todo get 1.1 working properly
+                return E_UNEXPECTED;
+            }
+            else if(*(WORD*)pPropertyData == 0x0100)
+            {
+                LOG(DBGLOG_FLOW, ("Rate Change 1.0\n"));
+                m_CorrectTS = true;
+            }
+            else
+            {
+                return E_UNEXPECTED;
+            }
+        }
+        break;
     default:
         return E_PROP_ID_UNSUPPORTED;
     }
@@ -150,10 +115,10 @@ HRESULT CMpegDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWORD
             *pcbReturned = sizeof(AM_QueryRate);
         }
         break;
-	case AM_RATE_QueryLastRateSegPTS:
-		{
+    case AM_RATE_QueryLastRateSegPTS:
+        {
             LOG(DBGLOG_FLOW, ("QueryLastRateSegPTS\n"));
-			REFERENCE_TIME* LastPTS = (REFERENCE_TIME*)pPropertyData;
+            REFERENCE_TIME* LastPTS = (REFERENCE_TIME*)pPropertyData;
             *pcbReturned = sizeof(REFERENCE_TIME);
         }
         break;
@@ -179,10 +144,10 @@ HRESULT CMpegDecoder::SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport)
     case AM_RATE_CorrectTS:
         *pTypeSupport = KSPROPERTY_SUPPORT_SET;
         break;
-	case AM_RATE_UseRateVersion:
+    case AM_RATE_UseRateVersion:
         *pTypeSupport = KSPROPERTY_SUPPORT_SET;
         break;
-	case AM_RATE_QueryLastRateSegPTS:
+    case AM_RATE_QueryLastRateSegPTS:
         *pTypeSupport = KSPROPERTY_SUPPORT_GET;
         break;
     }

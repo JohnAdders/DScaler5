@@ -98,7 +98,7 @@ static void rewind_bits(bits_t * r)
 /* takes codewords from a and b, concatenate them and store them in b */
 static void concat_bits( bits_t * a, bits_t * b)
 {
-    uint32_t	hwa, lwa, hwb, lwb;
+    uint32_t    hwa, lwa, hwb, lwb;
 
     if (a->len == 0) return;
 
@@ -133,14 +133,14 @@ static const uint8_t maxCwLen[32] = {0, 11, 9, 20, 16, 13, 11, 14, 12, 17, 14, 4
 
 typedef struct
 {
-    bits_t		bits;
-    uint8_t		decoded;
-    uint16_t	sp_offset;
-    uint8_t		cb;
+    bits_t        bits;
+    uint8_t        decoded;
+    uint16_t    sp_offset;
+    uint8_t        cb;
 } codeword_state;
 
 
-#define segmentWidth( codebook )	min( maxCwLen[codebook], ics->length_of_longest_codeword )
+#define segmentWidth( codebook )    min( maxCwLen[codebook], ics->length_of_longest_codeword )
      
 uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile *ld,
                                 int16_t *spectral_data)
@@ -149,8 +149,8 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
     uint16_t g,i, presort;
     uint16_t NrCodeWords=0, numberOfSegments=0, BitsRead=0;
     uint8_t numberOfSets, set;
-    codeword_state Codewords[ 1024 ];	// FIXME max length? PCWs are not stored, so index is Codewordnr - numberOfSegments!, maybe malloc()?
-    bits_t	Segment[ 512 ];
+    codeword_state Codewords[ 1024 ];    // FIXME max length? PCWs are not stored, so index is Codewordnr - numberOfSegments!, maybe malloc()?
+    bits_t    Segment[ 512 ];
 
     uint8_t PCW_decoded=0;
     uint16_t nshort = hDecoder->frameLength/8;
@@ -218,7 +218,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
                                 uint8_t inc = (sect_cb < FIRST_PAIR_HCB) ? QUAD_LEN : PAIR_LEN;
                                 uint16_t k;
 
-                                uint32_t	hw, lw;
+                                uint32_t    hw, lw;
 
                                 for  (k=0; (k < (4/inc)*ics->window_group_length[g]) &&
                                     ( (k+w*ics->window_group_length[g]/inc) < (ics->sect_sfb_offset[g][sfb+1] - ics->sect_sfb_offset[g][sfb])); k++)
@@ -330,7 +330,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
             uint16_t set_decoded=numberOfSegments;
 
             if (set == numberOfSets)
-                set_decoded = NrCodeWords - set*numberOfSegments;	/* last set is shorter than the rest */
+                set_decoded = NrCodeWords - set*numberOfSegments;    /* last set is shorter than the rest */
 
             for (codewordBase = 0; codewordBase < numberOfSegments; codewordBase++)
             {
@@ -374,7 +374,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
                 }
             } /* of codewordBase */
 
-            if (set_decoded == 0) break;	/* no undecoded codewords left in this set */
+            if (set_decoded == 0) break;    /* no undecoded codewords left in this set */
 
         } /* of trial */
 
@@ -403,7 +403,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
         {
             printf("reordered_spectral_data: %d Undecoded Codewords remaining!\n",c );
         }
-        if ((r !=0) || (c!=0))	return 10;
+        if ((r !=0) || (c!=0))    return 10;
     }
 #endif
 

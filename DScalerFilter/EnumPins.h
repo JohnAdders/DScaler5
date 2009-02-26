@@ -30,14 +30,14 @@ public:
 /////////////////////////////////////////////////////////////////////////////
 // CDScaler
 class ATL_NO_VTABLE CEnumPins : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IEnumPins
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IEnumPins
 {
 public:
-	CEnumPins();
+    CEnumPins();
 
 BEGIN_COM_MAP(CEnumPins)
-	COM_INTERFACE_ENTRY(IEnumPins)
+    COM_INTERFACE_ENTRY(IEnumPins)
 END_COM_MAP()
 
 // IBaseFilter

@@ -18,13 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2004/12/15 13:04:10  adcockj
-// added simple statistics display
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "GenDMOProp.h"
@@ -35,16 +28,16 @@
 
 CStatisticsPropPage::CStatisticsPropPage() 
 {
-	m_dwTitleID = IDS_TITLEStatisticsPropPage;
-	m_dwHelpFileID = IDS_HELPFILELicensePropPage;
-	m_dwDocStringID = IDS_DOCSTRINGStatisticsPropPage;
+    m_dwTitleID = IDS_TITLEStatisticsPropPage;
+    m_dwHelpFileID = IDS_HELPFILELicensePropPage;
+    m_dwDocStringID = IDS_DOCSTRINGStatisticsPropPage;
 }
 
 STDMETHODIMP CStatisticsPropPage::Apply(void)
 {
-	ATLTRACE(_T("CStatisticsPropPage::Apply\n"));
-	m_bDirty = FALSE;
-	return S_OK;
+    ATLTRACE(_T("CStatisticsPropPage::Apply\n"));
+    m_bDirty = FALSE;
+    return S_OK;
 }
 
 STDMETHODIMP CStatisticsPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
@@ -67,16 +60,16 @@ STDMETHODIMP CStatisticsPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bM
     }
 
     HRESULT hr = IPropertyPageImpl<CStatisticsPropPage>::Activate(hWndParent,pRect,bModal);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
+    if(FAILED(hr))
+    {
+        return hr;
+    }
 
 
     DWORD NumProps;
 
     hr = m_Statistics->get_NumStatistics(&NumProps);
-	if(FAILED(hr)) return hr;
+    if(FAILED(hr)) return hr;
 
     SendMessageW(GetDlgItem(IDC_LIST1), LB_RESETCONTENT, 0, 0);
 
@@ -85,11 +78,11 @@ STDMETHODIMP CStatisticsPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bM
     {
         BSTR Name = NULL;
         hr = m_Statistics->get_StatisticName(i, &Name);
-    	if(FAILED(hr)) return hr;
+        if(FAILED(hr)) return hr;
         SendMessageW(GetDlgItem(IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Name);
         BSTR Value = NULL;
         hr = m_Statistics->get_StatisticValue(i, &Value);
-    	if(FAILED(hr)) return hr;
+        if(FAILED(hr)) return hr;
         SendMessageW(GetDlgItem(IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Value);
     }
 

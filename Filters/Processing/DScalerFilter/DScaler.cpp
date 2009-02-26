@@ -18,118 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.19  2005/02/17 09:41:22  adcockj
-// Improved timecode handling
-//
-// Revision 1.18  2005/01/04 17:53:44  adcockj
-// added option to force dscalewr filter to be loaded2
-//
-// Revision 1.17  2004/12/21 14:47:00  adcockj
-// fixed connection and settings issues
-//
-// Revision 1.16  2004/12/15 13:04:08  adcockj
-// added simple statistics display
-//
-// Revision 1.15  2004/12/13 16:59:57  adcockj
-// flag based film detection
-//
-// Revision 1.14  2004/12/07 08:44:00  adcockj
-// fixed VS6 issues
-//
-// Revision 1.13  2004/12/06 18:05:01  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.12  2004/11/25 21:55:54  adcockj
-// fix issue with interlaced flags on output
-//
-// Revision 1.11  2004/11/01 14:09:39  adcockj
-// More DScaler filter insipred changes
-//
-// Revision 1.10  2004/08/31 16:33:42  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.9  2004/05/06 06:38:07  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.8  2004/04/28 16:32:37  adcockj
-// Better dynamic connection
-//
-// Revision 1.7  2004/04/20 16:30:31  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.6  2004/03/08 17:20:05  adcockj
-// Minor bug fixes
-//
-// Revision 1.5  2004/03/06 20:51:10  adcockj
-// Correct isue with aspect ratio changes
-//
-// Revision 1.4  2004/03/05 17:21:32  adcockj
-// Better handling of dynamic format changes
-//
-// Revision 1.3  2004/03/05 15:56:29  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.2  2004/02/12 17:06:45  adcockj
-// Libary Tidy up
-// Fix for stopping problems
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.15  2003/12/09 11:45:51  adcockj
-// Improved implementation of EnumPins
-//
-// Revision 1.14  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.13  2003/09/19 16:12:14  adcockj
-// Further improvements
-//
-// Revision 1.12  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.11  2003/05/20 16:50:58  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.10  2003/05/09 15:51:04  adcockj
-// Code tidy up
-// Added aspect ratio parameters
-//
-// Revision 1.9  2003/05/08 15:58:37  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.8  2003/05/07 16:27:41  adcockj
-// Slightly better properties implementation
-//
-// Revision 1.7  2003/05/06 16:38:00  adcockj
-// Changed to fixed size output buffer and changed connection handling
-//
-// Revision 1.6  2003/05/02 16:22:22  adcockj
-// Switched to ISpecifyPropertyPagesImpl
-//
-// Revision 1.5  2003/05/02 16:05:22  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.4  2003/05/02 10:53:07  adcockj
-// Returns test parameter for testing property page
-//
-// Revision 1.3  2003/05/01 18:15:17  adcockj
-// Moved IMedaiSeeking to output pin
-//
-// Revision 1.2  2003/05/01 16:19:02  adcockj
-// Changed property pages ready for generic page
-//
-// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DScaler.h"
 #include "EnumPins.h"
@@ -145,13 +33,13 @@ CDScaler::CDScaler() :
     InitMediaType(&m_InternalMTInput);
     m_TypesChanged = TRUE;
     m_RebuildRequired = TRUE;
-	m_ChangeTypes = FALSE;
+    m_ChangeTypes = FALSE;
     m_NextFieldNumber = 0;
     m_DetectedPulldownIndex = 0;
     m_DetectedPulldownType = FULLRATEVIDEO;
-	m_LastStartEnd = 0;
+    m_LastStartEnd = 0;
     m_FieldTiming = 0;
-	m_FieldsInBuffer = 0;
+    m_FieldsInBuffer = 0;
 
     LOG(DBGLOG_FLOW, ("CDScaler::CreatePins\n"));
     
@@ -206,7 +94,7 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
     case INPUTISANAMORPHIC:
         m_ChangeTypes = TRUE;
         break;
-	case DEINTERLACEMODE:
+    case DEINTERLACEMODE:
         m_RebuildRequired = TRUE;
         break;  
     case MANUALPULLDOWN:
@@ -216,7 +104,7 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
         break;
     case PULLDOWNINDEX:
         break;
-	case FILMDETECTMODE:
+    case FILMDETECTMODE:
         m_RebuildRequired = TRUE;
         break;  
     default:
@@ -246,7 +134,7 @@ HRESULT CDScaler::GetEnumTextDeinterlaceMode(WCHAR **ppwchText)
 {
     *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_DeinterlaceNames.length() + 2 + 22 * 2);
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-	memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
+    memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
     size_t i(0);
     for(; i < m_DeinterlaceNames.length(); ++i)
     {
@@ -267,7 +155,7 @@ HRESULT CDScaler::GetEnumTextFilmDetectMode(WCHAR **ppwchText)
 {
     *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_FilmDetectorNames.length() + 2 + 22 * 2);
     if(*ppwchText == NULL) return E_OUTOFMEMORY;
-	memcpy(*ppwchText, L"Film Detect Mode\0None\0", 22 * 2);
+    memcpy(*ppwchText, L"Film Detect Mode\0None\0", 22 * 2);
     size_t i(0);
     for(; i < m_FilmDetectorNames.length(); ++i)
     {
@@ -446,11 +334,11 @@ HRESULT CDScaler::LoadDMOs()
     // we need at least one deinterlacing method
     if(m_Deinterlacers.size() > 0)
     {
-		_GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue = (MP_DATA)(m_Deinterlacers.size() - 1);
-		if(_GetParamList()[DEINTERLACEMODE].Value > _GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue)
-		{
-			_GetParamList()[DEINTERLACEMODE].Value = _GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue;
-		}
+        _GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue = (MP_DATA)(m_Deinterlacers.size() - 1);
+        if(_GetParamList()[DEINTERLACEMODE].Value > _GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue)
+        {
+            _GetParamList()[DEINTERLACEMODE].Value = _GetParamList()[DEINTERLACEMODE].MParamInfo.mpdMaxValue;
+        }
         return S_OK;
     }
     else
@@ -462,11 +350,11 @@ HRESULT CDScaler::LoadDMOs()
     // and at least one deinterlacing method
     if(m_FilmDetectors.size() > 0)
     {
-		_GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue = (MP_DATA)(m_FilmDetectors.size() - 1);
-		if(_GetParamList()[FILMDETECTMODE].Value > _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue)
-		{
-			_GetParamList()[FILMDETECTMODE].Value = _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue;
-		}
+        _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue = (MP_DATA)(m_FilmDetectors.size() - 1);
+        if(_GetParamList()[FILMDETECTMODE].Value > _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue)
+        {
+            _GetParamList()[FILMDETECTMODE].Value = _GetParamList()[FILMDETECTMODE].MParamInfo.mpdMaxValue;
+        }
         return S_OK;
     }
     else
@@ -522,7 +410,7 @@ HRESULT CDScaler::CheckProcessingLine()
         CProtectCode WhileVarInScope(this);
         hr = RebuildProcessingLine();
         CHECK(hr);
-		m_RebuildRequired = FALSE;
+        m_RebuildRequired = FALSE;
     }
     if(m_ChangeTypes)
     {
@@ -535,7 +423,7 @@ HRESULT CDScaler::CheckProcessingLine()
         CProtectCode WhileVarInScope(this);
         hr = UpdateTypes();
         CHECK(hr);
-		m_TypesChanged = FALSE;
+        m_TypesChanged = FALSE;
     }
     return S_OK;
 }
@@ -543,13 +431,13 @@ HRESULT CDScaler::CheckProcessingLine()
 HRESULT CDScaler::RebuildProcessingLine()
 {
     HRESULT hr = S_OK;
-	
-	// set it to the new one
-	m_CurrentDeinterlacingMethod = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)];
+    
+    // set it to the new one
+    m_CurrentDeinterlacingMethod = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)];
     SI(IDScalerVideoFilterPlugin) pVPI = m_CurrentDeinterlacingMethod;
     if(pVPI)
     {
-	    hr = pVPI->get_NumFieldsBuffered(&m_NumberOfFieldsToBuffer);
+        hr = pVPI->get_NumFieldsBuffered(&m_NumberOfFieldsToBuffer);
     }
     else
     {
@@ -562,22 +450,22 @@ HRESULT CDScaler::RebuildProcessingLine()
     DWORD FilmBuffersRequired = 0;
     if(pVPI)
     {
-	    hr = pVPI->get_NumFieldsBuffered(&FilmBuffersRequired);
+        hr = pVPI->get_NumFieldsBuffered(&FilmBuffersRequired);
         m_NumberOfFieldsToBuffer = max(m_NumberOfFieldsToBuffer, FilmBuffersRequired);
     }
 
-	// make sure we set the types up
-	m_TypesChanged = TRUE;
+    // make sure we set the types up
+    m_TypesChanged = TRUE;
     return hr;
 }
 
 HRESULT CDScaler::UpdateTypes()
 {
     HRESULT hr = S_OK;
-	hr = UpdateTypes(m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]);
-	CHECK(hr);
-	hr = UpdateTypes(m_FilmDetectors[GetParamInt(FILMDETECTMODE)]);
-	CHECK(hr);
+    hr = UpdateTypes(m_Deinterlacers[GetParamInt(DEINTERLACEMODE)]);
+    CHECK(hr);
+    hr = UpdateTypes(m_FilmDetectors[GetParamInt(FILMDETECTMODE)]);
+    CHECK(hr);
 
     VIDEOINFOHEADER2* vih2 = (VIDEOINFOHEADER2*)m_InternalMTInput.pbFormat;
 
@@ -589,16 +477,16 @@ HRESULT CDScaler::UpdateTypes()
 HRESULT CDScaler::UpdateTypes(IMediaObject* pDMO)
 {
     HRESULT hr = S_OK;
-	pDMO->Flush();
-	CHECK(hr);
-	pDMO->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	pDMO->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	pDMO->SetInputType(0, &m_InternalMTInput, 0);
-	CHECK(hr);
-	pDMO->SetOutputType(0, &m_VideoOutPin->m_ConnectedMediaType, 0);
-	CHECK(hr);
+    pDMO->Flush();
+    CHECK(hr);
+    pDMO->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    pDMO->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    pDMO->SetInputType(0, &m_InternalMTInput, 0);
+    CHECK(hr);
+    pDMO->SetOutputType(0, &m_VideoOutPin->m_ConnectedMediaType, 0);
+    CHECK(hr);
     return hr;
 }
 
@@ -689,18 +577,18 @@ HRESULT CDScaler::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBase
     }
     else if(pPin == m_VideoOutPin)
     {
-		if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo)
-		{
-			VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pPin->GetMediaType()->pbFormat;
-			pProps->cbBuffer = vih->bmiHeader.biSizeImage;
-		}
-		else if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo2)
-		{
-			VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pPin->GetMediaType()->pbFormat;
-			pProps->cbBuffer = vih->bmiHeader.biSizeImage;
-		}
+        if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo)
+        {
+            VIDEOINFOHEADER* vih = (VIDEOINFOHEADER*)pPin->GetMediaType()->pbFormat;
+            pProps->cbBuffer = vih->bmiHeader.biSizeImage;
+        }
+        else if(pPin->GetMediaType()->formattype == FORMAT_VideoInfo2)
+        {
+            VIDEOINFOHEADER2* vih = (VIDEOINFOHEADER2*)pPin->GetMediaType()->pbFormat;
+            pProps->cbBuffer = vih->bmiHeader.biSizeImage;
+        }
 
-	    pProps->cBuffers = 1;
+        pProps->cBuffers = 1;
         pProps->cbAlign = 1;
         return S_OK;
     }
@@ -718,7 +606,7 @@ HRESULT CDScaler::Notify(IBaseFilter *pSelf, Quality q, CDSBasePin* pPin)
 
 HRESULT CDScaler::NewSegmentInternal(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate, CDSBasePin* pPin)
 {
-	m_LastStartEnd = 0;
+    m_LastStartEnd = 0;
     m_FieldTiming = 0;
     return S_OK;
 }
@@ -741,7 +629,7 @@ HRESULT CDScaler::QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTy
 
 HRESULT CDScaler::Flush(CDSBasePin* pPin)
 {
-	ClearAll();
+    ClearAll();
     return S_OK;
 }
 
@@ -754,16 +642,16 @@ HRESULT CDScaler::SendOutLastSamples(CDSBasePin* pPin)
 HRESULT CDScaler::InternalProcessOutput()
 {
     REFERENCE_TIME FrameEndTime = 0;
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
-	if(m_FieldsInBuffer > 2)
+    if(m_FieldsInBuffer > 2)
     {
         hr = UpdateMovementMap();
         CHECK(hr)
     }
 
-	if(m_FieldsInBuffer >= m_NumberOfFieldsToBuffer)
-	{
+    if(m_FieldsInBuffer >= m_NumberOfFieldsToBuffer)
+    {
         switch(WorkOutHowToProcess(FrameEndTime))
         {
         case PROCESS_IGNORE:
@@ -775,13 +663,13 @@ HRESULT CDScaler::InternalProcessOutput()
             hr = DeinterlaceOutput(FrameEndTime);
             break;
         }
-	}
+    }
 
     while(m_FieldsInBuffer > max(2, m_NumberOfFieldsToBuffer))
     {
         PopStack();
     }
-	return hr;
+    return hr;
 }
 
 HRESULT CDScaler::UpdateMovementMap()
@@ -820,7 +708,7 @@ HRESULT CDScaler::UpdateMovementMap()
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
-		if(!IsTopLine)
+        if(!IsTopLine)
         {
             pInputDataNewer += InputInfo->bmiHeader.biWidth * 2;
             pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
@@ -851,7 +739,7 @@ HRESULT CDScaler::UpdateMovementMap()
     }
     else
     {
-		if(!IsTopLine)
+        if(!IsTopLine)
         {
             pInputDataNewer += InputInfo->bmiHeader.biWidth;
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
@@ -926,7 +814,7 @@ HRESULT CDScaler::UpdateMovementMap()
 
 HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     hr = m_VideoOutPin->CheckForReconnection();
 
@@ -941,9 +829,9 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
         CHECK(hr);
     }
 
-	SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
+    SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
 
-	DWORD Status(0);
+    DWORD Status(0);
 
     // reconfigure the filters if the input format has changed
     hr = CheckProcessingLine();
@@ -951,8 +839,8 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
 
     hr = Weave((IInterlacedBufferStack*)this, OutBuffer.GetNonAddRefedInterface());
 
-	if(hr == S_OK && !m_VideoInPin->IsFlushing())
-	{
+    if(hr == S_OK && !m_VideoInPin->IsFlushing())
+    {
         if(FrameEndTime)
         {
             // just in case things go a bit funny
@@ -960,8 +848,8 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
             {
                 m_LastStartEnd = *FrameEndTime - 1;
             }
-		    hr = OutSample->SetTime(&m_LastStartEnd, FrameEndTime);
-		    CHECK(hr);
+            hr = OutSample->SetTime(&m_LastStartEnd, FrameEndTime);
+            CHECK(hr);
         
             LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Weave]\n", 
                             m_LastStartEnd, *FrameEndTime));
@@ -970,20 +858,20 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
         }
         else
         {
-		    hr = OutSample->SetTime(NULL, NULL);
-		    CHECK(hr);
+            hr = OutSample->SetTime(NULL, NULL);
+            CHECK(hr);
         }
-		
+        
         // finally send the processed sample on it's way
-		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
-	}
-	// if we are at the start then we might need to send 
-	// a couple of frames in before getting a response
-	else if(hr == S_FALSE)
-	{
-		LOG(DBGLOG_FLOW, ("Skipped\n"));
-		hr = S_OK;
-	}
+        hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
+    }
+    // if we are at the start then we might need to send 
+    // a couple of frames in before getting a response
+    else if(hr == S_FALSE)
+    {
+        LOG(DBGLOG_FLOW, ("Skipped\n"));
+        hr = S_OK;
+    }
 
     return hr;
 }
@@ -991,7 +879,7 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
 
 HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     hr = m_VideoOutPin->CheckForReconnection();
 
@@ -1000,9 +888,9 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
     hr = m_VideoOutPin->GetOutputSample(OutSample.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     CHECK(hr);
 
-	SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
+    SI(IMediaBuffer) OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample.GetNonAddRefedInterface());
 
-	DWORD Status(0);
+    DWORD Status(0);
 
     // reconfigure the filters if the input format has changed
     hr = CheckProcessingLine();
@@ -1018,25 +906,25 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
         DumpOutput(OutBuffer.GetNonAddRefedInterface(), "Output.txt");
     }
 
-	if(hr == S_OK && m_VideoInPin->IsFlushing() == FALSE)
-	{
-		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
-		CHECK(hr);
+    if(hr == S_OK && m_VideoInPin->IsFlushing() == FALSE)
+    {
+        hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
+        CHECK(hr);
 
         LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Deint]\n", 
                         m_LastStartEnd, FrameEndTime));
 
 
         // finally send the processed sample on it's way
-		hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
-	}
-	// if we are at the start then we might need to send 
-	// a couple of frames in before getting a response
-	else if(hr == S_FALSE)
-	{
-		LOG(DBGLOG_FLOW, ("Skipped\n"));
-		hr = S_OK;
-	}
+        hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
+    }
+    // if we are at the start then we might need to send 
+    // a couple of frames in before getting a response
+    else if(hr == S_FALSE)
+    {
+        LOG(DBGLOG_FLOW, ("Skipped\n"));
+        hr = S_OK;
+    }
 
     m_LastStartEnd = FrameEndTime;
 
@@ -1132,7 +1020,7 @@ HRESULT CDScaler::Activate()
 
 HRESULT CDScaler::Deactivate()
 {
-	ClearAll();
+    ClearAll();
     return S_OK;
 }
 
@@ -1151,8 +1039,8 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
         result &= (pmt->subtype == MEDIASUBTYPE_YUY2 || 
                pmt->subtype == MEDIASUBTYPE_YV12);
     
-		if(result)
-		{
+        if(result)
+        {
             BITMAPINFOHEADER* BitmapInfo;
             if(pmt->formattype == FORMAT_VIDEOINFO2)
             {
@@ -1180,7 +1068,7 @@ HRESULT CDScaler::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBasePin
     {
         ClearAll();
         CreateInternalMediaTypes();
-		m_RebuildRequired = TRUE;
+        m_RebuildRequired = TRUE;
     }
     else if(pPin == m_VideoOutPin)
     {
@@ -1244,25 +1132,25 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
         return E_UNEXPECTED;
     }
 
-	HRESULT hr = CheckProcessingLine();
-	CHECK(hr);
+    HRESULT hr = CheckProcessingLine();
+    CHECK(hr);
 
     if((pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID) == AM_SAMPLE_TIMEVALID)
     {
         // if there was a discontinuity then we need to ask for the buffer
         // differently 
         if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	    {
-		    m_IsDiscontinuity = true;
+        {
+            m_IsDiscontinuity = true;
             m_LastStartEnd = pSampleProperties->tStart;
-	    }
+        }
 
         if((pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID) != AM_SAMPLE_STOPVALID ||
             pSampleProperties->tStop <= pSampleProperties->tStart ||
             (pSampleProperties->tStop - pSampleProperties->tStart) == 1)
-	    {
+        {
             pSampleProperties->tStop = pSampleProperties->tStart + m_VideoOutPin->GetAvgTimePerFrame();
-	    }
+        }
 
         if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)
         {
@@ -1283,18 +1171,18 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
     else
     {
         hr = ShowNow(InSample, pSampleProperties);
-		m_IsDiscontinuity = true;
+        m_IsDiscontinuity = true;
     }
 
-	if(FAILED(hr) || hr == S_FALSE)
-	{
-		hr = ClearAll();
-		CHECK(hr);
+    if(FAILED(hr) || hr == S_FALSE)
+    {
+        hr = ClearAll();
+        CHECK(hr);
 
-		m_IsDiscontinuity = true;
+        m_IsDiscontinuity = true;
 
-		return S_FALSE;
-	}
+        return S_FALSE;
+    }
 
     return hr;
 }
@@ -1437,9 +1325,9 @@ void CDScaler::ShiftUpSamples(int NumberToShift, IMediaSample* InputSample)
     if(m_FieldsInBuffer > 0)
     {
         for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
-		{
-			m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
-		}
+        {
+            m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
+        }
     }
     m_FieldsInBuffer += NumberToShift;
     while(NumberToShift--)
@@ -1539,7 +1427,7 @@ HRESULT CDScaler::CreateInternalMediaTypes()
         NewFormat->dwPictAspectRatioY *= 3;
     }
 
-	memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
+    memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
 
     m_InternalMTInput.lSampleSize = BitmapInfo->biSizeImage;
 

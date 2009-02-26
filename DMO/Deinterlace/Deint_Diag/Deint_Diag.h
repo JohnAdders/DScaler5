@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.2  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.1  2003/05/21 13:41:12  adcockj
-// Added new deinterlace methods
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -43,12 +28,12 @@ DEFINE_GUID(CLSID_CDeint_Diag, 0xCAAD7294, 0x8B6C, 0x11d7, 0xB8, 0x51, 0x00, 0x0
 
 
 class CDeint_Diag : 
-	public CDeintDMO,
+    public CDeintDMO,
     public IAmFreeSoftwareLicensed
 {
 public:
 IMPLEMENT_AGGREGATABLE_COCLASS(CDeint_Diag, "{CAAD7294-8B6C-11d7-B851-0002A5623377}", "Deint_Diag Class", "DMO.Deint_Diag.1", "DMO.Deint_Diag", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IMediaObject)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
@@ -61,8 +46,8 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CDeint_Diag, "{CAAD7294-8B6C-11d7-B851-0002A56233
 END_INTERFACE_TABLE()
 
 public:
-    CDeint_Diag();	// Constructor
-    ~CDeint_Diag();	// Destructor
+    CDeint_Diag();    // Constructor
+    ~CDeint_Diag();    // Destructor
 
 BEGIN_PARAM_LIST()
 END_PARAM_LIST()
@@ -72,9 +57,9 @@ public:
 
 // IAmFreeSoftwareLicensed
 public:
-	STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
-	STDMETHOD(get_Authors)(BSTR* Authors);
+    STDMETHOD(get_Name)(BSTR* Name);
+    STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_Authors)(BSTR* Authors);
 
 // IDeinterlace
 public:

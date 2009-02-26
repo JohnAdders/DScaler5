@@ -33,11 +33,6 @@
 //  - Replaced Baseclasses with FilterLib
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
@@ -67,26 +62,26 @@ HRESULT CAudioDecoder::SetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWOR
             LOG(DBGLOG_FLOW, ("Rate Change Correct TS =%d\n", m_CorrectTS));
         }
         break;
-	case AM_RATE_UseRateVersion:
-		{
-			if(*(WORD*)pPropertyData == 0x0101)
-			{
-		        LOG(DBGLOG_FLOW, ("Rate Change 1.1\n"));
-				m_CorrectTS = true;
-				// todo get 1.1 working properly
-				return E_UNEXPECTED;
-			}
-			else if(*(WORD*)pPropertyData == 0x0100)
-			{
-	            LOG(DBGLOG_FLOW, ("Rate Change 1.0\n"));
-				m_CorrectTS = true;
-			}
-			else
-			{
-		        return E_UNEXPECTED;
-			}
-		}
-		break;
+    case AM_RATE_UseRateVersion:
+        {
+            if(*(WORD*)pPropertyData == 0x0101)
+            {
+                LOG(DBGLOG_FLOW, ("Rate Change 1.1\n"));
+                m_CorrectTS = true;
+                // todo get 1.1 working properly
+                return E_UNEXPECTED;
+            }
+            else if(*(WORD*)pPropertyData == 0x0100)
+            {
+                LOG(DBGLOG_FLOW, ("Rate Change 1.0\n"));
+                m_CorrectTS = true;
+            }
+            else
+            {
+                return E_UNEXPECTED;
+            }
+        }
+        break;
     default:
         return E_PROP_ID_UNSUPPORTED;
     }
@@ -121,10 +116,10 @@ HRESULT CAudioDecoder::GetPropSetRate(DWORD dwPropID, LPVOID pInstanceData, DWOR
             *pcbReturned = sizeof(AM_QueryRate);
         }
         break;
-	case AM_RATE_QueryLastRateSegPTS:
-		{
+    case AM_RATE_QueryLastRateSegPTS:
+        {
             LOG(DBGLOG_FLOW, ("QueryLastRateSegPTS\n"));
-			REFERENCE_TIME* LastPTS = (REFERENCE_TIME*)pPropertyData;
+            REFERENCE_TIME* LastPTS = (REFERENCE_TIME*)pPropertyData;
             *pcbReturned = sizeof(REFERENCE_TIME);
         }
         break;
@@ -150,10 +145,10 @@ HRESULT CAudioDecoder::SupportPropSetRate(DWORD dwPropID, DWORD *pTypeSupport)
     case AM_RATE_CorrectTS:
         *pTypeSupport = KSPROPERTY_SUPPORT_SET;
         break;
-	case AM_RATE_UseRateVersion:
+    case AM_RATE_UseRateVersion:
         *pTypeSupport = KSPROPERTY_SUPPORT_SET;
         break;
-	case AM_RATE_QueryLastRateSegPTS:
+    case AM_RATE_QueryLastRateSegPTS:
         *pTypeSupport = KSPROPERTY_SUPPORT_GET;
         break;
     }

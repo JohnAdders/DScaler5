@@ -28,7 +28,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDSInputPin
 class CDSInputPin : 
-	public CDSBasePin,
+    public CDSBasePin,
     public IMemInputPin,
     public IPinConnection
 {
@@ -37,16 +37,16 @@ public:
 IMPLEMENT_UNKNOWN(CDSInputPin)
 
 BEGIN_INTERFACE_TABLE(CDSInputPin)
-	IMPLEMENTS_INTERFACE(IPin)
-	IMPLEMENTS_INTERFACE(IMemInputPin)
+    IMPLEMENTS_INTERFACE(IPin)
+    IMPLEMENTS_INTERFACE(IMemInputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
-	IMPLEMENTS_INTERFACE(IPinConnection)
-	IMPLEMENTS_INTERFACE(IKsPropertySet)
+    IMPLEMENTS_INTERFACE(IPinConnection)
+    IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()
 
 public:
-	CDSInputPin();
-	~CDSInputPin();
+    CDSInputPin();
+    ~CDSInputPin();
 
 // IPin
 public:
@@ -95,8 +95,8 @@ protected:
         SOURCE_DV,
     };
 
-	BOOL AreWeAreTalkingToOurself(IPin* pConnector);
-	void FixupMediaType(AM_MEDIA_TYPE *pmt);
+    BOOL AreWeAreTalkingToOurself(IPin* pConnector);
+    void FixupMediaType(AM_MEDIA_TYPE *pmt);
     void CheckForBlocking();
 
 protected:

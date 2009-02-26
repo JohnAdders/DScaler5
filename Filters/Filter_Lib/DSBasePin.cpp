@@ -17,42 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.9  2004/08/31 16:33:42  adcockj
-// Minor improvements to quality control
-// Preparation for next version
-// Start on integrating film detect
-//
-// Revision 1.8  2004/07/28 16:32:35  adcockj
-// Fixes Blight's problems from the forum
-//
-// Revision 1.7  2004/07/16 16:03:20  adcockj
-// Fixed compilation issues under .NET
-//
-// Revision 1.6  2004/07/07 14:09:01  adcockj
-// removed tabs
-//
-// Revision 1.5  2004/04/29 16:16:46  adcockj
-// Yet more reconnection fixes
-//
-// Revision 1.4  2004/04/20 16:30:29  adcockj
-// Improved Dynamic Connections
-//
-// Revision 1.3  2004/04/16 16:19:44  adcockj
-// Better reconnection and improved AFD support
-//
-// Revision 1.2  2004/02/25 17:14:03  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DSBasePin.h"
@@ -312,7 +276,7 @@ IBaseFilter* CDSBasePin::GetConnectedFilter()
         if(PinInfo.pFilter != NULL)
         {
             PinInfo.pFilter->Release();
-			return PinInfo.pFilter;
+            return PinInfo.pFilter;
         }
     }
 

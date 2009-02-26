@@ -18,17 +18,13 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "EnumPins.h"
 
 CEnumPins::CEnumPins()
 {
-	m_Count = 0;
+    m_Count = 0;
 }
 
 STDMETHODIMP CEnumPins::Next(ULONG cPins,IPin **ppPins, ULONG *pcFetched)
@@ -97,7 +93,7 @@ STDMETHODIMP CEnumPins::Clone(IEnumPins **ppEnum)
         return E_OUTOFMEMORY;
     }
 
-	NewEnum->m_Count = m_Count;
+    NewEnum->m_Count = m_Count;
 
     NewEnum->AddRef();
     *ppEnum = NewEnum;

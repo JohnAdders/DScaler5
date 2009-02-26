@@ -1056,14 +1056,14 @@ int InverseQ( dts_state_t * state, huff_entry_t * huff )
         value <<= 1;
         value |= bitstream_get (state, 1);
 
-	for( j = 0; huff[j].length != 0 && huff[j].length < length; j++ );
+    for( j = 0; huff[j].length != 0 && huff[j].length < length; j++ );
 
-	if( huff[j].length == 0 ) break;
+    if( huff[j].length == 0 ) break;
 
-	for( ; huff[j].length == length; j++ )
-	{
-	    if( huff[j].code == value ) return huff[j].value;
-	}
+    for( ; huff[j].length == length; j++ )
+    {
+        if( huff[j].code == value ) return huff[j].value;
+    }
     }
 
     return 0;

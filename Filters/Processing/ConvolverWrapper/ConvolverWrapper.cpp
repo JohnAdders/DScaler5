@@ -18,25 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2006/03/07 15:12:41  adcockj
-// fix for convolver under audacity
-//
-// Revision 1.1  2005/07/21 12:42:33  adcockj
-// firstt cut of wrapper for John Pavel's convolver
-//
-// Revision 1.3  2004/10/21 18:52:30  adcockj
-// Half works with ac3 now
-//
-// Revision 1.2  2004/09/13 14:28:45  adcockj
-// Connection changes and crash fixes
-//
-// Revision 1.1  2004/09/10 16:55:46  adcockj
-// Initial version of spdif input filter
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "ConvolverWrapper.h"
 #include "EnumPins.h"
@@ -150,7 +131,7 @@ HRESULT CConvolverWrapper::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps
     {
         pProps->cBuffers = 0;
         pProps->cbAlign = 0;
-		pProps->cbBuffer = 0;
+        pProps->cbBuffer = 0;
         pProps->cbPrefix = 0;
         return S_OK;
     }
@@ -254,8 +235,8 @@ bool CConvolverWrapper::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBa
 
         result = (hr == S_OK);
     }
-	else if(pPin == m_AudioOutPin)
-	{
+    else if(pPin == m_AudioOutPin)
+    {
         HRESULT hr = CheckConvolver();
         if(FAILED(hr)) return false;
 
@@ -263,7 +244,7 @@ bool CConvolverWrapper::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBa
         if(FAILED(hr)) return false;
 
         result = (hr == S_OK);
-	}
+    }
     return result;
 }
 
@@ -296,10 +277,10 @@ HRESULT CConvolverWrapper::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, C
 
 HRESULT CConvolverWrapper::NotifyConnected(CDSBasePin* pPin)
 {
-	if(pPin == m_AudioInPin)
-	{
+    if(pPin == m_AudioInPin)
+    {
         UpdateTypes(&pPin->m_ConnectedMediaType);
-	}
+    }
     return S_OK;
 }
 
@@ -310,7 +291,7 @@ HRESULT CConvolverWrapper::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePi
         if(!m_AudioInPin->IsConnected()) return VFW_E_NOT_CONNECTED;
 
         if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
+        if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
         
         return CopyMediaType(pmt, &m_AudioInPin->m_ConnectedMediaType);;
     }
@@ -324,7 +305,7 @@ HRESULT CConvolverWrapper::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePi
 
 HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* pSampleProperties, CDSBasePin* pPin)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
 
     if(pPin != m_AudioInPin)
     {
@@ -334,9 +315,9 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
     // if there was a discontinuity then we need to ask for the buffer
     // differently 
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	{
-		m_IsDiscontinuity = true;
-	}
+    {
+        m_IsDiscontinuity = true;
+    }
 
     SI(IMediaBuffer) InputBuffer = CMediaBufferWrapper::CreateBuffer(InSample);
 
@@ -374,12 +355,12 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
             if(Length > 0)
             {
                 if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-	            {
-		            OutputSample->SetDiscontinuity(TRUE);
-	            }
+                {
+                    OutputSample->SetDiscontinuity(TRUE);
+                }
                 else
                 {
-		            OutputSample->SetDiscontinuity(FALSE);
+                    OutputSample->SetDiscontinuity(FALSE);
                 }
                 
                 if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
@@ -417,16 +398,16 @@ HRESULT CConvolverWrapper::UpdateTypes(const AM_MEDIA_TYPE* MediaType)
     HRESULT hr = S_OK;
     hr = CheckConvolver();
     CHECK(hr);
-	m_Convolver->Flush();
-	CHECK(hr);
-	m_Convolver->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	m_Convolver->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	m_Convolver->SetInputType(0, MediaType, 0);
-	CHECK(hr);
-	m_Convolver->SetOutputType(0, MediaType, 0);
-	CHECK(hr);
+    m_Convolver->Flush();
+    CHECK(hr);
+    m_Convolver->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    m_Convolver->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    m_Convolver->SetInputType(0, MediaType, 0);
+    CHECK(hr);
+    m_Convolver->SetOutputType(0, MediaType, 0);
+    CHECK(hr);
     return hr;
 }
 
@@ -491,12 +472,12 @@ HRESULT STDMETHODCALLTYPE CConvolverWrapper::put_attenuation(double newVal)
     return m_ConvolverPrivate->put_attenuation(newVal);
 }
 
-double	CConvolverWrapper::decode_Attenuationdb(const DWORD dwValue)
+double    CConvolverWrapper::decode_Attenuationdb(const DWORD dwValue)
 {
     return m_ConvolverPrivate->decode_Attenuationdb(dwValue);
 }
 
-DWORD	CConvolverWrapper::encode_Attenuationdb(const double fValue)
+DWORD    CConvolverWrapper::encode_Attenuationdb(const double fValue)
 {
     return m_ConvolverPrivate->encode_Attenuationdb(fValue);
 }

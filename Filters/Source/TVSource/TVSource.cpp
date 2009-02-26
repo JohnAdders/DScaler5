@@ -18,22 +18,6 @@
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.4  2006/03/08 16:58:12  adcockj
-// added multiple file support to TVSource
-//
-// Revision 1.3  2005/02/17 09:41:23  adcockj
-// Improved timecode handling
-//
-// Revision 1.2  2004/10/26 16:35:03  adcockj
-// Whoops - should be GPL not LGPL
-//
-// Revision 1.1  2004/10/26 16:26:54  adcockj
-// Added new Transport stream source filter
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "TVSource.h"
 #include "EnumPins.h"
@@ -145,8 +129,8 @@ HRESULT CTVSource::GetAllocatorRequirements(ALLOCATOR_PROPERTIES *pProps, CDSBas
 {
     if(pPin == m_OutPin)
     {
-		pProps->cbBuffer = 188;
-	    pProps->cBuffers = 3;
+        pProps->cbBuffer = 188;
+        pProps->cBuffers = 3;
         pProps->cbAlign = 1;
         return S_OK;
     }
@@ -227,7 +211,7 @@ HRESULT CTVSource::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pPin,
     if(pPin == m_OutPin)
     {
         if(TypeNum < 0) return E_INVALIDARG;
-	    if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
+        if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
         ClearMediaType(pmt);
         pmt->majortype = MEDIATYPE_Stream;
         pmt->subtype = MEDIASUBTYPE_MPEG2_TRANSPORT;

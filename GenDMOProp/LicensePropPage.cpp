@@ -18,19 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2003/05/20 16:51:02  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.2  2003/05/06 16:36:27  adcockj
-// Prelimuianry support for license page
-//
-// Revision 1.1  2003/05/01 12:34:41  adcockj
-// Added headers and new license page
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "GenDMOProp.h"
@@ -41,16 +28,16 @@
 
 CLicensePropPage::CLicensePropPage() 
 {
-	m_dwTitleID = IDS_TITLELicensePropPage;
-	m_dwHelpFileID = IDS_HELPFILELicensePropPage;
-	m_dwDocStringID = IDS_DOCSTRINGLicensePropPage;
+    m_dwTitleID = IDS_TITLELicensePropPage;
+    m_dwHelpFileID = IDS_HELPFILELicensePropPage;
+    m_dwDocStringID = IDS_DOCSTRINGLicensePropPage;
 }
 
 STDMETHODIMP CLicensePropPage::Apply(void)
 {
-	ATLTRACE(_T("CLicensePropPage::Apply\n"));
-	m_bDirty = FALSE;
-	return S_OK;
+    ATLTRACE(_T("CLicensePropPage::Apply\n"));
+    m_bDirty = FALSE;
+    return S_OK;
 }
 
 STDMETHODIMP CLicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
@@ -71,11 +58,11 @@ STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModa
         return E_UNEXPECTED;
     }
 
-	HRESULT hr = IPropertyPageImpl<CLicensePropPage>::Activate(hWndParent,pRect,bModal);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
+    HRESULT hr = IPropertyPageImpl<CLicensePropPage>::Activate(hWndParent,pRect,bModal);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
 
     BSTR Name = NULL;
     eFreeLicense LicenceType;
@@ -88,7 +75,7 @@ STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModa
 
     hr = m_License->get_Name(&Name);
     if(FAILED(hr)) return hr;
-	hr = m_License->get_License(&LicenceType);
+    hr = m_License->get_License(&LicenceType);
     if(FAILED(hr)) return hr;
     hr = m_License->get_Authors(&Authors);
     if(FAILED(hr)) return hr;

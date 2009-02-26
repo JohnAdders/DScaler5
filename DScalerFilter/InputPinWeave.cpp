@@ -15,10 +15,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "InputPin.h"
@@ -78,19 +74,19 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right * 2;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth * 2;
-		}
-
-		if(IsTopLine == TRUE)
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
         {
-			pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
+            LineLength = InputInfo->rcSource.right * 2;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth * 2;
+        }
+
+        if(IsTopLine == TRUE)
+        {
+            pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
             for(int i(0); i < InputInfo->bmiHeader.biHeight/2; ++i)
             {
                 memcpy(pOutputData, pInputDataNewer, LineLength);
@@ -119,17 +115,17 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
     // worry about deinterlacing the luma and just copy the chroma
     else
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth;
+        }
 
-		// process luma
+        // process luma
         if(IsTopLine == TRUE)
         {
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
@@ -170,15 +166,15 @@ void CInputPin::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOIN
     // but the both 
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','V','1','2'))
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right / 2;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth / 2;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right / 2;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth / 2;
+        }
         // copy V then U
         // there are biWidth / 2 x biHeight/2 of V 
         // followed by biWidth / 2 x biHeight/2 of U
@@ -191,17 +187,17 @@ void CInputPin::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOIN
     }
     else if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('N','V','1','2'))
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth;
+        }
 
-		// copy U & V - there are biWidth / 2 x biHeight/2 of UV samples
+        // copy U & V - there are biWidth / 2 x biHeight/2 of UV samples
         for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)
         {
             memcpy(pOutputData, pInputData, LineLength);

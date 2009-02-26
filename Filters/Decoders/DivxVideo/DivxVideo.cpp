@@ -18,22 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.4  2007/12/03 07:54:26  adcockj
-// Interim checkin will be tidied up later
-//
-// Revision 1.3  2007/11/30 18:06:48  adcockj
-// Initial go at h264 support
-//
-// Revision 1.2  2004/11/09 17:21:37  adcockj
-// Seeking fixes
-//
-// Revision 1.1  2004/11/05 17:45:53  adcockj
-// Added new decoder
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
@@ -68,11 +52,11 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
         g_hInstance = hInstance;
         DisableThreadLibraryCalls(hInstance);
         CPU_SetupFeatureFlag();
-		InitializeCriticalSection( &g_csStaticDataLock );
+        InitializeCriticalSection( &g_csStaticDataLock );
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
-		DeleteCriticalSection( &g_csStaticDataLock );
+        DeleteCriticalSection( &g_csStaticDataLock );
     }
     return TRUE;    // ok
 }

@@ -15,30 +15,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.5  2004/12/06 18:05:01  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.4  2004/11/01 14:09:55  adcockj
-// More DScaler filter insipred changes
-//
-// Revision 1.3  2004/03/05 17:21:33  adcockj
-// Better handling of dynamic format changes
-//
-// Revision 1.2  2004/03/05 15:56:30  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "DScaler.h"
@@ -94,19 +70,19 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right * 2;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth * 2;
-		}
-
-		if(IsTopLine == TRUE)
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
         {
-			pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
+            LineLength = InputInfo->rcSource.right * 2;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth * 2;
+        }
+
+        if(IsTopLine == TRUE)
+        {
+            pInputDataOlder += InputInfo->bmiHeader.biWidth * 2;
             for(int i(0); i < InputInfo->bmiHeader.biHeight/2; ++i)
             {
                 memcpy(pOutputData, pInputDataNewer, LineLength);
@@ -135,17 +111,17 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
     // worry about deinterlacing the luma and just copy the chroma
     else
     {
-		DWORD LineLength;
-		if(InputInfo->rcSource.right > 0)
-		{
-			LineLength = InputInfo->rcSource.right;
-		}
-		else
-		{
-			LineLength = InputInfo->bmiHeader.biWidth;
-		}
+        DWORD LineLength;
+        if(InputInfo->rcSource.right > 0)
+        {
+            LineLength = InputInfo->rcSource.right;
+        }
+        else
+        {
+            LineLength = InputInfo->bmiHeader.biWidth;
+        }
 
-		// process luma
+        // process luma
         if(IsTopLine == TRUE)
         {
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
@@ -182,15 +158,15 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
 
 void CDScaler::WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
 {
-	DWORD LineLength;
-	if(InputInfo->rcSource.right > 0)
-	{
-		LineLength = InputInfo->rcSource.right / 2;
-	}
-	else
-	{
-		LineLength = InputInfo->bmiHeader.biWidth / 2;
-	}
+    DWORD LineLength;
+    if(InputInfo->rcSource.right > 0)
+    {
+        LineLength = InputInfo->rcSource.right / 2;
+    }
+    else
+    {
+        LineLength = InputInfo->bmiHeader.biWidth / 2;
+    }
     // copy V then U
     // there are biWidth / 2 x biHeight/2 of V 
     // followed by biWidth / 2 x biHeight/2 of U

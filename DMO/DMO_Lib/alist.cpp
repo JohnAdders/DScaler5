@@ -17,10 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-/////////////////////////////////////////////////////////////////////////////
 
 #include <stdafx.h>
 #include "alist.h"
@@ -89,21 +85,21 @@ AListItem* AListItem::GetPrev(AListItem *pItem) const
 AListItem * AListItem::GetItem(LONG index)
 
 {
-	AListItem *scan;
-	for (scan = this; scan!=NULL && index; scan = scan->m_pNext) 
-	{
-		index--;
-	}
-	return (scan);
+    AListItem *scan;
+    for (scan = this; scan!=NULL && index; scan = scan->m_pNext) 
+    {
+        index--;
+    }
+    return (scan);
 }
 
 void AList::InsertBefore(AListItem *pItem,AListItem *pInsert)
 
 {
-	AListItem *prev = GetPrev(pItem);
-	pInsert->SetNext(pItem);
-	if (prev) prev->SetNext(pInsert);
-	else m_pHead = pInsert;
+    AListItem *prev = GetPrev(pItem);
+    pInsert->SetNext(pItem);
+    if (prev) prev->SetNext(pInsert);
+    else m_pHead = pInsert;
 }
 
 

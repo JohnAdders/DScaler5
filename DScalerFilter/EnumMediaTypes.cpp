@@ -18,41 +18,19 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.6  2003/05/08 15:58:38  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.5  2003/05/06 16:38:00  adcockj
-// Changed to fixed size output buffer and changed connection handling
-//
-// Revision 1.4  2003/05/02 19:15:39  adcockj
-// Futher corrections to Next
-//
-// Revision 1.3  2003/05/02 10:52:26  adcockj
-// Fixed memory allocation bug in next
-//
-// Revision 1.2  2003/05/02 07:03:13  adcockj
-// Some minor changes most not really improvements
-//
-// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "EnumMediaTypes.h"
 
 CEnumMediaTypes::CEnumMediaTypes()
 {
-	m_Count = 0;
+    m_Count = 0;
     m_Version = 0;
 }
 
 CEnumMediaTypes::~CEnumMediaTypes()
 {
-	m_Count = 0;
+    m_Count = 0;
 }
 
 
@@ -136,7 +114,7 @@ STDMETHODIMP CEnumMediaTypes::Clone(IEnumMediaTypes **ppEnum)
         return E_OUTOFMEMORY;
     }
 
-	NewEnum->m_Count = m_Count;
+    NewEnum->m_Count = m_Count;
     NewEnum->m_Version = m_Version;
     
     NewEnum->AddRef();

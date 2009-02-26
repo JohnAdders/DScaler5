@@ -25,12 +25,12 @@
 /////////////////////////////////////////////////////////////////////////////
 // CMediaBufferWrapper
 class ATL_NO_VTABLE CMediaBufferWrapper : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IMediaBuffer
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IMediaBuffer
 {
 public:
-	CMediaBufferWrapper();
-	~CMediaBufferWrapper();
+    CMediaBufferWrapper();
+    ~CMediaBufferWrapper();
 
 BEGIN_COM_MAP(CMediaBufferWrapper)
     COM_INTERFACE_ENTRY(IMediaBuffer)
@@ -38,13 +38,13 @@ END_COM_MAP()
 
 // IMediaBuffer
 public:
-	STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	STDMETHOD(SetLength)(DWORD cbLength);
+    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+    STDMETHOD(SetLength)(DWORD cbLength);
     static IMediaBuffer* CreateBuffer(IMediaSample* Sample);
 
 protected:
-	CComPtr<IMediaSample> m_pSample;
+    CComPtr<IMediaSample> m_pSample;
 };
 
 

@@ -30,18 +30,18 @@
 
 
 class ATL_NO_VTABLE DECLSPEC_UUID("0D71870A-7563-11D7-B84A-0002A5623377") CDScaler : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public CComCoClass<CDScaler, &__uuidof(CDScaler)>,
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public CComCoClass<CDScaler, &__uuidof(CDScaler)>,
     public ISpecifyPropertyPagesImpl<CDScaler>,
     public IBaseFilter,
-	public IPersistStream,
+    public IPersistStream,
     public IMediaParamInfo,
     public IMediaParams,
     public IAmFreeSoftwareLicensed,
     public IHavePins
 {
 public:
-	CDScaler();
+    CDScaler();
 
 DECLARE_REGISTRY_RESOURCEID(IDR_DSCALER)
 DECLARE_GET_CONTROLLING_UNKNOWN()
@@ -49,36 +49,36 @@ DECLARE_GET_CONTROLLING_UNKNOWN()
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CDScaler)
-	COM_INTERFACE_ENTRY(IBaseFilter)
-	COM_INTERFACE_ENTRY(IMediaFilter)
-	COM_INTERFACE_ENTRY2(IPersist, IPersistStream)
-	COM_INTERFACE_ENTRY(ISpecifyPropertyPages)
-	COM_INTERFACE_ENTRY(IPersistStream)
+    COM_INTERFACE_ENTRY(IBaseFilter)
+    COM_INTERFACE_ENTRY(IMediaFilter)
+    COM_INTERFACE_ENTRY2(IPersist, IPersistStream)
+    COM_INTERFACE_ENTRY(ISpecifyPropertyPages)
+    COM_INTERFACE_ENTRY(IPersistStream)
     COM_INTERFACE_ENTRY(IMediaParamInfo)
     COM_INTERFACE_ENTRY(IMediaParams)
     COM_INTERFACE_ENTRY(IAmFreeSoftwareLicensed)
-	COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, m_pUnkMarshaler.p)
+    COM_INTERFACE_ENTRY_AGGREGATE(IID_IMarshal, m_pUnkMarshaler.p)
 END_COM_MAP()
 
 BEGIN_PROP_MAP(CDScaler)
-	PROP_PAGE(CLSID_GenDMOPropPage)
-	PROP_PAGE(CLSID_LicensePropPage)
+    PROP_PAGE(CLSID_GenDMOPropPage)
+    PROP_PAGE(CLSID_LicensePropPage)
 END_PROP_MAP()
 
-	HRESULT FinalConstruct();
-	void FinalRelease();
+    HRESULT FinalConstruct();
+    void FinalRelease();
 
-	CComPtr<IUnknown> m_pUnkMarshaler;
+    CComPtr<IUnknown> m_pUnkMarshaler;
 
     enum eDScalerFilterParams
     {
         ASPECTINCREASEX,
         ASPECTINCREASEY,
         INPUTISANAMORPHIC,
-		DEINTERLACEMODE,
-		MANUALPULLDOWN,
-		PULLDOWNMODE,
-		PULLDOWNINDEX,
+        DEINTERLACEMODE,
+        MANUALPULLDOWN,
+        PULLDOWNMODE,
+        PULLDOWNINDEX,
         PARAMS_LASTONE,
     };
 
@@ -124,7 +124,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 public:
@@ -149,7 +149,7 @@ public:
     std::list<IMediaObject*> m_Filters;
     std::vector<IMediaObject*> m_Deinterlacers;
     CComQIPtr<IDeinterlace> m_CurrentDeinterlacingMethod;
-	REFERENCE_TIME m_StartTime;
+    REFERENCE_TIME m_StartTime;
     std::wstring m_DeinterlaceNames;
     DWORD m_NumberOfFieldsToBuffer;
     
@@ -157,7 +157,7 @@ private:
     HRESULT LoadDMOs();
     void UnloadDMOs();
     void EmptyList(std::list<IMediaObject*>& List);
-	void EmptyVector(std::vector<IMediaObject*>& Vector);
+    void EmptyVector(std::vector<IMediaObject*>& Vector);
     HRESULT RebuildProcessingLine();
     HRESULT UpdateTypes();
     void ResetPullDownIndexRange();

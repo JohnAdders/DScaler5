@@ -17,60 +17,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.12  2006/02/07 17:39:12  adcockj
-// added debug build code to add filter grapg to ROT
-//
-// Revision 1.11  2004/12/15 13:04:08  adcockj
-// added simple statistics display
-//
-// Revision 1.10  2004/11/02 16:57:24  adcockj
-// fix for crashing problem on exit
-//
-// Revision 1.9  2004/07/20 16:37:57  adcockj
-// Fixes for main issues raised in testing of 0.0.1
-//  - Improved parameter handling
-//  - Fixed some overlay issues
-//  - Auto aspect ratio with VMR
-//  - Fixed some overlay stutters
-//  - Fixed some push filter issues
-//  - ffdshow and DirectVobSub connection issues
-//
-// Added
-//  - Hardcode for PAL setting for ffdshow
-//  - Added choice of IDCT for testing
-//
-// Revision 1.8  2004/07/07 14:09:01  adcockj
-// removed tabs
-//
-// Revision 1.7  2004/05/25 16:59:30  adcockj
-// fixed issues with new buffered pin
-//
-// Revision 1.6  2004/04/14 16:31:34  adcockj
-// Subpicture fixes, AFD started and minor fixes
-//
-// Revision 1.5  2004/03/15 17:17:05  adcockj
-// Basic registry saving support
-//
-// Revision 1.4  2004/03/01 13:04:28  adcockj
-// Fixed another locking problem
-//
-// Revision 1.3  2004/02/27 17:08:16  adcockj
-// Improved locking at state changes
-// Better error handling at state changes
-//
-// Revision 1.2  2004/02/12 17:06:45  adcockj
-// Libary Tidy up
-// Fix for stopping problems
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DSBaseFilter.h"
 #include "DSBasePin.h"

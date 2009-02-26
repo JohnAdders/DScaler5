@@ -18,39 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.4  2004/12/06 18:05:01  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.3  2004/03/05 15:56:30  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.2  2004/02/17 16:51:34  adcockj
-// Added countof define
-//
-// Revision 1.1  2004/02/06 12:17:17  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.5  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.4  2003/09/19 16:12:14  adcockj
-// Further improvements
-//
-// Revision 1.3  2003/05/02 16:05:23  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.2  2003/05/01 16:20:30  adcockj
-// Include generic property pages uuids
-//
-// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"
@@ -78,7 +45,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
     if (dwReason == DLL_PROCESS_ATTACH)
     {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
+        DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
     {
@@ -104,10 +71,10 @@ STDAPI DllCanUnloadNow(void)
 
 STDAPI DllRegisterServer(void)
 {
-	REGPINTYPES Types[] = {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2,
-							&CLSID_CDScaler, &MEDIASUBTYPE_YV12,
+    REGPINTYPES Types[] = {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2,
+                            &CLSID_CDScaler, &MEDIASUBTYPE_YV12,
                             &MEDIATYPE_Video, &MEDIASUBTYPE_YUY2,
-							&MEDIATYPE_Video, &MEDIASUBTYPE_YV12};
+                            &MEDIATYPE_Video, &MEDIASUBTYPE_YV12};
     
     REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(Types), Types, 0, NULL, &GUID_NULL}, 
                               { REG_PINFLAG_B_OUTPUT , 1, countof(Types), Types, 0, NULL, &GUID_NULL}};

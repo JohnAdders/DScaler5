@@ -31,11 +31,11 @@ public:
 
 
 class CEnumMediaTypes : 
-	public IEnumMediaTypes
+    public IEnumMediaTypes
 {
 public:
-	CEnumMediaTypes();
-	~CEnumMediaTypes();
+    CEnumMediaTypes();
+    ~CEnumMediaTypes();
 
 IMPLEMENT_UNKNOWN(CEnumMediaTypes);
 

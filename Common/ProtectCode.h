@@ -32,24 +32,24 @@ class CCanLock :
 {
 public:
     CCanLock() 
-	{
-		InitializeCriticalSection(&m_Crit);
-	}
+    {
+        InitializeCriticalSection(&m_Crit);
+    }
     
-	~CCanLock()
-	{
-		DeleteCriticalSection(&m_Crit);
-	}
+    ~CCanLock()
+    {
+        DeleteCriticalSection(&m_Crit);
+    }
 
     void Lock()
-	{
-		EnterCriticalSection(&m_Crit);
-	}
+    {
+        EnterCriticalSection(&m_Crit);
+    }
     
-	void Unlock() 
-	{
-		LeaveCriticalSection(&m_Crit);
-	}
+    void Unlock() 
+    {
+        LeaveCriticalSection(&m_Crit);
+    }
 private:
     CRITICAL_SECTION m_Crit;
 };

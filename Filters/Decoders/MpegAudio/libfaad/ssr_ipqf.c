@@ -38,7 +38,7 @@ static real_t **pp_q0, **pp_t0, **pp_t1;
 
 void gc_set_protopqf(real_t *p_proto)
 {
-    int	j;
+    int    j;
     static real_t a_half[48] =
     {
         1.2206911375946939E-05,  1.7261986723798209E-05,  1.2300093657077942E-05,
@@ -72,8 +72,8 @@ void gc_setcoef_eff_pqfsyn(int mm,
                            real_t ***ppp_t0,
                            real_t ***ppp_t1)
 {
-    int	i, k, n;
-    real_t	w;
+    int    i, k, n;
+    real_t    w;
 
     /* Set 1st Mul&Acc Coef's */
     *ppp_q0 = (real_t **) calloc(mm, sizeof(real_t *));
@@ -124,7 +124,7 @@ void ssr_ipqf(ssr_info *ssr, real_t *in_data, real_t *out_data,
     static int initFlag = 0;
     real_t a_pqfproto[PQFTAPS];
 
-    int	i;
+    int    i;
 
     if (initFlag == 0)
     {

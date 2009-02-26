@@ -18,13 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "MediaBufferWrapper.h"
@@ -39,26 +32,26 @@ CMediaBufferWrapper::~CMediaBufferWrapper()
 
 STDMETHODIMP CMediaBufferWrapper::GetBufferAndLength(BYTE** ppBuffer, DWORD* pcbLength)
 {
-	*pcbLength = m_pSample->GetActualDataLength();
-	return m_pSample->GetPointer(ppBuffer);
+    *pcbLength = m_pSample->GetActualDataLength();
+    return m_pSample->GetPointer(ppBuffer);
 }
 
 STDMETHODIMP CMediaBufferWrapper::GetMaxLength(DWORD* pcbMaxLength)
 {
-	*pcbMaxLength = m_pSample->GetSize();
-	return S_OK;
+    *pcbMaxLength = m_pSample->GetSize();
+    return S_OK;
 }
 
 STDMETHODIMP CMediaBufferWrapper::SetLength(DWORD cbLength)
 {
-	return m_pSample->SetActualDataLength(cbLength);
+    return m_pSample->SetActualDataLength(cbLength);
 }
 
 
 IMediaBuffer* CMediaBufferWrapper::CreateBuffer(IMediaSample* Sample)
 {
-	CComObject<CMediaBufferWrapper>* NewBuffer = new CComObject<CMediaBufferWrapper>;
-	NewBuffer->m_pSample = Sample;
+    CComObject<CMediaBufferWrapper>* NewBuffer = new CComObject<CMediaBufferWrapper>;
+    NewBuffer->m_pSample = Sample;
     NewBuffer->AddRef();
     return (IMediaBuffer*)NewBuffer;
 }

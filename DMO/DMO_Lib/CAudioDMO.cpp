@@ -17,18 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "params.h"
@@ -40,7 +28,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CAudioDMO
 CAudioDMO::CAudioDMO(LPCWSTR Name) :
-	CDMO(Name)
+    CDMO(Name)
 {
 };
 
@@ -86,8 +74,8 @@ CAudioDMO::~CAudioDMO()
 HRESULT CAudioDMO::InternalFlush(void)
 {
     // Just clear out the buffers
-	m_Buffer.Detach();
-	return S_OK;
+    m_Buffer.Detach();
+    return S_OK;
 }
 
 ////////////////////////////////////
@@ -144,18 +132,18 @@ HRESULT CAudioDMO::InternalFlush(void)
 //
 HRESULT CAudioDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pulSizeMaxLookahead, DWORD *pulSizeAlignment)
 {
-	// We don't have to do any validation, because it is all done in the base class
+    // We don't have to do any validation, because it is all done in the base class
 
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = InputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = InputType(0);
     
     if(pmt->majortype == MEDIATYPE_Audio)
     {
-	    const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
-	    *pcbSize = pwfx->nBlockAlign;
-	    *pulSizeMaxLookahead = 0;	// no look ahead
-	    *pulSizeAlignment = 1;		// no alignment requirement
+        const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
+        *pcbSize = pwfx->nBlockAlign;
+        *pulSizeMaxLookahead = 0;    // no look ahead
+        *pulSizeAlignment = 1;        // no alignment requirement
     }
     else
     {
@@ -163,7 +151,7 @@ HRESULT CAudioDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcb
         hr = E_FAIL;
     }
 
-	return hr;
+    return hr;
 }
 
 
@@ -219,14 +207,14 @@ HRESULT CAudioDMO::InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcb
 HRESULT CAudioDMO::InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pulSizeAlignment)
 {
     // We don't have to do any validation, because it is all done in the base class
-	HRESULT hr = S_OK;
-	const DMO_MEDIA_TYPE* pmt;
-	pmt = OutputType(0);
+    HRESULT hr = S_OK;
+    const DMO_MEDIA_TYPE* pmt;
+    pmt = OutputType(0);
     if(pmt->majortype == MEDIATYPE_Audio)
     {
-	    const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
-	    *pcbSize = pwfx->nBlockAlign;
-	    *pulSizeAlignment = 1;
+        const WAVEFORMATEX* pwfx = reinterpret_cast<const WAVEFORMATEX*>(pmt->pbFormat);
+        *pcbSize = pwfx->nBlockAlign;
+        *pulSizeAlignment = 1;
     }
     else
     {
@@ -503,7 +491,7 @@ HRESULT CAudioDMO::InternalProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount
         if (bComplete)
         {
             m_Buffer.Detach();   // Release input buffer
-	    }
+        }
         else
         {
             pOutputBuffers[0].dwStatus |= DMO_OUTPUT_DATA_BUFFERF_INCOMPLETE;
@@ -543,5 +531,5 @@ HRESULT CAudioDMO::InternalAcceptingInput(DWORD dwInputStreamIndex)
 
 HRESULT CAudioDMO::InternalFreeStreamingResources(void)
 {
-	return S_OK;
+    return S_OK;
 }

@@ -33,10 +33,10 @@ class CAudioDetect :
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CAudioDetect, "{E0F74C2B-B3D5-41cd-A186-03B960E98F2C}", "DScaler Audio Detect Class", "Filter.AudioDetect.1", "Filter.AudioDetect", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
-	IMPLEMENTS_INTERFACE(IBaseFilter)
-	IMPLEMENTS_INTERFACE(IMediaFilter)
-	IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IBaseFilter)
+    IMPLEMENTS_INTERFACE(IMediaFilter)
+    IMPLEMENTS_INTERFACE(ISpecifyPropertyPages)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
     IMPLEMENTS_INTERFACE(IPersistStream)
@@ -45,7 +45,7 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CAudioDetect, "{E0F74C2B-B3D5-41cd-A186-03B960E98
 END_INTERFACE_TABLE()
 
 public:
-	CAudioDetect();
+    CAudioDetect();
     ~CAudioDetect();
 
     enum eDetectType
@@ -62,7 +62,7 @@ END_PARAM_LIST()
 
     enum eAudioDetectParams
     {
-		DETECT_TYPE,
+        DETECT_TYPE,
         PARAMS_LASTONE,
     };
 
@@ -74,7 +74,7 @@ public:
 // IAmFreeSoftwareLicensed
 public:
     STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_License)(eFreeLicense* License);
     STDMETHOD(get_Authors)(BSTR* Authors);
 
 public:
@@ -100,37 +100,37 @@ public:
 private:
 
 protected:
-	enum eStreamType
-	{
-		STREAM_AC3,
-		STREAM_DTS,
-		STREAM_PCM,
-		STREAM_SILENCE,
-	};
+    enum eStreamType
+    {
+        STREAM_AC3,
+        STREAM_DTS,
+        STREAM_PCM,
+        STREAM_SILENCE,
+    };
 
-	eStreamType m_StreamType;
+    eStreamType m_StreamType;
 
-	bool m_NeedToAttachFormat;
-	WAVEFORMATEX m_InternalWF;
-	AM_MEDIA_TYPE m_InternalMT;
-	DWORD m_SamplesPerSec;
+    bool m_NeedToAttachFormat;
+    WAVEFORMATEX m_InternalWF;
+    AM_MEDIA_TYPE m_InternalMT;
+    DWORD m_SamplesPerSec;
     REFERENCE_TIME m_BufferStartTime;
 
-	std::vector<BYTE> m_buff;
+    std::vector<BYTE> m_buff;
 
 protected:
 
     HRESULT GetEnumTextDetectType(WCHAR **ppwchText);
     HRESULT ParamChanged(DWORD dwParamIndex);
     HRESULT GetEnumText(DWORD dwParamIndex, WCHAR **ppwchText);
-	void CreateInternalMediaType();
+    void CreateInternalMediaType();
     HRESULT ProcessPCM();
     HRESULT ProcessAC3();
     HRESULT ProcessDTS();
     HRESULT ProcessSilence();
     HRESULT LookForSync();
-	HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
-	HRESULT Deliver(IMediaSample* pOut);
+    HRESULT GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDataOut, DWORD Len);
+    HRESULT Deliver(IMediaSample* pOut);
     void ChangeTypeBasedOnSpdifType(WORD SpdifType);
 
 private:

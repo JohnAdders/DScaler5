@@ -121,7 +121,7 @@ static INLINE int16_t huffman_getescape(bitfile *ld, int16_t sp)
 {
     uint8_t neg, i;
     int32_t j;
-	int32_t off;
+    int32_t off;
 
     if (sp < 0)
     {
@@ -462,14 +462,14 @@ int8_t huffman_spectral_data_2(uint8_t cb, bits_t *ld, int16_t *sp)
         break;
     }
 
-	/* decode sign bits */
+    /* decode sign bits */
     if (unsigned_cb[cb]) {
 
         for(i = 0; i < ((cb < FIRST_PAIR_HCB) ? QUAD_LEN : PAIR_LEN); i++)
         {
             if(sp[i])
             {
-            	uint8_t b;
+                uint8_t b;
                 if ( get1bit_hcr(ld, &b) ) return -1;
                 if (b != 0) {
                     sp[i] = -sp[i];

@@ -29,23 +29,23 @@ class CInputPin;
 /////////////////////////////////////////////////////////////////////////////
 // COutputPin
 class ATL_NO_VTABLE COutputPin : 
-	public CComObjectRootEx<CComMultiThreadModel>,
-	public IPin,
+    public CComObjectRootEx<CComMultiThreadModel>,
+    public IPin,
     public IUpdateMediaTypes,
     public IPinFlowControl,
     public IMediaSeeking,
     public IQualityControl
 {
 public:
-	COutputPin();
-	~COutputPin();
+    COutputPin();
+    ~COutputPin();
 
 
 BEGIN_COM_MAP(COutputPin)
-	COM_INTERFACE_ENTRY(IPin)
+    COM_INTERFACE_ENTRY(IPin)
     COM_INTERFACE_ENTRY(IPinFlowControl)
     COM_INTERFACE_ENTRY(IQualityControl)
-	COM_INTERFACE_ENTRY(IMediaSeeking)
+    COM_INTERFACE_ENTRY(IMediaSeeking)
 END_COM_MAP()
 
 // IPin

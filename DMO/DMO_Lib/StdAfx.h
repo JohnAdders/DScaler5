@@ -17,30 +17,12 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.4  2004/03/15 17:17:04  adcockj
-// Basic registry saving support
-//
-// Revision 1.3  2004/03/05 15:56:13  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.2  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #define _CRT_SECURE_NO_DEPRECATE
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN        // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <windowsx.h>
 

@@ -17,18 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once 
 
@@ -41,22 +29,22 @@ class CAudioDMO :
     public CDMO
 {
 public:
-    CAudioDMO(LPCWSTR Name);	// Constructor
-	virtual ~CAudioDMO();	// Destructor
+    CAudioDMO(LPCWSTR Name);    // Constructor
+    virtual ~CAudioDMO();    // Destructor
 
 protected:
-	//IMediaObjectImpl Methods   
-	STDMETHODIMP InternalFlush(void);
-	STDMETHODIMP InternalFreeStreamingResources(void);
+    //IMediaObjectImpl Methods   
+    STDMETHODIMP InternalFlush(void);
+    STDMETHODIMP InternalFreeStreamingResources(void);
     STDMETHODIMP InternalGetInputSizeInfo(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pcbMaxLookahead, DWORD *pcbAlignment);
-	STDMETHODIMP InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment);
-	STDMETHODIMP InternalProcessInput(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength);
-	STDMETHODIMP InternalProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus);
+    STDMETHODIMP InternalGetOutputSizeInfo(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment);
+    STDMETHODIMP InternalProcessInput(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength);
+    STDMETHODIMP InternalProcessOutput(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus);
 
-	// IMediaObjectImpl Required overides
-	virtual STDMETHODIMP InternalAcceptingInput(DWORD dwInputStreamIndex);
+    // IMediaObjectImpl Required overides
+    virtual STDMETHODIMP InternalAcceptingInput(DWORD dwInputStreamIndex);
 
-	// Private functions
+    // Private functions
     /** UpdateStatesInternal
         Override this function if you need to do maintain
         any information based on the parameters
@@ -64,16 +52,16 @@ protected:
     virtual HRESULT DoProcess(BYTE *pbData, const BYTE *pbInputData, DWORD BytesToProcess) = 0;
 
 
-	// States of the DMO
+    // States of the DMO
 
-	SI(IMediaBuffer) 	    m_Buffer;			// Pointer to the input buffer
-	BYTE*                   m_pbInputData;		// Pointer to the data in the input buffer
-	DWORD					m_cbInputLength;	// Length of the data
+    SI(IMediaBuffer)         m_Buffer;            // Pointer to the input buffer
+    BYTE*                   m_pbInputData;        // Pointer to the data in the input buffer
+    DWORD                    m_cbInputLength;    // Length of the data
 
-	REFERENCE_TIME			m_rtTimestamp;		// Most recent timestamp
-	REFERENCE_TIME			m_rtTimelength;		// Most recent timelength
-	bool					m_bValidTime;		// Controls whether timestamp is valid or not
-	bool					m_bValidLength;		// Controls whether timelength is valid or not
+    REFERENCE_TIME            m_rtTimestamp;        // Most recent timestamp
+    REFERENCE_TIME            m_rtTimelength;        // Most recent timelength
+    bool                    m_bValidTime;        // Controls whether timestamp is valid or not
+    bool                    m_bValidLength;        // Controls whether timelength is valid or not
     WAVEFORMATEXTENSIBLE    m_WaveFormat;
 };
 

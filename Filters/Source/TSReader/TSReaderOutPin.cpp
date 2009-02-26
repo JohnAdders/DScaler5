@@ -18,13 +18,6 @@
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2004/10/26 16:26:54  adcockj
-// Added new Transport stream source filter
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "TSReaderOutPin.h"

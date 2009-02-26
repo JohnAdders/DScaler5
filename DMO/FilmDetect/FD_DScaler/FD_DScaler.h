@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.1  2004/09/10 15:40:00  adcockj
-// Added stub project for film detection
-//
-// Revision 1.2  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.1  2003/05/21 17:06:01  adcockj
-// Added new filter
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -43,14 +28,14 @@
 DEFINE_GUID(CLSID_CFD_DScaler, 0x81ee9ffc, 0x301, 0x4e0c, 0xa5, 0x69, 0xfe, 0x13, 0x80, 0xea, 0xc4, 0x8f);
 
 class CFD_DScaler : 
-	public CSimpleInPlaceVideoDMO,
+    public CSimpleInPlaceVideoDMO,
     public IFilmDetect,
     public IAmFreeSoftwareLicensed
 {
 public:
 
 IMPLEMENT_AGGREGATABLE_COCLASS(CFD_DScaler, "{81EE9FFC-0301-4e0c-A569-FE1380EAC48F}", "Film Detect DScaler Class", "DMO.FD_DScaler.1", "DMO.FD_DScaler", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IMediaObject)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
@@ -78,12 +63,12 @@ public:
 
 // IAmFreeSoftwareLicensed
 public:
-	STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
-	STDMETHOD(get_Authors)(BSTR* Authors);
+    STDMETHOD(get_Name)(BSTR* Name);
+    STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_Authors)(BSTR* Authors);
 
 protected:
-	HRESULT ParamChanged(DWORD dwParamIndex);
+    HRESULT ParamChanged(DWORD dwParamIndex);
 private:
     void CheckVideo(eDetectionHint Hint, DWORD FieldNumber, IInterlacedField* Field);
     void Check32(eDetectionHint Hint, DWORD FieldNumber, IInterlacedField* Field);

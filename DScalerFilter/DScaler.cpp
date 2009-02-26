@@ -18,56 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.15  2003/12/09 11:45:51  adcockj
-// Improved implementation of EnumPins
-//
-// Revision 1.14  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.13  2003/09/19 16:12:14  adcockj
-// Further improvements
-//
-// Revision 1.12  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.11  2003/05/20 16:50:58  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.10  2003/05/09 15:51:04  adcockj
-// Code tidy up
-// Added aspect ratio parameters
-//
-// Revision 1.9  2003/05/08 15:58:37  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.8  2003/05/07 16:27:41  adcockj
-// Slightly better properties implementation
-//
-// Revision 1.7  2003/05/06 16:38:00  adcockj
-// Changed to fixed size output buffer and changed connection handling
-//
-// Revision 1.6  2003/05/02 16:22:22  adcockj
-// Switched to ISpecifyPropertyPagesImpl
-//
-// Revision 1.5  2003/05/02 16:05:22  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.4  2003/05/02 10:53:07  adcockj
-// Returns test parameter for testing property page
-//
-// Revision 1.3  2003/05/01 18:15:17  adcockj
-// Moved IMedaiSeeking to output pin
-//
-// Revision 1.2  2003/05/01 16:19:02  adcockj
-// Changed property pages ready for generic page
-//
-// Revision 1.1.1.1  2003/04/30 13:01:20  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 #include "stdafx.h"
 #include "DScaler.h"
 #include "EnumPins.h"
@@ -89,7 +39,7 @@ MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] =
 
 CDScaler::CDScaler()
 {
-	m_pUnkMarshaler = NULL;
+    m_pUnkMarshaler = NULL;
     m_State = State_Stopped;
     m_Graph = NULL;
     m_IsDirty = FALSE;
@@ -100,7 +50,7 @@ CDScaler::CDScaler()
     }
     m_TypesChanged = TRUE;
     m_RebuildRequired = TRUE;
-	m_ChangeTypes = FALSE;
+    m_ChangeTypes = FALSE;
 }
 
 HRESULT CDScaler::FinalConstruct()
@@ -116,7 +66,7 @@ HRESULT CDScaler::FinalConstruct()
     m_OutputPin->m_InputPin = m_InputPin;
     HRESULT hr = LoadDMOs();
     CHECK(hr)
-	return CoCreateFreeThreadedMarshaler(GetControllingUnknown(), &m_pUnkMarshaler.p);
+    return CoCreateFreeThreadedMarshaler(GetControllingUnknown(), &m_pUnkMarshaler.p);
 }
 
 void CDScaler::FinalRelease()
@@ -124,7 +74,7 @@ void CDScaler::FinalRelease()
     LOG(DBGLOG_FLOW, ("CDScaler::FinalRelease\n"));
     m_InputPin->Release();
     m_OutputPin->Release();
-	m_pUnkMarshaler.Release();
+    m_pUnkMarshaler.Release();
     UnloadDMOs();
 }
 
@@ -243,7 +193,7 @@ STDMETHODIMP CDScaler::Stop(void)
 
     CProtectCode WhileVarInScope(this);
 
-	// make sure no more Receives come through
+    // make sure no more Receives come through
     HRESULT hr = m_InputPin->FinishProcessing();
     CHECK(hr);
 
@@ -254,7 +204,7 @@ STDMETHODIMP CDScaler::Stop(void)
     }
     m_State = State_Stopped;
 
-	LOG(DBGLOG_FLOW, ("CDScaler::End Stop\n"));
+    LOG(DBGLOG_FLOW, ("CDScaler::End Stop\n"));
 
     return S_OK;
 }
@@ -283,7 +233,7 @@ STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
 
     CProtectCode WhileVarInScope(this);
 
-	if(m_OutputPin->m_Allocator != NULL)
+    if(m_OutputPin->m_Allocator != NULL)
     {
         if(m_State == State_Stopped)
         {
@@ -293,7 +243,7 @@ STDMETHODIMP CDScaler::Run(REFERENCE_TIME tStart)
     }
 
     m_State = State_Running;
-	m_StartTime = tStart;
+    m_StartTime = tStart;
     return S_OK;
 }
 
@@ -448,7 +398,7 @@ STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
         case INPUTISANAMORPHIC:
             m_ChangeTypes = TRUE;
             break;
-		case DEINTERLACEMODE:
+        case DEINTERLACEMODE:
             m_RebuildRequired = TRUE;
             break;  
         case MANUALPULLDOWN:
@@ -459,7 +409,7 @@ STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
         case PULLDOWNINDEX:
             break;
         default:
-	        return E_INVALIDARG;
+            return E_INVALIDARG;
             break;
         }
         return S_OK;
@@ -539,7 +489,7 @@ STDMETHODIMP CDScaler::GetParamText(DWORD dwParamIndex,WCHAR **ppwchText)
         {
             *ppwchText = (WCHAR*)CoTaskMemAlloc(2 * m_DeinterlaceNames.length() + 2 + 22 * 2);
             if(*ppwchText == NULL) return E_OUTOFMEMORY;
-			memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
+            memcpy(*ppwchText, L"Deinterlace Mode\0None\0", 22 * 2);
             for(size_t i(0); i < m_DeinterlaceNames.length(); ++i)
             {
                 if(m_DeinterlaceNames[i] != L'~')
@@ -710,11 +660,11 @@ HRESULT CDScaler::LoadDMOs()
     // we need at least one deinterlacing method
     if(m_Deinterlacers.size() > 0)
     {
-		m_ParamInfos[DEINTERLACEMODE].mpdMaxValue = (MP_DATA)(m_Deinterlacers.size() - 1);
-		if(m_ParamValues[DEINTERLACEMODE] > m_ParamInfos[DEINTERLACEMODE].mpdMaxValue)
-		{
-			m_ParamValues[DEINTERLACEMODE] = m_ParamInfos[DEINTERLACEMODE].mpdMaxValue;
-		}
+        m_ParamInfos[DEINTERLACEMODE].mpdMaxValue = (MP_DATA)(m_Deinterlacers.size() - 1);
+        if(m_ParamValues[DEINTERLACEMODE] > m_ParamInfos[DEINTERLACEMODE].mpdMaxValue)
+        {
+            m_ParamValues[DEINTERLACEMODE] = m_ParamInfos[DEINTERLACEMODE].mpdMaxValue;
+        }
         return S_OK;
     }
     else
@@ -768,14 +718,14 @@ HRESULT CDScaler::CheckProcessingLine()
         CProtectCode WhileVarInScope(this);
         hr = RebuildProcessingLine();
         CHECK(hr);
-		m_RebuildRequired = FALSE;
+        m_RebuildRequired = FALSE;
     }
     if(m_TypesChanged == TRUE)
     {
         CProtectCode WhileVarInScope(this);
         hr = UpdateTypes();
         CHECK(hr);
-		m_TypesChanged = FALSE;
+        m_TypesChanged = FALSE;
     }
     
     if(m_ChangeTypes)
@@ -792,36 +742,36 @@ HRESULT CDScaler::CheckProcessingLine()
 HRESULT CDScaler::RebuildProcessingLine()
 {
     HRESULT hr = S_OK;
-	
-	// set it to the new one
-	m_CurrentDeinterlacingMethod = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]];
+    
+    // set it to the new one
+    m_CurrentDeinterlacingMethod = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]];
     CComQIPtr<IDScalerVideoFilterPlugin> pVPI = m_CurrentDeinterlacingMethod;
     if(pVPI != NULL)
     {
-	    hr = pVPI->get_NumFieldsBuffered(&m_NumberOfFieldsToBuffer);
+        hr = pVPI->get_NumFieldsBuffered(&m_NumberOfFieldsToBuffer);
     }
     else
     {
         m_NumberOfFieldsToBuffer = 1;
     }
-	// make sure we set the types up
-	m_TypesChanged = TRUE;
+    // make sure we set the types up
+    m_TypesChanged = TRUE;
     return hr;
 }
 
 HRESULT CDScaler::UpdateTypes()
 {
     HRESULT hr = S_OK;
-	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->Flush();
-	CHECK(hr);
-	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
-	CHECK(hr);
-	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, &m_InputPin->m_InternalMediaType, 0);
-	CHECK(hr);
-	hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, &m_OutputPin->m_CurrentMediaType, 0);
-	CHECK(hr);
+    hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->Flush();
+    CHECK(hr);
+    hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, NULL, DMO_SET_TYPEF_CLEAR );
+    CHECK(hr);
+    hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetInputType(0, &m_InputPin->m_InternalMediaType, 0);
+    CHECK(hr);
+    hr = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]]->SetOutputType(0, &m_OutputPin->m_CurrentMediaType, 0);
+    CHECK(hr);
     return hr;
 }
 

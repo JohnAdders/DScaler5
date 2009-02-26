@@ -18,98 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.30  2003/12/09 11:45:57  adcockj
-// Improved implementation of EnumPins
-//
-// Revision 1.29  2003/11/13 21:39:50  adcockj
-// fix for diag to work properly
-//
-// Revision 1.28  2003/11/13 17:27:44  adcockj
-// Minor improvements
-//
-// Revision 1.27  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.26  2003/09/30 16:59:26  adcockj
-// Improved handling of small format changes
-//
-// Revision 1.25  2003/09/28 15:08:07  adcockj
-// optimization fix and minor changes
-//
-// Revision 1.24  2003/09/24 16:33:00  adcockj
-// Bug fixes - starting to work now..
-//
-// Revision 1.23  2003/09/19 16:12:14  adcockj
-// Further improvements
-//
-// Revision 1.21  2003/08/21 16:17:58  adcockj
-// Changed filter to wrap the deinterlacing DMO, fixed many bugs
-//
-// Revision 1.20  2003/07/30 06:58:42  adcockj
-// Uncommented temporary non-processing of YUY2
-//
-// Revision 1.19  2003/07/29 07:01:54  adcockj
-// Fixed some issues with YV12 and general chroma positioning
-//
-// Revision 1.18  2003/07/25 16:00:55  adcockj
-// Remove 704 stuff
-//
-// Revision 1.17  2003/05/20 16:50:59  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.16  2003/05/17 11:29:35  adcockj
-// Fixed crashing
-//
-// Revision 1.15  2003/05/16 15:18:36  adcockj
-// Interim check inas we move to supporting DMO plug-ins
-//
-// Revision 1.14  2003/05/10 13:21:31  adcockj
-// Bug fixes
-//
-// Revision 1.13  2003/05/09 15:51:05  adcockj
-// Code tidy up
-// Added aspect ratio parameters
-//
-// Revision 1.12  2003/05/09 07:03:25  adcockj
-// Bug fixes for new format code
-//
-// Revision 1.11  2003/05/08 16:20:25  adcockj
-// Tidy up
-//
-// Revision 1.10  2003/05/08 15:58:38  adcockj
-// Better error handling, threading and format support
-//
-// Revision 1.9  2003/05/08 07:00:59  adcockj
-// Couple of minor fixes
-//
-// Revision 1.8  2003/05/07 16:27:41  adcockj
-// Slightly better properties implementation
-//
-// Revision 1.7  2003/05/07 07:03:56  adcockj
-// Some bug fixes
-//
-// Revision 1.6  2003/05/06 16:38:00  adcockj
-// Changed to fixed size output buffer and changed connection handling
-//
-// Revision 1.5  2003/05/06 07:00:29  adcockj
-// Some changes from Torbjorn also some other attempted fixes
-//
-// Revision 1.4  2003/05/02 16:05:23  adcockj
-// Logging with file and line numbers
-//
-// Revision 1.3  2003/05/02 07:03:13  adcockj
-// Some minor changes most not really improvements
-//
-// Revision 1.2  2003/05/01 16:22:24  adcockj
-// Dynamic connection test code
-//
-// Revision 1.1.1.1  2003/04/30 13:01:21  adcockj
-// Initial Import
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "InputPin.h"
@@ -130,11 +38,11 @@ CInputPin::CInputPin()
     m_FormatVersion = 0;
     m_Block = FALSE;
     m_BlockEvent = NULL;
-	m_dwFlags = AM_GBF_PREVFRAMESKIPPED;
-	m_MyMemAlloc = new CComObject<CInputMemAlloc>;
-	m_ExpectedStartIn = 0;
-	m_LastStartEnd = 0;
-	m_Counter = 0;
+    m_dwFlags = AM_GBF_PREVFRAMESKIPPED;
+    m_MyMemAlloc = new CComObject<CInputMemAlloc>;
+    m_ExpectedStartIn = 0;
+    m_LastStartEnd = 0;
+    m_Counter = 0;
     m_FieldsInBuffer = 0;
     m_NextFieldNumber = 0;
     m_SourceType = SOURCE_DEFAULT;
@@ -167,18 +75,18 @@ STDMETHODIMP CInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYPE 
     {
         return E_POINTER;
     }
-	
+    
     // find out who the pin belongs to
     // we will process differently depending on 
     // the filter at the other end
     // if this fumction returns TRUE we are talking to 
     // ourself then error
-	if(WorkOutWhoWeAreTalkingTo(pConnector) == TRUE)
-	{
+    if(WorkOutWhoWeAreTalkingTo(pConnector) == TRUE)
+    {
         return VFW_E_TYPE_NOT_ACCEPTED;
-	}
+    }
 
-	FixupMediaType((AM_MEDIA_TYPE *)pmt);
+    FixupMediaType((AM_MEDIA_TYPE *)pmt);
 
     if(QueryAccept(pmt) != S_OK)
     {
@@ -392,7 +300,7 @@ STDMETHODIMP CInputPin::EndOfStream(void)
         // a format renegoatiation
         if(m_NotifyEvent == NULL)
         {
-			hr = InternalProcessOutput(FALSE);
+            hr = InternalProcessOutput(FALSE);
             CHECK(hr);
 
             hr = m_OutputPin->m_ConnectedPin->EndOfStream();
@@ -410,9 +318,9 @@ STDMETHODIMP CInputPin::BeginFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::BeginFlush\n"));
 
-	CProtectCode WhileVarInScope(m_Filter);
+    CProtectCode WhileVarInScope(m_Filter);
 
-	// Sets an internal flag that causes all data-streaming methods to fail
+    // Sets an internal flag that causes all data-streaming methods to fail
     m_Flushing = TRUE;
 
     // pass the Flush downstream
@@ -429,7 +337,7 @@ STDMETHODIMP CInputPin::EndFlush(void)
 {
     LOG(DBGLOG_FLOW, ("CInputPin::EndFlush\n"));
 
-	CProtectCode WhileVarInScope(m_Filter);
+    CProtectCode WhileVarInScope(m_Filter);
 
     FinishProcessing();
 
@@ -452,8 +360,8 @@ STDMETHODIMP CInputPin::NewSegment(REFERENCE_TIME tStart, REFERENCE_TIME tStop, 
         // Will wait for all any streaming functions to finish
         // may block so be careful
         CProtectCode WhileVarInScope(this);
-		m_ExpectedStartIn = tStart;
-		m_LastStartEnd = tStart;
+        m_ExpectedStartIn = tStart;
+        m_LastStartEnd = tStart;
         hr = m_OutputPin->m_ConnectedPin->NewSegment(tStart, tStop, dRate);
         CHECK(hr);
         m_FieldTiming = 0;
@@ -554,7 +462,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         // a NULL means the type is the same as last time
         if(InSampleProperties.pMediaType != NULL)
         {
-			FixupMediaType(InSampleProperties.pMediaType);
+            FixupMediaType(InSampleProperties.pMediaType);
 
             // this shouldn't ever fail as a good filter will have
             // called this already but I've seen a filter ignore the
@@ -581,7 +489,7 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
             SetInputType(InSampleProperties.pMediaType);
         }
 
-		// check to see if we are blocked
+        // check to see if we are blocked
         // need to check this before we get each sample
         CheckForBlocking();
 
@@ -601,49 +509,49 @@ HRESULT CInputPin::InternalReceive(IMediaSample *InSample)
         // if there was a discontinuity then we need to ask for the buffer
         // differently 
         if(InSampleProperties.dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
-		{
-			if(m_ExpectedStartIn != 0)
-			{
-				LOG(DBGLOG_FLOW, ("Discontinuity\n"));
-				hr = ClearAll();
-				CHECK(hr);
-				m_ExpectedStartIn = 0;
-			}
-			else
-			{
-				LOG(DBGLOG_FLOW, ("Ignored First Discontinuity\n"));
-			}
-			m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-		}
-		// if we get a later sample then flush the buffers
-		else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn + 100000 < InSampleProperties.tStart)
         {
-			LOG(DBGLOG_FLOW, ("Skipped Frames expected %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
+            if(m_ExpectedStartIn != 0)
+            {
+                LOG(DBGLOG_FLOW, ("Discontinuity\n"));
+                hr = ClearAll();
+                CHECK(hr);
+                m_ExpectedStartIn = 0;
+            }
+            else
+            {
+                LOG(DBGLOG_FLOW, ("Ignored First Discontinuity\n"));
+            }
+            m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
+        }
+        // if we get a later sample then flush the buffers
+        else if(m_ExpectedStartIn != 0 && m_ExpectedStartIn + 100000 < InSampleProperties.tStart)
+        {
+            LOG(DBGLOG_FLOW, ("Skipped Frames expected %d got %d\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart));
 
-			GuessInterlaceFlags(&InSampleProperties);
-			hr = ClearAll();
-			CHECK(hr);
+            GuessInterlaceFlags(&InSampleProperties);
+            hr = ClearAll();
+            CHECK(hr);
 
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
         }
 
-		//LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.dwTypeSpecificFlags));
-		
-		m_ExpectedStartIn = InSampleProperties.tStop;
+        //LOG(DBGLOG_FLOW, ("Incoming expected %d Start %d end %d addr %08x\n", (long)m_ExpectedStartIn, (long)InSampleProperties.tStart, (long)InSampleProperties.tStop, InSampleProperties.dwTypeSpecificFlags));
+        
+        m_ExpectedStartIn = InSampleProperties.tStop;
 
         hr = PushSample(InSample, &InSampleProperties);
         CHECK(hr);
 
-		hr = InternalProcessOutput(FALSE);
+        hr = InternalProcessOutput(FALSE);
 
-		if(FAILED(hr) || hr == S_FALSE)
-		{
-			hr = ClearAll();
-			CHECK(hr);
+        if(FAILED(hr) || hr == S_FALSE)
+        {
+            hr = ClearAll();
+            CHECK(hr);
 
             m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-			return S_FALSE;
-		}
+            return S_FALSE;
+        }
     }
     // since there are loads of ways out of this function
     // make sure that anything that needs to be cleaned up
@@ -662,43 +570,43 @@ HRESULT CInputPin::GetOutputSample(IMediaSample** OutSample)
 {
     *OutSample = NULL;
 
-	// get a sample to output to
-	HRESULT hr = m_OutputPin->m_Allocator->GetBuffer(OutSample, NULL, NULL, m_dwFlags);
-	if(FAILED(hr) || *OutSample == NULL)
-	{
-		//LOG(DBGLOG_FLOW, ("Frame Skipped\n"));
-		m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
-		return S_FALSE;
-	}
-	else
-	{
-		m_dwFlags = 0;
-	}
+    // get a sample to output to
+    HRESULT hr = m_OutputPin->m_Allocator->GetBuffer(OutSample, NULL, NULL, m_dwFlags);
+    if(FAILED(hr) || *OutSample == NULL)
+    {
+        //LOG(DBGLOG_FLOW, ("Frame Skipped\n"));
+        m_dwFlags |= AM_GBF_PREVFRAMESKIPPED;
+        return S_FALSE;
+    }
+    else
+    {
+        m_dwFlags = 0;
+    }
 
-	// check for media type changes on the output side
-	// a NULL means the type is the same as last time
+    // check for media type changes on the output side
+    // a NULL means the type is the same as last time
     AM_MEDIA_TYPE* pMediaType = NULL;
 
     hr = (*OutSample)->GetMediaType(&pMediaType);
 
-	CHECK(hr);
+    CHECK(hr);
 
-	if(hr == S_OK && pMediaType != NULL)
-	{
-		hr = m_OutputPin->SetMediaType(pMediaType);
-		CHECK(hr);
+    if(hr == S_OK && pMediaType != NULL)
+    {
+        hr = m_OutputPin->SetMediaType(pMediaType);
+        CHECK(hr);
         FreeMediaType(pMediaType);
-	}
+    }
     return S_OK;
 }
 
 HRESULT CInputPin::InternalProcessOutput(BOOL HurryUp)
 {
     REFERENCE_TIME FrameEndTime = 0;
-	HRESULT hr = S_OK;
-	
-	while(hr == S_OK && m_FieldsInBuffer > m_Filter->m_NumberOfFieldsToBuffer)
-	{
+    HRESULT hr = S_OK;
+    
+    while(hr == S_OK && m_FieldsInBuffer > m_Filter->m_NumberOfFieldsToBuffer)
+    {
         switch(WorkOutHowToProcess(FrameEndTime))
         {
         case PROCESS_IGNORE:
@@ -712,13 +620,13 @@ HRESULT CInputPin::InternalProcessOutput(BOOL HurryUp)
         }
 
         PopStack();
-	}
-	return hr;
+    }
+    return hr;
 }
 
 HRESULT CInputPin::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
     IMediaSample* OutSample = NULL;
 
     hr = GetOutputSample(&OutSample);
@@ -729,37 +637,37 @@ HRESULT CInputPin::WeaveOutput(REFERENCE_TIME& FrameEndTime)
     CHECK(hr);
 
 
-	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+    IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
 
-	DWORD Status(0);
+    DWORD Status(0);
 
     hr = Weave((IInterlacedBufferStack*)this, OutBuffer);
 
-	if(hr == S_OK && m_Flushing == FALSE)
-	{
+    if(hr == S_OK && m_Flushing == FALSE)
+    {
         // just in case things go a bit funny
         if(m_LastStartEnd >= FrameEndTime)
         {
             m_LastStartEnd = FrameEndTime - 1;
         }
-		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
-		CHECK(hr);
+        hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
+        CHECK(hr);
         
         //LOG(DBGLOG_FLOW, ("Output Start %d end %d\n", (long)m_LastStartEnd, (long)FrameEndTime));
-		
+        
         // finally send the processed sample on it's way
-		hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
-	}
-	// if we are at the start then we might need to send 
-	// a couple of frames in before getting a response
-	else if(hr == S_FALSE)
-	{
-		LOG(DBGLOG_FLOW, ("Skipped\n"));
-		hr = S_OK;
-	}
+        hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+    }
+    // if we are at the start then we might need to send 
+    // a couple of frames in before getting a response
+    else if(hr == S_FALSE)
+    {
+        LOG(DBGLOG_FLOW, ("Skipped\n"));
+        hr = S_OK;
+    }
 
-	OutBuffer->Release();
-	OutSample->Release();
+    OutBuffer->Release();
+    OutSample->Release();
 
     m_LastStartEnd = FrameEndTime;
 
@@ -769,7 +677,7 @@ HRESULT CInputPin::WeaveOutput(REFERENCE_TIME& FrameEndTime)
 
 HRESULT CInputPin::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
 {
-	HRESULT hr = S_OK;
+    HRESULT hr = S_OK;
     IMediaSample* OutSample = NULL;
 
     hr = GetOutputSample(&OutSample);
@@ -780,30 +688,30 @@ HRESULT CInputPin::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
     CHECK(hr);
 
 
-	IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
+    IMediaBuffer* OutBuffer = CMediaBufferWrapper::CreateBuffer(OutSample);
 
-	DWORD Status(0);
+    DWORD Status(0);
 
     hr = m_Filter->m_CurrentDeinterlacingMethod->Process((IInterlacedBufferStack*)this, OutBuffer);
 
-	if(hr == S_OK && m_Flushing == FALSE)
-	{
-		hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
-		CHECK(hr);
-		
+    if(hr == S_OK && m_Flushing == FALSE)
+    {
+        hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
+        CHECK(hr);
+        
         // finally send the processed sample on it's way
-		hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
-	}
-	// if we are at the start then we might need to send 
-	// a couple of frames in before getting a response
-	else if(hr == S_FALSE)
-	{
-		LOG(DBGLOG_FLOW, ("Skipped\n"));
-		hr = S_OK;
-	}
+        hr = m_OutputPin->m_MemInputPin->Receive(OutSample);
+    }
+    // if we are at the start then we might need to send 
+    // a couple of frames in before getting a response
+    else if(hr == S_FALSE)
+    {
+        LOG(DBGLOG_FLOW, ("Skipped\n"));
+        hr = S_OK;
+    }
 
-	OutBuffer->Release();
-	OutSample->Release();
+    OutBuffer->Release();
+    OutSample->Release();
 
     m_LastStartEnd = FrameEndTime;
 
@@ -1062,35 +970,35 @@ BITMAPINFOHEADER* CInputPin::GetBitmapInfo()
 void CInputPin::FixupMediaType(AM_MEDIA_TYPE *pmt)
 {
     BITMAPINFOHEADER* BitmapInfo = NULL;
-	LPRECT pSource;
+    LPRECT pSource;
 
-	if(pmt->formattype == FORMAT_VIDEOINFO2)
+    if(pmt->formattype == FORMAT_VIDEOINFO2)
     {
         VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-		pSource = &Format->rcSource; 
+        pSource = &Format->rcSource; 
     }
     else if(pmt->formattype == FORMAT_VideoInfo)
     {
         VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-		pSource = &Format->rcSource; 
+        pSource = &Format->rcSource; 
     }
     else
     {
         return;
     }
 
-	if(pSource->right == 0)
-	{
-		pSource->right = BitmapInfo->biWidth;
-		pSource->bottom = abs(BitmapInfo->biHeight);
-	}
+    if(pSource->right == 0)
+    {
+        pSource->right = BitmapInfo->biWidth;
+        pSource->bottom = abs(BitmapInfo->biHeight);
+    }
 
-	if(BitmapInfo->biSizeImage > BitmapInfo->biHeight * BitmapInfo->biWidth * BitmapInfo->biBitCount / 8U)
-	{
-		BitmapInfo->biWidth = BitmapInfo->biSizeImage / (BitmapInfo->biHeight * BitmapInfo->biBitCount / 8);
-	}
+    if(BitmapInfo->biSizeImage > BitmapInfo->biHeight * BitmapInfo->biWidth * BitmapInfo->biBitCount / 8U)
+    {
+        BitmapInfo->biWidth = BitmapInfo->biSizeImage / (BitmapInfo->biHeight * BitmapInfo->biBitCount / 8);
+    }
 }
 
 BOOL CInputPin::IsThisATypeWeWorkWith(const AM_MEDIA_TYPE *pmt)
@@ -1142,7 +1050,7 @@ HRESULT CInputPin::FinishProcessing()
 {
     // Will wait for all any streaming functions to finish
     // may block so be careful
-	
+    
     CProtectCode WhileVarInScope(this);
 
     if(m_Block == TRUE)
@@ -1154,7 +1062,7 @@ HRESULT CInputPin::FinishProcessing()
     }
 
     // \todo free any buffers
-	ClearAll();
+    ClearAll();
     return S_OK;   
 }
 
@@ -1187,7 +1095,7 @@ HRESULT CInputPin::SetInputType(const AM_MEDIA_TYPE *pmt)
     hr = CreateInternalMediaType(&m_InputMediaType, &m_InternalMediaType);
     CHECK(hr);
 
-	// tell the filter that we need to rebuild the processing path
+    // tell the filter that we need to rebuild the processing path
     m_Filter->SetTypesChangedFlag();
     return hr;
 }
@@ -1226,7 +1134,7 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
         {
             NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
         }
-		else if(OldFormat->dwInterlaceFlags & AMINTERLACE_DisplayModeWeaveOnly && BitmapInfo->biHeight == 576)
+        else if(OldFormat->dwInterlaceFlags & AMINTERLACE_DisplayModeWeaveOnly && BitmapInfo->biHeight == 576)
         {
             NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
         }
@@ -1288,8 +1196,8 @@ HRESULT CInputPin::CreateInternalMediaType(const AM_MEDIA_TYPE* InputType, AM_ME
         NewFormat->dwPictAspectRatioY *= 3;
     }
 
-	memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
-	
+    memcpy(&NewFormat->bmiHeader, BitmapInfo, sizeof(BITMAPINFOHEADER));
+    
     NewType->lSampleSize = BitmapInfo->biSizeImage;
     return S_OK;
 }
@@ -1298,34 +1206,34 @@ class DECLSPEC_UUID("F50B3F13-19C4-11CF-AA9A-02608C9BABA2") ElecardVideoDecoder;
 
 BOOL CInputPin::WorkOutWhoWeAreTalkingTo(IPin* pConnector)
 {
-	PIN_INFO PinInfo;
-	BOOL RetVal = TRUE;
+    PIN_INFO PinInfo;
+    BOOL RetVal = TRUE;
 
     m_SourceType = SOURCE_DEFAULT;
 
-	HRESULT hr = pConnector->QueryPinInfo(&PinInfo);
-	if(SUCCEEDED(hr))
-	{
-		CLSID ClassId;
-		hr = PinInfo.pFilter->GetClassID(&ClassId);
-		if(SUCCEEDED(hr))
-		{
-			if(ClassId != __uuidof(CDScaler))
-			{
+    HRESULT hr = pConnector->QueryPinInfo(&PinInfo);
+    if(SUCCEEDED(hr))
+    {
+        CLSID ClassId;
+        hr = PinInfo.pFilter->GetClassID(&ClassId);
+        if(SUCCEEDED(hr))
+        {
+            if(ClassId != __uuidof(CDScaler))
+            {
                 if(ClassId == __uuidof(ElecardVideoDecoder))
                 {
                     m_SourceType = SOURCE_ELECARD;
                 }
-				RetVal = FALSE;
-			}
-		}
-		if(PinInfo.pFilter != NULL)
-		{
-			PinInfo.pFilter->Release();
-		}
-	}
+                RetVal = FALSE;
+            }
+        }
+        if(PinInfo.pFilter != NULL)
+        {
+            PinInfo.pFilter->Release();
+        }
+    }
 
-	return RetVal;
+    return RetVal;
 }
 
 HRESULT CInputPin::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* InSampleProperties)
@@ -1361,9 +1269,9 @@ void CInputPin::ShiftUpSamples(int NumberToShift, IMediaSample* InputSample)
     if(m_FieldsInBuffer > 0)
     {
         for(int i(m_FieldsInBuffer - 1); i >= 0; --i)
-		{
-			m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
-		}
+        {
+            m_IncomingFields[i + NumberToShift] = m_IncomingFields[i];
+        }
     }
     m_FieldsInBuffer += NumberToShift;
     while(NumberToShift--)

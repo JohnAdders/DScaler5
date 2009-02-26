@@ -311,7 +311,7 @@ void ifilter_bank(fb_info *fb, uint8_t window_sequence, uint8_t window_shape,
             time_out[nflat_ls+nshort+i] = overlap[nflat_ls+nshort+i] + transf_buf[nflat_ls+nshort+i];
         for (i = 0; i < nlong; i++)
             overlap[i] = MUL_F(transf_buf[nlong+i],window_long[nlong-1-i]);
-		break;
+        break;
     }
 
 #ifdef PROFILE
@@ -639,7 +639,7 @@ void ifilter_bank_sse(fb_info *fb, uint8_t window_sequence, uint8_t window_shape
 
             _mm_store_ps(&time_out[nlong+i], m4);
         }
-		break;
+        break;
     }
 
 #ifdef PROFILE

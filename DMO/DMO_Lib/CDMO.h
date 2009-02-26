@@ -17,21 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.3  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.2  2003/05/20 16:50:57  adcockj
-// Interim checkin, preparation for DMO processing path
-//
-// Revision 1.1  2003/05/16 16:19:12  adcockj
-// Added new files into DMO framework
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once 
 
@@ -41,8 +26,8 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDMO
 class CDMO : 
-	public IMediaObjectImpl<CDMO,1,1>,				// DMO Template (1 input stream & 1 output stream)
-	public CParams,
+    public IMediaObjectImpl<CDMO,1,1>,                // DMO Template (1 input stream & 1 output stream)
+    public CParams,
     public ISpecifyPropertyPages,
     public IDScalerFilterPlugin
 {
@@ -51,59 +36,59 @@ friend class LockIt;
 
 public:
     CDMO(LPCWSTR Name);
-	virtual ~CDMO();
+    virtual ~CDMO();
 
 public:
-	// IPersist Methods
-	STDMETHOD(GetClassID)(CLSID* pClassID) = 0;
+    // IPersist Methods
+    STDMETHOD(GetClassID)(CLSID* pClassID) = 0;
 
     // IDScalerFilterPlugin
-	STDMETHOD(Attach)(IUnknown* pFilter);
-	STDMETHOD(Detach)();
+    STDMETHOD(Attach)(IUnknown* pFilter);
+    STDMETHOD(Detach)();
 
     // ISpecifyPropertyPages
     STDMETHOD(GetPages)(CAUUID* pPages);
 
 
 protected:
-	//IMediaObjectImpl Methods   
+    //IMediaObjectImpl Methods   
     STDMETHOD(InternalAllocateStreamingResources)(void);
-	STDMETHOD(InternalDiscontinuity)(DWORD dwInputStreamIndex);
+    STDMETHOD(InternalDiscontinuity)(DWORD dwInputStreamIndex);
     STDMETHOD(InternalGetInputStreamInfo)(DWORD dwInputStreamIndex, DWORD *pdwFlags);
     STDMETHOD(InternalGetOutputStreamInfo)(DWORD dwInputStreamIndex, DWORD *pdwFlags);
     STDMETHOD(InternalGetInputMaxLatency)(DWORD dwInputStreamIndex, REFERENCE_TIME *prtMaxLatency);
-	STDMETHOD(InternalSetInputMaxLatency)(DWORD dwInputStreamIndex, REFERENCE_TIME rtMaxLatency);
-	STDMETHOD(InternalFlush)(void) = 0;
-	STDMETHOD(InternalFreeStreamingResources)(void) = 0;
+    STDMETHOD(InternalSetInputMaxLatency)(DWORD dwInputStreamIndex, REFERENCE_TIME rtMaxLatency);
+    STDMETHOD(InternalFlush)(void) = 0;
+    STDMETHOD(InternalFreeStreamingResources)(void) = 0;
     STDMETHOD(InternalGetInputSizeInfo)(DWORD dwInputStreamIndex, DWORD *pcbSize, DWORD *pcbMaxLookahead, DWORD *pcbAlignment) = 0;
-	STDMETHOD(InternalGetOutputSizeInfo)(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment) = 0;
+    STDMETHOD(InternalGetOutputSizeInfo)(DWORD dwOutputStreamIndex, DWORD *pcbSize, DWORD *pcbAlignment) = 0;
     virtual HRESULT InternalGetInputType(DWORD dwInputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt) = 0;
-	virtual HRESULT InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt) = 0;
-	STDMETHOD(InternalProcessInput)(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength) = 0;
-	STDMETHOD(InternalProcessOutput)(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus) = 0;
+    virtual HRESULT InternalGetOutputType(DWORD dwOutputStreamIndex, DWORD dwTypeIndex, DMO_MEDIA_TYPE *pmt) = 0;
+    STDMETHOD(InternalProcessInput)(DWORD dwInputStreamIndex, IMediaBuffer *pBuffer, DWORD dwFlags, REFERENCE_TIME rtTimestamp, REFERENCE_TIME rtTimelength) = 0;
+    STDMETHOD(InternalProcessOutput)(DWORD dwFlags, DWORD cOutputBufferCount, DMO_OUTPUT_DATA_BUFFER *pOutputBuffers, DWORD *pdwStatus) = 0;
 
-	// IMediaObjectImpl Required overides
-	STDMETHOD(InternalAcceptingInput)(DWORD dwInputStreamIndex) = 0;
-	virtual HRESULT InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt) = 0;
-	virtual HRESULT InternalCheckOutputType(DWORD dwOutputStreamIndex, const DMO_MEDIA_TYPE *pmt) = 0;
-	void Lock(void);
-	void Unlock(void);
+    // IMediaObjectImpl Required overides
+    STDMETHOD(InternalAcceptingInput)(DWORD dwInputStreamIndex) = 0;
+    virtual HRESULT InternalCheckInputType(DWORD dwInputStreamIndex, const DMO_MEDIA_TYPE *pmt) = 0;
+    virtual HRESULT InternalCheckOutputType(DWORD dwOutputStreamIndex, const DMO_MEDIA_TYPE *pmt) = 0;
+    void Lock(void);
+    void Unlock(void);
 
 
-	// Private functions
+    // Private functions
     /** UpdateStatesInternal
         Override this function if you need to do maintain
         any information based on the parameters
     */
-	virtual HRESULT UpdateStatesInternal();
+    virtual HRESULT UpdateStatesInternal();
 
-	// States of the DMO
-	bool	m_fInitialized;
+    // States of the DMO
+    bool    m_fInitialized;
 
-	REFERENCE_TIME			m_rtTimestamp;		// Most recent timestamp
-	REFERENCE_TIME			m_rtTimelength;		// Most recent timelength
-	bool					m_bValidTime;		// Controls whether timestamp is valid or not
-	bool					m_bValidLength;		// Controls whether timelength is valid or not
+    REFERENCE_TIME            m_rtTimestamp;        // Most recent timestamp
+    REFERENCE_TIME            m_rtTimelength;        // Most recent timelength
+    bool                    m_bValidTime;        // Controls whether timestamp is valid or not
+    bool                    m_bValidLength;        // Controls whether timelength is valid or not
     IUnknown*               m_ParentFilter;
 };
 

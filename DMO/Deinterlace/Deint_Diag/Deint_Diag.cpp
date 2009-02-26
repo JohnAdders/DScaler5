@@ -17,54 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.14  2004/12/06 18:04:54  adcockj
-// Major improvements to deinterlacing
-//
-// Revision 1.13  2004/04/28 16:32:36  adcockj
-// Better dynamic connection
-//
-// Revision 1.12  2004/03/15 17:17:04  adcockj
-// Basic registry saving support
-//
-// Revision 1.11  2004/02/06 12:17:15  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-// Revision 1.10  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.9  2003/09/30 16:59:26  adcockj
-// Improved handling of small format changes
-//
-// Revision 1.8  2003/09/24 07:01:01  adcockj
-// fix some release issues
-//
-// Revision 1.7  2003/09/19 16:12:13  adcockj
-// Further improvements
-//
-// Revision 1.6  2003/07/30 06:58:01  adcockj
-// Fixed another chroma position problem
-//
-// Revision 1.5  2003/07/29 07:01:54  adcockj
-// Fixed some issues with YV12 and general chroma positioning
-//
-// Revision 1.4  2003/07/25 16:02:56  adcockj
-// Fixed compile problem
-//
-// Revision 1.3  2003/07/25 16:00:54  adcockj
-// Remove 704 stuff
-//
-// Revision 1.2  2003/07/18 09:26:34  adcockj
-// Corrections to assembler files (does not compile)
-//
-// Revision 1.1  2003/05/21 13:41:12  adcockj
-// Added new deinterlace methods
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include <initguid.h>
@@ -93,9 +45,9 @@ int FunctionIndex = 0;
 
 DIAG_FUNC* DiagFunctions[3][2] = 
 {
-	{Deint_Diag_Core_YUY2_MMX, Deint_Diag_Core_Packed_MMX,},
-	{Deint_Diag_Core_YUY2_3DNOW, Deint_Diag_Core_Packed_3DNOW,},
-	{Deint_Diag_Core_YUY2_SSE, Deint_Diag_Core_Packed_SSE,},
+    {Deint_Diag_Core_YUY2_MMX, Deint_Diag_Core_Packed_MMX,},
+    {Deint_Diag_Core_YUY2_3DNOW, Deint_Diag_Core_Packed_3DNOW,},
+    {Deint_Diag_Core_YUY2_SSE, Deint_Diag_Core_Packed_SSE,},
 };
 
 #define NUM_FIELDS 2
@@ -194,16 +146,16 @@ STDMETHODIMP CDeint_Diag::Process(IInterlacedBufferStack* Stack, IMediaBuffer* p
 
                 pInputData[0] += TwoLinePitch;
 
-				DiagFunctions[FunctionIndex][DIAG_YUY2](
-															pInputData[0],
-															pInputData[1],
-															pInputData[1] + TwoLinePitch,
-															pMapData + InputPitch,
-															pMapData,
-															pMapData + TwoLinePitch,
-															pOutputData,
-															InputPitch
-														);
+                DiagFunctions[FunctionIndex][DIAG_YUY2](
+                                                            pInputData[0],
+                                                            pInputData[1],
+                                                            pInputData[1] + TwoLinePitch,
+                                                            pMapData + InputPitch,
+                                                            pMapData,
+                                                            pMapData + TwoLinePitch,
+                                                            pOutputData,
+                                                            InputPitch
+                                                        );
                 pOutputData += OutputPitch;
 
                 pInputData[1] += TwoLinePitch;
@@ -223,15 +175,15 @@ STDMETHODIMP CDeint_Diag::Process(IInterlacedBufferStack* Stack, IMediaBuffer* p
                 pOutputData += OutputPitch;
 
                 DiagFunctions[FunctionIndex][DIAG_YUY2](
-															pInputData[0],
-															pInputData[1],
-															pInputData[1] + TwoLinePitch,
-															pMapData + InputPitch,
-															pMapData,
-															pMapData + TwoLinePitch,
-															pOutputData,
-															InputPitch
-														);
+                                                            pInputData[0],
+                                                            pInputData[1],
+                                                            pInputData[1] + TwoLinePitch,
+                                                            pMapData + InputPitch,
+                                                            pMapData,
+                                                            pMapData + TwoLinePitch,
+                                                            pOutputData,
+                                                            InputPitch
+                                                        );
                 pOutputData += OutputPitch;
 
                 pInputData[0] += TwoLinePitch;
@@ -270,15 +222,15 @@ STDMETHODIMP CDeint_Diag::Process(IInterlacedBufferStack* Stack, IMediaBuffer* p
                 pInputData[0] += TwoLinePitch;
 
                 DiagFunctions[FunctionIndex][DIAG_PACK](
-															pInputData[0],
-															pInputData[1],
-															pInputData[1] + TwoLinePitch,
-															pMapData + InputPitch,
-															pMapData,
-															pMapData + TwoLinePitch,
-															pOutputData,
-															InputInfo->bmiHeader.biWidth
-														);
+                                                            pInputData[0],
+                                                            pInputData[1],
+                                                            pInputData[1] + TwoLinePitch,
+                                                            pMapData + InputPitch,
+                                                            pMapData,
+                                                            pMapData + TwoLinePitch,
+                                                            pOutputData,
+                                                            InputInfo->bmiHeader.biWidth
+                                                        );
                 pOutputData += OutputPitch;
 
                 pInputData[1] += TwoLinePitch;
@@ -302,15 +254,15 @@ STDMETHODIMP CDeint_Diag::Process(IInterlacedBufferStack* Stack, IMediaBuffer* p
                 pOutputData += OutputPitch;
 
                 DiagFunctions[FunctionIndex][DIAG_PACK](
-															pInputData[0],
-															pInputData[1],
-															pInputData[1] + TwoLinePitch,
-															pMapData + InputPitch,
-															pMapData,
-															pMapData + TwoLinePitch,
-															pOutputData,
-															InputInfo->bmiHeader.biWidth
-														);
+                                                            pInputData[0],
+                                                            pInputData[1],
+                                                            pInputData[1] + TwoLinePitch,
+                                                            pMapData + InputPitch,
+                                                            pMapData,
+                                                            pMapData + TwoLinePitch,
+                                                            pOutputData,
+                                                            InputInfo->bmiHeader.biWidth
+                                                        );
                 pOutputData += OutputPitch;
 
                 pInputData[0] += TwoLinePitch;
@@ -334,15 +286,15 @@ STDMETHODIMP CDeint_Diag::Process(IInterlacedBufferStack* Stack, IMediaBuffer* p
 
 void CDeint_Diag::ProcessChromaTop(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* pMapData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
 {
-	DWORD LineLength;
-	if(InputInfo->rcSource.right > 0)
-	{
-		LineLength = InputInfo->rcSource.right / 2;
-	}
-	else
-	{
-		LineLength = InputInfo->bmiHeader.biWidth / 2;
-	}
+    DWORD LineLength;
+    if(InputInfo->rcSource.right > 0)
+    {
+        LineLength = InputInfo->rcSource.right / 2;
+    }
+    else
+    {
+        LineLength = InputInfo->bmiHeader.biWidth / 2;
+    }
     // copy V then U
     // there are biWidth / 2 x biHeight/2 of V 
     // followed by biWidth / 2 x biHeight/2 of U
@@ -354,15 +306,15 @@ void CDeint_Diag::ProcessChromaTop(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE*
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
         DiagFunctions[FunctionIndex][DIAG_PACK](
-													pLowerChroma,
-													pUpperChroma,
-													pUpperChroma + InputInfo->bmiHeader.biWidth,
-													pMapData + InputInfo->bmiHeader.biWidth / 2,
-													pMapData,
-													pMapData + InputInfo->bmiHeader.biWidth,
-													pOutputData,
-													InputInfo->bmiHeader.biWidth / 2
-												);
+                                                    pLowerChroma,
+                                                    pUpperChroma,
+                                                    pUpperChroma + InputInfo->bmiHeader.biWidth,
+                                                    pMapData + InputInfo->bmiHeader.biWidth / 2,
+                                                    pMapData,
+                                                    pMapData + InputInfo->bmiHeader.biWidth,
+                                                    pOutputData,
+                                                    InputInfo->bmiHeader.biWidth / 2
+                                                );
 
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
@@ -393,15 +345,15 @@ void CDeint_Diag::ProcessChromaTop(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE*
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
         DiagFunctions[FunctionIndex][DIAG_PACK](
-													pLowerChroma,
-													pUpperChroma,
-													pUpperChroma + InputInfo->bmiHeader.biWidth,
-													pMapData + InputInfo->bmiHeader.biWidth / 2,
-													pMapData,
-													pMapData + InputInfo->bmiHeader.biWidth,
-													pOutputData,
-													InputInfo->bmiHeader.biWidth / 2
-												);
+                                                    pLowerChroma,
+                                                    pUpperChroma,
+                                                    pUpperChroma + InputInfo->bmiHeader.biWidth,
+                                                    pMapData + InputInfo->bmiHeader.biWidth / 2,
+                                                    pMapData,
+                                                    pMapData + InputInfo->bmiHeader.biWidth,
+                                                    pOutputData,
+                                                    InputInfo->bmiHeader.biWidth / 2
+                                                );
 
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
@@ -424,15 +376,15 @@ void CDeint_Diag::ProcessChromaTop(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE*
 
 void CDeint_Diag::ProcessChromaBottom(BYTE* pLowerChroma, BYTE* pUpperChroma, BYTE* pMapData, BYTE* pOutputData, VIDEOINFOHEADER2* InputInfo, VIDEOINFOHEADER2* OutputInfo)
 {
-	DWORD LineLength;
-	if(InputInfo->rcSource.right > 0)
-	{
-		LineLength = InputInfo->rcSource.right / 2;
-	}
-	else
-	{
-		LineLength = InputInfo->bmiHeader.biWidth / 2;
-	}
+    DWORD LineLength;
+    if(InputInfo->rcSource.right > 0)
+    {
+        LineLength = InputInfo->rcSource.right / 2;
+    }
+    else
+    {
+        LineLength = InputInfo->bmiHeader.biWidth / 2;
+    }
     // copy V then U
     // there are biWidth / 2 x biHeight/2 of V 
     // followed by biWidth / 2 x biHeight/2 of U
@@ -451,15 +403,15 @@ void CDeint_Diag::ProcessChromaBottom(BYTE* pLowerChroma, BYTE* pUpperChroma, BY
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
         DiagFunctions[FunctionIndex][DIAG_PACK](
-													pUpperChroma,
-													pLowerChroma,
-													pLowerChroma + InputInfo->bmiHeader.biWidth,
-													pMapData + InputInfo->bmiHeader.biWidth / 2,
-													pMapData,
-													pMapData + InputInfo->bmiHeader.biWidth,
-													pOutputData,
-													InputInfo->bmiHeader.biWidth / 2
-												);
+                                                    pUpperChroma,
+                                                    pLowerChroma,
+                                                    pLowerChroma + InputInfo->bmiHeader.biWidth,
+                                                    pMapData + InputInfo->bmiHeader.biWidth / 2,
+                                                    pMapData,
+                                                    pMapData + InputInfo->bmiHeader.biWidth,
+                                                    pOutputData,
+                                                    InputInfo->bmiHeader.biWidth / 2
+                                                );
 
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
@@ -492,15 +444,15 @@ void CDeint_Diag::ProcessChromaBottom(BYTE* pLowerChroma, BYTE* pUpperChroma, BY
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
         DiagFunctions[FunctionIndex][DIAG_PACK](
-													pUpperChroma,
-													pLowerChroma,
-													pLowerChroma + InputInfo->bmiHeader.biWidth,
-													pMapData + InputInfo->bmiHeader.biWidth / 2,
-													pMapData,
-													pMapData + InputInfo->bmiHeader.biWidth,
-													pOutputData,
-													InputInfo->bmiHeader.biWidth / 2
-												);
+                                                    pUpperChroma,
+                                                    pLowerChroma,
+                                                    pLowerChroma + InputInfo->bmiHeader.biWidth,
+                                                    pMapData + InputInfo->bmiHeader.biWidth / 2,
+                                                    pMapData,
+                                                    pMapData + InputInfo->bmiHeader.biWidth,
+                                                    pOutputData,
+                                                    InputInfo->bmiHeader.biWidth / 2
+                                                );
 
         pOutputData += OutputInfo->bmiHeader.biWidth / 2;
 
@@ -521,14 +473,14 @@ void CDeint_Diag::ProcessChromaBottom(BYTE* pLowerChroma, BYTE* pUpperChroma, BY
 
 HRESULT CDeint_Diag::GetClassID(CLSID *pClsid)
 {
-	// Check for valid pointer
-	if( NULL == pClsid )
-	{
-		return E_POINTER;
-	}
+    // Check for valid pointer
+    if( NULL == pClsid )
+    {
+        return E_POINTER;
+    }
 
-	*pClsid = CLSID_CDeint_Diag;
-	return S_OK;
+    *pClsid = CLSID_CDeint_Diag;
+    return S_OK;
 
 } // GetClassID
 
@@ -602,10 +554,10 @@ IMPLEMENT_DLL_MODULE_ROUTINES()
 extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
-	if (DLL_PROCESS_ATTACH == dwReason)
-	{
+    if (DLL_PROCESS_ATTACH == dwReason)
+    {
         g_hInstance = hInstance;
-		DisableThreadLibraryCalls(hInstance);
+        DisableThreadLibraryCalls(hInstance);
         CPU_SetupFeatureFlag();
         if(CpuFeatureFlags & FEATURE_SSE)
         {
@@ -619,31 +571,31 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
         {
             FunctionIndex = 0;
         }
-	}
-	else if (DLL_PROCESS_DETACH == dwReason)
+    }
+    else if (DLL_PROCESS_DETACH == dwReason)
     {
     }
-	return TRUE;    // ok
+    return TRUE;    // ok
 }
 
 STDAPI DllRegisterServer()
 {
     HRESULT hr = DMODllRegisterDeintDMO(L"Diag", CLSID_CDeint_Diag);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
 STDAPI DllUnregisterServer()
 {
     HRESULT hr = DMODllUnregisterDeintDMO(CLSID_CDeint_Diag);
-	if(FAILED(hr))
-	{
-		return hr;
-	}
-	return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
+    if(FAILED(hr))
+    {
+        return hr;
+    }
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
 

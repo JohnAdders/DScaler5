@@ -27,12 +27,6 @@
 // program see http://sf.net/projects/guliverkli/ for more details
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "AudioDecoder.h"
@@ -106,13 +100,13 @@ static sample_t Silence[256] = {
 
 const int MAXCHANNELS = 6;
 const int chmap[MAXCHANNELS][MAXCHANNELS+1] = {
-	// first column tell us if we need to remap
-	{  0, },					// mono
-	{  0, },					// l, r
-	{  1, 1, 2, 0, },			// c ,l, r -> l, r, c
-	{  1, 1, 2, 0, 3, },		// c, l, r, bc -> l, r, c, bc
-	{  1, 1, 2, 0, 3, 4, },		// c, l, r, bl, br -> l, r, c, bl, br
-	{  1, 1, 2, 0, 5, 3, 4 }	// c, l, r, bl, br, lfe -> l, r, c, lfe, bl, br
+    // first column tell us if we need to remap
+    {  0, },                    // mono
+    {  0, },                    // l, r
+    {  1, 1, 2, 0, },            // c ,l, r -> l, r, c
+    {  1, 1, 2, 0, 3, },        // c, l, r, bc -> l, r, c, bc
+    {  1, 1, 2, 0, 3, 4, },        // c, l, r, bl, br -> l, r, c, bl, br
+    {  1, 1, 2, 0, 5, 3, 4 }    // c, l, r, bl, br, lfe -> l, r, c, lfe, bl, br
 };
 
 HRESULT CAudioDecoder::ProcessAAC()
@@ -122,7 +116,7 @@ HRESULT CAudioDecoder::ProcessAAC()
     unsigned long insize = m_buff.size();
     HRESULT hr = S_OK;
 
-	faacDecFrameInfo frameInfo;
+    faacDecFrameInfo frameInfo;
 
     while(m_aac_init == false && insize > 0)
     {
@@ -150,12 +144,12 @@ HRESULT CAudioDecoder::ProcessAAC()
     }
     while(insize > 0)
     {
-	    sample_t *samples = (sample_t *)faacDecDecode(m_aac_handle, &frameInfo, &m_buff[0], m_buff.size());
+        sample_t *samples = (sample_t *)faacDecDecode(m_aac_handle, &frameInfo, &m_buff[0], m_buff.size());
 
-	    if (frameInfo.error)
-	    {
-		    break;
-	    }
+        if (frameInfo.error)
+        {
+            break;
+        }
         p += frameInfo.bytesconsumed;
         insize -= frameInfo.bytesconsumed;
 
@@ -223,13 +217,13 @@ HRESULT CAudioDecoder::ProcessAAC()
                 }
 
             }
-	        int channelidx = frameInfo.channels-1;
-	        if(chmap[channelidx][0])
-	        {
-	        }
-	        else
-	        {
-	        }
+            int channelidx = frameInfo.channels-1;
+            if(chmap[channelidx][0])
+            {
+            }
+            else
+            {
+            }
         }
     }
 
@@ -255,8 +249,8 @@ void CAudioDecoder::InitAAC()
     m_aac_handle = libfaad::faacDecOpen();
 
     faacDecConfigurationPtr c = faacDecGetCurrentConfiguration(m_aac_handle);
-	c->outputFormat = FAAD_FMT;
-	faacDecSetConfiguration(m_aac_handle, c);
+    c->outputFormat = FAAD_FMT;
+    faacDecSetConfiguration(m_aac_handle, c);
 
     WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
@@ -265,7 +259,7 @@ void CAudioDecoder::InitAAC()
         unsigned long freq;
         unsigned char channels;
 
-	    faacDecInit2(m_aac_handle, (BYTE*)(wfein+1), wfein->cbSize, &freq, &channels);
+        faacDecInit2(m_aac_handle, (BYTE*)(wfein+1), wfein->cbSize, &freq, &channels);
 
         faacDecConfigurationPtr c = faacDecGetCurrentConfiguration(m_aac_handle);
 
@@ -295,7 +289,7 @@ void CAudioDecoder::InitAAC()
             break;
         }
 
-	    faacDecSetConfiguration(m_aac_handle, c);
+        faacDecSetConfiguration(m_aac_handle, c);
 
         m_aac_init = true;
     }

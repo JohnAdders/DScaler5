@@ -29,30 +29,30 @@
 /////////////////////////////////////////////////////////////////////////////
 // CDSInputPin
 class CDSBufferedInputPin : 
-	public CDSInputPin
+    public CDSInputPin
 {
 public:
 
 IMPLEMENT_UNKNOWN(CDSBufferedInputPin)
 
 BEGIN_INTERFACE_TABLE(CDSBufferedInputPin)
-	IMPLEMENTS_INTERFACE(IPin)
-	IMPLEMENTS_INTERFACE(IMemInputPin)
+    IMPLEMENTS_INTERFACE(IPin)
+    IMPLEMENTS_INTERFACE(IMemInputPin)
     IMPLEMENTS_INTERFACE(IQualityControl)
-	IMPLEMENTS_INTERFACE(IPinConnection)
-	IMPLEMENTS_INTERFACE(IKsPropertySet)
+    IMPLEMENTS_INTERFACE(IPinConnection)
+    IMPLEMENTS_INTERFACE(IKsPropertySet)
 END_INTERFACE_TABLE()
 
 public:
-	CDSBufferedInputPin();
-	~CDSBufferedInputPin();
+    CDSBufferedInputPin();
+    ~CDSBufferedInputPin();
 
 // IPin
 public:
     STDMETHOD(EndOfStream)(void);
     STDMETHOD(BeginFlush)(void);
     STDMETHOD(EndFlush)(void);
-	STDMETHOD(NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
+    STDMETHOD(NewSegment)(REFERENCE_TIME tStart, REFERENCE_TIME tStop, double dRate);
 
 // IMemInputPin
 public:
@@ -73,7 +73,7 @@ protected:
     HANDLE m_SamplesReadyEvent;
     HANDLE m_ThreadStopEvent;
     HANDLE m_WorkerThread;
-	HRESULT m_ThreadRetCode;
-	DWORD m_ThreadId;
+    HRESULT m_ThreadRetCode;
+    DWORD m_ThreadId;
 };
 

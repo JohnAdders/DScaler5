@@ -325,8 +325,8 @@ static int read_major_sync(MLPDecodeContext *m, const uint8_t *buf,
 
 #ifdef CONFIG_AUDIO_NONSHORT
     m->avctx->bits_per_sample = mh.group1_bits;
-	if (mh.group1_bits > 16) {
-		m->avctx->sample_fmt = SAMPLE_FMT_S32;
+    if (mh.group1_bits > 16) {
+        m->avctx->sample_fmt = SAMPLE_FMT_S32;
     }
 #endif
 

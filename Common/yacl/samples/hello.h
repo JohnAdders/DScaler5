@@ -24,37 +24,37 @@ extern "C"{
 #ifndef __IHello_FWD_DEFINED__
 #define __IHello_FWD_DEFINED__
 typedef interface IHello IHello;
-#endif 	/* __IHello_FWD_DEFINED__ */
+#endif     /* __IHello_FWD_DEFINED__ */
 
 
 #ifndef __IAnimal_FWD_DEFINED__
 #define __IAnimal_FWD_DEFINED__
 typedef interface IAnimal IAnimal;
-#endif 	/* __IAnimal_FWD_DEFINED__ */
+#endif     /* __IAnimal_FWD_DEFINED__ */
 
 
 #ifndef __IDog_FWD_DEFINED__
 #define __IDog_FWD_DEFINED__
 typedef interface IDog IDog;
-#endif 	/* __IDog_FWD_DEFINED__ */
+#endif     /* __IDog_FWD_DEFINED__ */
 
 
 #ifndef __ICat_FWD_DEFINED__
 #define __ICat_FWD_DEFINED__
 typedef interface ICat ICat;
-#endif 	/* __ICat_FWD_DEFINED__ */
+#endif     /* __ICat_FWD_DEFINED__ */
 
 
 #ifndef __IPug_FWD_DEFINED__
 #define __IPug_FWD_DEFINED__
 typedef interface IPug IPug;
-#endif 	/* __IPug_FWD_DEFINED__ */
+#endif     /* __IPug_FWD_DEFINED__ */
 
 
 #ifndef __IOldPug_FWD_DEFINED__
 #define __IOldPug_FWD_DEFINED__
 typedef interface IOldPug IOldPug;
-#endif 	/* __IOldPug_FWD_DEFINED__ */
+#endif     /* __IOldPug_FWD_DEFINED__ */
 
 
 #ifndef __Hello_FWD_DEFINED__
@@ -66,7 +66,7 @@ typedef class Hello Hello;
 typedef struct Hello Hello;
 #endif /* __cplusplus */
 
-#endif 	/* __Hello_FWD_DEFINED__ */
+#endif     /* __Hello_FWD_DEFINED__ */
 
 
 #ifndef __Goodbye_FWD_DEFINED__
@@ -78,7 +78,7 @@ typedef class Goodbye Goodbye;
 typedef struct Goodbye Goodbye;
 #endif /* __cplusplus */
 
-#endif 	/* __Goodbye_FWD_DEFINED__ */
+#endif     /* __Goodbye_FWD_DEFINED__ */
 
 
 #ifndef __SoLong_FWD_DEFINED__
@@ -90,7 +90,7 @@ typedef class SoLong SoLong;
 typedef struct SoLong SoLong;
 #endif /* __cplusplus */
 
-#endif 	/* __SoLong_FWD_DEFINED__ */
+#endif     /* __SoLong_FWD_DEFINED__ */
 
 
 #ifndef __OldPugCat_FWD_DEFINED__
@@ -102,7 +102,7 @@ typedef class OldPugCat OldPugCat;
 typedef struct OldPugCat OldPugCat;
 #endif /* __cplusplus */
 
-#endif 	/* __OldPugCat_FWD_DEFINED__ */
+#endif     /* __OldPugCat_FWD_DEFINED__ */
 
 
 void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
@@ -147,7 +147,7 @@ EXTERN_C const IID IID_IHello;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct IHelloVtbl
     {
@@ -180,23 +180,23 @@ EXTERN_C const IID IID_IHello;
 #ifdef COBJMACROS
 
 
-#define IHello_QueryInterface(This,riid,ppvObject)	\
+#define IHello_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IHello_AddRef(This)	\
+#define IHello_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define IHello_Release(This)	\
+#define IHello_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define IHello_HelloWorld(This)	\
+#define IHello_HelloWorld(This)    \
     (This)->lpVtbl -> HelloWorld(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -212,7 +212,7 @@ void __RPC_STUB IHello_HelloWorld_Stub(
 
 
 
-#endif 	/* __IHello_INTERFACE_DEFINED__ */
+#endif     /* __IHello_INTERFACE_DEFINED__ */
 
 
 #ifndef __IAnimal_INTERFACE_DEFINED__
@@ -239,7 +239,7 @@ EXTERN_C const IID IID_IAnimal;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct IAnimalVtbl
     {
@@ -272,23 +272,23 @@ EXTERN_C const IID IID_IAnimal;
 #ifdef COBJMACROS
 
 
-#define IAnimal_QueryInterface(This,riid,ppvObject)	\
+#define IAnimal_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IAnimal_AddRef(This)	\
+#define IAnimal_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define IAnimal_Release(This)	\
+#define IAnimal_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define IAnimal_Eat(This)	\
+#define IAnimal_Eat(This)    \
     (This)->lpVtbl -> Eat(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -304,7 +304,7 @@ void __RPC_STUB IAnimal_Eat_Stub(
 
 
 
-#endif 	/* __IAnimal_INTERFACE_DEFINED__ */
+#endif     /* __IAnimal_INTERFACE_DEFINED__ */
 
 
 #ifndef __IDog_INTERFACE_DEFINED__
@@ -331,7 +331,7 @@ EXTERN_C const IID IID_IDog;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct IDogVtbl
     {
@@ -367,27 +367,27 @@ EXTERN_C const IID IID_IDog;
 #ifdef COBJMACROS
 
 
-#define IDog_QueryInterface(This,riid,ppvObject)	\
+#define IDog_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IDog_AddRef(This)	\
+#define IDog_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define IDog_Release(This)	\
+#define IDog_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define IDog_Eat(This)	\
+#define IDog_Eat(This)    \
     (This)->lpVtbl -> Eat(This)
 
 
-#define IDog_Bark(This)	\
+#define IDog_Bark(This)    \
     (This)->lpVtbl -> Bark(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -403,7 +403,7 @@ void __RPC_STUB IDog_Bark_Stub(
 
 
 
-#endif 	/* __IDog_INTERFACE_DEFINED__ */
+#endif     /* __IDog_INTERFACE_DEFINED__ */
 
 
 #ifndef __ICat_INTERFACE_DEFINED__
@@ -430,7 +430,7 @@ EXTERN_C const IID IID_ICat;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct ICatVtbl
     {
@@ -466,27 +466,27 @@ EXTERN_C const IID IID_ICat;
 #ifdef COBJMACROS
 
 
-#define ICat_QueryInterface(This,riid,ppvObject)	\
+#define ICat_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define ICat_AddRef(This)	\
+#define ICat_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define ICat_Release(This)	\
+#define ICat_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define ICat_Eat(This)	\
+#define ICat_Eat(This)    \
     (This)->lpVtbl -> Eat(This)
 
 
-#define ICat_IgnoreMaster(This)	\
+#define ICat_IgnoreMaster(This)    \
     (This)->lpVtbl -> IgnoreMaster(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -502,7 +502,7 @@ void __RPC_STUB ICat_IgnoreMaster_Stub(
 
 
 
-#endif 	/* __ICat_INTERFACE_DEFINED__ */
+#endif     /* __ICat_INTERFACE_DEFINED__ */
 
 
 #ifndef __IPug_INTERFACE_DEFINED__
@@ -529,7 +529,7 @@ EXTERN_C const IID IID_IPug;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct IPugVtbl
     {
@@ -568,31 +568,31 @@ EXTERN_C const IID IID_IPug;
 #ifdef COBJMACROS
 
 
-#define IPug_QueryInterface(This,riid,ppvObject)	\
+#define IPug_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IPug_AddRef(This)	\
+#define IPug_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define IPug_Release(This)	\
+#define IPug_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define IPug_Eat(This)	\
+#define IPug_Eat(This)    \
     (This)->lpVtbl -> Eat(This)
 
 
-#define IPug_Bark(This)	\
+#define IPug_Bark(This)    \
     (This)->lpVtbl -> Bark(This)
 
 
-#define IPug_Snore(This)	\
+#define IPug_Snore(This)    \
     (This)->lpVtbl -> Snore(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -608,7 +608,7 @@ void __RPC_STUB IPug_Snore_Stub(
 
 
 
-#endif 	/* __IPug_INTERFACE_DEFINED__ */
+#endif     /* __IPug_INTERFACE_DEFINED__ */
 
 
 #ifndef __IOldPug_INTERFACE_DEFINED__
@@ -635,7 +635,7 @@ EXTERN_C const IID IID_IOldPug;
         
     };
     
-#else 	/* C style interface */
+#else     /* C style interface */
 
     typedef struct IOldPugVtbl
     {
@@ -677,35 +677,35 @@ EXTERN_C const IID IID_IOldPug;
 #ifdef COBJMACROS
 
 
-#define IOldPug_QueryInterface(This,riid,ppvObject)	\
+#define IOldPug_QueryInterface(This,riid,ppvObject)    \
     (This)->lpVtbl -> QueryInterface(This,riid,ppvObject)
 
-#define IOldPug_AddRef(This)	\
+#define IOldPug_AddRef(This)    \
     (This)->lpVtbl -> AddRef(This)
 
-#define IOldPug_Release(This)	\
+#define IOldPug_Release(This)    \
     (This)->lpVtbl -> Release(This)
 
 
-#define IOldPug_Eat(This)	\
+#define IOldPug_Eat(This)    \
     (This)->lpVtbl -> Eat(This)
 
 
-#define IOldPug_Bark(This)	\
+#define IOldPug_Bark(This)    \
     (This)->lpVtbl -> Bark(This)
 
 
-#define IOldPug_Snore(This)	\
+#define IOldPug_Snore(This)    \
     (This)->lpVtbl -> Snore(This)
 
 
-#define IOldPug_SnoreLoudly(This)	\
+#define IOldPug_SnoreLoudly(This)    \
     (This)->lpVtbl -> SnoreLoudly(This)
 
 #endif /* COBJMACROS */
 
 
-#endif 	/* C style interface */
+#endif     /* C style interface */
 
 
 
@@ -721,7 +721,7 @@ void __RPC_STUB IOldPug_SnoreLoudly_Stub(
 
 
 
-#endif 	/* __IOldPug_INTERFACE_DEFINED__ */
+#endif     /* __IOldPug_INTERFACE_DEFINED__ */
 
 
 #ifdef __cplusplus

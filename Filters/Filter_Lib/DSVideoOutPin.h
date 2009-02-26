@@ -43,9 +43,9 @@ public:
     STDMETHODIMP QueryAccept(const AM_MEDIA_TYPE *pmt);
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
     HRESULT NotifyConnected();
-	void OnConnectToVMR7();
-	void OnConnectToVMR9();
-	void OnConnectToOverlay();
+    void OnConnectToVMR7();
+    void OnConnectToVMR9();
+    void OnConnectToOverlay();
     HRESULT CheckForReconnection();
     HRESULT ReconnectVMR();
     HRESULT ReconnectOverlay();

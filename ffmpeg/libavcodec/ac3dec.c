@@ -1075,7 +1075,7 @@ static int ac3_decode_frame(AVCodecContext * avctx, void *data, int *data_size, 
         }
 
 #ifdef CONFIG_AUDIO_NONSHORT
-    	s->avctx->sample_fmt = SAMPLE_FMT_FLT;
+        s->avctx->sample_fmt = SAMPLE_FMT_FLT;
         /* convert to float */
         for (i = 0; i < 256; i++)
             for (ch = 0; ch < s->out_channels; ch++)

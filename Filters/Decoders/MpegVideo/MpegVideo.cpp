@@ -18,44 +18,6 @@
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.9  2005/01/04 17:53:43  adcockj
-// added option to force dscalewr filter to be loaded2
-//
-// Revision 1.8  2004/10/28 15:52:24  adcockj
-// Moved video output pin code into new class
-//
-// Revision 1.7  2004/07/16 15:58:01  adcockj
-// Fixed compilation issues under .NET
-// Changed name of filter
-// Some performance improvements to libmpeg2
-//
-// Revision 1.6  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.5  2004/03/05 15:56:29  adcockj
-// Interim check in of DScalerFilter (compiles again)
-//
-// Revision 1.4  2004/02/25 17:14:02  adcockj
-// Fixed some timing bugs
-// Tidy up of code
-//
-// Revision 1.3  2004/02/17 16:51:33  adcockj
-// Added countof define
-//
-// Revision 1.2  2004/02/10 13:24:12  adcockj
-// Lots of bug fixes + corrected interlaced YV12 upconversion
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "resource.h"

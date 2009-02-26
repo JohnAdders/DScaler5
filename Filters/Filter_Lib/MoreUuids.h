@@ -1,6 +1,6 @@
 /* 
- *	Copyright (C) 2003 Gabest
- *	http://www.gabest.org
+ *    Copyright (C) 2003 Gabest
+ *    http://www.gabest.org
  *
  *  This Program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -124,12 +124,12 @@ DEFINE_GUID(MEDIASUBTYPE_SIPR,
 
 enum 
 {
-	WAVE_FORMAT_14_4 = 0x2002,
-	WAVE_FORMAT_28_8 = 0x2003,
-	WAVE_FORMAT_ATRC = 0x0270, //WAVE_FORMAT_SONY_SCX,
-	WAVE_FORMAT_COOK = 0x2004,
-	WAVE_FORMAT_DNET = 0x2005,
-	WAVE_FORMAT_SIPR = 0x0130, //WAVE_FORMAT_SIPROLAB_ACEPLNET,
+    WAVE_FORMAT_14_4 = 0x2002,
+    WAVE_FORMAT_28_8 = 0x2003,
+    WAVE_FORMAT_ATRC = 0x0270, //WAVE_FORMAT_SONY_SCX,
+    WAVE_FORMAT_COOK = 0x2004,
+    WAVE_FORMAT_DNET = 0x2005,
+    WAVE_FORMAT_SIPR = 0x0130, //WAVE_FORMAT_SIPROLAB_ACEPLNET,
 };
 
 DEFINE_GUID(CLSID_FFDShow, 0x04FE9017, 0xf873, 0x410e, 0x87, 0x1e, 0xab, 0x91, 0x66, 0x1a, 0x4e, 0xf7);

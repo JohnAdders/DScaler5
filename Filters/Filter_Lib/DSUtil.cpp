@@ -23,48 +23,6 @@
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.5  2008/03/19 18:09:11  adcockj
-// Add better support for getting pitch as well as video width
-//
-// Revision 1.4  2007/11/30 18:06:48  adcockj
-// Initial go at h264 support
-//
-// Revision 1.3  2004/11/25 17:22:10  adcockj
-// Fixed some more connection issues
-//
-// Revision 1.2  2004/11/04 16:01:13  adcockj
-// Minor changes in preparation for Divx filter
-//
-// Revision 1.1  2004/10/28 15:52:24  adcockj
-// Moved video output pin code into new class
-//
-// Revision 1.6  2004/08/06 08:38:53  adcockj
-// Added optional YV12 output type
-//
-// Revision 1.5  2004/07/29 13:44:59  adcockj
-// More fixes for Laurent's issues
-//
-// Revision 1.4  2004/07/07 14:07:07  adcockj
-// Added ATSC subtitle support
-// Removed tabs
-// Fixed film flag handling of progressive frames
-//
-// Revision 1.3  2004/05/06 06:38:06  adcockj
-// Interim fixes for connection and PES streams
-//
-// Revision 1.2  2004/04/14 16:31:34  adcockj
-// Subpicture fixes, AFD started and minor fixes
-//
-// Revision 1.1  2004/02/06 12:17:16  adcockj
-// Major changes to the Libraries to remove ATL and replace with YACL
-// First draft of Mpeg2 video decoder filter
-// Broken DScalerFilter part converted to new library
-//
-///////////////////////////////////////////////////////////////////////////////
 
 
 #include "stdafx.h"

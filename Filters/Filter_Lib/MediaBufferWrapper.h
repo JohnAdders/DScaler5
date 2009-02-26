@@ -25,29 +25,29 @@
 /////////////////////////////////////////////////////////////////////////////
 // CMediaBufferWrapper
 class CMediaBufferWrapper : 
-	public IMediaBuffer
+    public IMediaBuffer
 {
 public:
 IMPLEMENT_UNKNOWN(CMediaBufferWrapper)
 
 BEGIN_INTERFACE_TABLE(CMediaBufferWrapper)
-	IMPLEMENTS_INTERFACE(IMediaBuffer)
+    IMPLEMENTS_INTERFACE(IMediaBuffer)
 END_INTERFACE_TABLE()
 
 public:
-	CMediaBufferWrapper();
-	~CMediaBufferWrapper();
+    CMediaBufferWrapper();
+    ~CMediaBufferWrapper();
 
 
 // IMediaBuffer
 public:
-	STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
-	STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
-	STDMETHOD(SetLength)(DWORD cbLength);
+    STDMETHOD(GetBufferAndLength)(BYTE** ppBuffer, DWORD* pcbLength);
+    STDMETHOD(GetMaxLength)(DWORD* pcbMaxLength);
+    STDMETHOD(SetLength)(DWORD cbLength);
     static IMediaBuffer* CreateBuffer(IMediaSample* Sample);
 
 protected:
-	SI(IMediaSample) m_pSample;
+    SI(IMediaSample) m_pSample;
 };
 
 

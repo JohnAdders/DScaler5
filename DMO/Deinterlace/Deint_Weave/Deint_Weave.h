@@ -17,16 +17,6 @@
 // GNU Library General Public License for more details
 //
 /////////////////////////////////////////////////////////////////////////////
-// CVS Log
-//
-// $Log: not supported by cvs2svn $
-// Revision 1.2  2003/10/31 17:19:37  adcockj
-// Added support for manual pulldown selection (works with Elecard Filters)
-//
-// Revision 1.1  2003/05/21 13:41:12  adcockj
-// Added new deinterlace methods
-//
-/////////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
@@ -37,12 +27,12 @@
 DEFINE_GUID(CLSID_CDeint_Weave, 0xCAAD7296, 0x8B6C, 0x11d7, 0xB8, 0x51, 0x00, 0x02, 0xA5, 0x62, 0x33, 0x77);
 
 class CDeint_Weave : 
-	public CDeintDMO,
+    public CDeintDMO,
     public IAmFreeSoftwareLicensed
 {
 public:
 IMPLEMENT_AGGREGATABLE_COCLASS(CDeint_Weave, "{CAAD7296-8B6C-11d7-B851-0002A5623377}", "Deint_Weave Class", "DMO.Deint_Weave.1", "DMO.Deint_Weave", "both")
-	IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
+    IMPLEMENTS_INTERFACE(IAmFreeSoftwareLicensed)
     IMPLEMENTS_INTERFACE(IMediaObject)
     IMPLEMENTS_INTERFACE(IMediaParams)
     IMPLEMENTS_INTERFACE(IMediaParamInfo)
@@ -55,8 +45,8 @@ IMPLEMENT_AGGREGATABLE_COCLASS(CDeint_Weave, "{CAAD7296-8B6C-11d7-B851-0002A5623
 END_INTERFACE_TABLE()
 
 public:
-    CDeint_Weave();	// Constructor
-    ~CDeint_Weave();	// Destructor
+    CDeint_Weave();    // Constructor
+    ~CDeint_Weave();    // Destructor
 
 BEGIN_PARAM_LIST()
 END_PARAM_LIST()
@@ -66,9 +56,9 @@ public:
 
 // IAmFreeSoftwareLicensed
 public:
-	STDMETHOD(get_Name)(BSTR* Name);
-	STDMETHOD(get_License)(eFreeLicense* License);
-	STDMETHOD(get_Authors)(BSTR* Authors);
+    STDMETHOD(get_Name)(BSTR* Name);
+    STDMETHOD(get_License)(eFreeLicense* License);
+    STDMETHOD(get_Authors)(BSTR* Authors);
 
 // IDeinterlace
 public:
