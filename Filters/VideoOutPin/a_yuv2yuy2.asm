@@ -35,8 +35,45 @@ segment .const
 
     .code
 
+proc _uvtonv12row_MMX, 0
+    %$dst arg
+    %$srcu arg
+    %$srcv arg
+    %$width arg
 
-proc _yuvtoyuy2row_MMX, 12
+    push    edi
+    push    ebx
+
+    mov        edi, [ebp+%$dst]
+    mov        eax, [ebp+%$srcu]
+    mov        ebx, [ebp+%$srcv]
+    mov        ecx, [ebp+%$width]
+
+    shr        ecx, 3
+
+uvtonv12row_loop:
+
+    movq        mm0, [eax]
+    movq        mm1, [ebx]
+    movq        mm2, mm0
+    punpcklbw    mm0, mm1
+    punpckhbw    mm2, mm1
+
+    movq        [edi], mm0
+    movq        [edi+8], mm2
+
+    add        eax, 8
+    add        ebx, 8
+    add        edi, 16
+
+    loop    uvtonv12row_loop
+
+    pop        ebx
+    pop        edi
+endproc
+
+
+proc _yuvtoyuy2row_MMX, 0
 
     %$dst arg
     %$srcy arg

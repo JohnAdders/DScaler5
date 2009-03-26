@@ -50,6 +50,7 @@ extern "C"
     void yuvtoyuy2row_avg2_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv);
     void memcpy_accel_SSE(void* dst, const void* src, size_t len);
     void memcpy_accel_MMX(void* dst, const void* src, size_t len);
+    void uvtonv12row_MMX(BYTE* dst, BYTE* srcu, BYTE* srcv, DWORD width);
 }
 
 bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
@@ -79,6 +80,16 @@ bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int 
     return(true);
 }
 
+void uvtonv12row_c(BYTE* dst, BYTE* srcu, BYTE* srcv, DWORD width)
+{
+    for(DWORD x(0); x < width; ++x)
+    {
+        *dst++ = *srcu++;
+        *dst++ = *srcv++;
+    }
+}
+
+
 bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {
     if(w&1) return(false);
@@ -92,14 +103,23 @@ bool BitBltFromI420ToNV12(int w, int h, BYTE* dsty, BYTE* dstuv, int dstpitch, B
     pitch >>= 1;
     srcpitch >>= 1;
 
+    void (*uvtonv12row)(BYTE* dst, BYTE* srcu, BYTE* srcv, DWORD width) = NULL;
+
+    if((CpuFeatureFlags & FEATURE_MMX) && !(srcpitch&7))
+    {
+        uvtonv12row = uvtonv12row_MMX;
+    }
+    else
+    {
+        uvtonv12row = uvtonv12row_c;
+    }
+
+    if(!uvtonv12row)
+        return(false);
 
     for(y = 0; y < h; y+=2, srcu += srcpitch, srcv += srcpitch, dstuv += dstpitch)
     {
-        for(int x(0); x < pitch; ++x)
-        {
-            dstuv[2*x] = srcu[x];
-            dstuv[2*x + 1] = srcv[x];
-        }
+        uvtonv12row(dstuv, srcu, srcv, srcpitch);
     }
 
     if(CpuFeatureFlags & FEATURE_MMX)
