@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -276,22 +276,22 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
     {
         TypeNum += 2 * VariationsPerType;
     }
-    
+
 
     // this will make sure we won't connect to the old renderer in dvd mode
     // that renderer can't switch the format dynamically
     if(TypeNum < 0) return E_INVALIDARG;
     if(VideoControlFlags & VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER)
     {
-        // there should be no reason why 
+        // there should be no reason why
         // anything that doesn't support YUY2 or YV12 need the
         // stupid old RGB types
-        if(TypeNum >= VariationsPerType * 3) 
+        if(TypeNum >= VariationsPerType * 3)
             return VFW_S_NO_MORE_ITEMS;
     }
     else
     {
-        if(TypeNum >= (int)(VariationsPerType * countof(fmts))) 
+        if(TypeNum >= (int)(VariationsPerType * countof(fmts)))
             return VFW_S_NO_MORE_ITEMS;
     }
 
@@ -357,7 +357,7 @@ HRESULT CDSVideoOutPin::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum,
             vih->dwControlFlags |= 8;
         }
         pmt->pbFormat = (BYTE*)vih;
-        pmt->cbFormat = sizeof(VIDEOINFOHEADER2);       
+        pmt->cbFormat = sizeof(VIDEOINFOHEADER2);
         SetRect(&vih->rcSource, 0, 0, m_Width, m_Height);
         SetRect(&vih->rcTarget, 0, 0, 0, 0);
     }
@@ -549,11 +549,11 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
 {
     HRESULT hr = S_OK;
 
-    m_NeedToAttachFormat = false; 
+    m_NeedToAttachFormat = false;
 
-    if((m_Width != m_CurrentWidth) || 
-        (m_Height != m_CurrentHeight) || 
-        (m_AspectX != m_CurrentAspectX) || 
+    if((m_Width != m_CurrentWidth) ||
+        (m_Height != m_CurrentHeight) ||
+        (m_AspectX != m_CurrentAspectX) ||
         (m_AspectY != m_CurrentAspectY))
     {
         m_InsideReconnect = true;
@@ -579,12 +579,12 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
         }
 
         m_InsideReconnect = false;
-    
+
 
         m_CurrentWidth = m_Width;
         m_CurrentHeight = m_Height;
-        m_CurrentAspectX = m_AspectX; 
-        m_CurrentAspectY = m_AspectY; 
+        m_CurrentAspectX = m_AspectX;
+        m_CurrentAspectY = m_AspectY;
     }
     return hr;
 }
@@ -674,7 +674,7 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
         hr = m_ConnectedPin->BeginFlush();
         LOG(DBGLOG_FLOW, ("BeginFlush %08x\n", hr));
         CHECK(hr);
-        
+
         hr = m_ConnectedPin->EndFlush();
         LOG(DBGLOG_FLOW, ("EndFlush %08x\n", hr));
         CHECK(hr);
@@ -703,13 +703,13 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
         // if the new type would be greater than the old one then
         // we need to reconnect otherwise just attach the type to the next sample
         if(bmi->biSizeImage > (DWORD)AllocatorProps.cbBuffer)
-        {   
+        {
             hr = m_Allocator->Decommit();
 
             ALLOCATOR_PROPERTIES PropsAct;
             AllocatorProps.cbBuffer = bmi->biSizeImage;
             hr = m_Allocator->SetProperties(&AllocatorProps, &PropsAct);
-            CHECK(hr);     
+            CHECK(hr);
             LOG(DBGLOG_FLOW, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
 
             LOG(DBGLOG_FLOW, ("Decommit %08x\n", hr));
@@ -718,7 +718,7 @@ HRESULT CDSVideoOutPin::ReconnectVMR()
     }
     else
     {
-        m_NeedToAttachFormat = true; 
+        m_NeedToAttachFormat = true;
     }
 
     return hr;
@@ -756,7 +756,7 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
     bmi->biYPelsPerMeter = m_Height * m_AspectX;
     Simplify(bmi->biXPelsPerMeter, bmi->biYPelsPerMeter);
 
-    if((m_Width != m_CurrentWidth) || 
+    if((m_Width != m_CurrentWidth) ||
         (m_Height != m_CurrentHeight))
     {
 
@@ -807,7 +807,7 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
 
         hr = SetType(&m_InternalMT);
         CHECK(hr);
-        
+
         m_InsideReconnect = true;
         hr = NegotiateAllocator(NULL);
         m_InsideReconnect = false;
@@ -824,7 +824,7 @@ HRESULT CDSVideoOutPin::ReconnectOverlay()
     else
     {
         // only an aspect ratio change so just use the format
-        m_NeedToAttachFormat = true; 
+        m_NeedToAttachFormat = true;
     }
 
     return hr;
@@ -959,7 +959,7 @@ HRESULT CDSVideoOutPin::ReconnectWM10()
     m_InternalMT.bFixedSizeSamples = 1;
     m_InternalMT.lSampleSize = bmi->biSizeImage;
 
-    m_NeedToAttachFormat = true; 
+    m_NeedToAttachFormat = true;
     return S_OK;
 }
 
@@ -970,7 +970,7 @@ HRESULT CDSVideoOutPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME
     // cope with dynamic format changes from the renderer
     // we care about this when we think we need to change the format
     // and the video renderer sends up a new format too
-    // calling AdjustRenderersMediaType again will merge the two 
+    // calling AdjustRenderersMediaType again will merge the two
     // formats properly and should never call NegotiateAllocator
     if(hr == S_FALSE)
     {
@@ -993,16 +993,16 @@ HRESULT CDSVideoOutPin::GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME
 void CDSVideoOutPin::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType)
 {
     int wout = 0, hout = 0, pitch = 0;
-    long arxout = 0, aryout = 0; 
-    ExtractDim(pMediaType, wout, hout, arxout, aryout, pitch); 
+    long arxout = 0, aryout = 0;
+    ExtractDim(pMediaType, wout, hout, arxout, aryout, pitch);
     if(wout == m_Width && abs(hout) == m_Height &&
         arxout == m_AspectX &&
         aryout == m_AspectY)
     {
-        m_CurrentWidth = wout; 
-        m_CurrentHeight = abs(hout); 
-        m_CurrentAspectX = arxout; 
-        m_CurrentAspectY = aryout; 
+        m_CurrentWidth = wout;
+        m_CurrentHeight = abs(hout);
+        m_CurrentAspectX = arxout;
+        m_CurrentAspectY = aryout;
     }
 }
 
@@ -1029,7 +1029,7 @@ HRESULT CDSVideoOutPin::AdjustRenderersMediaType()
 {
     HRESULT hr = S_OK;
 
-    m_NeedToAttachFormat = true; 
+    m_NeedToAttachFormat = true;
 
     CopyMediaType(&m_InternalMT, GetMediaType());
 
@@ -1121,7 +1121,7 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
             if(pitch > wout)
             {
                 SetType(pmt);
-                m_NeedToAttachFormat = true; 
+                m_NeedToAttachFormat = true;
             }
         }
         return S_OK;

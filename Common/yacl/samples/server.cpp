@@ -37,7 +37,7 @@ public:
             *ppv = static_cast<IUnknown*>(this);
         else if (riid == IID_IHello)
             *ppv = static_cast<IHello*>(this);
-        else 
+        else
             return (*ppv = 0), E_NOINTERFACE;
         ((IUnknown*)*ppv)->AddRef();
         return S_OK;
@@ -64,7 +64,7 @@ public:
     }
 
 // implement static CreateInstance(IUnknown *, REFIID, void**)
-    static HRESULT STDAPICALLTYPE CreateInstance(IUnknown *pUnkOuter, 
+    static HRESULT STDAPICALLTYPE CreateInstance(IUnknown *pUnkOuter,
                                                  REFIID riid, void**ppv)
     {
         *ppv = 0;
@@ -97,7 +97,7 @@ public:
 
 class Hello : IHello
 {
-public:    
+public:
 // implement UpdateRegistry(HINSTANCE hInstance, BOOL bInstalling)
     BEGIN_CLASS_REGISTRY_TABLE(Hello)
         REGISTRY_KEY(HKEY_CLASSES_ROOT, "HelloLib.Hello.1", 0, "Hello Class", REGFLAG_DELETE_BEFORE_REGISTERING)

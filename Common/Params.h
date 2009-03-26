@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 
 #define BEGIN_PARAM_LIST() private: \
     ParamInfo* _GetParamList(DWORD* pCount = NULL) { \
-        static ParamInfo _params[] = { 
+        static ParamInfo _params[] = {
 
 #define DEFINE_PARAM_INT(min, max, neutral, unit, label) {{MPT_INT, 0, min, max, neutral, unit, label, }, neutral,},
 #define DEFINE_PARAM_FLOAT(min, max, neutral, unit, label) {{MPT_FLOAT, 0, min, max, neutral, unit, label,}, neutral,},
@@ -41,7 +41,7 @@
 #define GetParamBool(Index) ((BOOL)_GetParamList()[Index].Value)
 #define GetParamEnum(Index) ((long)_GetParamList()[Index].Value)
 
-class CParams : 
+class CParams :
     public IMediaParamInfo,
     public IMediaParams,
     public IPersistStream,
@@ -233,7 +233,7 @@ public:
         // \todo get working if required
         return E_NOTIMPL;
     }
-    
+
     // IPersistStream Methods
     STDMETHOD(IsDirty)()
     {
@@ -335,7 +335,7 @@ public:
         {
             return E_UNEXPECTED;
         }
-         
+
         for(DWORD i(0); i < ParamCount; ++i)
         {
             if(Params[i].MParamInfo.mpType != MPT_FLOAT)
@@ -367,7 +367,7 @@ public:
         {
             return E_UNEXPECTED;
         }
-         
+
         if(ParamIndex < ParamCount)
         {
             if(Params[ParamIndex].MParamInfo.mpType != MPT_FLOAT)
@@ -399,7 +399,7 @@ public:
         {
             return E_UNEXPECTED;
         }
-        
+
         for(DWORD i(0); i < ParamCount; ++i)
         {
             if(Params[i].MParamInfo.mpType != MPT_FLOAT)

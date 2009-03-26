@@ -17,9 +17,9 @@
 
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
-/* Forward Declarations */ 
+/* Forward Declarations */
 
 #ifndef __IHello_FWD_DEFINED__
 #define __IHello_FWD_DEFINED__
@@ -106,7 +106,7 @@ typedef struct OldPugCat OldPugCat;
 
 
 void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
-void __RPC_USER MIDL_user_free( void __RPC_FAR * ); 
+void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 
 #ifndef __HelloLib_LIBRARY_DEFINED__
@@ -117,7 +117,7 @@ void __RPC_USER MIDL_user_free( void __RPC_FAR * );
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [helpstring][version][uuid] */ 
+/* [helpstring][version][uuid] */
 
 
 
@@ -131,42 +131,42 @@ EXTERN_C const IID LIBID_HelloLib;
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_IHello;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E1-A38F-11d0-8C2F-0080C73925BA")
     IHello : public IUnknown
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE HelloWorld( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct IHelloVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             IHello __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             IHello __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             IHello __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *HelloWorld )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *HelloWorld )(
             IHello __RPC_FAR * This);
-        
+
         END_INTERFACE
     } IHelloVtbl;
 
@@ -175,7 +175,7 @@ EXTERN_C const IID IID_IHello;
         CONST_VTBL struct IHelloVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -200,7 +200,7 @@ EXTERN_C const IID IID_IHello;
 
 
 
-HRESULT STDMETHODCALLTYPE IHello_HelloWorld_Proxy( 
+HRESULT STDMETHODCALLTYPE IHello_HelloWorld_Proxy(
     IHello __RPC_FAR * This);
 
 
@@ -223,42 +223,42 @@ void __RPC_STUB IHello_HelloWorld_Stub(
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_IAnimal;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E2-A38F-11d0-8C2F-0080C73925BA")
     IAnimal : public IUnknown
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Eat( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct IAnimalVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             IAnimal __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             IAnimal __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             IAnimal __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )(
             IAnimal __RPC_FAR * This);
-        
+
         END_INTERFACE
     } IAnimalVtbl;
 
@@ -267,7 +267,7 @@ EXTERN_C const IID IID_IAnimal;
         CONST_VTBL struct IAnimalVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -292,7 +292,7 @@ EXTERN_C const IID IID_IAnimal;
 
 
 
-HRESULT STDMETHODCALLTYPE IAnimal_Eat_Proxy( 
+HRESULT STDMETHODCALLTYPE IAnimal_Eat_Proxy(
     IAnimal __RPC_FAR * This);
 
 
@@ -315,45 +315,45 @@ void __RPC_STUB IAnimal_Eat_Stub(
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_IDog;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E3-A38F-11d0-8C2F-0080C73925BA")
     IDog : public IAnimal
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Bark( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct IDogVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             IDog __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             IDog __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             IDog __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )(
             IDog __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )(
             IDog __RPC_FAR * This);
-        
+
         END_INTERFACE
     } IDogVtbl;
 
@@ -362,7 +362,7 @@ EXTERN_C const IID IID_IDog;
         CONST_VTBL struct IDogVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -391,7 +391,7 @@ EXTERN_C const IID IID_IDog;
 
 
 
-HRESULT STDMETHODCALLTYPE IDog_Bark_Proxy( 
+HRESULT STDMETHODCALLTYPE IDog_Bark_Proxy(
     IDog __RPC_FAR * This);
 
 
@@ -414,45 +414,45 @@ void __RPC_STUB IDog_Bark_Stub(
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_ICat;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E4-A38F-11d0-8C2F-0080C73925BA")
     ICat : public IAnimal
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE IgnoreMaster( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct ICatVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             ICat __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             ICat __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             ICat __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )(
             ICat __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *IgnoreMaster )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *IgnoreMaster )(
             ICat __RPC_FAR * This);
-        
+
         END_INTERFACE
     } ICatVtbl;
 
@@ -461,7 +461,7 @@ EXTERN_C const IID IID_ICat;
         CONST_VTBL struct ICatVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -490,7 +490,7 @@ EXTERN_C const IID IID_ICat;
 
 
 
-HRESULT STDMETHODCALLTYPE ICat_IgnoreMaster_Proxy( 
+HRESULT STDMETHODCALLTYPE ICat_IgnoreMaster_Proxy(
     ICat __RPC_FAR * This);
 
 
@@ -513,48 +513,48 @@ void __RPC_STUB ICat_IgnoreMaster_Stub(
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_IPug;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E5-A38F-11d0-8C2F-0080C73925BA")
     IPug : public IDog
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE Snore( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct IPugVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             IPug __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             IPug __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             IPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )(
             IPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )(
             IPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Snore )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Snore )(
             IPug __RPC_FAR * This);
-        
+
         END_INTERFACE
     } IPugVtbl;
 
@@ -563,7 +563,7 @@ EXTERN_C const IID IID_IPug;
         CONST_VTBL struct IPugVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -596,7 +596,7 @@ EXTERN_C const IID IID_IPug;
 
 
 
-HRESULT STDMETHODCALLTYPE IPug_Snore_Proxy( 
+HRESULT STDMETHODCALLTYPE IPug_Snore_Proxy(
     IPug __RPC_FAR * This);
 
 
@@ -619,51 +619,51 @@ void __RPC_STUB IPug_Snore_Stub(
  * at Mon Mar 31 02:21:48 1997
  * using MIDL 3.01.75
  ****************************************/
-/* [uuid][oleautomation][object] */ 
+/* [uuid][oleautomation][object] */
 
 
 
 EXTERN_C const IID IID_IOldPug;
 
 #if defined(__cplusplus) && !defined(CINTERFACE)
-    
+
     interface DECLSPEC_UUID("DABA24E6-A38F-11d0-8C2F-0080C73925BA")
     IOldPug : public IPug
     {
     public:
         virtual HRESULT STDMETHODCALLTYPE SnoreLoudly( void) = 0;
-        
+
     };
-    
+
 #else     /* C style interface */
 
     typedef struct IOldPugVtbl
     {
         BEGIN_INTERFACE
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *QueryInterface )(
             IOldPug __RPC_FAR * This,
             /* [in] */ REFIID riid,
             /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *AddRef )(
             IOldPug __RPC_FAR * This);
-        
-        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )( 
+
+        ULONG ( STDMETHODCALLTYPE __RPC_FAR *Release )(
             IOldPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Eat )(
             IOldPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Bark )(
             IOldPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Snore )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Snore )(
             IOldPug __RPC_FAR * This);
-        
-        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SnoreLoudly )( 
+
+        HRESULT ( STDMETHODCALLTYPE __RPC_FAR *SnoreLoudly )(
             IOldPug __RPC_FAR * This);
-        
+
         END_INTERFACE
     } IOldPugVtbl;
 
@@ -672,7 +672,7 @@ EXTERN_C const IID IID_IOldPug;
         CONST_VTBL struct IOldPugVtbl __RPC_FAR *lpVtbl;
     };
 
-    
+
 
 #ifdef COBJMACROS
 
@@ -709,7 +709,7 @@ EXTERN_C const IID IID_IOldPug;
 
 
 
-HRESULT STDMETHODCALLTYPE IOldPug_SnoreLoudly_Proxy( 
+HRESULT STDMETHODCALLTYPE IOldPug_SnoreLoudly_Proxy(
     IOldPug __RPC_FAR * This);
 
 

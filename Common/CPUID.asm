@@ -69,13 +69,13 @@ proc _CPU_SetupFeatureFlag, 12
     xor    ecx, ecx
     xor    edx, edx
     cpuid
-    
+
     mov [_CpuFeatureFlags],  dword FEATURE_CPUID
 
     ; Step 2: Check if CPUID supports function 1 (signature/std features)
     xor     eax, eax                      ; CPUID function #0
     cpuid                                 ; largest std func/vendor string
-    mov     dword [ebp - 12], ebx         ; save 
+    mov     dword [ebp - 12], ebx         ; save
     mov     dword [ebp - 8], edx          ;  vendor
     mov     dword [ebp - 4], ecx          ;   string
     test    eax, eax                      ; largest standard function==0?
@@ -83,7 +83,7 @@ proc _CPU_SetupFeatureFlag, 12
     or      [_CpuFeatureFlags], dword FEATURE_STD_FEATURES ; does have standard features
 
     ; Step 3: Get standard feature flags and signature
-    mov     eax, 1                        ; CPUID function #1 
+    mov     eax, 1                        ; CPUID function #1
     cpuid                                 ; get signature/std feature flgs
     mov     [esp], eax                    ; save processor signature
 
@@ -100,7 +100,7 @@ proc _CPU_SetupFeatureFlag, 12
     mov     ecx, CPUID_STD_MMX            ; bit 23 indicates MMX support
     and     ecx, edx                      ; supports MMX ? CPUID_STD_MMX:0
     neg     ecx                           ; supports MMX ? CY : NC
-    sbb     ecx, ecx                      ; supports MMX ? 0xffffffff:0  
+    sbb     ecx, ecx                      ; supports MMX ? 0xffffffff:0
     and     ecx, FEATURE_MMX              ; supports MMX ? FEATURE_MMX:0
     or      [_CpuFeatureFlags], ecx                 ; merge into feature flags
 
@@ -126,7 +126,7 @@ proc _CPU_SetupFeatureFlag, 12
     and     ecx, edx                      ; supports SSE ? CPUID_STD_SSE:0
     neg     ecx                           ; supports SSE ? CY : NC
     sbb     ecx, ecx                      ; supports SSE ? 0xffffffff:0
-    and     ecx, (FEATURE_MMXEXT+FEATURE_SSEFP+FEATURE_SSE) ; supports SSE ? 
+    and     ecx, (FEATURE_MMXEXT+FEATURE_SSEFP+FEATURE_SSE) ; supports SSE ?
                                        ; FEATURE_MMXEXT+FEATURE_SSEFP:0
     or      [_CpuFeatureFlags], ecx                 ; merge into feature flags
 
@@ -135,7 +135,7 @@ proc _CPU_SetupFeatureFlag, 12
     and     ecx, edx                      ; supports SSE2 ? CPUID_STD_SSE2:0
     neg     ecx                           ; supports SSE2 ? CY : NC
     sbb     ecx, ecx                      ; supports SSE2 ? 0xffffffff:0
-    and     ecx, (FEATURE_SSE2)           ; supports SSE2 ? 
+    and     ecx, (FEATURE_SSE2)           ; supports SSE2 ?
                                        ; FEATURE_SSE2:0
     or      [_CpuFeatureFlags], ecx                 ; merge into feature flags
 
@@ -146,11 +146,11 @@ proc _CPU_SetupFeatureFlag, 12
     jbe     NEAR no_extended_features         ; yes, no extended feature flags
     or      [_CpuFeatureFlags], dword FEATURE_EXT_FEATURES ; does have ext. feature flags
 
-    ; Step 6: Get extended feature flags 
+    ; Step 6: Get extended feature flags
     mov     eax, 0x80000001               ; CPUID ext. function 0x80000001
     cpuid                                 ; EDX = extended feature flags
 
-    ; Step 7: Extract vendor independent features from extended flags 
+    ; Step 7: Extract vendor independent features from extended flags
     ; Check for 3DNow! support (vendor independent)
     mov     ecx, CPUID_EXT_3DNOW          ; bit 31 indicates 3DNow! supprt
     and     ecx, edx                      ; supp 3DNow! ?CPUID_EXT_3DNOW:0
@@ -162,7 +162,7 @@ proc _CPU_SetupFeatureFlag, 12
     ; Step 8: Determine CPU vendor
     ; \todo check these 2 lines
     mov     esi, vendorAMD                ; AMD's vendor string
-    mov     edi, ebp                      
+    mov     edi, ebp
     sub     edi, 12                       ; this CPU's vendor string
     mov     ecx, 12                       ; strings are 12 characters
     cld                                   ; compare lowest to highest
@@ -171,7 +171,7 @@ proc _CPU_SetupFeatureFlag, 12
 
     ; Step 9: Check AMD specific extended features
     mov     ecx, CPUID_EXT_AMD_3DNOWEXT   ; bit 30 indicates 3DNow! ext.
-    and     ecx, edx                      ; 3DNow! ext? 
+    and     ecx, edx                      ; 3DNow! ext?
     neg     ecx                           ; 3DNow! ext ? CY : NC
     sbb     ecx, ecx                      ; 3DNow! ext ? 0xffffffff : 0
     and     ecx, FEATURE_3DNOWEXT         ; 3DNow! ext?FEATURE_3DNOWEXT:0
@@ -180,7 +180,7 @@ proc _CPU_SetupFeatureFlag, 12
     test    [_CpuFeatureFlags], dword FEATURE_MMXEXT      ; determined SSE MMX support?
     jnz     has_mmxext                   ; yes, don't need to check again
 
-    ; Check support for AMD's multimedia instruction set additions 
+    ; Check support for AMD's multimedia instruction set additions
 
     mov     ecx, CPUID_EXT_AMD_MMXEXT     ; bit 22 indicates MMX extension
     and     ecx, edx                      ; MMX ext?CPUID_EXT_AMD_MMXEXT:0
@@ -192,7 +192,7 @@ proc _CPU_SetupFeatureFlag, 12
 $has_mmxext:
 
     ; Step 10: Check AMD-specific features not reported by CPUID
-    ; Check support for AMD-K6 processor-style MTRRs          
+    ; Check support for AMD-K6 processor-style MTRRs
     mov     eax, [esp]   ; get processor signature
     and     eax, 0xFFF         ; extract family/model/stepping
     cmp     eax, 0x588         ; CPU < AMD-K6-2/CXT ? CY : NC
@@ -200,9 +200,9 @@ $has_mmxext:
     not     edx            ; CPU < AMD-K6-2/CXT ? 0:0xffffffff
     cmp     eax, 0x600         ; CPU < AMD Athlon ? CY : NC
     sbb     ecx, ecx       ; CPU < AMD-K6 ? 0xffffffff:0
-    and     ecx, edx       ; (CPU>=AMD-K6-2/CXT)&& 
+    and     ecx, edx       ; (CPU>=AMD-K6-2/CXT)&&
             ; (CPU<AMD Athlon) ? 0xffffffff:0
-    and     ecx, FEATURE_K6_MTRR   ; (CPU>=AMD-K6-2/CXT)&& 
+    and     ecx, FEATURE_K6_MTRR   ; (CPU>=AMD-K6-2/CXT)&&
             ; (CPU<AMD Athlon) ? FEATURE_K6_MTRR:0
     or      [_CpuFeatureFlags], ecx         ; merge into feature flags
 
@@ -213,7 +213,7 @@ not_AMD:
 no_extended_features:
 no_standard_features:
 all_done:
-    
+
 endproc
 
 proc _EndMMX, 0

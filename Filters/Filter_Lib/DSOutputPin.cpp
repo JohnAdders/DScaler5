@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -64,7 +64,7 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         {
             ClearMediaType(&ProposedType);
             return VFW_E_NO_ACCEPTABLE_TYPES;
-        } 
+        }
 
         // we got to the end of the list
         if(hr == VFW_S_NO_MORE_ITEMS)
@@ -80,7 +80,7 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
         if(pmt != NULL)
         {
             if((pmt->majortype != GUID_NULL && pmt->majortype != ProposedType.majortype) ||
-                (pmt->subtype != GUID_NULL && pmt->subtype != ProposedType.subtype) || 
+                (pmt->subtype != GUID_NULL && pmt->subtype != ProposedType.subtype) ||
                 (pmt->formattype != GUID_NULL && pmt->formattype != ProposedType.formattype))
             {
                 ++TypeNum;
@@ -95,7 +95,7 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
             hr = SetType(&ProposedType);
             if(SUCCEEDED(hr))
             {
-                hr = NegotiateAllocator(pReceivePin);    
+                hr = NegotiateAllocator(pReceivePin);
                 if(SUCCEEDED(hr))
                 {
                     break;
@@ -107,11 +107,11 @@ STDMETHODIMP CDSOutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
                 }
             }
         }
-        
+
         ++TypeNum;
         ClearMediaType(&ProposedType);
     }
-    
+
 
     ClearMediaType(&ProposedType);
 
@@ -351,7 +351,7 @@ STDMETHODIMP CDSOutputPin::ConvertTimeFormat(
     return MediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
 }
 
-STDMETHODIMP CDSOutputPin::SetPositions( 
+STDMETHODIMP CDSOutputPin::SetPositions(
                         LONGLONG *pCurrent,
                         DWORD dwCurrentFlags,
                         LONGLONG *pStop,
@@ -511,7 +511,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin)
         if(!m_Allocator)
         {
             m_Allocator = m_MyMemAlloc;
-            
+
             hr = NegotiateBufferSize(pReceivePin);
             if(FAILED(hr))
             {
@@ -573,7 +573,7 @@ HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin)
     hr = m_MemInputPin->GetAllocatorRequirements(&Props);
     if(FAILED(hr))
     {
-        // if the pin doen't want to tell up what it wants 
+        // if the pin doen't want to tell up what it wants
         // then see what the current allocator setup is
         if(hr == E_NOTIMPL)
         {
@@ -609,7 +609,7 @@ HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin)
 
     // \todo see if we need this rubbish
     // the old video renderer seems to set things up with
-    // an alignment of 16 
+    // an alignment of 16
     // that it's own allocator doesn't in fact support so
     // we loop down until we find an alignment it does like
     while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)

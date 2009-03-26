@@ -18,7 +18,7 @@ void png_read_init(png_struct *png_ptr)
 {
    /* reset all variables to 0 */
     memset(png_ptr, 0, sizeof (png_struct));
-    
+
     /* initialize zbuf - compression buffer */
     png_ptr->zbuf_size = PNG_ZBUF_SIZE;
     png_ptr->zbuf = (png_bytep)png_malloc(png_ptr,
@@ -26,7 +26,7 @@ void png_read_init(png_struct *png_ptr)
     png_ptr->zstream.zalloc = png_zalloc;
     png_ptr->zstream.zfree = png_zfree;
     png_ptr->zstream.opaque = (voidpf)png_ptr;
-    
+
     switch (inflateInit(&png_ptr->zstream))
         {
         case Z_OK: /* Do nothing */ break;
@@ -35,7 +35,7 @@ void png_read_init(png_struct *png_ptr)
         case Z_VERSION_ERROR: png_error(png_ptr, "zlib version"); break;
         default: png_error(png_ptr, "Unknown zlib error");
    }
-    
+
     png_ptr->zstream.next_out = png_ptr->zbuf;
     png_ptr->zstream.avail_out = (uInt)png_ptr->zbuf_size;
 }
@@ -461,7 +461,7 @@ png_read_row(png_structp png_ptr, png_bytep row, png_bytep dsp_row)
 
    png_memcpy_check(png_ptr, png_ptr->prev_row, png_ptr->row_buf,
       png_ptr->rowbytes + 1);
-   
+
 #if defined(PNG_MNG_FEATURES_SUPPORTED)
    if((png_ptr->mng_features_permitted & PNG_FLAG_MNG_FILTER_64) &&
       (png_ptr->filter_type == PNG_INTRAPIXEL_DIFFERENCING))

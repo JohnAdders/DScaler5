@@ -4,7 +4,7 @@
 //
 // This file contains the class definition of GenericClassFactory,
 // that implements IClassFactory in terms of a function:
-//    
+//
 //    HRESULT STDAPICALLTYPE CreateInstance(IUnknown*, REFIID, void**)
 //
 
@@ -14,7 +14,7 @@
 #include <windows.h>
 #include "gencf.h"
 
-STDMETHODIMP 
+STDMETHODIMP
 GenericClassFactory::QueryInterface(REFIID riid, void **ppv)
 {
     if (riid == IID_IUnknown || riid == IID_IClassFactory)
@@ -45,7 +45,7 @@ GenericClassFactory::Release(void)
     return 1;
 }
 
-STDMETHODIMP 
+STDMETHODIMP
 GenericClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv)
 {
     extern BOOL STDAPICALLTYPE ModuleIsStopping(void);
@@ -62,7 +62,7 @@ GenericClassFactory::CreateInstance(IUnknown *pUnkOuter, REFIID riid, void **ppv
     return hr;
 }
 
-STDMETHODIMP 
+STDMETHODIMP
 GenericClassFactory::LockServer(BOOL bLock)
 {
     extern void STDAPICALLTYPE ModuleAddRef(void);

@@ -2,13 +2,13 @@
 //
 // ustring.cpp - Copyright 1997, Don Box
 //
-// This file contains the implementation of several conversion routines 
+// This file contains the implementation of several conversion routines
 // that are used by the String816 class for duplicating/converting strings
 // on the fly.
 //
 //     uxdup(const char *psz) - returns a new-ed wchar_t string based on psz
 //     uxdup(const wchar_t *psz) - returns a new-ed char string based on psz
-//     
+//
 
 #ifndef _USTRING_CPP
 #define _USTRING_CPP

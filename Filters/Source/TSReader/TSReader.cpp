@@ -13,7 +13,7 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@ CTSReader::CTSReader() :
     CDSBaseFilter(L"TSReader Filter", 0, 1)
 {
     LOG(DBGLOG_FLOW, ("CTSReader::CreatePins\n"));
-    
+
     m_OutPin = new CTSReaderOutPin();
     if(m_OutPin == NULL)
     {
@@ -192,7 +192,7 @@ HRESULT CTSReader::Activate()
 
         HRESULT hr = m_OutPin->GetConnectedFilter()->FindPin(L"Audio", AudioPin.GetReleasedInterfaceReference());
         CHECK(hr);
-        
+
         hr = m_OutPin->GetConnectedFilter()->FindPin(L"Video", VideoPin.GetReleasedInterfaceReference());
         CHECK(hr);
 
@@ -226,7 +226,7 @@ HRESULT CTSReader::Activate()
                     ULONG PidToMap = m_PSIDataArray[i]->m_AudioPid;
                     hr = PIDMap->MapPID(1, &PidToMap, MEDIA_ELEMENTARY_STREAM);
                     CHECK(hr);
-                    
+
                     SI(IPin) AudioInPin;
                     hr = AudioPin->ConnectedTo(AudioInPin.GetReleasedInterfaceReference());
                     CHECK(hr);
@@ -247,10 +247,10 @@ HRESULT CTSReader::Activate()
 
     m_ThreadRetCode = S_OK;
 
-    m_WorkerThread = CreateThread(NULL, 0, 
-            (LPTHREAD_START_ROUTINE) ProcessingThread, 
+    m_WorkerThread = CreateThread(NULL, 0,
+            (LPTHREAD_START_ROUTINE) ProcessingThread,
             this,  // pass event handle
-            0, &m_ThreadId); 
+            0, &m_ThreadId);
 
     return hr;
 }
@@ -367,12 +367,12 @@ AM_MEDIA_TYPE* CTSReader::GetAC3MediaType()
     MediaType.subtype = MEDIASUBTYPE_DOLBY_AC3;
     MediaType.formattype = FORMAT_WaveFormatEx;
     static WAVEFORMATEX wfe;
-    wfe.wFormatTag = 0; 
-    wfe.nChannels = 2; 
-    wfe.nSamplesPerSec = 48000; 
-    wfe.nAvgBytesPerSec = 0; 
-    wfe.nBlockAlign = 0; 
-    wfe.wBitsPerSample = 16; 
+    wfe.wFormatTag = 0;
+    wfe.nChannels = 2;
+    wfe.nSamplesPerSec = 48000;
+    wfe.nAvgBytesPerSec = 0;
+    wfe.nBlockAlign = 0;
+    wfe.wBitsPerSample = 16;
     wfe.cbSize = 0;
     MediaType.cbFormat = sizeof(wfe);
     MediaType.pbFormat = (BYTE*)&wfe;
@@ -388,12 +388,12 @@ AM_MEDIA_TYPE* CTSReader::GetMPAMediaType()
     MediaType.subtype = MEDIASUBTYPE_MPEG1Payload;
     MediaType.formattype = FORMAT_WaveFormatEx;
     static WAVEFORMATEX wfe;
-    wfe.wFormatTag = 80; 
-    wfe.nChannels = 2; 
-    wfe.nSamplesPerSec = 48000; 
-    wfe.nAvgBytesPerSec = 0; 
-    wfe.nBlockAlign = 0; 
-    wfe.wBitsPerSample = 16; 
+    wfe.wFormatTag = 80;
+    wfe.nChannels = 2;
+    wfe.nSamplesPerSec = 48000;
+    wfe.nAvgBytesPerSec = 0;
+    wfe.nBlockAlign = 0;
+    wfe.wBitsPerSample = 16;
     wfe.cbSize = 0;
     MediaType.cbFormat = sizeof(wfe);
     MediaType.pbFormat = (BYTE*)&wfe;
@@ -409,12 +409,12 @@ AM_MEDIA_TYPE* CTSReader::GetAACMediaType()
     MediaType.subtype = MEDIASUBTYPE_MP4A;
     MediaType.formattype = FORMAT_WaveFormatEx;
     static WAVEFORMATEX wfe;
-    wfe.wFormatTag = 80; 
-    wfe.nChannels = 2; 
-    wfe.nSamplesPerSec = 48000; 
-    wfe.nAvgBytesPerSec = 0; 
-    wfe.nBlockAlign = 0; 
-    wfe.wBitsPerSample = 16; 
+    wfe.wFormatTag = 80;
+    wfe.nChannels = 2;
+    wfe.nSamplesPerSec = 48000;
+    wfe.nAvgBytesPerSec = 0;
+    wfe.nBlockAlign = 0;
+    wfe.wBitsPerSample = 16;
     wfe.cbSize = 0;
     MediaType.cbFormat = sizeof(wfe);
     MediaType.pbFormat = (BYTE*)&wfe;
@@ -427,7 +427,7 @@ HRESULT CTSReader::Render(IPin* pPin, IGraphBuilder* pGraphBuilder)
 
     HRESULT hr = MpegDemuxFilter.CreateInstance(CLSID_MPEG2Demultiplexer);
     CHECK(hr);
-    
+
     hr = pGraphBuilder->AddFilter(MpegDemuxFilter.GetNonAddRefedInterface(), L"MPEG-2 Demultiplexer");
     CHECK(hr);
 
@@ -461,7 +461,7 @@ HRESULT CTSReader::Render(IPin* pPin, IGraphBuilder* pGraphBuilder)
 
     hr = analyseFilter.CreateInstance(CLSID_Mpeg2VideoStreamAnalyzer);
     CHECK(hr);
-    
+
     hr = pGraphBuilder->AddFilter(analyseFilter.GetNonAddRefedInterface(), L"MPEG-2 Analyser");
     CHECK(hr);
 
@@ -664,7 +664,7 @@ HRESULT CTSReader::PushFile(HANDLE hFile)
         CHECK(hr);
         // Access the sample's data buffer
         BYTE* pData;
-        
+
         hr = OutSample->GetPointer(&pData);
         CHECK(hr);
         hr = OutSample->SetActualDataLength(188);

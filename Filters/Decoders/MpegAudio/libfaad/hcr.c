@@ -1,19 +1,19 @@
 /*
 ** FAAD2 - Freeware Advanced Audio (AAC) Decoder including SBR decoding
 ** Copyright (C) 2002-2004 A. Kurpiers
-**  
+**
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
 ** the Free Software Foundation; either version 2 of the License, or
 ** (at your option) any later version.
-** 
+**
 ** This program is distributed in the hope that it will be useful,
 ** but WITHOUT ANY WARRANTY; without even the implied warranty of
 ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ** GNU General Public License for more details.
-** 
+**
 ** You should have received a copy of the GNU General Public License
-** along with this program; if not, write to the Free Software 
+** along with this program; if not, write to the Free Software
 ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 **
 ** Any non-GPL usage of this software or parts of this software is strictly
@@ -71,7 +71,7 @@ static void rewind_lword( uint32_t *highW, uint32_t *lowW, uint8_t len)
         *highW = 0;
         *lowW = rewind_word( *lowW, len);
     }
-}    
+}
 
 /* Takes a codeword as stored in r, rewinds the remaining bits and stores it back */
 static void rewind_bits(bits_t * r)
@@ -141,7 +141,7 @@ typedef struct
 
 
 #define segmentWidth( codebook )    min( maxCwLen[codebook], ics->length_of_longest_codeword )
-     
+
 uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile *ld,
                                 int16_t *spectral_data)
 {
@@ -178,7 +178,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
         sp_offset[g] = sp_offset[g-1] + nshort*ics->window_group_length[g-1];
     }
 
-    /* All data is sorted according to the codebook used */        
+    /* All data is sorted according to the codebook used */
     for (presort = 0; presort < (hDecoder->aacSectionDataResilienceFlag ? 22 : 6); presort++)
     {
         uint8_t sfb;
@@ -276,12 +276,12 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
                                                 rewind_lword( &hw, &lw, additional_bits + Segment[ numberOfSegments-1 ].len );
                                                 if (Segment[ numberOfSegments-1 ].len > 32)
                                                 {
-                                                    Segment[ numberOfSegments-1 ].bufb = hw + 
+                                                    Segment[ numberOfSegments-1 ].bufb = hw +
                                                         showbits_hcr(&Segment[ numberOfSegments-1 ], Segment[ numberOfSegments-1 ].len - 32);
-                                                    Segment[ numberOfSegments-1 ].bufa = lw + 
+                                                    Segment[ numberOfSegments-1 ].bufa = lw +
                                                         showbits_hcr(&Segment[ numberOfSegments-1 ], 32);
                                                 } else {
-                                                    Segment[ numberOfSegments-1 ].bufa = lw + 
+                                                    Segment[ numberOfSegments-1 ].bufa = lw +
                                                         showbits_hcr(&Segment[ numberOfSegments-1 ], Segment[ numberOfSegments-1 ].len);
                                                     Segment[ numberOfSegments-1 ].bufb = hw;
                                                 }
@@ -316,7 +316,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
     if (numberOfSegments == 0)
         return 10; /* this is not good... */
 
-    numberOfSets = NrCodeWords / numberOfSegments;     
+    numberOfSets = NrCodeWords / numberOfSegments;
 
     /* second step: decode nonPCWs */
 
@@ -347,11 +347,11 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
 
                         if (Codewords[ codeword_index ].bits.len != 0)
                         {
-                            /* on the first trial the data is only stored in Segment[], not in Codewords[]. 
+                            /* on the first trial the data is only stored in Segment[], not in Codewords[].
                                On next trials first collect the data stored for this codeword and
                                concatenate the new data from Segment[] */
 
-                            concat_bits( &Codewords[ codeword_index ].bits, &Segment[ segment_index ]);                            
+                            concat_bits( &Codewords[ codeword_index ].bits, &Segment[ segment_index ]);
                             /* Now everthing is stored in Segment[] */
                         }
                         tmplen = Segment[ segment_index ].len;
@@ -370,7 +370,7 @@ uint8_t reordered_spectral_data(faacDecHandle hDecoder, ic_stream *ics, bitfile 
                             Codewords[ codeword_index ].bits.bufa = Segment[ segment_index ].bufa;
                             Codewords[ codeword_index ].bits.bufb = Segment[ segment_index ].bufb;
                         }
-                    }                        
+                    }
                 }
             } /* of codewordBase */
 

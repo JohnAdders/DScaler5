@@ -2,15 +2,15 @@
 //
 // clstable.cpp - Copyright 1997, Don Box
 //
-// This file contains the implementation of several routines for managing 
-// coclass tables and implementing DllGetClassObject, DllRegisterServer, 
+// This file contains the implementation of several routines for managing
+// coclass tables and implementing DllGetClassObject, DllRegisterServer,
 // DllUnregisterServer, and WinMain for out-of-process servers
 //
 //     ClassTableUpdateRegistry - installs/uninstalls registry entries
 //     ClassTableGetClassObject - for use in DllGetClassObject
 //     ClassTableRegisterClassObjects - used at start of WinMain in oop server
 //     ClassTableRevokeClassObjects - used at end of WinMain in oop server
-//     
+//
 
 #ifndef _CLSTABLE_CPP
 #define _CLSTABLE_CPP
@@ -29,9 +29,9 @@ static __inline BOOL  MyInlineIsEqualGUID(REFGUID rguid1, REFGUID rguid2)
 
 
 
-HRESULT STDAPICALLTYPE 
-ClassTableGetClassObject(COCLASS_ENTRY *pTable, 
-                         REFCLSID rclsid, 
+HRESULT STDAPICALLTYPE
+ClassTableGetClassObject(COCLASS_ENTRY *pTable,
+                         REFCLSID rclsid,
                          REFIID riid, void **ppv)
 {
     HRESULT hr = CLASS_E_CLASSNOTAVAILABLE;
@@ -52,11 +52,11 @@ ClassTableGetClassObject(COCLASS_ENTRY *pTable,
     return hr;
 }
 
-HRESULT STDAPICALLTYPE 
-ClassTableUpdateRegistry(HINSTANCE hInstance, 
-                         COCLASS_ENTRY *pTable, 
-                         REGISTRY_ENTRY *pModuleRegTable, 
-                         BOOL bModuleHasTypeLib, 
+HRESULT STDAPICALLTYPE
+ClassTableUpdateRegistry(HINSTANCE hInstance,
+                         COCLASS_ENTRY *pTable,
+                         REGISTRY_ENTRY *pModuleRegTable,
+                         BOOL bModuleHasTypeLib,
                          BOOL bInstalling)
 {
     HRESULT hr = S_OK;
@@ -104,8 +104,8 @@ ClassTableUpdateRegistry(HINSTANCE hInstance,
     return hr;
 }
 
-HRESULT STDAPICALLTYPE 
-ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable, 
+HRESULT STDAPICALLTYPE
+ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable,
                                DWORD dwClsCtx,
                                DWORD dwRegCls,
                                BOOL bResumeClassObjects )
@@ -137,7 +137,7 @@ ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable,
                 }
             }
         }
-        
+
         if (SUCCEEDED(hr) && bResumeClassObjects)
             hr = CoResumeClassObjects();
 
@@ -145,12 +145,12 @@ ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable,
             for (pTable--; pTable >= pHead; pTable--)
                 if (pTable->pfnGetClassObject)
                     CoRevokeClassObject(pTable->dwReg);
-        
+
     }
     return hr;
 }
 
-HRESULT STDAPICALLTYPE 
+HRESULT STDAPICALLTYPE
 ClassTableRevokeClassObjects(COCLASS_ENTRY *pTable)
 {
     HRESULT hr = E_FAIL;

@@ -10,15 +10,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ CREATE_CONVERT_TO_FLOAT(31)
 
 typedef void (CONV_FUNC)(BYTE*&, long);
 
-static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     Convert31ToFloat,
     Convert31To32,
@@ -118,7 +118,7 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 typedef void (CONV_FUNC)(BYTE*&, double);
 
-static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     ConvertDoubleToFloat,
     ConvertDoubleTo32,
@@ -133,7 +133,7 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 typedef void (CONV_FUNC)(BYTE*&, float);
 
-static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     ConvertFloatToFloat,
     ConvertFloatTo32,
@@ -145,7 +145,7 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 typedef void (CONV_FUNC16)(BYTE*&, short);
 
-static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     Convert16ToFloat,
     Convert16To32,
@@ -155,7 +155,7 @@ static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 typedef void (CONV_FUNC_FLOAT)(BYTE*&, float);
 
-static CONV_FUNC_FLOAT* pConvFuncsFloat[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC_FLOAT* pConvFuncsFloat[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     ConvertFloatToFloat,
     ConvertFloatTo32,
@@ -276,7 +276,7 @@ int ea52_syncinfo (uint8_t* buf, int* flags, int* sample_rate, int* bit_rate, bo
         bitrate = rate [frmsizecod >> 1];
         *bit_rate = (bitrate * 1000) >> half;
 
-        switch (buf[4] & 0xc0) 
+        switch (buf[4] & 0xc0)
         {
         case 0:
             *sample_rate = 48000 >> half;
@@ -315,13 +315,13 @@ HRESULT CAudioDecoder::ProcessAC3()
             if(fEnoughData)
             {
                 LOG(DBGLOG_ALL, ("size=%d, flags=%08x, sample_rate=%d, bit_rate=%d\n", size, flags, sample_rate, bit_rate));
-                
+
                 if(m_BufferSizeAtFrameStart <= 0)
                 {
                     hr = UpdateStartTime();
                     CHECK(hr)
                 }
-                
+
                 if(isEAC3)
                 {
                     if(m_CodecContext == NULL)
@@ -476,7 +476,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                             flags = A52_3F2R | A52_LFE;
                             break;
                         }
-                        
+
                         flags += A52_ADJUST_LEVEL;
 
                         sample_t level = LEVEL, gain = 1, bias = 0;
@@ -515,7 +515,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 
                                 ASSERT(outch == m_ChannelsRequested);
                                 ASSERT(ch == scmap.nChannels);
-                            
+
                                 for(int j = 0; j < 256; j++, samples++)
                                 {
                                     if(m_BytesLeftInBuffer == 0)
@@ -584,7 +584,7 @@ void CAudioDecoder::FinishAC3()
         liba52::a52_free(m_a52_state);
         m_a52_state = NULL;
     }
-    
+
     if(m_CodecContext != NULL)
     {
         avcodec_close(m_CodecContext);

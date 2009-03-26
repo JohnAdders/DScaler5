@@ -1353,7 +1353,7 @@ png_write_iTXt(png_structp png_ptr, int compression, png_charp key,
    {
       png_warning(png_ptr, "Empty language field in iTXt chunk");
       new_lang = NULL;
-      lang_len = 0;      
+      lang_len = 0;
    }
 
    if (lang_key == NULL)

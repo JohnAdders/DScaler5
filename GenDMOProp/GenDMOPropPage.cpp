@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,7 +27,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CGenDMOPropPage
 
-CGenDMOPropPage::CGenDMOPropPage() 
+CGenDMOPropPage::CGenDMOPropPage()
 {
     m_dwTitleID = IDS_TITLEGenDMOPropPage;
     m_dwHelpFileID = IDS_HELPFILEGenDMOPropPage;
@@ -38,7 +38,7 @@ CGenDMOPropPage::CGenDMOPropPage()
     m_ParamInfos = 0;
 }
 
-CGenDMOPropPage::~CGenDMOPropPage() 
+CGenDMOPropPage::~CGenDMOPropPage()
 {
     for(DWORD i(0); i < m_NumParams; ++i)
     {
@@ -56,7 +56,7 @@ CGenDMOPropPage::~CGenDMOPropPage()
 STDMETHODIMP CGenDMOPropPage::Deactivate()
 {
     // as a side effect this updates the
-    // values from the controls before 
+    // values from the controls before
     // we destroy the window
     SetDirty(HasAnythingChanged());
 
@@ -80,7 +80,7 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
     {
         GetValueFromControls();
     }
-    
+
     bool ShowMessage = false;
 
     for (DWORD i(0); i < m_NumParams; ++i)
@@ -108,7 +108,7 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
     {
         MessageBox("Some of the properties you attempted to change cannot be altered "
                    "while filter is connected, you will need to restart the program "
-                   "for the change to take effect.", "Warning", MB_OK); 
+                   "for the change to take effect.", "Warning", MB_OK);
     }
 
     m_bDirty = FALSE;
@@ -136,7 +136,7 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
         // How many parameters have we got
         HRESULT hr = m_MediaParamInfo->GetParamCount(&m_NumParams);
         if(FAILED(hr)) return hr;
-    
+
         // if there are no parameters then just return
         if(m_NumParams == 0)
         {
@@ -181,7 +181,7 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     }
 
     return S_OK;
-}   
+}
 
 STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
@@ -238,7 +238,7 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
             }
         }
         m_CurrentParam = 0;
-        
+
         SetupControls();
     }
 
@@ -263,7 +263,7 @@ void CGenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
 void CGenDMOPropPage::SetupControls()
 {
     if(m_NumParams == 0)
-    {   
+    {
         return;
     }
     m_EditBox.ShowWindow(SW_HIDE);
@@ -366,7 +366,7 @@ void CGenDMOPropPage::SetupEnumCombo()
     m_Combo.SendMessage(CB_RESETCONTENT, 0, 0);
 
     WCHAR* CurString = &m_ParamTexts[m_CurrentParam][0];
-    
+
     // skip past name and units
     CurString += wcslen(CurString) + 1;
     if(CurString == L'\0') return;
@@ -505,7 +505,7 @@ LRESULT CGenDMOPropPage::OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCt
 }
 
 
-// we need to override this to get 
+// we need to override this to get
 // the normal apply and cancel  behaviour
 void CGenDMOPropPage::SetDirty(BOOL bDirty)
 {

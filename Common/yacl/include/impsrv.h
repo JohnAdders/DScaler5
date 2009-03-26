@@ -10,8 +10,8 @@
 // There are two routines for detecting the standard commandline
 // arguments:
 //
-//    PARSE_RESULT SvcParseCommandLine(const char *); 
-//    PARSE_RESULT SvcParseCommandLineV(int argc, char **argv); 
+//    PARSE_RESULT SvcParseCommandLine(const char *);
+//    PARSE_RESULT SvcParseCommandLineV(int argc, char **argv);
 //
 // There are several default implementations of ModuleAddRef, ModuleRelease,
 // ModuleIsStopping, ModuleIsIdle, and ModuleServerListen
@@ -20,12 +20,12 @@
 //   IMPLEMENT_STAEXE_MODULE_ROUTINES() - out-of-proc STA server
 //   IMPLEMENT_DLL_MODULE_ROUTINES() - in-proc server
 //
-// There is also a macro that automates the boilerplate code for 
+// There is also a macro that automates the boilerplate code for
 // implementing the 4 standard COM inproc server exports:
 //
 //    IMPLEMENT_DLL_ENTRY_POINTS(ClassTable, ModuleRegTable, bModuleHasTypeLib)
 //
-// There is also a macro that automates the boilerplate code for 
+// There is also a macro that automates the boilerplate code for
 // implementing the CoRegisterClassObject/Wait/CoRevokeClassObject sequence
 // for out-of-process servers:
 //

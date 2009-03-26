@@ -112,13 +112,13 @@ col_loop:
     mov    edi,V_pointer            ;[C]
     mov    cl,[_YUV_clip_table+edx-3f00h]    ;[4] edx = [0][r][g][b] !!
     xor    edx,edx                ;[C]
-    mov    [eax+ebp*8-4],ecx        ;[4] 
+    mov    [eax+ebp*8-4],ecx        ;[4]
     xor    ecx,ecx                ;[C]
 col_loop_start:
     mov    cl,[esi + ebp]            ;[C] eax = U
     mov    dl,[edi + ebp]            ;[C] ebx = V
-    mov    eax,Y1_pointer            ;[1] 
-    xor    ebx,ebx                ;[1] 
+    mov    eax,Y1_pointer            ;[1]
+    xor    ebx,ebx                ;[1]
     mov    esi,[_YUV_U_table + ecx*4]    ;[C] eax = [b impact][u-g impact]
     mov    ecx,[_YUV_V_table + edx*4]    ;[C] ebx = [r impact][v-g impact]
     mov    edi,esi                ;[C]
@@ -136,36 +136,36 @@ col_loop_start:
     shr    ebx,16                ;[1] ebx = red
     and    ecx,0000ffffh            ;[1] edi = blue
     mov    dl,[_YUV_clip_table+edx+edi-3f00h]    ;[1] edx = [0][0][junk][green]
-    mov    eax,Y1_pointer            ;[2] 
+    mov    eax,Y1_pointer            ;[2]
     mov    dh,[_YUV_clip_table+ebx-3f00h]    ;[1] edx = [0][0][red][green]
-    xor    ebx,ebx                ;[2] 
+    xor    ebx,ebx                ;[2]
     shl    edx,8                ;[1] edx = [0][red][green][0]
     mov    bl,[eax + ebp*2 + 1]        ;[2] ebx = Y1 value
-    mov    eax,ARGB1_pointer        ;[1] 
+    mov    eax,ARGB1_pointer        ;[1]
     mov    dl,[_YUV_clip_table+ecx-3f00h]    ;[1] edx = [0][r][g][b] !!
     mov    ebx,[_YUV_Y_table + ebx*4]    ;[2] ebx = Y impact
-    mov    ecx,0000ffffh            ;[2] 
+    mov    ecx,0000ffffh            ;[2]
 
     and    ecx,ebx                ;[2]
     add    ebx,esi                ;[2] ebx = [red][blue]
 
-    mov    [eax+ebp*8],edx            ;[1] 
+    mov    [eax+ebp*8],edx            ;[1]
     mov    edx,ebx                ;[2]
 
     shr    ebx,16                ;[2] ebx = red
-    mov    eax,Y2_pointer            ;[3] 
+    mov    eax,Y2_pointer            ;[3]
 
     and    edx,0000ffffh            ;[2]
-    mov    cl,[_YUV_clip_table+ecx+edi-3f00h]    ;[2] edx = [0][0][junk][green]    
+    mov    cl,[_YUV_clip_table+ecx+edi-3f00h]    ;[2] edx = [0][0][junk][green]
 
     mov    al,[eax + ebp*2]        ;[3] ebx = Y1 value
     mov    ch,[_YUV_clip_table+ebx-3f00h]    ;[2] edx = [0][0][red][green]
 
     shl    ecx,8                ;[2] edx = [0][red][green][0]
-    and    eax,000000ffh            ;[3] 
+    and    eax,000000ffh            ;[3]
 
     mov    cl,[_YUV_clip_table+edx-3f00h]    ;[2] edx = [0][r][g][b] !!
-    mov    edx,ARGB1_pointer        ;[2] 
+    mov    edx,ARGB1_pointer        ;[2]
 
     mov    ebx,[_YUV_Y_table + eax*4]    ;[3] ebx = Y impact
     mov    eax,0000ffffh
@@ -173,11 +173,11 @@ col_loop_start:
     and    eax,ebx                ;[3] edi = [red][blue]
     add    ebx,esi                ;[3] ebx = [red][blue]
 
-    mov    [edx+ebp*8+4],ecx        ;[2] 
+    mov    [edx+ebp*8+4],ecx        ;[2]
     mov    edx,ebx                ;[3]
 
     shr    ebx,16                ;[3] ebx = red
-    mov    ecx,Y2_pointer            ;[4] 
+    mov    ecx,Y2_pointer            ;[4]
 
     and    edx,0000ffffh            ;[3] ecx = green
     mov    al,[_YUV_clip_table+eax+edi-3f00h]    ;[3] edx = [0][0][junk][green]
@@ -186,10 +186,10 @@ col_loop_start:
     mov    ah,[_YUV_clip_table+ebx-3f00h]    ;[3] edx = [0][0][red][green]
 
     shl    eax,8                ;[3] edx = [0][red][green][0]
-    and    ecx,000000ffh            ;[4] 
+    and    ecx,000000ffh            ;[4]
 
     mov    al,[_YUV_clip_table+edx-3f00h]    ;[3] edx = [0][r][g][b] !!
-    mov    edx,ARGB2_pointer        ;[3] 
+    mov    edx,ARGB2_pointer        ;[3]
 
     mov    ebx,[_YUV_Y_table + ecx*4]    ;[4] ebx = Y impact
     mov    ecx,0000ffffh            ;[4]
@@ -197,14 +197,14 @@ col_loop_start:
     and    ecx,ebx                ;[4] ecx = [0][Y-impact]
     add    ebx,esi                ;[4] ebx = [red][blue]
 
-    mov    [edx+ebp*8],eax            ;[3] 
+    mov    [edx+ebp*8],eax            ;[3]
     mov    edx,ebx                ;[4] edx = [red][blue]
 
     shr    ebx,16                ;[4] ebx = red
     mov    cl,[_YUV_clip_table+ecx+edi-3f00h]    ;[4] edx = [0][0][junk][green]
 
     and    edx,0000ffffh            ;[4] edx = blue
-    mov    eax,ARGB2_pointer        ;[4] 
+    mov    eax,ARGB2_pointer        ;[4]
 
     inc    ebp
 
@@ -213,7 +213,7 @@ col_loop_start:
     mov    ch,[_YUV_clip_table+ebx-3f00h]    ;[4] edx = [0][0][red][green]
     shl    ecx,8                ;[4] edx = [0][red][green][0]
     mov    cl,[_YUV_clip_table+edx-3f00h]    ;[4] edx = [0][r][g][b] !!
-    mov    [eax+ebp*8-4],ecx        ;[4] 
+    mov    [eax+ebp*8-4],ecx        ;[4]
 
     pop    ebp
     pop    edi
@@ -1091,19 +1091,19 @@ _asm_YUVtoRGB16_row_MMX:
 
 col_loop_MMX16:
     movd    mm0,[esi+ebp]        ;[0       ] U (byte)
-    pxor    mm7,mm7            ;[0      7] 
+    pxor    mm7,mm7            ;[0      7]
 
     movd    mm1,[edi+ebp]        ;[01     7] V (byte)
     punpcklbw mm0,mm7        ;[01     7] U (word)
 
-    psubw    mm0,[MMX_80w]        ;[01     7] 
+    psubw    mm0,[MMX_80w]        ;[01     7]
     punpcklbw mm1,mm7        ;[01     7] V (word)
 
-    psubw    mm1,[MMX_80w]        ;[01      ] 
-    movq    mm2,mm0            ;[012     ] 
+    psubw    mm1,[MMX_80w]        ;[01      ]
+    movq    mm2,mm0            ;[012     ]
 
-    pmullw    mm2,[MMX_Ugrncoeff]    ;[012     ] 
-    movq    mm3,mm1            ;[0123    ] 
+    pmullw    mm2,[MMX_Ugrncoeff]    ;[012     ]
+    movq    mm3,mm1            ;[0123    ]
 
     ;mm0: blue
     ;mm1: red
@@ -1112,13 +1112,13 @@ col_loop_MMX16:
     movq    mm6,[ecx+ebp*2]        ;[0123  6 ] [1] Y
     ;<-->
 
-    pmullw    mm3,[MMX_Vgrncoeff]    ;[0123    ] 
+    pmullw    mm3,[MMX_Vgrncoeff]    ;[0123    ]
     movq    mm7,mm6            ;[012   67] [2] Y
 
-    pmullw    mm0,[MMX_Ublucoeff]    ;[0123    ] 
+    pmullw    mm0,[MMX_Ublucoeff]    ;[0123    ]
     psrlw    mm7,8            ;[012   67] [2]
 
-    pmullw    mm1,[MMX_Vredcoeff]    ;[0123    ] 
+    pmullw    mm1,[MMX_Vredcoeff]    ;[0123    ]
     ;<-->
 
     pand    mm6,[MMX_00FFw]        ;[012   67] [1]
@@ -1169,7 +1169,7 @@ col_loop_MMX16:
     paddw    mm5,mm2            ;[01234567] [2] mm5: <G3><G2><G1><G0>
 
     pand    mm4,[MMX_00FFw]        ;[01234567] [3]
-    psraw    mm3,6            ;[01234567] [2]    
+    psraw    mm3,6            ;[01234567] [2]
 
     psubw    mm4,[MMX_10w]        ;[01234567] [3]
     psraw    mm5,4            ;[01234567] [2]
@@ -1243,7 +1243,7 @@ col_loop_MMX16:
     pand    mm5,[MMX_grnmask]        ;[01 3 567] [3] mm7: <G3><G2><G1><G0>
     psraw    mm0,4            ;[01 3 567] [4]
 
-    por    mm6,mm5            ;[01 3  67] [3] mm4: P6P4P2P0    
+    por    mm6,mm5            ;[01 3  67] [3] mm4: P6P4P2P0
     psraw    mm7,6            ;[01 3  67] [4]
 
     paddsw    mm0,[MMX_clip]
@@ -1714,19 +1714,19 @@ col_loop_ISSE16:
     prefetchnta [edi+ebp+32]
 
     movd    mm0,[esi+ebp]        ;[0       ] U (byte)
-    pxor    mm7,mm7            ;[0      7] 
+    pxor    mm7,mm7            ;[0      7]
 
     movd    mm1,[edi+ebp]        ;[01     7] V (byte)
     punpcklbw mm0,mm7        ;[01     7] U (word)
 
-    psubw    mm0,[MMX_80w]        ;[01     7] 
+    psubw    mm0,[MMX_80w]        ;[01     7]
     punpcklbw mm1,mm7        ;[01     7] V (word)
 
-    psubw    mm1,[MMX_80w]        ;[01      ] 
-    movq    mm2,mm0            ;[012     ] 
+    psubw    mm1,[MMX_80w]        ;[01      ]
+    movq    mm2,mm0            ;[012     ]
 
-    pmullw    mm2,[MMX_Ugrncoeff]    ;[012     ] 
-    movq    mm3,mm1            ;[0123    ] 
+    pmullw    mm2,[MMX_Ugrncoeff]    ;[012     ]
+    movq    mm3,mm1            ;[0123    ]
 
     ;mm0: blue
     ;mm1: red
@@ -1738,13 +1738,13 @@ col_loop_ISSE16:
     movq    mm6,[ecx+ebp*2]        ;[0123  6 ] [1] Y
     ;<-->
 
-    pmullw    mm3,[MMX_Vgrncoeff]    ;[0123    ] 
+    pmullw    mm3,[MMX_Vgrncoeff]    ;[0123    ]
     movq    mm7,mm6            ;[012   67] [2] Y
 
-    pmullw    mm0,[MMX_Ublucoeff]    ;[0123    ] 
+    pmullw    mm0,[MMX_Ublucoeff]    ;[0123    ]
     psrlw    mm7,8            ;[012   67] [2]
 
-    pmullw    mm1,[MMX_Vredcoeff]    ;[0123    ] 
+    pmullw    mm1,[MMX_Vredcoeff]    ;[0123    ]
     ;<-->
 
     pand    mm6,[MMX_00FFw]        ;[012   67] [1]
@@ -1795,7 +1795,7 @@ col_loop_ISSE16:
     paddw    mm5,mm2            ;[01234567] [2] mm5: <G3><G2><G1><G0>
 
     pand    mm4,[MMX_00FFw]        ;[01234567] [3]
-    psraw    mm3,6            ;[01234567] [2]    
+    psraw    mm3,6            ;[01234567] [2]
 
     psubw    mm4,[MMX_10w]        ;[01234567] [3]
     psraw    mm5,4            ;[01234567] [2]
@@ -1869,7 +1869,7 @@ col_loop_ISSE16:
     pand    mm5,[MMX_grnmask]        ;[01 3 567] [3] mm7: <G3><G2><G1><G0>
     psraw    mm0,4            ;[01 3 567] [4]
 
-    por    mm6,mm5            ;[01 3  67] [3] mm4: P6P4P2P0    
+    por    mm6,mm5            ;[01 3  67] [3] mm4: P6P4P2P0
     psraw    mm7,6            ;[01 3  67] [4]
 
     paddsw    mm0,[MMX_clip]

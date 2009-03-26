@@ -1,18 +1,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 // $Id$
 ///////////////////////////////////////////////////////////////////////////////
-// Copyright (c) 2004 John Adcock 
+// Copyright (c) 2004 John Adcock
 ///////////////////////////////////////////////////////////////////////////////
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -76,7 +76,7 @@ STDMETHODIMP CDSBaseFilter::EnumPins(IEnumPins **ppEnum)
     NewEnum->SetFilter(this);
     NewEnum->AddRef();
     *ppEnum = NewEnum;
-    
+
     return S_OK;
 }
 
@@ -185,18 +185,18 @@ STDMETHODIMP CDSBaseFilter::JoinFilterGraph(IFilterGraph *pGraph, LPCWSTR pName)
     return S_OK;
 }
 
-STDMETHODIMP CDSBaseFilter::AddToRot(IUnknown *pUnkGraph) 
+STDMETHODIMP CDSBaseFilter::AddToRot(IUnknown *pUnkGraph)
 {
     IMoniker * pMoniker;
     IRunningObjectTable *pROT;
-    if (FAILED(GetRunningObjectTable(0, &pROT))) 
+    if (FAILED(GetRunningObjectTable(0, &pROT)))
     {
         return E_FAIL;
     }
     WCHAR wsz[256];
     wsprintfW(wsz, L"FilterGraph %08x pid %08x", (DWORD_PTR)pUnkGraph, GetCurrentProcessId());
     HRESULT hr = CreateItemMoniker(L"!", wsz, &pMoniker);
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
     {
         hr = pROT->Register(ROTFLAGS_REGISTRATIONKEEPSALIVE, pUnkGraph,
             pMoniker, &m_Register);
@@ -209,7 +209,7 @@ STDMETHODIMP CDSBaseFilter::AddToRot(IUnknown *pUnkGraph)
 void CDSBaseFilter::RemoveFromRot()
 {
     IRunningObjectTable *pROT;
-    if (SUCCEEDED(GetRunningObjectTable(0, &pROT))) 
+    if (SUCCEEDED(GetRunningObjectTable(0, &pROT)))
     {
         pROT->Revoke(m_Register);
         pROT->Release();
@@ -227,9 +227,9 @@ STDMETHODIMP CDSBaseFilter::Stop(void)
     LOG(DBGLOG_FLOW, ("CDSBaseFilter::Stop\n"));
 
     CProtectCode WhileVarInScope(this);
-    
+
     int i;
-    
+
 
     LockAllPins();
 
@@ -267,7 +267,7 @@ STDMETHODIMP CDSBaseFilter::Pause(void)
     if(m_State == State_Stopped)
     {
         LockAllPins();
-    
+
         int i;
         for(i = 0; i < m_NumInputPins; ++i)
         {

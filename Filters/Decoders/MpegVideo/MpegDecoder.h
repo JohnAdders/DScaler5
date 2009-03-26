@@ -8,18 +8,18 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
@@ -36,7 +36,7 @@ extern "C"
 
 DEFINE_GUID(CLSID_CMpegDecoder, 0xf8904f1f, 0x371, 0x4471, 0x88, 0x66, 0x90, 0xe6, 0x28, 0x1a, 0xbd, 0xb6);
 
-class CMpegDecoder : 
+class CMpegDecoder :
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed,
     public IAMDecoderCaps
@@ -155,8 +155,8 @@ private:
     DWORD m_ControlFlags;
     DWORD m_PicturesSinceSequence;
     BYTE m_AFD;
-    
-    typedef enum 
+
+    typedef enum
     {
         CHROMA_420,
         CHROMA_422,
@@ -206,8 +206,8 @@ private:
     long m_ARAdjustX;
     long m_ARAdjustY;
     bool m_PanAndScanDVD;
-    
-    typedef enum 
+
+    typedef enum
     {
         DIAuto,
         DIWeave,
@@ -245,15 +245,15 @@ private:
 
     typedef enum
     {
-        TRANSFER_DEFAULT, 
-        TRANSFER_BT709, 
-        TRANSFER_BT601, 
+        TRANSFER_DEFAULT,
+        TRANSFER_BT709,
+        TRANSFER_BT601,
         TRANSFER_SMPTE240M,
     } eTransferMatrix;
 
     typedef enum
     {
-        LIGHTING_DEFAULT, 
+        LIGHTING_DEFAULT,
         LIGHTING_BRIGHT,
         LIGHTING_OFFICE,
         LIGHTING_DIM,
@@ -262,27 +262,27 @@ private:
 
     typedef enum
     {
-        PRIMARIES_DEFAULT, 
-        PRIMARIES_RESERVED, 
-        PRIMARIES_BT709, 
-        PRIMARIES_NTSC_ORIG, 
-        PRIMARIES_BT470, 
+        PRIMARIES_DEFAULT,
+        PRIMARIES_RESERVED,
+        PRIMARIES_BT709,
+        PRIMARIES_NTSC_ORIG,
+        PRIMARIES_BT470,
         PRIMARIES_SMPTE170M,
-        PRIMARIES_SMPTE240M, 
-        PRIMARIES_EBU, 
+        PRIMARIES_SMPTE240M,
+        PRIMARIES_EBU,
         PRIMARIES_SMPTE_C,
     } ePrimaries;
 
     typedef enum
     {
-        FUNC_DEFAULT, 
-        FUNC_10, 
-        FUNC_18, 
-        FUNC_20, 
-        FUNC_22, 
-        FUNC_22_709, 
-        FUNC_22_240M, 
-        FUNC_22_8BIT, 
+        FUNC_DEFAULT,
+        FUNC_10,
+        FUNC_18,
+        FUNC_20,
+        FUNC_22,
+        FUNC_22_709,
+        FUNC_22_240M,
+        FUNC_22_8BIT,
         FUNC_28,
     } eTransferFunction;
 
@@ -313,7 +313,7 @@ private:
     HRESULT SetNextBuffer();
 
     void DrawPixel(BYTE** yuv, POINT pt, int pitch, BYTE color, BYTE contrast, AM_DVD_YUV* sppal);
-    void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode, 
+    void DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode,
                                 AM_PROPERTY_SPHLI& sphli, RECT& rc,
                                 AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
                                 AM_DVD_YUV* sppal);
@@ -339,7 +339,7 @@ private:
         CSubPicture();
         ~CSubPicture();
         REFERENCE_TIME rtStart;
-        REFERENCE_TIME rtStop; 
+        REFERENCE_TIME rtStop;
         std::vector<BYTE> pData;
         bool fForced;
     };
@@ -351,7 +351,7 @@ private:
         ~CHighlight();
         AM_PROPERTY_SPHLI m_Hi;
         REFERENCE_TIME rtStart;
-        REFERENCE_TIME rtStop; 
+        REFERENCE_TIME rtStop;
     };
     std::list<CHighlight*> m_HighlightList;
     CCanLock m_SubPictureLock;

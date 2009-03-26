@@ -34,10 +34,10 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
     SI(IInterlacedField) pNewerBuffer;
     SI(IInterlacedField) pOlderBuffer;
 
-    HRESULT hr = Stack->GetField(0, pNewerBuffer.GetReleasedInterfaceReference()); 
+    HRESULT hr = Stack->GetField(0, pNewerBuffer.GetReleasedInterfaceReference());
     if(FAILED(hr)) return hr;
 
-    hr = Stack->GetField(1, pOlderBuffer.GetReleasedInterfaceReference()); 
+    hr = Stack->GetField(1, pOlderBuffer.GetReleasedInterfaceReference());
     if(FAILED(hr)) return hr;
 
     BOOLEAN IsTopLine = FALSE;
@@ -51,7 +51,7 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
     DWORD InputLengthOlder;
     BYTE* pOutputData;
     DWORD OutputLength;
-    
+
     hr = pNewerBuffer->GetBufferAndLength(&pInputDataNewer, &InputLengthNewer);
     if(FAILED(hr)) return hr;
 
@@ -66,7 +66,7 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
         hr = pOutputBuffer->SetLength(OutputInfo->bmiHeader.biSizeImage);
         if(FAILED(hr)) return hr;
     }
-    // do 4:2:2 format up here and we need to 
+    // do 4:2:2 format up here and we need to
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
@@ -107,7 +107,7 @@ HRESULT CDScaler::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutputBuff
             }
         }
     }
-    // otherwise it's a 4:2:0 plannar format and we just 
+    // otherwise it's a 4:2:0 plannar format and we just
     // worry about deinterlacing the luma and just copy the chroma
     else
     {
@@ -168,7 +168,7 @@ void CDScaler::WeavePlanarChroma(BYTE* pUpperChroma, BYTE* pLowerChroma, BYTE* p
         LineLength = InputInfo->bmiHeader.biWidth / 2;
     }
     // copy V then U
-    // there are biWidth / 2 x biHeight/2 of V 
+    // there are biWidth / 2 x biHeight/2 of V
     // followed by biWidth / 2 x biHeight/2 of U
     pLowerChroma += InputInfo->bmiHeader.biWidth / 2;
     for(int i(0); i < InputInfo->bmiHeader.biHeight / 2; ++i)

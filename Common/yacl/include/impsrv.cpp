@@ -10,8 +10,8 @@
 // There are two routines for detecting the standard commandline
 // arguments:
 //
-//    PARSE_RESULT SvcParseCommandLine(const char *); 
-//    PARSE_RESULT SvcParseCommandLineV(int argc, char **argv); 
+//    PARSE_RESULT SvcParseCommandLine(const char *);
+//    PARSE_RESULT SvcParseCommandLineV(int argc, char **argv);
 //
 
 #ifndef _IMPSRV_CPP
@@ -36,16 +36,16 @@ PARSE_RESULT STDAPICALLTYPE SvcParseCommandLine(char *pszCmdParam)
     lstrcpyA(szCmdParam, pszCmdParam);
     CharUpperA(szCmdParam);
     PARSE_RESULT result = PARSE_NORMAL;
-    if (strstr(szCmdParam, "/REGSERVER") 
+    if (strstr(szCmdParam, "/REGSERVER")
         || strstr(szCmdParam, "-REGSERVER"))
         result = PARSE_REGISTER_SERVER;
-    else if (strstr(szCmdParam, "/UNREGSERVER") 
+    else if (strstr(szCmdParam, "/UNREGSERVER")
         || strstr(szCmdParam, "-UNREGSERVER"))
         result = PARSE_UNREGISTER_SERVER;
-    else if (strstr(szCmdParam, "/AUTOMATION") 
+    else if (strstr(szCmdParam, "/AUTOMATION")
         || strstr(szCmdParam, "-AUTOMATION"))
         result = PARSE_AUTOMATION;
-    else if (strstr(szCmdParam, "/EMBEDDING") 
+    else if (strstr(szCmdParam, "/EMBEDDING")
         || strstr(szCmdParam, "-EMBEDDING"))
         result = PARSE_EMBEDDING;
     return result;
@@ -57,16 +57,16 @@ PARSE_RESULT STDAPICALLTYPE SvcParseCommandLineV(int argc, char **argv, int *par
     int i = 0;
     for (i = 0; i < argc && (result == PARSE_NORMAL); i++)
     {
-        if (!strcmpi(argv[i], "/REGSERVER") 
+        if (!strcmpi(argv[i], "/REGSERVER")
             || !strcmpi(argv[i], "-REGSERVER"))
             result = PARSE_REGISTER_SERVER;
-        else if (!strcmpi(argv[i], "/UNREGSERVER") 
+        else if (!strcmpi(argv[i], "/UNREGSERVER")
             || !strcmpi(argv[i], "-UNREGSERVER"))
             result = PARSE_UNREGISTER_SERVER;
-        else if (!strcmpi(argv[i], "/EMBEDDING") 
+        else if (!strcmpi(argv[i], "/EMBEDDING")
             || !strcmpi(argv[i], "-EMBEDDING"))
             result = PARSE_EMBEDDING;
-        else if (!strcmpi(argv[i], "/AUTOMATION") 
+        else if (!strcmpi(argv[i], "/AUTOMATION")
             || !strcmpi(argv[i], "-AUTOMATION"))
             result = PARSE_AUTOMATION;
     }

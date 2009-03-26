@@ -8,18 +8,18 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
@@ -28,10 +28,10 @@ DEFINE_GUID(CLSID_CConvolverWrapper, 0x6105e395, 0x1c5a, 0x4b3e, 0x97, 0x1, 0xfb
 
 // Guid of John Pavel's Convolver WMP add-in
 // {47427372-7AED-4e37-ABEB-7BD64C4184BF}
-DEFINE_GUID(CLSID_Convolver, 
+DEFINE_GUID(CLSID_Convolver,
 0x47427372, 0x7aed, 0x4e37, 0xab, 0xeb, 0x7b, 0xd6, 0x4c, 0x41, 0x84, 0xbf);
 
-DEFINE_GUID(IID_IConvolver, 
+DEFINE_GUID(IID_IConvolver,
 0x9B102F5D, 0x8e2c, 0x41f2, 0x92, 0x56, 0x2d, 0x3c, 0xa7, 0x6f, 0xbe, 0x35);
 
 
@@ -54,7 +54,7 @@ public:
 };
 
 
-class CConvolverWrapper : 
+class CConvolverWrapper :
     public CDSBaseFilter,
     public IConvolver,
     public IAmFreeSoftwareLicensed
@@ -124,10 +124,10 @@ public:
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
     HRESULT Activate();
     HRESULT Deactivate();
-    
+
 public:
     BOOL m_IsDirty;
-    
+
 protected:
     HRESULT UpdateTypes(const AM_MEDIA_TYPE* MediaType);
     HRESULT CheckConvolver();

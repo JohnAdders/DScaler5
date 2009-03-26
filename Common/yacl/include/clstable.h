@@ -16,15 +16,15 @@
 //     COCLASS_TABLE_ENTRY(pclsid, pfngco, pfnur) - (pclsid, pfngco, pfnur)
 //     END_COCLASS_TABLE() - terminates table definition
 //
-// This file contains the prototypes for several routines that manage 
-// coclass tables and implement DllGetClassObject, DllRegisterServer, 
+// This file contains the prototypes for several routines that manage
+// coclass tables and implement DllGetClassObject, DllRegisterServer,
 // DllUnregisterServer, and WinMain for out-of-process servers
 //
 //     ClassTableUpdateRegistry - installs/uninstalls registry entries
 //     ClassTableGetClassObject - for use in DllGetClassObject
 //     ClassTableRegisterClassObjects - used at start of WinMain in oop server
 //     ClassTableRevokeClassObjects - used at end of WinMain in oop server
-//     
+//
 
 #ifndef _CLSTABLE_H
 #define _CLSTABLE_H
@@ -64,7 +64,7 @@ EXTERN_C HRESULT STDAPICALLTYPE ClassTableUpdateRegistry(HINSTANCE hInstance, CO
 
 EXTERN_C HRESULT STDAPICALLTYPE ClassTableGetClassObject(COCLASS_ENTRY *pTable, REFCLSID rclsid, REFIID riid, void **ppv);
 
-EXTERN_C HRESULT STDAPICALLTYPE ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable, 
+EXTERN_C HRESULT STDAPICALLTYPE ClassTableRegisterClassObjects(COCLASS_ENTRY *pTable,
                                                              DWORD dwClsCtx = CLSCTX_LOCAL_SERVER,
                                                              DWORD dwRegCls = REGCLS_MULTIPLEUSE,
                                                              BOOL bResumeClassObjects = TRUE);

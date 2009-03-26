@@ -13,13 +13,13 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
@@ -27,7 +27,7 @@
 // {1E3EAB17-274F-45a5-8E45-F70B3D97AB26}
 DEFINE_GUID(CLSID_CTVSource, 0x1e3eab17, 0x274f, 0x45a5, 0x8e, 0x45, 0xf7, 0xb, 0x3d, 0x97, 0xab, 0x26);
 
-class CTVSource : 
+class CTVSource :
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed,
     public IFileSourceFilter
@@ -106,7 +106,7 @@ public:
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
     HRESULT Activate();
     HRESULT Deactivate();
-    
+
 public:
     HRESULT Render(IPin* pPin, IGraphBuilder* pGraphBuilder);
     HRESULT Backout(IPin* pPin, IGraphBuilder* pGraphBuilder);

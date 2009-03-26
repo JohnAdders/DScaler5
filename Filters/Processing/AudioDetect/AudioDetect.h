@@ -8,25 +8,25 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
 
 DEFINE_GUID(CLSID_CAudioDetect, 0xe0f74c2b, 0xb3d5, 0x41cd, 0xa1, 0x86, 0x3, 0xb9, 0x60, 0xe9, 0x8f, 0x2c);
 
-class CAudioDetect : 
+class CAudioDetect :
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed
 {
@@ -93,10 +93,10 @@ public:
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
     HRESULT Activate();
     HRESULT Deactivate();
-    
+
 public:
     BOOL m_IsDirty;
-    
+
 private:
 
 protected:

@@ -2,15 +2,15 @@
 //
 // impunk.h - Copyright 1997, Don Box
 //
-// This file contains several macros for implementing 
+// This file contains several macros for implementing
 // QueryInterface, AddRef and Release:
 //
 //     IMPLEMENT_UNKNOWN(ClassName) - heap-based, non-aggregatable
 //     IMPLEMENT_UNKNOWN_NO_DELETE(ClassName) - non-heap-based, non-aggregatable
 //     IMPLEMENT_AGGREGATABLE_UNKNOWN(ClassName) - heap-based, aggregatable
-//     
+//
 //     IMPLEMENT_COMPOSITE_UNKNOWN(OuterClassName, InnerClassName, DataMember) - MFC-style composition
-// 
+//
 // The first three of these macros above expect two global functions to be defined
 // somewhere in the project that [un]lock the current server:
 //
@@ -19,7 +19,7 @@
 //
 // if you do not want references to your object to keep the server alive,
 // simply add the following macro before the IMPLEMENT_UNKNOWN_XXX macro:
-// 
+//
 //     NO_MODULE_LOCK(ClassName)
 //
 // Also present in this file are macros that define a static method
@@ -46,8 +46,8 @@ struct AUTO_LONG {
 
 // the AddRef/Release methods defined in this file
 // all call functions called ModuleAddRef and ModuleRelease
-// unconditionally. If you do not want the object's 
-// outstanding references to hold the object running, 
+// unconditionally. If you do not want the object's
+// outstanding references to hold the object running,
 // then add the following macro to your class definition
 
 #define NO_MODULE_LOCK(ClassName)\

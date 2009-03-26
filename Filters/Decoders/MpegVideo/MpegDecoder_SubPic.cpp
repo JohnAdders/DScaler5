@@ -11,15 +11,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -74,9 +74,9 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                 // a ptm that says do now
                 // we are on a still page
                 // otherwise eat any that overlap
-                if((*it)->rtStart >= PTS2RT(pSPHLI->StartPTM) || 
-                    pSPHLI->HLISS == 0 || 
-                    pSPHLI->StartPTM == 0xFFFFFFFF || 
+                if((*it)->rtStart >= PTS2RT(pSPHLI->StartPTM) ||
+                    pSPHLI->HLISS == 0 ||
+                    pSPHLI->StartPTM == 0xFFFFFFFF ||
                     m_LastPictureWasStill)
                 {
                     delete *it;
@@ -88,7 +88,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                     it++;
                 }
             }
-                            
+
             if(pSPHLI->HLISS)
             {
                 // switch off any previous highlights
@@ -103,7 +103,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                         }
                     }
                 }
-                
+
                 // add new highlight into list
                 CHighlight* NewHighlight = new CHighlight();
                 memcpy(&NewHighlight->m_Hi, pSPHLI, sizeof(AM_PROPERTY_SPHLI));
@@ -127,7 +127,7 @@ HRESULT CMpegDecoder::SetPropSetSubPic(DWORD dwPropID, LPVOID pInstanceData, DWO
                 m_HighlightList.push_back(NewHighlight);
                 fRefresh = true;
 
-                LOG(DBGLOG_FLOW,("hli: %I64d - %I64d, (%x,%x) (%d,%d) - (%d,%d) %d\n", 
+                LOG(DBGLOG_FLOW,("hli: %I64d - %I64d, (%x,%x) (%d,%d) - (%d,%d) %d\n",
                     NewHighlight->rtStart, NewHighlight->rtStop,
                     pSPHLI->StartPTM, pSPHLI->EndPTM,
                     pSPHLI->StartX, pSPHLI->StartY, pSPHLI->StopX, pSPHLI->StopY, m_HighlightList.size()));
@@ -216,11 +216,11 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
 
     if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
     {
-        len -= 14; 
+        len -= 14;
         pDataIn += 14;
         if(int stuffing = (pDataIn[-1]&7))
         {
-            len -= stuffing; 
+            len -= stuffing;
             pDataIn += stuffing;
         }
     }
@@ -235,14 +235,14 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
     {
         if(m_SubpictureInPin->GetMediaType()->subtype == MEDIASUBTYPE_DVD_SUBPICTURE)
         {
-            len -= 8; 
+            len -= 8;
             pDataIn += 8;
-            len -= *pDataIn+1+1; 
+            len -= *pDataIn+1+1;
             pDataIn += *pDataIn+1+1;
         }
     }
 
-    if(len <= 0) 
+    if(len <= 0)
     {
         LOG(DBGLOG_FLOW,("Nothing after subpicture\n"));
         return S_OK;
@@ -285,7 +285,7 @@ HRESULT CMpegDecoder::ProcessSubPicSample(IMediaSample* InSample, AM_SAMPLE2_PRO
         {
             LOG(DBGLOG_FLOW,("Hanging subpicture\n"));
         }
-    }   
+    }
 
     if(m_SubPicureList.size() > 0)
     {
@@ -534,30 +534,30 @@ void colorCodeToColor(BYTE colorCode, AM_PROPERTY_SPHLI* infoToUse, BYTE& color,
 {
     switch(colorCode)
     {
-    case 0: 
-        color = infoToUse->ColCon.backcol; 
-        contrast = infoToUse->ColCon.backcon; 
+    case 0:
+        color = infoToUse->ColCon.backcol;
+        contrast = infoToUse->ColCon.backcon;
         break;
-    case 1: 
-        color = infoToUse->ColCon.patcol; 
-        contrast = infoToUse->ColCon.patcon; 
+    case 1:
+        color = infoToUse->ColCon.patcol;
+        contrast = infoToUse->ColCon.patcon;
         break;
-    case 2: 
-        color = infoToUse->ColCon.emph1col; 
-        contrast = infoToUse->ColCon.emph1con; 
+    case 2:
+        color = infoToUse->ColCon.emph1col;
+        contrast = infoToUse->ColCon.emph1con;
         break;
-    case 3: 
-        color = infoToUse->ColCon.emph2col; 
-        contrast = infoToUse->ColCon.emph2con; 
+    case 3:
+        color = infoToUse->ColCon.emph2col;
+        contrast = infoToUse->ColCon.emph2con;
         break;
-    default: 
-        ASSERT(0); 
+    default:
+        ASSERT(0);
         return;
     }
 }
 
 
-void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode, 
+void CMpegDecoder::DrawPixels(BYTE** yuv, POINT pt, int pitch, int len, BYTE colorCode,
                                 AM_PROPERTY_SPHLI& sphli, RECT& rc,
                                 AM_PROPERTY_SPHLI* sphli_hli, RECT& rchli,
                                 AM_DVD_YUV* sppal)
@@ -637,7 +637,7 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
         return;
     }
 
-    long shift(0); 
+    long shift(0);
 
     BYTE* pData = &sp->pData[0];
     RECT rc = {sphli.StartX, sphli.StartY, sphli.StopX, sphli.StopY};
@@ -651,7 +651,7 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
     else
     {
         // only do shift when there is no highlight
-        // probably not foolproof but should make 
+        // probably not foolproof but should make
         // menus work better even with a shift activated
         shift = GetParamInt(SUBTITLEVERTICALOFFSET);
     }
@@ -664,7 +664,7 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
     {
         POINT pt = {sphli.StartX, sphli.StartY + nField + shift};
         int fAligned = 1;
-        
+
         while(offset[nField] < end[nField] && pt.y <= sphli.StopY)
         {
             DWORD code;
@@ -695,7 +695,7 @@ void CMpegDecoder::RenderSubpic(CSubPicture* sp, BYTE** p, int w, int h, AM_PROP
             pt.x += len;
             if(pt.x >= sphli.StopX)
             {
-                if(!fAligned) 
+                if(!fAligned)
                 {
                     GetNibble(pData, offset, nField, fAligned); // align to byte
                 }

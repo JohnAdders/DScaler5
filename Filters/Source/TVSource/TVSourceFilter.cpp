@@ -13,7 +13,7 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -72,12 +72,12 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer(void)
 {
     REGPINTYPES Types[] = {&MEDIATYPE_Stream , &MEDIASUBTYPE_MPEG2_TRANSPORT, };
-    
+
     REGFILTERPINS2 Pins[1] = {
                               { REG_PINFLAG_B_OUTPUT , 1, countof(Types), Types, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
-   
+
     RegInfo.dwVersion = 2;
     RegInfo.dwMerit = MERIT_DO_NOT_USE;
     RegInfo.cPins2 = 1;

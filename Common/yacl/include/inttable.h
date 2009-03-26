@@ -3,7 +3,7 @@
 // itftable.h - Copyright 1995-1997, Don Box
 //
 // This file contains a datatype, INTERFACE_ENTRY that can be used to build
-// tables that map IIDs onto vptrs. 
+// tables that map IIDs onto vptrs.
 //
 // The data structure INTERFACE_ENTRY should be considered opaque, and the
 // the following preprocesor macros:
@@ -18,12 +18,12 @@
 // where pfnFindItf can be any function with the following prototype:
 //
 //    HRESULT STDAPICALLTYPE Find(void *pThis, DWORD dwData, REFIID, void **);
-// 
+//
 // This file contains the prototype for a routine that implements
 // QueryInterface based on an interface table.
 //
 //     InterfaceTableQueryInterface - finds and AddRef's vptr on an object
-//     
+//
 
 #ifndef _INTTABLE_H
 #define _INTTABLE_H

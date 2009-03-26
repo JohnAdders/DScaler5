@@ -35,7 +35,7 @@ void _win32_error_log(const char* src, const char* format, ...);
  * Error management
  *****************************************************************************/
 #define DVBPSI_ERROR _win32_error_log
-#define DVBPSI_ERROR_ARG  _win32_error_log                             
+#define DVBPSI_ERROR_ARG  _win32_error_log
 
 #ifdef DEBUG
 #  define DVBPSI_DEBUG _win32_debug_log

@@ -10,15 +10,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,7 +38,7 @@ typedef void (CONV_FUNC16)(BYTE*&, short);
 
 
 
-static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC16* pConvFuncs16[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     Convert16ToFloat,
     Convert16To32,
@@ -52,7 +52,7 @@ CREATE_CONVERT_TO_16(24);
 typedef void (CONV_FUNC24)(BYTE*&, long);
 
 
-static CONV_FUNC24* pConvFuncs24[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC24* pConvFuncs24[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     Convert24ToFloat,
     Convert24To32,
@@ -66,7 +66,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
     WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
     DWORD LenIn = m_buff.size();
-    
+
     HRESULT hr = S_OK;
     int Padding = (m_ChannelsRequested - 2) * m_SampleSize;
 
@@ -98,7 +98,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 pConvFunc(m_pDataOut, (lastRight + 2 * right1 + right2) >> 2);
                 lastLeft = left2;
                 lastRight = right2;
-                
+
                 if(Padding > 0)
                 {
                     memset(m_pDataOut, 0, Padding);
@@ -111,7 +111,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
             {
                 CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
 
-                // if it's 24 bit audio 
+                // if it's 24 bit audio
                 // we need to do unmangle the data
                 // the packing method was discussed in conversations on the ogle list
                 // see http://lists.berlios.de/pipermail/ogle-devel/2003-April/000408.html
@@ -122,7 +122,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 long right1 = (m_buff[i + 2] << 16) + (m_buff[i + 3] << 8) + m_buff[i + 9];
                 long left2 = (m_buff[i + 4] << 16) + (m_buff[i + 5] << 8) + m_buff[i + 10];
                 long right2 = (m_buff[i + 6] << 16) + (m_buff[i + 7] << 8) + m_buff[i + 11];
-            
+
                 pConvFunc(m_pDataOut, (lastLeft + 2 * left1 + left2) >> 2);
                 pConvFunc(m_pDataOut, (lastRight + 2 * right1 + right2) >> 2);
 
@@ -149,7 +149,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 short right = (m_buff[i + 2] << 8) + m_buff[i + 3];
                 pConvFunc(m_pDataOut, left);
                 pConvFunc(m_pDataOut, right);
-                
+
                 if(Padding > 0)
                 {
                     memset(m_pDataOut, 0, Padding);
@@ -161,7 +161,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
             else if(wfein->wBitsPerSample == 24)
             {
                 CONV_FUNC24* pConvFunc = pConvFuncs24[m_OutputSampleType];
-                // if it's 24 bit audio 
+                // if it's 24 bit audio
                 // we need to do unmangle the data
                 // and convert to little endian
                 // the packing method was discussed in conversations on the ogle list
@@ -171,7 +171,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
                 long right1 = (m_buff[i + 2] << 24) + (m_buff[i + 3] << 16) + (m_buff[i + 9] << 8);
                 long left2 = (m_buff[i + 4] << 24) + (m_buff[i + 5] << 16) + (m_buff[i + 10] << 8);
                 long right2 = (m_buff[i + 6] << 24) + (m_buff[i + 7] << 16) + (m_buff[i + 11] << 8);
-            
+
                 pConvFunc(m_pDataOut, left1 >> 8);
                 pConvFunc(m_pDataOut, right1 >> 8);
 
@@ -180,7 +180,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
                     memset(m_pDataOut, 0, Padding);
                     m_pDataOut += Padding;
                 }
-        
+
                 pConvFunc(m_pDataOut, left2 >> 8);
                 pConvFunc(m_pDataOut, right2 >> 8);
 

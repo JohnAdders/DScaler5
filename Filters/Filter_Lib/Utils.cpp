@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -102,7 +102,7 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     Dest->formattype = Source->formattype;
     // this pUnk is pretty always NULL
     // but sometimes it isn't and doing the correct
-    // thing causes crashes 
+    // thing causes crashes
     if(Dest->pUnk != NULL)
     {
         //Dest->pUnk->Release();
@@ -130,7 +130,7 @@ HRESULT CopyMediaType(AM_MEDIA_TYPE* Dest, const AM_MEDIA_TYPE* Source)
     {
         Dest->pbFormat = NULL;
     }
-    
+
     return S_OK;
 }
 
@@ -229,7 +229,7 @@ void LogMediaType(const AM_MEDIA_TYPE* MediaType, LPCSTR Desc, int LogLevel)
         char *szName;
     };
     //BYTE* Uuid;
-    
+
     LOG(LogLevel, ("%s - AM_MEDIA_TYPE Dump\n", Desc));
     LOG(LogLevel, (" Major Type %s\n", GetGUIDName(MediaType->majortype)));
     LOG(LogLevel, (" Sub Type %s\n",GetGUIDName(MediaType->subtype)));
@@ -342,7 +342,7 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line)
     const TCHAR *ErrorMsg=NULL;
 #endif
     if(ErrorMsg!=NULL)
-    {           
+    {
         String816 ErrorText(ErrorMsg);
         _LOG("%s(%d) : Bad HRESULT 0x%08x  - %s\n", File, Line, hr, (const char *)ErrorText);
     }

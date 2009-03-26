@@ -10,15 +10,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,7 @@ CREATE_CONVERT_TO_FLOAT(29)
 
 typedef void (CONV_FUNC)(BYTE*&, long);
 
-static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] = 
+static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 {
     Convert29ToFloat,
     Convert29To32,
@@ -76,7 +76,7 @@ HRESULT CAudioDecoder::ProcessMPA()
 
             if(!MAD_RECOVERABLE(m_stream.error))
                 return E_FAIL;
-            
+
             continue;
         }
 
@@ -85,7 +85,7 @@ HRESULT CAudioDecoder::ProcessMPA()
             hr = UpdateStartTime();
             CHECK(hr)
         }
-        
+
         short len = m_stream.next_frame - m_stream.this_frame;
         m_BufferSizeAtFrameStart -= len;
 
@@ -93,7 +93,7 @@ HRESULT CAudioDecoder::ProcessMPA()
         {
             // Send the undecoded byte stream over spdif
             // Code was inspired by mpegspdif by Ilkka Karvinen <ik@iki.fi>
-            // the source for mpegspdif can be found at 
+            // the source for mpegspdif can be found at
             // http://www.cs.tut.fi/~ik/mpegspdif.html
             if(m_InputSampleRate > m_frame.header.samplerate)
                 continue;

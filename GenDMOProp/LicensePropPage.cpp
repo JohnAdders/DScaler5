@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -26,7 +26,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // CLicensePropPage
 
-CLicensePropPage::CLicensePropPage() 
+CLicensePropPage::CLicensePropPage()
 {
     m_dwTitleID = IDS_TITLELicensePropPage;
     m_dwHelpFileID = IDS_HELPFILELicensePropPage;
@@ -49,7 +49,7 @@ STDMETHODIMP CLicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     m_License = *ppUnk;
 
     return S_OK;
-}   
+}
 
 STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
 {
@@ -79,7 +79,7 @@ STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModa
     if(FAILED(hr)) return hr;
     hr = m_License->get_Authors(&Authors);
     if(FAILED(hr)) return hr;
-    
+
     SendMessageW(GetDlgItem(IDC_NAME), WM_SETTEXT, 0, (LPARAM)Name);
     CComBSTR LicenseText;
 

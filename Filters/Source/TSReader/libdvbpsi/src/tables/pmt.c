@@ -105,7 +105,7 @@ void dvbpsi_DetachPMT(dvbpsi_handle h_dvbpsi)
 
   free(p_pmt_decoder->p_building_pmt);
 
-  for(i = 0; i <= 255; i++)              
+  for(i = 0; i <= 255; i++)
   {
     if(p_pmt_decoder->ap_sections[i])
       free(p_pmt_decoder->ap_sections[i]);
@@ -155,7 +155,7 @@ void dvbpsi_EmptyPMT(dvbpsi_pmt_t* p_pmt)
   p_pmt->p_first_descriptor = NULL;
   p_pmt->p_first_es = NULL;
 }
-                        
+
 
 /*****************************************************************************
  * dvbpsi_PMTAddDescriptor

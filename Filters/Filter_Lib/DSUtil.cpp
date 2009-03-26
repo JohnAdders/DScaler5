@@ -11,15 +11,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ BITMAPINFOHEADER* ExtractBIH(const AM_MEDIA_TYPE* pmt)
             return &vih->bmiHeader;
         }
     }
-    
+
     return NULL;
 }
 
@@ -129,7 +129,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary, 
         {
             w = (ptr[4]<<4)|(ptr[5]>>4);
             h = ((ptr[5]&0xf)<<8)|ptr[6];
-            float ar[] = 
+            float ar[] =
             {
                 1.0000f,1.0000f,0.6735f,0.7031f,
                 0.7615f,0.8055f,0.8437f,0.8935f,
@@ -142,7 +142,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary, 
     }
     else if(pmt->formattype == FORMAT_MPEG2_VIDEO)
     {
-        ptr = (BYTE*)((MPEG2VIDEOINFO*)pmt->pbFormat)->dwSequenceHeader; 
+        ptr = (BYTE*)((MPEG2VIDEOINFO*)pmt->pbFormat)->dwSequenceHeader;
         len = ((MPEG2VIDEOINFO*)pmt->pbFormat)->cbSequenceHeader;
 
         if(ptr && len >= 8 && ptr[0] == 0 && ptr[1] == 0 && ptr[2] == 0x01 && ptr[3] == 0xb3)
@@ -189,7 +189,7 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary, 
     return(true);
 }
 
-// function taken from 
+// function taken from
 // header.c
 // Copyright (C) 2000-2003 Michel Lespinasse <walken@zoy.org>
 // Copyright (C) 2003      Regis Duchesne <hpreg@zoy.org>
@@ -201,14 +201,14 @@ void Simplify(long& u, long& v)
 {
     long a, b, tmp;
 
-    a = u;  
+    a = u;
     b = v;
-    
-    while (a) 
-    {   
+
+    while (a)
+    {
         /* find greatest common divisor */
-        tmp = a;    
-        a = b % tmp;    
+        tmp = a;
+        a = b % tmp;
         b = tmp;
     }
     u /= b;
@@ -219,14 +219,14 @@ void Simplify(unsigned long& u, unsigned long& v)
 {
     unsigned long a, b, tmp;
 
-    a = u;  
+    a = u;
     b = v;
-    
-    while (a) 
-    {   
+
+    while (a)
+    {
         /* find greatest common divisor */
-        tmp = a;    
-        a = b % tmp;    
+        tmp = a;
+        a = b % tmp;
         b = tmp;
     }
     u /= b;

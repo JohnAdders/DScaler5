@@ -66,7 +66,7 @@ static void spectral_extension(AC3DecodeContext *s){
     float rmsenergy[AC3_MAX_CHANNELS][18];
 
     //XXX spxbandtable[bnd] = 25 + 12 * bnd ?
-    static int spxbandtable[] = 
+    static int spxbandtable[] =
     {
         25, 37, 49, 61, 73, 85, 97, 109, 121, 133, 145, 157, 169, 181, 193, 205, 217, 229
     };

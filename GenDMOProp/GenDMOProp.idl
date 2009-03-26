@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -27,14 +27,14 @@ typedef LPVOID*  IMediaSample;
 cpp_quote("#endif")
 
 [
-	uuid(0E93874B-7AED-11D7-B84B-0002A5623377),
-	version(1.0),
-	helpstring("GenDMOProp 1.0 Type Library")
+    uuid(0E93874B-7AED-11D7-B84B-0002A5623377),
+    version(1.0),
+    helpstring("GenDMOProp 1.0 Type Library")
 ]
 library GENDMOPROPLib
 {
-	importlib("stdole32.tlb");
-	importlib("stdole2.tlb");
+    importlib("stdole32.tlb");
+    importlib("stdole2.tlb");
 
     typedef enum
     {
@@ -77,12 +77,12 @@ library GENDMOPROPLib
 
     [
         object,
-		uuid(7317990A-1A7F-4499-938A-1100D8F75E95),
-		helpstring("IInterlacedField Interface"),
-		pointer_default(unique)
-	]
-	interface IInterlacedField : IMediaBuffer
-	{
+        uuid(7317990A-1A7F-4499-938A-1100D8F75E95),
+        helpstring("IInterlacedField Interface"),
+        pointer_default(unique)
+    ]
+    interface IInterlacedField : IMediaBuffer
+    {
         [propget] HRESULT TopFieldFirst([out,retval] BOOLEAN* TopFieldFirst);
         [propget] HRESULT Hint([out,retval] eDetectionHint* HintValue);
         [propget] HRESULT FieldNumber([out,retval] DWORD* FieldNumber);
@@ -90,12 +90,12 @@ library GENDMOPROPLib
 
     [
         object,
-		uuid(85E79149-6CB3-4f72-B8F1-983425D31C5B),
-		helpstring("IInterlacedBufferStack Interface"),
-		pointer_default(unique)
-	]
-	interface IInterlacedBufferStack : IUnknown
-	{
+        uuid(85E79149-6CB3-4f72-B8F1-983425D31C5B),
+        helpstring("IInterlacedBufferStack Interface"),
+        pointer_default(unique)
+    ]
+    interface IInterlacedBufferStack : IUnknown
+    {
         [propget] HRESULT NumFields([out,retval] DWORD* Count);
         HRESULT GetField([in] DWORD Index, [out,retval] IInterlacedField** Field);
         HRESULT GetMovementMap([out,retval] IMediaBuffer** MovementMap);
@@ -103,119 +103,119 @@ library GENDMOPROPLib
         HRESULT ClearAll();
     }
 
-	[
+    [
         object,
-		uuid(3E119535-D5AB-4520-B0E1-495B322E2A1A),
-		helpstring("IAmFreeSoftwareLicenced Interface"),
-		pointer_default(unique)
-	]
-	interface IAmFreeSoftwareLicensed : IUnknown
-	{
+        uuid(3E119535-D5AB-4520-B0E1-495B322E2A1A),
+        helpstring("IAmFreeSoftwareLicenced Interface"),
+        pointer_default(unique)
+    ]
+    interface IAmFreeSoftwareLicensed : IUnknown
+    {
         [propget] HRESULT Name([out, retval] BSTR* Name);
-		[propget] HRESULT License([out, retval] eFreeLicense* License);
+        [propget] HRESULT License([out, retval] eFreeLicense* License);
         [propget] HRESULT Authors([out, retval] BSTR* Authors);
-	}
+    }
 
     [
         object,
-		uuid(BBFCEC96-6D42-425e-9988-9C10E5ACDE27),
-		helpstring("IHaveStatistics Interface"),
-		pointer_default(unique)
-	]
-	interface IHaveStatistics : IUnknown
-	{
+        uuid(BBFCEC96-6D42-425e-9988-9C10E5ACDE27),
+        helpstring("IHaveStatistics Interface"),
+        pointer_default(unique)
+    ]
+    interface IHaveStatistics : IUnknown
+    {
         [propget] HRESULT NumStatistics([out, retval] DWORD* Number);
-		[propget] HRESULT StatisticName([in] DWORD Index, [out, retval] BSTR* StatName);
-		[propget] HRESULT StatisticValue([in] DWORD Index, [out, retval] BSTR* StatValue);
-	}
+        [propget] HRESULT StatisticName([in] DWORD Index, [out, retval] BSTR* StatName);
+        [propget] HRESULT StatisticValue([in] DWORD Index, [out, retval] BSTR* StatValue);
+    }
 
-	[
+    [
         object,
-		uuid(85F5007E-3759-4be0-854B-A78B06814DB7),
-		helpstring("ISaveDefaults Interface"),
-		pointer_default(unique)
-	]
-	interface ISaveDefaults : IUnknown
-	{
+        uuid(85F5007E-3759-4be0-854B-A78B06814DB7),
+        helpstring("ISaveDefaults Interface"),
+        pointer_default(unique)
+    ]
+    interface ISaveDefaults : IUnknown
+    {
         HRESULT SaveDefaultsToRegistry();
         HRESULT LoadDefaultsFromRegistry();
         HRESULT SaveDefaultToRegistry(DWORD ParamIndex);
-	}
+    }
 
 
     [
         object,
-		uuid(7F7E0B72-860E-11d7-B84E-0002A5623377),
-		helpstring("IDScalerFilterPlugin Interface"),
-		pointer_default(unique)
-	]
-	interface IDScalerFilterPlugin : IUnknown
-	{
+        uuid(7F7E0B72-860E-11d7-B84E-0002A5623377),
+        helpstring("IDScalerFilterPlugin Interface"),
+        pointer_default(unique)
+    ]
+    interface IDScalerFilterPlugin : IUnknown
+    {
         HRESULT Attach([in] IUnknown* m_DScalerFilter);
         HRESULT Detach();
     }
 
-   	[
+       [
         object,
-		uuid(D2C9AF19-8AC4-11d7-B851-0002A5623377),
-		helpstring("IDScalerVideoFilterPlugin Interface"),
-		pointer_default(unique)
-	]
-	interface IDScalerVideoFilterPlugin : IUnknown
-	{
+        uuid(D2C9AF19-8AC4-11d7-B851-0002A5623377),
+        helpstring("IDScalerVideoFilterPlugin Interface"),
+        pointer_default(unique)
+    ]
+    interface IDScalerVideoFilterPlugin : IUnknown
+    {
         [propget] HRESULT Position([out, retval] eVideoFilterPosition* pPosition);
         [propget] HRESULT NumFieldsDelay([out, retval] DWORD* pFieldsDelay);
         [propget] HRESULT NumFieldsBuffered([out, retval] DWORD* pFieldsBuffered);
     }
 
-	[
+    [
         object,
-		uuid(7F7E0B71-860E-11d7-B84E-0002A5623377),
-		helpstring("IDeinterlace Interface"),
-		pointer_default(unique)
-	]
-	interface IDeinterlace : IUnknown
-	{
+        uuid(7F7E0B71-860E-11d7-B84E-0002A5623377),
+        helpstring("IDeinterlace Interface"),
+        pointer_default(unique)
+    ]
+    interface IDeinterlace : IUnknown
+    {
         [propget] HRESULT ComplexityIndex([out, retval] long* pComplexity);
         HRESULT Process([in] IInterlacedBufferStack* Stack, [in] IMediaBuffer* pBuffer);
     }
 
-	[
+    [
         object,
-		uuid(2FDD175D-5AFA-40e9-81B2-4B67B4698CF1),
-		helpstring("IFilmDetect Interface"),
-		pointer_default(unique)
-	]
-	interface IFilmDetect : IUnknown
-	{
+        uuid(2FDD175D-5AFA-40e9-81B2-4B67B4698CF1),
+        helpstring("IFilmDetect Interface"),
+        pointer_default(unique)
+    ]
+    interface IFilmDetect : IUnknown
+    {
         HRESULT DetectFilm([in] IInterlacedBufferStack* Stack, [in, out] eDeinterlaceType* DetectedType, [in, out] DWORD* DetectedIndex);
         HRESULT ResetDectection();
     }
 
     [
         uuid(0E938757-7AED-11D7-B84B-0002A5623377),
- 		helpstring("GenDMOPropPage Class")
+         helpstring("GenDMOPropPage Class")
     ]
-	coclass GenDMOPropPage
-	{
-		interface IUnknown;
-	};
-
-	[
-		uuid(FDA2243F-7BAA-11D7-B84B-0002A5623377),
-		helpstring("LicensePropPage Class")
-	]
-	coclass LicensePropPage
-	{
-		interface IUnknown;
-	};
+    coclass GenDMOPropPage
+    {
+        interface IUnknown;
+    };
 
     [
-		uuid(3DDF3FE5-24D4-4289-9143-E1FFD70CD934),
-		helpstring("StatisticsPropPage Class")
-	]
-	coclass StatisticsPropPage
-	{
-		interface IUnknown;
-	};
+        uuid(FDA2243F-7BAA-11D7-B84B-0002A5623377),
+        helpstring("LicensePropPage Class")
+    ]
+    coclass LicensePropPage
+    {
+        interface IUnknown;
+    };
+
+    [
+        uuid(3DDF3FE5-24D4-4289-9143-E1FFD70CD934),
+        helpstring("StatisticsPropPage Class")
+    ]
+    coclass StatisticsPropPage
+    {
+        interface IUnknown;
+    };
 };

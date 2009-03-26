@@ -7,21 +7,21 @@
 // the appropriate CRT routine to do the work. The routines are inlined
 // and incur no additional overhead.
 //
-//     size_t ustrlen(const uchar *p); 
-//     uchar *ustrcpy(uchar *p1, const uchar *p2); 
-//     uchar *ustrcat(uchar *p1, const uchar *p2); 
+//     size_t ustrlen(const uchar *p);
+//     uchar *ustrcpy(uchar *p1, const uchar *p2);
+//     uchar *ustrcat(uchar *p1, const uchar *p2);
 //
 // where uchar = { wchar_t , char }
 //
-// This file contains the prototypes for several conversion routines 
+// This file contains the prototypes for several conversion routines
 // that are used by the String816 class for duplicating/converting strings
 // on the fly.
 //
 //     uxdup(const char *psz) - returns a new-ed wchar_t string based on psz
 //     uxdup(const wchar_t *psz) - returns a new-ed char string based on psz
-//     
+//
 // Finally, this file contains two class definitions:
-// 
+//
 //     _U - converts const uchar * to const uchar *
 //     _UNCC - converts const uchar * to uchar * (needed for non-const correct code)
 //
@@ -95,14 +95,14 @@ inline wchar_t *ustrcat(wchar_t *pszTarget, const char *pszSrc)
     return mbstowcs(pszTarget + ustrlen(pszTarget), pszSrc, INT_MAX), pszTarget;
 }
 
-// these two routines are equivalent to strdup but convert 
+// these two routines are equivalent to strdup but convert
 // instead of just copying
 
 wchar_t *uxdup(const char *psz);
 char *uxdup(const wchar_t *pwsz);
 
 
-// String816 maps const wchar_t * and const char * to 
+// String816 maps const wchar_t * and const char * to
 // either const wchar_t * or const char * depending on context
 class String816
 {

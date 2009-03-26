@@ -48,7 +48,7 @@
 dvbpsi_subtitling_dr_t * dvbpsi_DecodeSubtitlingDr(
                                         dvbpsi_descriptor_t * p_descriptor)
 {
-  int i_subtitles_number, i;      
+  int i_subtitles_number, i;
   dvbpsi_subtitling_dr_t * p_decoded;
 
   /* Check the tag */
@@ -85,28 +85,28 @@ dvbpsi_subtitling_dr_t * dvbpsi_DecodeSubtitlingDr(
                      p_descriptor->i_length);
     free(p_decoded);
   }
-  
+
   i_subtitles_number = p_descriptor->i_length / 8;
 
   p_decoded->i_subtitles_number = i_subtitles_number;
-  
+
   for (i=0; i < i_subtitles_number; i++)
   {
     memcpy(p_decoded->p_subtitle[i].i_iso6392_language_code,
                      p_descriptor->p_data + 8 * i, 3);
 
-    p_decoded->p_subtitle[i].i_subtitling_type = 
+    p_decoded->p_subtitle[i].i_subtitling_type =
                                  p_descriptor->p_data[8 * i + 3];
-    
-    p_decoded->p_subtitle[i].i_composition_page_id = 
+
+    p_decoded->p_subtitle[i].i_composition_page_id =
               ((uint16_t)(p_descriptor->p_data[8 * i + 4]) << 8)
             | p_descriptor->p_data[8 * i + 5];
-    
-    p_decoded->p_subtitle[i].i_ancillary_page_id = 
+
+    p_decoded->p_subtitle[i].i_ancillary_page_id =
               ((uint16_t)(p_descriptor->p_data[8 * i + 6]) << 8)
-            | p_descriptor->p_data[8 * i + 7]; 
+            | p_descriptor->p_data[8 * i + 7];
   }
-  
+
   p_descriptor->p_decoded = (void*)p_decoded;
 
   return p_decoded;
@@ -121,34 +121,34 @@ dvbpsi_descriptor_t * dvbpsi_GenSubtitlingDr(
                                         int b_duplicate)
 {
   int i;
-  
+
   /* Create the descriptor */
   dvbpsi_descriptor_t * p_descriptor =
       dvbpsi_NewDescriptor(0x59, 2 + p_decoded->i_subtitles_number * 8 , NULL);
-  
+
   if(p_descriptor)
   {
     /* Encode data */
     for (i=0; i < p_decoded->i_subtitles_number; i++ )
-    {     
+    {
       memcpy( p_descriptor->p_data + 8 * i,
               p_decoded->p_subtitle[i].i_iso6392_language_code,
               3);
-         
-      p_descriptor->p_data[8 * i + 3] = 
+
+      p_descriptor->p_data[8 * i + 3] =
                                   p_decoded->p_subtitle[i].i_subtitling_type;
 
-      p_descriptor->p_data[8 * i + 4] = 
+      p_descriptor->p_data[8 * i + 4] =
                            p_decoded->p_subtitle[i].i_composition_page_id >> 8;
-      p_descriptor->p_data[8 * i + 5] = 
+      p_descriptor->p_data[8 * i + 5] =
                            p_decoded->p_subtitle[i].i_composition_page_id % 0xFF;
 
-      p_descriptor->p_data[8 * i + 6] = 
+      p_descriptor->p_data[8 * i + 6] =
                            p_decoded->p_subtitle[i].i_ancillary_page_id >> 8;
-      p_descriptor->p_data[8 * i + 7] = 
+      p_descriptor->p_data[8 * i + 7] =
                            p_decoded->p_subtitle[i].i_ancillary_page_id % 0xFF;
     }
-    
+
     if(b_duplicate)
     {
       /* Duplicate decoded data */
@@ -156,7 +156,7 @@ dvbpsi_descriptor_t * dvbpsi_GenSubtitlingDr(
         (dvbpsi_subtitling_dr_t*)malloc(sizeof(dvbpsi_subtitling_dr_t));
       if(p_dup_decoded)
         memcpy(p_dup_decoded, p_decoded, sizeof(dvbpsi_subtitling_dr_t));
-  
+
       p_descriptor->p_decoded = (void*)p_dup_decoded;
     }
   }

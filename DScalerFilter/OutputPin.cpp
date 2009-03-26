@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -57,7 +57,7 @@ HRESULT COutputPin::ChangeOutputFormat(const AM_MEDIA_TYPE* InputType)
         hr = CreateOutputMediaType(InputType, &ProposedType);
         CHECK(hr);
     }
-    
+
     hr = m_Allocator->Decommit();
     CHECK(hr);
 
@@ -106,7 +106,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
     hr = m_MemInputPin->GetAllocatorRequirements(&Props);
     if(FAILED(hr))
     {
-        // if the pin doen't want to tell up what it wants 
+        // if the pin doen't want to tell up what it wants
         // then see what the current allocator setup is
         if(hr == E_NOTIMPL)
         {
@@ -122,7 +122,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
             return VFW_E_NO_TRANSPORT;
         }
     }
-    
+
     Props.cBuffers = max(1, Props.cBuffers);
     Props.cbBuffer = max(768*576*2, (ULONG)Props.cbBuffer);
     Props.cbAlign = max(1, Props.cbAlign);
@@ -131,7 +131,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
 
     // \todo see if we need this rubbish
     // the old video renderer seems to set things up with
-    // an alignment of 16 
+    // an alignment of 16
     // that it's own allocator doesn't in fact support so
     // we loop down until we find an alignment it does like
     while(hr == VFW_E_BADALIGN && Props.cbAlign > 1)
@@ -145,7 +145,7 @@ HRESULT COutputPin::InternalConnect(IPin *pReceivePin, const AM_MEDIA_TYPE* Prop
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return VFW_E_NO_TRANSPORT;
     }
-    
+
     LOG(DBGLOG_ALL, ("Allocator Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
 
     hr = m_MemInputPin->NotifyAllocator(m_Allocator, FALSE);
@@ -182,7 +182,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     {
         return VFW_E_NO_TRANSPORT;
     }
-    
+
     AM_MEDIA_TYPE ProposedType;
     InitMediaType(&ProposedType);
 
@@ -195,7 +195,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
     if(pmt != NULL)
     {
         if((pmt->majortype != GUID_NULL && pmt->majortype != ProposedType.majortype) ||
-            (pmt->subtype != GUID_NULL && pmt->subtype != ProposedType.subtype) || 
+            (pmt->subtype != GUID_NULL && pmt->subtype != ProposedType.subtype) ||
             (pmt->formattype != GUID_NULL && pmt->formattype != ProposedType.formattype))
         {
             ClearMediaType(&ProposedType);
@@ -212,7 +212,7 @@ STDMETHODIMP COutputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 
     // If all is OK the save the Pin interface
     m_ConnectedPin = pReceivePin;
-    
+
     // save the IPinConnection pointer
     // so that we can propagate dynamic reconnections
     m_PinConnection = pReceivePin;
@@ -525,7 +525,7 @@ ULONG COutputPin::FormatVersion()
 }
 
 HRESULT COutputPin::GetType(ULONG TypeNum, AM_MEDIA_TYPE* Type)
-{   
+{
     HRESULT hr = S_OK;
     if(m_CurrentMediaType.majortype != GUID_NULL)
     {
@@ -642,7 +642,7 @@ STDMETHODIMP COutputPin::ConvertTimeFormat(
     return MediaSeeking->ConvertTimeFormat(pTarget, pTargetFormat, Source, pSourceFormat);
 }
 
-STDMETHODIMP COutputPin::SetPositions( 
+STDMETHODIMP COutputPin::SetPositions(
                         LONGLONG *pCurrent,
                         DWORD dwCurrentFlags,
                         LONGLONG *pStop,
@@ -760,7 +760,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
 
     // we want to use the new height but we'll work with a normal stride
     // if it's within 32 of the new width
-    long Height = BitmapInfo->biHeight; 
+    long Height = BitmapInfo->biHeight;
     long Width;
 
     if(Height == 576)
@@ -801,7 +801,7 @@ HRESULT COutputPin::CreateOutputMediaType(const AM_MEDIA_TYPE* InputType, AM_MED
     NewFormat->rcTarget.bottom = Height;
     NewFormat->rcTarget.left = 0;
     NewFormat->rcTarget.right = Width;
-    
+
     NewFormat->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 
     NewFormat->bmiHeader.biHeight = Height;

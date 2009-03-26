@@ -18,7 +18,7 @@ library HelloLib
 
         HRESULT HelloWorld(void);
     }
-    
+
     [
         object,
         oleautomation,
@@ -30,13 +30,13 @@ library HelloLib
 
         HRESULT Eat(void);
     }
-    
+
     [
         object,
         oleautomation,
         uuid(DABA24E3-A38F-11d0-8C2F-0080C73925BA)
     ]
-    interface IDog : IAnimal 
+    interface IDog : IAnimal
     {
         import "unknwn.idl";
 
@@ -48,7 +48,7 @@ library HelloLib
         oleautomation,
         uuid(DABA24E4-A38F-11d0-8C2F-0080C73925BA)
     ]
-    interface ICat : IAnimal 
+    interface ICat : IAnimal
     {
         import "unknwn.idl";
 
@@ -59,7 +59,7 @@ library HelloLib
         oleautomation,
         uuid(DABA24E5-A38F-11d0-8C2F-0080C73925BA)
     ]
-    interface IPug : IDog 
+    interface IPug : IDog
     {
         import "unknwn.idl";
 
@@ -76,7 +76,7 @@ library HelloLib
 
         HRESULT SnoreLoudly(void);
     }
-    
+
     [
         uuid(DABA24E7-A38F-11d0-8C2F-0080C73925BA)
     ]

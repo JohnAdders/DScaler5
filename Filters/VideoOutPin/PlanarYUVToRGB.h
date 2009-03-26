@@ -15,7 +15,7 @@
 //    along with this program; if not, write to the Free Software
 //    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //
-//  Notes: 
+//  Notes:
 //  - BitBltFromI420ToRGB is from VirtualDub
 //    - The core assembly function of CCpuID is from DVD2AVI
 //    (- vd.cpp/h should be renamed to something more sensible already :)

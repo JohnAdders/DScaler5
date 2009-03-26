@@ -13,13 +13,13 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
@@ -39,7 +39,7 @@ extern "C"
 
 DEFINE_GUID(CLSID_CTSReader, 0xe59f5154, 0xdac7, 0x44f0, 0x99, 0x7e, 0x9a, 0xc1, 0x9a, 0x17, 0x66, 0x92);
 
-class CTSReader : 
+class CTSReader :
     public CDSBaseFilter,
     public IAmFreeSoftwareLicensed,
     public IFileSourceFilter
@@ -112,7 +112,7 @@ public:
     HRESULT QuerySupported(REFGUID guidPropSet, DWORD dwPropID, DWORD *pTypeSupport, CDSBasePin* pPin);
     HRESULT Activate();
     HRESULT Deactivate();
-    
+
 public:
     HRESULT Render(IPin* pPin, IGraphBuilder* pGraphBuilder);
     HRESULT Backout(IPin* pPin, IGraphBuilder* pGraphBuilder);

@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,7 @@ CAudioDetect::CAudioDetect() :
     m_NeedToAttachFormat = false;
 
     LOG(DBGLOG_FLOW, ("CAudioDetect::CreatePins\n"));
-    
+
     m_AudioInPin = new CDSInputPin;
     if(m_AudioInPin == NULL)
     {
@@ -43,7 +43,7 @@ CAudioDetect::CAudioDetect() :
     }
     m_AudioInPin->AddRef();
     m_AudioInPin->SetupObject(this, L"Input");
-    
+
     m_AudioOutPin = new CDSOutputPin();
     if(m_AudioOutPin == NULL)
     {
@@ -313,7 +313,7 @@ HRESULT CAudioDetect::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* pP
 
         if(TypeNum < 0) return E_INVALIDARG;
         if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
-        
+
         return CopyMediaType(pmt, &m_InternalMT);
     }
     else
@@ -351,7 +351,7 @@ void CAudioDetect::CreateInternalMediaType()
     m_InternalWF.wFormatTag = (WORD)m_InternalMT.subtype.Data1;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWF);
-    m_InternalMT.pbFormat = (BYTE*)&m_InternalWF; 
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWF;
 
     m_NeedToAttachFormat = true;
 }
@@ -365,7 +365,7 @@ HRESULT CAudioDetect::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     }
 
     // if there was a discontinuity then we need to ask for the buffer
-    // differently 
+    // differently
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
     {
         m_IsDiscontinuity = true;
@@ -446,8 +446,8 @@ HRESULT CAudioDetect::ProcessPCM()
 {
     HRESULT hr = S_OK;
     int Chunks = m_buff.size() / 0x1800;
-    
-    WORD* pData = (WORD*)&m_buff[0]; 
+
+    WORD* pData = (WORD*)&m_buff[0];
 
     while(Chunks--)
     {
@@ -468,7 +468,7 @@ HRESULT CAudioDetect::ProcessPCM()
         }
         pData += 0x1800 / 2;
     }
-    
+
     int ByteToChuck = (BYTE*)pData - (BYTE*)&m_buff[0];
     if(ByteToChuck != 0)
     {
@@ -484,8 +484,8 @@ HRESULT CAudioDetect::ProcessSilence()
 {
     HRESULT hr = S_OK;
     int Chunks = m_buff.size() / 0x1800;
-    
-    WORD* pData = (WORD*)&m_buff[0]; 
+
+    WORD* pData = (WORD*)&m_buff[0];
 
     while(Chunks--)
     {
@@ -496,7 +496,7 @@ HRESULT CAudioDetect::ProcessSilence()
         }
         pData += 0x1800 / 2;
     }
-    
+
     int ByteToChuck = (BYTE*)pData - (BYTE*)&m_buff[0];
     if(ByteToChuck != 0)
     {
@@ -635,7 +635,7 @@ HRESULT CAudioDetect::GetOutputSampleAndPointer(IMediaSample** pOut, BYTE** ppDa
 
     hr = (*pOut)->SetActualDataLength(Len);
     CHECK(hr);
-    
+
     return hr;
 }
 
@@ -655,11 +655,11 @@ HRESULT CAudioDetect::Deliver(IMediaSample* pOut)
     {
         m_AudioOutPin->SetType(&m_InternalMT);
         pOut->SetMediaType(&m_InternalMT);
-        pOut->SetDiscontinuity(TRUE); 
+        pOut->SetDiscontinuity(TRUE);
     }
     else
     {
-        pOut->SetDiscontinuity(m_IsDiscontinuity); 
+        pOut->SetDiscontinuity(m_IsDiscontinuity);
     }
 
     m_IsDiscontinuity = false;

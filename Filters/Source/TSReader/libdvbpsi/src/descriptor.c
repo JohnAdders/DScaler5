@@ -83,7 +83,7 @@ dvbpsi_descriptor_t* dvbpsi_NewDescriptor(uint8_t i_tag, uint8_t i_length,
 void dvbpsi_DeleteDescriptors(dvbpsi_descriptor_t* p_descriptor)
 {
   while(p_descriptor != NULL)
-  { 
+  {
     dvbpsi_descriptor_t* p_next = p_descriptor->p_next;
 
     if(p_descriptor->p_data != NULL)

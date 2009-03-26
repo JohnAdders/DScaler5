@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,7 @@ CDSBufferedInputPin::CDSBufferedInputPin() :
     m_ThreadStopEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     m_WorkerThread = NULL;
     m_ThreadRetCode = S_OK;
-    
+
 }
 
 CDSBufferedInputPin::~CDSBufferedInputPin()
@@ -70,7 +70,7 @@ STDMETHODIMP CDSBufferedInputPin::EndFlush(void)
 
     // make sure we are not in ProcessBufferedSamples
     CProtectCode WhileVarInScope(&m_WorkerThreadLock);
-    
+
     HRESULT hr = CDSInputPin::EndFlush();
 
     return hr;
@@ -81,7 +81,7 @@ STDMETHODIMP CDSBufferedInputPin::EndOfStream(void)
     LOG(DBGLOG_ALL, ("CDSBufferedInputPin::EndOfStream\n"));
 
     // all code below here is protected
-    // from runnning at the same time as other 
+    // from runnning at the same time as other
     // functions with this line
     CProtectCode WhileVarInScope(this);
 
@@ -126,7 +126,7 @@ STDMETHODIMP CDSBufferedInputPin::Receive(IMediaSample *InSample)
     HRESULT hr = S_OK;
 
     // all code below here is protected
-    // from runnning at the same time as other 
+    // from runnning at the same time as other
     // functions with this line
     CProtectCode WhileVarInScope(this);
 
@@ -141,7 +141,7 @@ STDMETHODIMP CDSBufferedInputPin::Receive(IMediaSample *InSample)
     m_Samples.push(InSample);
 
     SetEvent(m_SamplesReadyEvent);
-    
+
     return hr;
 }
 
@@ -155,16 +155,16 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
     {
         HRESULT hr = S_OK;
         DWORD dwWaitResult;
-        HANDLE hEvents[2]; 
+        HANDLE hEvents[2];
 
         hEvents[0] = pThis->m_ThreadStopEvent;  // thread's read event
-        hEvents[1] = pThis->m_SamplesReadyEvent; 
+        hEvents[1] = pThis->m_SamplesReadyEvent;
 
         dwWaitResult = WaitForMultipleObjects(2, hEvents, FALSE, INFINITE);
 
-        switch (dwWaitResult) 
+        switch (dwWaitResult)
         {
-            case WAIT_OBJECT_0: 
+            case WAIT_OBJECT_0:
                 {
                     CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
                     pThis->m_ThreadRetCode = S_FALSE;
@@ -175,7 +175,7 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
                 }
                 LOG(DBGLOG_FLOW, ("ProcessingThread Exit by event\n"));
                 ExitThread(0);
-                break; 
+                break;
             case WAIT_OBJECT_0 + 1:
                 hr = pThis->ProcessBufferedSamples();
                 if(FAILED(hr))
@@ -190,13 +190,13 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
                     }
                 }
                 break;
-            default: 
+            default:
                 {
                     CProtectCode WhileVarInScope2(&pThis->m_SamplesLock);
                     pThis->m_ThreadRetCode = E_UNEXPECTED;
                 }
                 LOG(DBGLOG_FLOW, ("ProcessingThread Exit by unexpected\n"));
-                ExitThread(0); 
+                ExitThread(0);
                 break;
         }
     }
@@ -213,7 +213,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSamples()
     while(size > 0 && SUCCEEDED(hr))
     {
         SI(IMediaSample) InSample;
-        
+
         {
             CProtectCode WhileVarInScope(&m_SamplesLock);
             size = m_Samples.size();
@@ -275,7 +275,7 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSample(IMediaSample* InSample)
         return VFW_E_WRONG_STATE;
     }
 
-   
+
     AM_SAMPLE2_PROPERTIES InSampleProperties;
     ZeroMemory(&InSampleProperties, sizeof(AM_SAMPLE2_PROPERTIES));
 
@@ -307,9 +307,9 @@ HRESULT CDSBufferedInputPin::ProcessBufferedSample(IMediaSample* InSample)
     CheckForBlocking();
 
     // make sure we don't bother sending nothing down
-    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
+    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL)
     {
-        // Send the sample to the filter for processing 
+        // Send the sample to the filter for processing
         hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
     }
 
@@ -340,10 +340,10 @@ HRESULT CDSBufferedInputPin::Activate()
     ResetEvent(m_SamplesReadyEvent);
     m_ThreadRetCode = S_OK;
 
-    m_WorkerThread = CreateThread(NULL, 0, 
-        (LPTHREAD_START_ROUTINE) ProcessingThread, 
+    m_WorkerThread = CreateThread(NULL, 0,
+        (LPTHREAD_START_ROUTINE) ProcessingThread,
         this,  // pass event handle
-        0, &m_ThreadId); 
+        0, &m_ThreadId);
 
     return hr;
 }

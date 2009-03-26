@@ -21,7 +21,7 @@ __inline void check(HRESULT hr)
 class RegisterInRotROT
 {
 public:
-    RegisterInRotROT(IUnknown *pUnkGraph) 
+    RegisterInRotROT(IUnknown *pUnkGraph)
     {
         SI(IRunningObjectTable) rot;
         check(GetRunningObjectTable(0, rot.GetReleasedInterfaceReference()));
@@ -45,10 +45,10 @@ private:
     DWORD m_Register;
 };
 
-void SaveGraphFile(SI(IGraphBuilder)& graph, WCHAR* wszPath) 
+void SaveGraphFile(SI(IGraphBuilder)& graph, WCHAR* wszPath)
 {
-    const WCHAR wszStreamName[] = L"ActiveMovieGraph"; 
-    
+    const WCHAR wszStreamName[] = L"ActiveMovieGraph";
+
     SI(IStorage) storage;
     check(StgCreateDocfile(
         wszPath,
@@ -62,7 +62,7 @@ void SaveGraphFile(SI(IGraphBuilder)& graph, WCHAR* wszPath)
         0, 0, stream.GetReleasedInterfaceReference()));
 
     SI(IPersistStream) persist(graph);
-    
+
     persist->Save(stream.GetNonAddRefedInterface(), TRUE);
 
     check(storage->Commit(STGC_DEFAULT));
@@ -73,16 +73,16 @@ void SaveGraphFile(SI(IGraphBuilder)& graph, WCHAR* wszPath)
 void convertTs2Dvr(string& tsfilename)
 {
     SI(IGraphBuilder) graph;
-    
+
     check(graph.CreateInstance(CLSID_FilterGraph, CLSCTX_INPROC_SERVER));
-   
+
     RegisterInRotROT rot(graph.GetNonAddRefedInterface());
 
     SI(IMediaControl) control(graph);
 
     SI(IFilterGraph2) graph2(graph);
     SI(IMediaEvent) mediaEvent(graph);
-    
+
     SI(IBaseFilter)    inputFileFilter;
     check(graph->AddSourceFilter(_U(tsfilename.c_str()), _U(tsfilename.c_str()), inputFileFilter.GetReleasedInterfaceReference()));
 
@@ -92,7 +92,7 @@ void convertTs2Dvr(string& tsfilename)
 
     check(graph->AddFilter(sink.GetNonAddRefedInterface(), L"Sink"));
 
-    // Now we need to connect the output pin of the source 
+    // Now we need to connect the output pin of the source
     // to the input pin of the parser.
     // obtain the output pin of the source filter
     // We use the filter's member function GetPin to do this.
@@ -116,7 +116,7 @@ void convertTs2Dvr(string& tsfilename)
     SI(IBaseFilter)    infTee;
     check(infTee.CreateInstance(CLSID_InfTee, CLSCTX_INPROC_SERVER));
     check(graph->AddFilter(infTee.GetNonAddRefedInterface(), L"Inf Tee"));
-    
+
     check(infTee->FindPin(L"Input", inPin.GetReleasedInterfaceReference()));
     check(graph2->Connect(outPin.GetNonAddRefedInterface(), inPin.GetNonAddRefedInterface()));
 
@@ -148,11 +148,11 @@ void convertTs2Dvr(string& tsfilename)
     SaveGraphFile(graph, L"Graph.grf");
 
     SI(IStreamBufferSink) sinkControl(sink);
-    
+
     check(sinkControl->LockProfile(NULL));
     SI(IUnknown) rec;
-    check(sinkControl->CreateRecorder(L"C:\\MyRecording.dvr-ms", 
-                                            RECORDING_TYPE_CONTENT, 
+    check(sinkControl->CreateRecorder(L"C:\\MyRecording.dvr-ms",
+                                            RECORDING_TYPE_CONTENT,
                                             rec.GetReleasedInterfaceReference()));
 
     SI(IStreamBufferRecordControl) recControl(rec);

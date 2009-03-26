@@ -3,7 +3,7 @@
 // regtable.h - Copyright 1996-1997, Don Box
 //
 // This file contains a datatype, REGISTRY_ENTRY that can be used to build
-// tables that contain registry strings. 
+// tables that contain registry strings.
 //
 // The data structure REGISTRY_ENTRY should be considered opaque, and the
 // the following preprocesor macros:
@@ -14,7 +14,7 @@
 //     END_REGISTRY_TABLE() - terminates table definition
 //
 // where flags can be one of the following:
-// 
+//
 //    REGFLAG_NORMAL - add at install, remove at uninstall
 //    REGFLAG_NEVER_DELETE - add at install, ignore at uninstall
 //    REGFLAG_DELETE_WHEN_REGISTERING - remove at install, ignore at uninstall
@@ -30,12 +30,12 @@
 //
 //     DEFAULT_CLASS_REGISTRY_ENTRIES(szCLSID, szFriendlyName, szProgID, szVersionIndependentProgID, szThreadingModel)
 //
-//  The following convenience macro defines an UpdateRegistry routine that 
+//  The following convenience macro defines an UpdateRegistry routine that
 //  contains only the default entries for a coclass:
 //
 //     DEFAULT_CLASS_REGISTRY_TABLE(ClassName, szCLSID, szFriendlyName, szProgID, szVersionIndependentProgID, szThreadingModel)
 //
-//  
+//
 //  The following pre-defined pseudo-strings are allowed:
 //
 //     REG_MODULE_NAME - a token that is replaced with the actual module name
@@ -46,23 +46,23 @@
 // the table's registry entries and optionally registers a type library.
 //
 //     RegistryTableUpdateRegistry - adds/removes registry entries for table
-//     
+//
 // Usage:
 /*
 class Hello : public IHello {
-DEFAULT_CLASS_REGISTRY_TABLE(Hello, 
-                             "{12345678-1234-1234-1234-123412341234}", 
-                             "Hello Class", 
-                             "HelloLib.Hello.1", 
-                             "HelloLib.Hello", 
-                             "both")  
+DEFAULT_CLASS_REGISTRY_TABLE(Hello,
+                             "{12345678-1234-1234-1234-123412341234}",
+                             "Hello Class",
+                             "HelloLib.Hello.1",
+                             "HelloLib.Hello",
+                             "both")
 };
 
 class Goodbye : public IHello {
 BEGIN_REGISTRY_TABLE(Goodbye)
-    REGISTRY_KEY(HKEY_CLASSES_ROOT, "CLSID\\{12345678-1234-1234-1234-123412341234}", 0, "Goodbye Class", REGFLAGS_DELETE_BEFORE_REGISTERING)  
-        REGISTRY_SUBKEY("Automation", 0, "", REGFLAGS_NORMAL)  
-        REGISTRY_SUBKEY(REG_SERVER_TYPE, 0, REG_MODULE_NAME, REGFLAGS_NORMAL)  
+    REGISTRY_KEY(HKEY_CLASSES_ROOT, "CLSID\\{12345678-1234-1234-1234-123412341234}", 0, "Goodbye Class", REGFLAGS_DELETE_BEFORE_REGISTERING)
+        REGISTRY_SUBKEY("Automation", 0, "", REGFLAGS_NORMAL)
+        REGISTRY_SUBKEY(REG_SERVER_TYPE, 0, REG_MODULE_NAME, REGFLAGS_NORMAL)
 END_REGISTRY_TABLE()
 };
 */
@@ -83,7 +83,7 @@ typedef struct _REGISTRY_ENTRY {
 EXTERN_C HRESULT STDAPICALLTYPE RegistryTableUpdateRegistry(HINSTANCE hInstance, REGISTRY_ENTRY *pEntries, BOOL bRegisterModuleAsTypeLib, BOOL bInstalling);
 
 // some default strings
-#define REG_DEFAULT_VALUE 0 
+#define REG_DEFAULT_VALUE 0
 #define REG_MODULE_NAME ((char*)-1)
 #if defined(DLLSVC)
     #define REG_SERVER_TYPE "InprocServer32"
@@ -91,7 +91,7 @@ EXTERN_C HRESULT STDAPICALLTYPE RegistryTableUpdateRegistry(HINSTANCE hInstance,
     #define REG_SERVER_TYPE "LocalServer32"
 #endif
 
-// flags for 
+// flags for
 enum REGFLAGS {
     REGFLAG_NORMAL = 0x0,
     REGFLAG_NEVER_DELETE = 0x1,
@@ -101,7 +101,7 @@ enum REGFLAGS {
 
 
 #define BEGIN_REGISTRY_TABLE(TableName) \
-static REGISTRY_ENTRY TableName [] = {        
+static REGISTRY_ENTRY TableName [] = {
 
 #define REGISTRY_KEY(hkr, pszKey, pszValueName, pszValue, fFlags) \
     { hkr, pszKey, pszValueName, pszValue, fFlags },
@@ -121,7 +121,7 @@ static REGISTRY_ENTRY TableName [] = {
 #define END_CLASS_REGISTRY_TABLE() \
         END_REGISTRY_TABLE()\
         return RegistryTableUpdateRegistry(hInstance, entries, FALSE, bInstalling);\
-    }   
+    }
 
 #ifdef DLLSVC
 #define DEFAULT_CLASS_REGISTRY_ENTRIES(szCLSID, szFriendlyName, szProgID, szVersionIndependentProgID, szThreadingModel)\

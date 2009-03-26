@@ -24,16 +24,16 @@ void main(void)
             SI(IPersistStorage) sips;
             hr = sips.BindToObject(_U("D:\\dbox\\courseware\\ecom\\02_cxx.ppt"));
 
-            
+
 
             SI(IClassFactory) sicf;
             hr = sicf.GetClassObject(OLESTR("Excel.Sheet"));
 
             SI(IUnknown) p1;
-            
+
             hr = sicf->CreateInstance(0, IID_PPV(p1));
             hr = OleRun(p1.GetNonAddRefedInterface());
-            
+
 
         }
         CoUninitialize();

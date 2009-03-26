@@ -38,10 +38,10 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
     CComPtr<IInterlacedField> pNewerBuffer;
     CComPtr<IInterlacedField> pOlderBuffer;
 
-    HRESULT hr = Stack->GetField(0, &pNewerBuffer); 
+    HRESULT hr = Stack->GetField(0, &pNewerBuffer);
     if(FAILED(hr)) return hr;
 
-    hr = Stack->GetField(1, &pOlderBuffer); 
+    hr = Stack->GetField(1, &pOlderBuffer);
     if(FAILED(hr)) return hr;
 
     BOOLEAN IsTopLine = FALSE;
@@ -55,7 +55,7 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
     DWORD InputLengthOlder;
     BYTE* pOutputData;
     DWORD OutputLength;
-    
+
     hr = pNewerBuffer->GetBufferAndLength(&pInputDataNewer, &InputLengthNewer);
     if(FAILED(hr)) return hr;
 
@@ -70,7 +70,7 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
         hr = pOutputBuffer->SetLength(OutputInfo->bmiHeader.biSizeImage);
         if(FAILED(hr)) return hr;
     }
-    // do 4:2:2 format up here and we need to 
+    // do 4:2:2 format up here and we need to
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
@@ -111,7 +111,7 @@ STDMETHODIMP CInputPin::Weave(IInterlacedBufferStack* Stack, IMediaBuffer* pOutp
             }
         }
     }
-    // otherwise it's a 4:2:0 plannar format and we just 
+    // otherwise it's a 4:2:0 plannar format and we just
     // worry about deinterlacing the luma and just copy the chroma
     else
     {
@@ -163,7 +163,7 @@ void CInputPin::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOIN
 {
     // copy chroma over
     // the formats for YV12 and NV12 are different
-    // but the both 
+    // but the both
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','V','1','2'))
     {
         DWORD LineLength;
@@ -176,7 +176,7 @@ void CInputPin::ProcessPlanarChroma(BYTE* pInputData, BYTE* pOutputData, VIDEOIN
             LineLength = InputInfo->bmiHeader.biWidth / 2;
         }
         // copy V then U
-        // there are biWidth / 2 x biHeight/2 of V 
+        // there are biWidth / 2 x biHeight/2 of V
         // followed by biWidth / 2 x biHeight/2 of U
         for(int i(0); i < InputInfo->bmiHeader.biHeight; ++i)
         {

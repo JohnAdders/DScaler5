@@ -4,7 +4,7 @@
 //
 // This file contains the class definition of GenericClassFactory,
 // that implements IClassFactory in terms of a function:
-//    
+//
 //    HRESULT STDAPICALLTYPE CreateInstance(IUnknown*, REFIID, void**)
 //
 // There is also a macro that defines a static routine, GetClassObject
@@ -42,7 +42,7 @@ public:
     STDMETHODIMP LockServer(BOOL bLock);
 };
 
-inline 
+inline
 GenericClassFactory::GenericClassFactory(CREATE_INSTANCE_PROC pfnCreateInstance)
     : m_pfnCreateInstance(pfnCreateInstance)
 {

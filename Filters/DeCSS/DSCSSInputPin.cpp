@@ -49,7 +49,7 @@ CDSCSSInputPin::~CDSCSSInputPin()
 HRESULT CDSCSSInputPin::GetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPERTIES* SampleProperties)
 {
     HRESULT hr = S_OK;
-    
+
     hr = CDSInputPin::GetSampleProperties(Sample, SampleProperties);
     CHECK(hr);
 

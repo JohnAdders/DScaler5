@@ -3,13 +3,13 @@
 // itftable.cpp - Copyright 1995-1997, Don Box
 //
 // This file contains a datatype, INTERFACE_ENTRY that can be used to build
-// tables that map IIDs onto vptrs. 
+// tables that map IIDs onto vptrs.
 //
 // This file contains the prototype for a routine that implements
 // QueryInterface based on an interface table.
 //
 //     InterfaceTableQueryInterface - finds and AddRef's vptr on an object
-//     
+//
 
 #include <windows.h>
 #include "inttable.h"

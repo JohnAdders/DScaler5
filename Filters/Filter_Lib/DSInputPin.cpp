@@ -7,12 +7,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,9 +62,9 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     }
 
     // find out who the pin belongs to
-    // we will process differently depending on 
+    // we will process differently depending on
     // the filter at the other end
-    // if this function returns TRUE we are talking to 
+    // if this function returns TRUE we are talking to
     // ourself then error
     if(AreWeAreTalkingToOurself(pConnector) == TRUE)
     {
@@ -86,7 +86,7 @@ STDMETHODIMP CDSInputPin::ReceiveConnection(IPin *pConnector, const AM_MEDIA_TYP
     CHECK(hr);
 
     m_ConnectedPin = pConnector;
-    
+
     hr = m_Filter->NotifyConnected(this);
     if(FAILED(hr))
     {
@@ -217,7 +217,7 @@ STDMETHODIMP CDSInputPin::EndFlush(void)
 
     HRESULT hr =  S_OK;
 
-    // Calls EndFlush downstream. 
+    // Calls EndFlush downstream.
     for(int i(0); i < m_Filter->GetNumPins(); ++i)
     {
         CDSBasePin* pPin = m_Filter->GetPin(i);
@@ -321,14 +321,14 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     {
         return E_POINTER;
     }
-    
+
     if(m_Filter->m_State == State_Stopped)
     {
         return VFW_E_WRONG_STATE;
     }
 
     // all code below here is protected
-    // from runnning at the same time as other 
+    // from runnning at the same time as other
     // functions with this line
     CProtectCode WhileVarInScope(this);
 
@@ -373,9 +373,9 @@ STDMETHODIMP CDSInputPin::Receive(IMediaSample *InSample)
     CheckForBlocking();
 
     // make sure we don't bother sending nothing down
-    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL) 
+    if(InSampleProperties.lActual > 0 && InSampleProperties.pbBuffer != NULL)
     {
-        // Send the sample to the filter for processing 
+        // Send the sample to the filter for processing
         hr = m_Filter->ProcessSample(InSample, &InSampleProperties, this);
     }
 
@@ -540,7 +540,7 @@ HRESULT CDSInputPin::SetSampleProperties(IMediaSample* Sample, AM_SAMPLE2_PROPER
             hr = Sample->SetTime(&SampleProperties->tStart, &SampleProperties->tStop);
             CHECK(hr);
         }
-      
+
         hr = Sample->SetDiscontinuity((SampleProperties->dwSampleFlags & AM_SAMPLE_TIMEDISCONTINUITY) > 0);
         CHECK(hr);
 
@@ -562,13 +562,13 @@ void CDSInputPin::FixupMediaType(AM_MEDIA_TYPE *pmt)
     {
         VIDEOINFOHEADER2* Format = (VIDEOINFOHEADER2*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-        pSource = &Format->rcSource; 
+        pSource = &Format->rcSource;
     }
     else if(pmt->formattype == FORMAT_VideoInfo)
     {
         VIDEOINFOHEADER* Format = (VIDEOINFOHEADER*)pmt->pbFormat;
         BitmapInfo = &Format->bmiHeader;
-        pSource = &Format->rcSource; 
+        pSource = &Format->rcSource;
     }
     else
     {
@@ -597,7 +597,7 @@ void CDSInputPin::CheckForBlocking()
             m_BlockEvent = NULL;
         }
         // do a crude spin on the Block variable
-        // this should allow other threads in 
+        // this should allow other threads in
         while(m_Block)
         {
             Sleep(1);
@@ -630,7 +630,7 @@ BOOL CDSInputPin::AreWeAreTalkingToOurself(IPin* pConnector)
             if(SUCCEEDED(hr))
             {
                 if(ClassId == MyClassId)
-                {   
+                {
                     // if we're talking to ourselves
                     // return TRUE
                     RetVal = TRUE;

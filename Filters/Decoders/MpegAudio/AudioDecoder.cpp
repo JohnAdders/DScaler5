@@ -11,15 +11,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ CAudioDecoder::CAudioDecoder() :
     CDSBaseFilter(L"Mpeg Audio Filter", 1, 1)
 {
     LOG(DBGLOG_FLOW, ("CAudioDecoder::CreatePins\n"));
-    
+
     m_AudioInPin = new CDSCSSInputPin();
     if(m_AudioInPin == NULL)
     {
@@ -89,14 +89,14 @@ CAudioDecoder::CAudioDecoder() :
     m_BufferSizeAtFrameStart = 0;
     m_AC3SilenceFrames = 0;
     m_ProcessingType = PROCESS_AC3;
-    
+
     InitMediaType(&m_InternalMT);
     ZeroMemory(&m_InternalWFE, sizeof(WAVEFORMATEXTENSIBLE));
 
     m_a52_state = NULL;
     m_dts_state = NULL;
     m_madinit = false;
-    
+
     m_aac_handle = NULL;
     m_aac_init = false;
 
@@ -271,7 +271,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     if(pPin == m_AudioInPin)
     {
         pProperties->cBuffers = 6;
-        pProperties->cbBuffer = 8192; 
+        pProperties->cbBuffer = 8192;
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
     }
@@ -280,7 +280,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
         // we specify a fixed size buffer and so size is already
         // taken care of
         pProperties->cBuffers = 3;
-        pProperties->cbBuffer = 0; 
+        pProperties->cbBuffer = 0;
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
     }
@@ -296,73 +296,73 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
     bool Result = false;
     if(pPin == m_AudioInPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_Audio && 
+        Result = (pmt->majortype == MEDIATYPE_Audio &&
                   pmt->subtype == MEDIASUBTYPE_MP3) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                   pmt->subtype == MEDIASUBTYPE_MPEG1AudioPayload) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_MPEG1Payload) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_MPEG1Packet) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_MPEG2_AUDIO_MPCBUG) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DOLBY_AC3) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DOLBY_AC3) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_DOLBY_AC3) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_DOLBY_AC3) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_WAVE_DOLBY_AC3) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DTS) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DTS) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_DTS) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_DTS) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_WAVE_DTS) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_DVD_LPCM_AUDIO) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_AAC) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_AAC) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_AAC) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_AAC) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_MP4A) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_MP4A) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_MP4A) ||
-                (pmt->majortype == MEDIATYPE_Audio && 
+                (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_MP4A) ||
-                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
+                (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                  pmt->subtype == MEDIASUBTYPE_mp4a) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
                  pmt->subtype == MEDIASUBTYPE_mp4a) ||
-                (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                  pmt->subtype == MEDIASUBTYPE_mp4a) ||
                 (pmt->majortype == MEDIATYPE_Audio &&
                  pmt->subtype == MEDIASUBTYPE_mp4a);
@@ -374,7 +374,7 @@ bool CAudioDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePi
     }
     else if(pPin == m_AudioOutPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_Audio) && 
+        Result = (pmt->majortype == MEDIATYPE_Audio) &&
                   (pmt->subtype == MEDIASUBTYPE_PCM ||
                     pmt->subtype == MEDIASUBTYPE_IEEE_FLOAT ||
                     pmt->subtype == MEDIASUBTYPE_DOLBY_AC3_SPDIF);
@@ -401,11 +401,11 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
     if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
     {
-        len -= 14; 
+        len -= 14;
         pDataIn += 14;
         if(int stuffing = (pDataIn[-1]&7))
         {
-            len -= stuffing; 
+            len -= stuffing;
             pDataIn += stuffing;
         }
     }
@@ -432,7 +432,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         pDataIn += 4;
 
         int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
-        
+
         // Skip past the packet length
         len -= 2;
         pDataIn += 2;
@@ -453,7 +453,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
             // Skip to the header data length
             len -= 2;
             pDataIn += 2;
-    
+
             // skip past all the optional headers and the llength byte itself
             len -= *pDataIn + 1;
             pDataIn += *pDataIn + 1;
@@ -493,10 +493,10 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
         {
             if(m_ProcessingType == PROCESS_PCM)
             {
-                len -= 7; 
+                len -= 7;
                 pDataIn += 7;
 
-                // LPCM packets seem to sometimes have variable 
+                // LPCM packets seem to sometimes have variable
                 // padding on the end
                 // just need to strip this off
                 // see http://members.freemail.absa.co.za/ginggs/dvd/mpeg2_lpcm.txt
@@ -510,8 +510,8 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
                     }
                     if(PadCount == ((pDataIn[len - 1 - PadCount - 1] << 8) + pDataIn[len - 1 - PadCount]) &&
                         pDataIn[len - 1 - PadCount - 2] == 0xbe &&
-                        pDataIn[len - 1 - PadCount - 3] == 0x01 && 
-                        pDataIn[len - 1 - PadCount - 4] == 0x00 && 
+                        pDataIn[len - 1 - PadCount - 3] == 0x01 &&
+                        pDataIn[len - 1 - PadCount - 4] == 0x00 &&
                         pDataIn[len - 1 - PadCount - 5] == 0x00)
                     {
                         len -= PadCount + 6;
@@ -520,19 +520,19 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
             }
             else if(m_ProcessingType == PROCESS_AC3 || m_ProcessingType == PROCESS_DTS)
             {
-                len -= 4; 
+                len -= 4;
                 pDataIn += 4;
             }
             else
             {
-                len -= 1; 
+                len -= 1;
                 pDataIn += 1;
             }
         }
         if(ExpectedLength > 0)
         {
             ExpectedLength -= pDataIn - EndOfPacketLength;
-            len = min(len, ExpectedLength); 
+            len = min(len, ExpectedLength);
         }
     }
 
@@ -619,7 +619,7 @@ HRESULT CAudioDecoder::CreateInternalSPDIFMediaType(DWORD nSamplesPerSec, WORD w
     m_InternalWFE.Format.cbSize = 0;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
-    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE;
 
     HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
     if(hr == S_OK)
@@ -660,7 +660,7 @@ HRESULT CAudioDecoder::CreateInternalPCMMediaType(DWORD nSamplesPerSec, WORD nCh
     }
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE.Format) + m_InternalWFE.Format.cbSize;
-    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE;
 
     HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
 
@@ -707,7 +707,7 @@ HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nC
     m_InternalWFE.Samples.wValidBitsPerSample = 32;
 
     m_InternalMT.cbFormat = sizeof(m_InternalWFE);
-    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE; 
+    m_InternalMT.pbFormat = (BYTE*)&m_InternalWFE;
     HRESULT hr = m_AudioOutPin->m_ConnectedPin->QueryAccept(&m_InternalMT);
     if(hr == S_OK)
     {
@@ -715,7 +715,7 @@ HRESULT CAudioDecoder::CreateInternalIEEEMediaType(DWORD nSamplesPerSec, WORD nC
         m_SampleSize = sizeof(float);
         return hr;
     }
-    
+
     return CreateInternalPCMMediaType(nSamplesPerSec, nChannels, dwChannelMask, 32);
 
 }
@@ -768,13 +768,13 @@ HRESULT CAudioDecoder::Deliver(bool IsSpdif)
         {
             m_AudioOutPin->SetType(&m_InternalMT);
             m_CurrentOutputSample->SetMediaType(&m_InternalMT);
-            m_CurrentOutputSample->SetDiscontinuity(TRUE); 
+            m_CurrentOutputSample->SetDiscontinuity(TRUE);
         }
         else
         {
-            m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity); 
+            m_CurrentOutputSample->SetDiscontinuity(m_IsDiscontinuity);
         }
-        
+
         m_IsDiscontinuity = false;
 
         hr = m_AudioOutPin->SendSample(m_CurrentOutputSample.GetNonAddRefedInterface());
@@ -832,8 +832,8 @@ HRESULT CAudioDecoder::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePin* p
         else
         {
             // we need to cope with the compilation option for integer
-            // calculation 
-            // so after this -1 will be used to indeicate that we 
+            // calculation
+            // so after this -1 will be used to indeicate that we
             // want floating point
             // then 0 = 32 bit 1 = 24bit and 2 = 16 bit
             if(TypeNum > GetParamEnum(CONNECTTYPE)) return VFW_S_NO_MORE_ITEMS;
@@ -969,7 +969,7 @@ HRESULT CAudioDecoder::Deactivate()
 {
     FinishLibraries();
 
-    m_IsDiscontinuity = false; 
+    m_IsDiscontinuity = false;
 
     m_BytesLeftInBuffer = 0;
     m_CurrentOutputSample.Detach();
@@ -1022,7 +1022,7 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     m_pDataOut = NULL;
     m_rtNextFrameStart = _I64_MIN;
     m_BufferSizeAtFrameStart = 0;
-  
+
     if(m_ConnectedAsSpdif && m_ProcessingType == PROCESS_AC3)
     {
         m_AC3SilenceFrames = 3;
@@ -1031,7 +1031,7 @@ HRESULT CAudioDecoder::Flush(CDSBasePin* pPin)
     {
         m_AC3SilenceFrames = 0;
     }
-    
+
     InitLibraries();
 
     return S_OK;
@@ -1085,7 +1085,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         m_IsDiscontinuity = true;
         m_NeedToAttachFormat = true;
         m_AC3SilenceFrames = 0;
-        
+
         // cope with dynamic format changes
         // these can happen during DVD playback
         // as the DVD navigator always connectes with AC3 first
@@ -1095,7 +1095,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
         //    to a suitable format
         //  - We're connected to Sp-dif and a good filter and we need to change
         //    back and forward between to an spdif format
-        //  - We're conncted to a bad filter that doesn't allow dynamic reconnection 
+        //  - We're conncted to a bad filter that doesn't allow dynamic reconnection
         //    so we try and do the best we can
         // also we need to cope with getting 96000 kHz pcm and the renderer not
         // being able to support that
@@ -1143,7 +1143,7 @@ HRESULT CAudioDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBa
             {
                 m_AC3SilenceFrames = 3;
             }
-            
+
             if(m_AudioOutPin->m_ConnectedPin && m_CanReconnect)
             {
                 if(GetParamBool(USESPDIF) && !m_ConnectedAsSpdif)
@@ -1411,7 +1411,7 @@ HRESULT CAudioDecoder::GetOutputSampleAndPointer()
 
     hr = m_CurrentOutputSample->SetActualDataLength(m_InternalMT.lSampleSize);
     CHECK(hr);
-    
+
     m_BytesLeftInBuffer = m_InternalMT.lSampleSize;
 
     return hr;
@@ -1560,18 +1560,18 @@ HRESULT CAudioDecoder::UpdateStartTime()
         }
         // always go forward but never go back for small clock adjustments
         // this sort of readjustement seems to happen with MPEG streams
-        // as the times are encoded as PTS values which are less accurate than 
+        // as the times are encoded as PTS values which are less accurate than
         // the MS time values
         if(m_rtOutputStart == 0 || (OutputStart - m_rtOutputStart) >= 0 || (OutputStart - m_rtOutputStart) < -2000)
         {
             m_rtOutputStart = OutputStart;
         }
-        else 
+        else
         {
             LOG(DBGLOG_FLOW, ("Minor adjustment ignored %I64d - %I64d\n", OutputStart, m_rtOutputStart));
         }
    }
-    
+
     m_rtNextFrameStart = _I64_MIN;
     return S_OK;
 }

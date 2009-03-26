@@ -11,15 +11,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,7 +60,7 @@ CMpegDecoder::CMpegDecoder() :
     CDSBaseFilter(L"MpegVideo Filter", 2, 2)
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::CreatePins\n"));
-    
+
     m_VideoInPin = new CDSCSSInputPin;
     if(m_VideoInPin == NULL)
     {
@@ -76,7 +76,7 @@ CMpegDecoder::CMpegDecoder() :
     }
     m_SubpictureInPin->AddRef();
     m_SubpictureInPin->SetupObject(this, L"SubPicture");
-    
+
     // can't use m_VideoOutPin due to casting
     m_OutputPins[0] = new CDSVideoOutPin();
     if(m_VideoOutPin == NULL)
@@ -99,9 +99,9 @@ CMpegDecoder::CMpegDecoder() :
     MT.majortype = MEDIATYPE_AUXLine21Data;
     MT.subtype = MEDIASUBTYPE_Line21_GOPPacket;
     MT.formattype = GUID_NULL;
-    
+
     m_CCOutPin->SetType(&MT);
-    
+
     ClearMediaType(&MT);
 
     m_spon = TRUE;
@@ -376,7 +376,7 @@ STDMETHODIMP CMpegDecoder::GetDecoderCaps(DWORD dwCapIndex,DWORD* lpdwCap)
     {
     case AM_QUERY_DECODER_VMR_SUPPORT:
     case AM_QUERY_DECODER_DVD_SUPPORT:
-    case AM_QUERY_DECODER_ATSC_SD_SUPPORT:   
+    case AM_QUERY_DECODER_ATSC_SD_SUPPORT:
     case AM_QUERY_DECODER_ATSC_HD_SUPPORT:
     case AM_GETDECODERCAP_QUERY_VMR9_SUPPORT:
         *lpdwCap = DECODER_CAP_SUPPORTED;
@@ -434,26 +434,26 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     bool Result = false;
     if(pPin == m_VideoInPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
-                  pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
+        Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
+                  pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) ||
                     (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
-                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-                    (pmt->majortype == MEDIATYPE_MPEG2_PES && 
-                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-                    (pmt->majortype == MEDIATYPE_Video && 
-                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) || 
-                    (pmt->majortype == MEDIATYPE_Video && 
-                     pmt->subtype == MEDIASUBTYPE_MPEG1Packet) || 
-                    (pmt->majortype == MEDIATYPE_Video && 
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) ||
+                    (pmt->majortype == MEDIATYPE_MPEG2_PES &&
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) ||
+                    (pmt->majortype == MEDIATYPE_Video &&
+                     pmt->subtype == MEDIASUBTYPE_MPEG2_VIDEO) ||
+                    (pmt->majortype == MEDIATYPE_Video &&
+                     pmt->subtype == MEDIASUBTYPE_MPEG1Packet) ||
+                    (pmt->majortype == MEDIATYPE_Video &&
                      pmt->subtype == MEDIASUBTYPE_MPEG1Payload);
     }
     else if(pPin == m_SubpictureInPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK && 
-                    pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE) || 
-                 (pmt->majortype == MEDIATYPE_MPEG2_PACK && 
+        Result = (pmt->majortype == MEDIATYPE_DVD_ENCRYPTED_PACK &&
                     pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE) ||
-                 (pmt->majortype == MEDIATYPE_MPEG2_PES && 
+                 (pmt->majortype == MEDIATYPE_MPEG2_PACK &&
+                    pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE) ||
+                 (pmt->majortype == MEDIATYPE_MPEG2_PES &&
                     pmt->subtype == MEDIASUBTYPE_DVD_SUBPICTURE);
     }
     else if(pPin == m_VideoOutPin)
@@ -461,7 +461,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
         int wout = 0, hout = 0;
         long arxout = 0, aryout = 0;
         Result = ((pmt->majortype == MEDIATYPE_Video ||
-                    pmt->majortype == CLSID_CDScaler) && 
+                    pmt->majortype == CLSID_CDScaler) &&
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
                    pmt->subtype == MEDIASUBTYPE_NV12 ||
@@ -473,7 +473,7 @@ bool CMpegDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     }
     else if(pPin == m_CCOutPin)
     {
-        Result = (pmt->majortype == MEDIATYPE_AUXLine21Data) && 
+        Result = (pmt->majortype == MEDIATYPE_AUXLine21Data) &&
                  (pmt->subtype == MEDIASUBTYPE_Line21_GOPPacket);
     }
     return Result;
@@ -741,7 +741,7 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
     if(pPin == m_VideoInPin)
     {
         m_MpegWidth = m_MpegHeight = 0;
-        m_ARMpegX = 4; 
+        m_ARMpegX = 4;
         m_ARMpegY = 3;
         m_ARAdjustX = m_ARAdjustY = 1;
         int pitch = 0;
@@ -844,28 +844,28 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
 
     if(*(DWORD*)pDataIn == 0xBA010000) // MEDIATYPE_*_PACK
     {
-        len -= 14; 
+        len -= 14;
         pDataIn += 14;
         if(int stuffing = (pDataIn[-1]&7))
         {
-            len -= stuffing; 
+            len -= stuffing;
             pDataIn += stuffing;
         }
     }
 
-    if(len <= 0) 
+    if(len <= 0)
         return S_OK;
 
     if(*(DWORD*)pDataIn == 0xBB010000)
     {
-        len -= 4; 
+        len -= 4;
         pDataIn += 4;
         int hdrlen = ((pDataIn[0]<<8)|pDataIn[1]) + 2;
-        len -= hdrlen; 
+        len -= hdrlen;
         pDataIn += hdrlen;
     }
 
-    if(len <= 0) 
+    if(len <= 0)
         return S_OK;
 
     if((*(DWORD*)pDataIn&0xE0FFFFFF) == 0xE0010000)
@@ -875,7 +875,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
         pDataIn += 4;
 
         int ExpectedLength = (pDataIn[0] << 8)+ pDataIn[1];
-        
+
         // Skip past the packet length
         len -= 2;
         pDataIn += 2;
@@ -896,7 +896,7 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
             // Skip to the header data length
             len -= 2;
             pDataIn += 2;
-    
+
             // skip past all the optional headers and the length byte itself
             len -= *pDataIn + 1;
             pDataIn += *pDataIn + 1;
@@ -935,11 +935,11 @@ HRESULT CMpegDecoder::ProcessMPEGSample(IMediaSample* InSample, AM_SAMPLE2_PROPE
         if(ExpectedLength > 0)
         {
             ExpectedLength -= pDataIn - EndOfPacketLength;
-            len = min(len, ExpectedLength); 
+            len = min(len, ExpectedLength);
         }
     }
 
-    if(len <= 0) 
+    if(len <= 0)
         return S_OK;
 
 
@@ -1035,7 +1035,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
     // when we're not really ready
 
     TCHAR frametype[] = {'?','I', 'P', 'B', 'D'};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n", 
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [num %d prfr %d tff %d rff %d] (%dx%d %d) (preroll %d) %d\n",
         m_CurrentPicture->m_rtStart, m_CurrentPicture->m_rtStop,
         frametype[m_CurrentPicture->m_Flags&PIC_MASK_CODING_TYPE],
         m_CurrentPicture->m_NumFields,
@@ -1048,12 +1048,12 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStop;
-    
+
     if(!fRepeatLast)
     {
         CProtectCode WhileVarInScope(&m_RateLock);
 
-        // cope with a change in rate       
+        // cope with a change in rate
         if(m_rate.Rate != m_ratechange.Rate && m_CurrentPicture->m_rtStart >= m_ratechange.StartTime)
         {
             m_rate.Rate = m_ratechange.Rate;
@@ -1078,7 +1078,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
         // if we want smooth frames then we simply adjust the stop time by half
         // a frame so that 3:2 becomes 2.5:2.5
-        // the way we always use the previous stop time as the start time for the next 
+        // the way we always use the previous stop time as the start time for the next
         // frame will mean that we only have to worry about adjusting the 3 field parts.
         rtStop = m_rate.StartTime + (m_CurrentPicture->m_rtStop - m_rate.StartTime) * abs(m_rate.Rate) / 10000;
 
@@ -1118,7 +1118,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
 
     SI(IMediaSample) pOut;
     BYTE* pDataOut = NULL;
-    
+
     hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), NULL, NULL, m_IsDiscontinuity);
     if(FAILED(hr))
     {
@@ -1193,9 +1193,9 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         // tell the next filter that this is film
         if(m_NextFrameDeint == DIWeave)
         {
-            Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
+            Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;
         }
-    
+
         if(FAILED(hr = pOut2->SetProperties(sizeof(AM_SAMPLE2_PROPERTIES), (BYTE*)&Props)))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
@@ -1239,7 +1239,7 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             // as we need to keep the decoder's copy clean
             // so that it can be used in predictions
             m_SubPicBuffer = *m_CurrentPicture;
-            
+
             buf = &m_SubPicBuffer.m_Buf[0];
 
             RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_OutputHeight);
@@ -1293,7 +1293,7 @@ void CMpegDecoder::FlushMPEG()
 {
     CProtectCode WhileVarInScope(m_VideoInPin);
     CProtectCode WhileVarInScope2(&m_RateLock);
-        
+
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
     m_IsDiscontinuity = true;
@@ -1545,7 +1545,7 @@ void CMpegDecoder::UpdateAspectRatio()
                                                     m_CurrentSequence.pixel_height,
                                                     m_CurrentSequence.display_width,
                                                     m_CurrentSequence.display_height));
-    
+
     CorrectOutputSize();
 }
 
@@ -1566,9 +1566,9 @@ HRESULT CMpegDecoder::SetNextBuffer()
 
 HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperties)
 {
-    // Removing const cast is naughty but the mpeg2_tag_picture 
+    // Removing const cast is naughty but the mpeg2_tag_picture
     // function doesn't let us only tag I frames
-    // which is what we need in the bda case when we get 
+    // which is what we need in the bda case when we get
     // loads of timestamps
     mpeg2_picture_t* CurrentPicture = (mpeg2_picture_t*)mpeg2_info(m_dec)->current_picture;
 
@@ -1587,7 +1587,7 @@ HRESULT CMpegDecoder::ProcessPictureStart(AM_SAMPLE2_PROPERTIES* pSampleProperti
     CHECK(hr);
 
     // picture User data (notably CC info) to be processed in picture display order
-    // so save the user info 
+    // so save the user info
     if(mpeg2_info(m_dec)->user_data_len > 0 && mpeg2_info(m_dec)->user_data_len <= MAX_USER_DATA)
     {
         memcpy(m_Buffers[(int)mpeg2_info(m_dec)->current_fbuf->id - 1].m_UserData, mpeg2_info(m_dec)->user_data, mpeg2_info(m_dec)->user_data_len);
@@ -1657,7 +1657,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
             {
                 // we are being told this frame is progressive
                 // either because the MPEG is encoded as progressive
-                // which happens rarely (except MPEG1) or we get passed a 
+                // which happens rarely (except MPEG1) or we get passed a
                 // sequence with a single progressive frame which is how DVD menus are encoded
                 m_fFilm = true;
                 LOG(DBGLOG_FLOW, ("Progressive mode m_fFilm = true\n"));
@@ -1692,7 +1692,7 @@ HRESULT CMpegDecoder::ProcessPictureDisplay(bool ProgressiveHint)
                 {
                     if(m_fFilm)
                     {
-                        if(!(LastPicture->m_NumFields == 3) || 
+                        if(!(LastPicture->m_NumFields == 3) ||
                             !(LastPicture->m_Flags&PIC_FLAG_PROGRESSIVE_FRAME) ||
                             (picture->nb_fields > 2))
                         {
@@ -1807,7 +1807,7 @@ void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
     m_OutputHeight &= ~1;
     m_ARAdjustX = YAdjust;
     m_ARAdjustY = XAdjust;
-    
+
     if(!IsTop)
     {
         m_VideoOutPin->SetPanScanY(m_VideoOutPin->GetPanScanY() + (OriginalHeight - m_OutputHeight) / 2);
@@ -1822,7 +1822,7 @@ void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
     m_OutputWidth &= ~1;
     m_ARAdjustX = XAdjust;
     m_ARAdjustY = YAdjust;
-    
+
     m_VideoOutPin->SetPanScanX(m_VideoOutPin->GetPanScanX() + (OriginalWidth - m_OutputWidth) / 2);
 }
 

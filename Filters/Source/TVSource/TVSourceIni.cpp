@@ -13,7 +13,7 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -31,7 +31,7 @@ long CTVSource::getInteger(LPCWSTR settingName, long defaultValue)
 std::wstring CTVSource::getString(LPCWSTR settingName, LPCWSTR defaultValue)
 {
     wchar_t result[256];
-    
+
     GetPrivateProfileStringW(L"TV", settingName, defaultValue, result, 255, m_FileName.c_str());
 
     return result;

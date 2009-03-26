@@ -59,7 +59,7 @@ proc _Deint_Diag_Core_YUY2%1, 28
     movq    mm5, [edx]
     movq    mm1, [esi]
     DS_PAVGB mm5, mm2, mm0, [ShiftMask]
-    
+
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax]
 
@@ -67,7 +67,7 @@ proc _Deint_Diag_Core_YUY2%1, 28
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax]
-    
+
     pcmpgtb mm2, [_STILL]
     pcmpgtb mm3, [_STILL]
     pcmpgtb mm4, [_STILL]
@@ -81,16 +81,16 @@ proc _Deint_Diag_Core_YUY2%1, 28
 
     mov        ecx, 8                ; curr offset into all lines
 
-LoopYUY2%1:    
-    add        esi, 8        
-    add        edi, 8        
+LoopYUY2%1:
+    add        esi, 8
+    add        edi, 8
     add        ebx, 8
     add        edx, 8
 
     ; First, get and save our possible Bob values
     ; Assume our pixels are layed out as follows with x the calc'd bob value
     ; and the other pixels are from the current field
-    ;  
+    ;
     ;         a b c         current field
     ;           x            calculated line
     ;         d e f         current field
@@ -144,9 +144,9 @@ LoopYUY2%1:
     ; mm6 = avg(|a - e|, |b - f|)
     ; [esp] = avg(a, f)
     ; [esp + 8] = avg(c, d)
-    
-    pxor    mm0, mm0            
-    psubusb mm4, mm6            ; nonzero where mm4 > mm6 
+
+    pxor    mm0, mm0
+    psubusb mm4, mm6            ; nonzero where mm4 > mm6
     pcmpeqb mm4, mm0            ; now ff where mm4 <= mm6
     movq    mm6, mm4
     pcmpeqb mm6, mm0            ; now ff where mm6 < mm4
@@ -174,7 +174,7 @@ LoopYUY2%1:
     psubusb mm1, [_MOVE]        ; nonzero where |b - e| > MOVE is Bob is visible
     pcmpeqb mm1, mm0           ; now ff where (|b - e| <= MOVE)
     por mm2, mm1               ; we'll let bob through always if the diff is small
- 
+
     DS_COMBINE mm5, mm6, mm2
     movq mm6, mm5
 
@@ -185,7 +185,7 @@ LoopYUY2%1:
 
     ; at the start of this function
     ; mm0 = 0
-    ; mm6 = Bob pixels          
+    ; mm6 = Bob pixels
 
     movq mm1, [esi]
 
@@ -195,7 +195,7 @@ LoopYUY2%1:
     ; these should be the values held as we go in
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm6 = Bob pixels          
+    ; mm6 = Bob pixels
 
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax + ecx]
@@ -204,13 +204,13 @@ LoopYUY2%1:
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax + ecx]
-    
+
     ; mm0 = 0
     ; mm1 = weave pixels
     ; mm2 = movement map in the top
     ; mm3 = movement map in the centre
     ; mm4 = movement map in the bottom
-    ; mm6 = Bob pixels          
+    ; mm6 = Bob pixels
 
     pcmpgtb mm2, [_STILL]           ; FF where still
     pcmpgtb mm3, [_STILL]           ; non-zero where mm3 > MOVE i.e. still
@@ -219,7 +219,7 @@ LoopYUY2%1:
     por  mm2, mm4                   ; top or bottom still
     pand  mm3, mm2                  ; middle and top or bottom still
 
-   
+
     mov        eax, [ebp + %$Dest]
     DS_COMBINE mm1, mm6, mm3
     DS_MOVNTQ [eax + ecx], mm1
@@ -240,7 +240,7 @@ LoopYUY2%1:
     movq    mm5, [edx]
     movq    mm1, [esi]
     DS_PAVGB mm5, mm2, mm0, [ShiftMask]
-    
+
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax + ecx]
 
@@ -248,7 +248,7 @@ LoopYUY2%1:
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax + ecx]
-    
+
     pcmpgtb mm2, [_STILL]
     pcmpgtb mm3, [_STILL]
     pcmpgtb mm4, [_STILL]
@@ -265,7 +265,7 @@ LoopYUY2%1:
     mov ebx, [esp+24]
 
     emms
-    
+
     %undef %1
 endproc
 %endmacro
@@ -309,7 +309,7 @@ proc _Deint_Diag_Core_Packed%1, 28
     movq    mm5, [edx]
     movq    mm1, [esi]
     DS_PAVGB mm5, mm2, mm0, [ShiftMask]
-    
+
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax]
 
@@ -317,7 +317,7 @@ proc _Deint_Diag_Core_Packed%1, 28
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax]
-    
+
     pcmpgtb mm2, [_STILL]
     pcmpgtb mm3, [_STILL]
     pcmpgtb mm4, [_STILL]
@@ -331,16 +331,16 @@ proc _Deint_Diag_Core_Packed%1, 28
 
     mov        ecx, 8                ; curr offset into all lines
 
-LoopLuma%1:    
-    add        esi, 8        
-    add        edi, 8        
+LoopLuma%1:
+    add        esi, 8
+    add        edi, 8
     add        ebx, 8
     add        edx, 8
 
     ; First, get and save our possible Bob values
     ; Assume our pixels are layed out as follows with x the calc'd bob value
     ; and the other pixels are from the current field
-    ;  
+    ;
     ;         a b c         current field
     ;           x            calculated line
     ;         d e f         current field
@@ -394,10 +394,10 @@ LoopLuma%1:
     ; mm6 = avg(|a - e|, |b - f|)
     ; [esp] = avg(a, f)
     ; [esp + 8] = avg(c, d)
-    
-    pxor    mm7, mm7            
-    pxor    mm0, mm0            
-    psubusb mm4, mm6            ; nonzero where mm4 > mm6 
+
+    pxor    mm7, mm7
+    pxor    mm0, mm0
+    psubusb mm4, mm6            ; nonzero where mm4 > mm6
     pcmpeqb mm4, mm0            ; now ff where mm4 <= mm6
     movq    mm6, mm4
     pcmpeqb mm6, mm0            ; now ff where mm6 < mm4
@@ -441,7 +441,7 @@ LoopLuma%1:
     ; these should be the values held as we go in
     ; mm0 = 0
     ; mm1 = weave pixels
-    ; mm6 = Bob pixels          
+    ; mm6 = Bob pixels
 
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax + ecx]
@@ -450,13 +450,13 @@ LoopLuma%1:
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax + ecx]
-    
+
     ; mm0 = 0
     ; mm1 = weave pixels
     ; mm2 = "movement" in the top
     ; mm3 = "movement" in the centre
     ; mm4 = "movement" in the bottom
-    ; mm6 = Bob pixels          
+    ; mm6 = Bob pixels
 
     pcmpgtb mm2, [_STILL]
     pcmpgtb mm3, [_STILL]
@@ -485,7 +485,7 @@ LoopLuma%1:
     movq    mm5, [edx]
     movq    mm1, [esi]
     DS_PAVGB mm5, mm2, mm0, [ShiftMask]
-    
+
     mov     eax, [ebp + %$T4]
     movq    mm2, [eax + ecx]
 
@@ -493,7 +493,7 @@ LoopLuma%1:
 
     mov     eax, [ebp + %$B4]
     movq    mm4, [eax + ecx]
-    
+
     pcmpgtb mm2, [_STILL]
     pcmpgtb mm3, [_STILL]
     pcmpgtb mm4, [_STILL]
@@ -504,7 +504,7 @@ LoopLuma%1:
     mov        eax, [ebp + %$Dest]
     DS_COMBINE mm1, mm5, mm3
     DS_MOVNTQ [eax + ecx], mm1
-    
+
     mov esi, [esp+16]
     mov edi, [esp+20]
     mov ebx, [esp+24]

@@ -9,15 +9,15 @@
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
 //  any later version.
-//   
+//
 //  This Program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 //  GNU General Public License for more details.
-//   
+//
 //  You should have received a copy of the GNU General Public License
 //  along with GNU Make; see the file COPYING.  If not, write to
-//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+//  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
 //  http://www.gnu.org/copyleft/gpl.html
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -40,7 +40,7 @@ CDivxDecoder::CDivxDecoder() :
     CDSBaseFilter(L"DivxVideo Filter", 1, 1)
 {
     LOG(DBGLOG_FLOW, ("CDivxDecoder::CreatePins\n"));
-    
+
     m_VideoInPin = new CDSInputPin;
     if(m_VideoInPin == NULL)
     {
@@ -206,7 +206,7 @@ STDMETHODIMP CDivxDecoder::GetDecoderCaps(DWORD dwCapIndex,DWORD* lpdwCap)
     {
     case AM_QUERY_DECODER_VMR_SUPPORT:
     case AM_QUERY_DECODER_DVD_SUPPORT:
-    case AM_QUERY_DECODER_ATSC_SD_SUPPORT:   
+    case AM_QUERY_DECODER_ATSC_SD_SUPPORT:
     case AM_QUERY_DECODER_ATSC_HD_SUPPORT:
     case AM_GETDECODERCAP_QUERY_VMR9_SUPPORT:
         *lpdwCap = DECODER_CAP_SUPPORTED;
@@ -275,8 +275,8 @@ bool CDivxDecoder::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin
     {
         int wout = 0, hout = 0, pitch = 0;
         long arxout = 0, aryout = 0;
-        Result = (ExtractDim(pmt, wout, hout, arxout, aryout, pitch) && 
-                  (pmt->majortype == MEDIATYPE_Video) && 
+        Result = (ExtractDim(pmt, wout, hout, arxout, aryout, pitch) &&
+                  (pmt->majortype == MEDIATYPE_Video) &&
                   (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                    pmt->subtype == MEDIASUBTYPE_YV12 ||
                    pmt->subtype == MEDIASUBTYPE_NV12 ||
@@ -384,7 +384,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
     if(pPin == m_VideoInPin)
     {
         m_DivxWidth = m_DivxHeight = 0;
-        m_ARDivxX = 4; 
+        m_ARDivxX = 4;
         m_ARDivxY = 3;
         int pitch = 0;
         ExtractDim(pMediaType, m_DivxWidth, m_DivxHeight, m_ARDivxX, m_ARDivxY, pitch);
@@ -393,7 +393,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_ExtraSize = 0;
         m_ExtraData.clear();
         RECT* pSourceRect;
-    
+
         m_fWaitForKeyFrame = true;
 
         if(pMediaType->formattype == FORMAT_VideoInfo2)
@@ -507,7 +507,7 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
             m_FourCC = UpperFourCC(pMediaType->subtype.Data1);
         }
         m_CodecID = lookupCodec(m_FourCC);
-            
+
         if(m_CodecID == CODEC_ID_NONE)
         {
             return E_UNEXPECTED;
@@ -543,7 +543,7 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
 
     long len = pSampleProperties->lActual;
 
-    if(len <= 0) 
+    if(len <= 0)
         return S_OK;
 
     LOG(DBGLOG_FLOW, ("Process %010I64d - %010I64d - %d\n", pSampleProperties->tStart, pSampleProperties->tStop, len));
@@ -663,7 +663,7 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
 {
     HRESULT hr = S_OK;
     TCHAR frametype[] = {'?','I', 'P', 'B', 'S', '1', '2',};
-    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d] %d\n", 
+    LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [%c] [repeat %d keyframe %d int %d tff %d] %d\n",
         CurrentPicture->m_rtStartCoded, CurrentPicture->m_rtStartDisplay,
         frametype[NextFrame.pict_type],
         NextFrame.repeat_pict,
@@ -685,11 +685,11 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
         }
     }
 
-    
+
     REFERENCE_TIME rtStart;
     REFERENCE_TIME rtStartFromFile;
     REFERENCE_TIME rtStop;
-    
+
     // AVC1 and MP4V seems to be flaged like MPEG 2 so the timestamps are when
     // you get the frame start not when you show the frame
     if(m_CodecContext->codec_tag == MAKEFOURCC('A', 'V', 'C', '1') || m_CodecContext->codec_tag == MAKEFOURCC('M', 'P', '4', 'V'))
@@ -741,7 +741,7 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
     LOG(DBGLOG_FLOW, ("Picture Time %010I64d  - %010I64d  - %010I64d  - %010I64d\n", rtStart, rtStop, rtStop - rtStart, rtStop - m_LastOutputTime));
 
     m_LastOutputTime = rtStop;
-    
+
     if(rtStop > 0)
     {
         // cope with dynamic format changes from our side
@@ -755,7 +755,7 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
 
         SI(IMediaSample) pOut;
         BYTE* pDataOut = NULL;
-        
+
         hr = m_VideoOutPin->GetOutputSample(pOut.GetReleasedInterfaceReference(), &rtStart, &rtStop, m_IsDiscontinuity);
         if(FAILED(hr))
         {
@@ -792,7 +792,7 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
             // tell the next filter that this is film
             if(m_NextFrameDeint == DIWeave)
             {
-                Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;    
+                Props.dwTypeSpecificFlags |= AM_VIDEO_FLAG_WEAVE;
             }
             else
             {
@@ -865,7 +865,7 @@ void CDivxDecoder::FlushDivx()
 {
     CProtectCode WhileVarInScope(m_VideoInPin);
     CProtectCode WhileVarInScope2(&m_DeliverLock);
-        
+
     m_fWaitForKeyFrame = true;
     m_fFilm = false;
     m_IsDiscontinuity = true;
@@ -933,7 +933,7 @@ HRESULT CDivxDecoder::ResetDivxDecoder()
         return E_UNEXPECTED;
     }
 
-    if (avcodec_open(m_CodecContext, m_Codec) < 0) 
+    if (avcodec_open(m_CodecContext, m_Codec) < 0)
     {
         av_free(m_CodecContext);
         m_CodecContext = NULL;
@@ -1069,7 +1069,7 @@ namespace
         }
         return in;
     }
-    
+
     char lower(char in)
     {
         if(in >= 'A' && in <= 'Z')

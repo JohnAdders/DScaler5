@@ -481,7 +481,7 @@ static int bit_alloc(AC3EncodeContext *s,
                                       s->nb_coefs[ch], snr_offset,
                                       s->bit_alloc.floor, ff_ac3_bap_tab,
                                       bap[i][ch]);
-            
+
             frame_bits += compute_mantissa_size(s, bap[i][ch],
                                                  s->nb_coefs[ch]);
         }

@@ -13,7 +13,7 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -32,7 +32,7 @@ CTVSource::CTVSource() :
     CDSBaseFilter(L"TVSource Filter", 0, 1)
 {
     LOG(DBGLOG_FLOW, ("CTVSource::CreatePins\n"));
-    
+
     m_OutPin = new CTVSourceOutPin();
     if(m_OutPin == NULL)
     {

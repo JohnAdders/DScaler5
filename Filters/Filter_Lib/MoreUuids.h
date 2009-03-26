@@ -1,4 +1,4 @@
-/* 
+/*
  *    Copyright (C) 2003 Gabest
  *    http://www.gabest.org
  *
@@ -6,18 +6,18 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *   
+ *
  *  This Program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  *  GNU General Public License for more details.
- *   
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with GNU Make; see the file COPYING.  If not, write to
- *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA. 
+ *  the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
  *  http://www.gnu.org/copyleft/gpl.html
  *
- *  Note: This interface was defined for the matroska container format 
+ *  Note: This interface was defined for the matroska container format
  *  originally, but can be implemented for other formats as well.
  *
  */
@@ -30,12 +30,12 @@ DEFINE_GUID(MEDIASUBTYPE_I420,
 
 #define WAVE_FORMAT_DOLBY_AC3 0x2000
 // {00002000-0000-0010-8000-00aa00389b71}
-DEFINE_GUID(MEDIASUBTYPE_WAVE_DOLBY_AC3, 
+DEFINE_GUID(MEDIASUBTYPE_WAVE_DOLBY_AC3,
 WAVE_FORMAT_DOLBY_AC3, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 #define WAVE_FORMAT_DVD_DTS 0x2001
 // {00002001-0000-0010-8000-00aa00389b71}
-DEFINE_GUID(MEDIASUBTYPE_WAVE_DTS, 
+DEFINE_GUID(MEDIASUBTYPE_WAVE_DTS,
 WAVE_FORMAT_DVD_DTS, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xaa, 0x00, 0x38, 0x9b, 0x71);
 
 // Be compatible with 3ivx
@@ -79,7 +79,7 @@ WAVE_FORMAT_MPEG2, 0xdb46, 0x11cf, 0xb4, 0xd1, 0x00, 0x80, 0x5f, 0x6c, 0xbb, 0xe
 
 
 // {57428EC6-C2B2-44a2-AA9C-28F0B6A5C48E}
-DEFINE_GUID(MEDIASUBTYPE_RealMedia, 
+DEFINE_GUID(MEDIASUBTYPE_RealMedia,
 0x57428ec6, 0xc2b2, 0x44a2, 0xaa, 0x9c, 0x28, 0xf0, 0xb6, 0xa5, 0xc4, 0x8e);
 
 // 30315652-0000-0010-8000-00AA00389B71
@@ -122,7 +122,7 @@ DEFINE_GUID(MEDIASUBTYPE_DNET,
 DEFINE_GUID(MEDIASUBTYPE_SIPR,
 0x52504953, 0x0000, 0x0010, 0x80, 0x00, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
 
-enum 
+enum
 {
     WAVE_FORMAT_14_4 = 0x2002,
     WAVE_FORMAT_28_8 = 0x2003,

@@ -5,9 +5,9 @@
 //  Copyright 1994-1997, Don Box
 //
 //  There is one class in this file:
-//  
+//
 //    SmartInterface<T, PIID> : the smart interface pointer
-//   
+//
 //  There is one function in this file:
 //
 //    IsSameObject(x, y) : identity test that supports SmartInterface
@@ -34,7 +34,7 @@ IPersistStorage *LoadFromStorage(IStorage *pstg)
   SmartPersistStorage pPersistStg1, pPersistStg2;
 
 // use the IID_PPV macro to get the last two args in QI form
-  CoCreateInstance(clsid, 0, CLSCTX_ALL, IID_PPV(punk1)); 
+  CoCreateInstance(clsid, 0, CLSCTX_ALL, IID_PPV(punk1));
 
 // I1 <- I1 assignment simply addrefs
   punk2 = punk1;
@@ -74,7 +74,7 @@ inline BOOL IsSameObject(IUnknown *pUnk1, IUnknown *pUnk2)
 {
     assert(pUnk1 && pUnk2);
     BOOL bResult = TRUE;
-    if (pUnk1 != pUnk2) 
+    if (pUnk1 != pUnk2)
     {
         HRESULT hr;
         IUnknown *p1 = 0, *p2 = 0;
@@ -103,7 +103,7 @@ inline BOOL IsSameObject(const SmartToken& pUnk1, const SmartToken& pUnk2)
 }
 
 template <class If, const IID * const piid>
-class SmartInterface 
+class SmartInterface
 {
     If *m_pif;
     typedef SmartInterface<If, piid> SameSmartType;
@@ -121,25 +121,25 @@ public:
 // constructors/destructors ///////////////////////////
 
 // default constructor
-    SmartInterface(void) 
+    SmartInterface(void)
         : m_pif(0)
     {
     }
-    
+
 // homogeneous raw constructor
-    SmartInterface(If *rhs) 
+    SmartInterface(If *rhs)
     {
-        if (m_pif = rhs) 
+        if (m_pif = rhs)
             m_pif->AddRef();
     }
-    
+
 // homogeneous smart constructor
-    SmartInterface(const SameSmartType& rhs) 
+    SmartInterface(const SameSmartType& rhs)
     {
-        if (m_pif = rhs.m_pif) 
+        if (m_pif = rhs.m_pif)
             m_pif->AddRef();
     }
-    
+
     operator SmartToken (void) const
     {
         return SmartToken(m_pif);
@@ -153,9 +153,9 @@ public:
         if (rhs)
             rhs->QueryInterface(GetIID(), (void **)&m_pif);
     }
-    
+
 // heterogeneous smart constructor
-    SmartInterface(const SmartToken& rhs) 
+    SmartInterface(const SmartToken& rhs)
         : m_pif(0)
     {
         if (rhs.m_pif)
@@ -169,7 +169,7 @@ public:
     }
 
 // Attach/Detach operations
-    
+
 // homogeneous raw attachment
     void Attach(If * rhs)
     {
@@ -180,29 +180,29 @@ public:
                 m_pif->AddRef();
         }
     }
-    
+
 // homogeneous smart attachment
     void Attach(const SameSmartType& rhs)
     {
         Attach(rhs.m_pif);
     }
-    
+
 // heterogeneous raw attachment
     void Attach(IUnknown * rhs)
     {
         SafeRelease();
         if (rhs)
             rhs->QueryInterface(GetIID(), (void **)&m_pif);
-        else 
+        else
             m_pif = 0;
     }
-    
+
 // heterogeneous smart attachment
     void Attach(const SmartToken& rhs)
     {
         Attach(rhs.m_pif);
     }
-    
+
     void Detach(void)
     {
         SafeRelease();
@@ -216,14 +216,14 @@ public:
         Attach(rhs);
         return *this;
     }
-    
+
 // homogeneous smart assignment
     SameSmartType& operator = (const SameSmartType& rhs)
     {
         Attach(rhs);
         return *this;
     }
-    
+
 #if !defined(_NO_SILENT_QI)
 // heterogeneous raw assignment
     SameSmartType& operator = (IUnknown * rhs)
@@ -231,9 +231,9 @@ public:
         Attach(rhs);
         return *this;
     }
-    
+
 // heterogeneous smart assignment
-    SameSmartType& operator = (const SmartToken& rhs) 
+    SameSmartType& operator = (const SmartToken& rhs)
     {
         Attach(rhs);
         return *this;
@@ -260,8 +260,8 @@ public:
         return m_pif != rhs.m_pif;
     }
 
-// CoCreateInstance wrappers    
-    HRESULT CreateInstance(REFCLSID rclsid, 
+// CoCreateInstance wrappers
+    HRESULT CreateInstance(REFCLSID rclsid,
         DWORD dwClsCtx = CLSCTX_ALL,
         IUnknown *pUnkOuter = 0)
     {
@@ -269,8 +269,8 @@ public:
         return CoCreateInstance(rclsid, pUnkOuter, dwClsCtx,
             GetIID(), AsPPVArg());
     }
-    
-    HRESULT CreateInstance(LPCOLESTR szProgID, 
+
+    HRESULT CreateInstance(LPCOLESTR szProgID,
         DWORD dwClsCtx = CLSCTX_ALL,
         IUnknown *pUnkOuter = 0)
     {
@@ -281,15 +281,15 @@ public:
         return result;
     }
 
-    HRESULT GetClassObject(REFCLSID rclsid, 
+    HRESULT GetClassObject(REFCLSID rclsid,
         DWORD dwClsCtx = CLSCTX_ALL)
     {
         Detach();
         return CoGetClassObject(rclsid, dwClsCtx, 0,
             GetIID(), AsPPVArg());
     }
-    
-    HRESULT GetClassObject(LPCOLESTR szProgID, 
+
+    HRESULT GetClassObject(LPCOLESTR szProgID,
         DWORD dwClsCtx = CLSCTX_ALL)
     {
         CLSID clsid;
@@ -298,7 +298,7 @@ public:
             result = GetClassObject(clsid, dwClsCtx);
         return result;
     }
-    
+
 #ifdef _WIN32_DCOM
     HRESULT CreateInstance(REFCLSID rclsid, DWORD dwClsCtx,
                            const OLECHAR *pwszHostName,
@@ -324,7 +324,7 @@ public:
         return result;
     }
 
-    HRESULT GetClassObject(REFCLSID rclsid, 
+    HRESULT GetClassObject(REFCLSID rclsid,
                            DWORD dwClsCtx,
                            const OLECHAR *pwszHostName,
                            COAUTHINFO *pai = 0)
@@ -334,8 +334,8 @@ public:
         return CoGetClassObject(rclsid, dwClsCtx, &csi,
             GetIID(), AsPPVArg());
     }
-    
-    HRESULT GetClassObject(LPCOLESTR szProgID, 
+
+    HRESULT GetClassObject(LPCOLESTR szProgID,
                            DWORD dwClsCtx,
                            const OLECHAR *pwszHostName,
                            COAUTHINFO *pai = 0)
@@ -346,7 +346,7 @@ public:
             result = GetClassObject(clsid, dwClsCtx, pwszHostName, pai);
         return result;
     }
-    
+
 #endif
 
     HRESULT BindToObject(IMoniker *pmk, IBindCtx *pbc = 0, IMoniker *pmkToLeft = 0)
@@ -389,7 +389,7 @@ public:
 
         return hr;
     }
-  
+
 // operations
     const IID& GetIID(void) const
     {
@@ -401,52 +401,52 @@ public:
         SafeRelease();
         return (void * FAR*)&m_pif;
     }
-    
+
 // note: no If * operator is allowed, as it makes it very
 //       easy to break the protocol of COM. Instead, these
 //       four operations require the user to be explicit
 
     If * GetAddRefedInterface(void) const
-    { 
+    {
         if (m_pif)
             m_pif->AddRef();
         return m_pif;
     }
 
     If * GetNonAddRefedInterface(void) const
-    { 
+    {
         return m_pif;
     }
 
     If **GetReleasedInterfaceReference(void)
-    { 
+    {
         SafeRelease();
         return &m_pif;
     }
-        
+
     If **GetNonReleasedInterfaceReference(void)
-    { 
+    {
         return &m_pif;
     }
-        
+
     BOOL operator ! (void) const
     {
         return m_pif == 0;
     }
-    
+
     BOOL IsOK(void) const
     {
         return m_pif != 0;
     }
-    
+
     // instead of operator bool, we return a fake ptr type to allow if (pFoo) usage
     // but to disallow if (pFoo == pBar) which is probably wrong
     class PseudoBool {};
-    operator PseudoBool * (void) const 
+    operator PseudoBool * (void) const
     {
         return (PseudoBool *)m_pif;
     }
-    
+
     // the arrow operator returns a pointer with AddRef and Release disabled
     class NoAddRefOrRelease : public If {
     private:
@@ -482,40 +482,40 @@ public:
 // constructors/destructors ///////////////////////////
 
 // default constructor
-    SmartInterface(void) 
+    SmartInterface(void)
         : m_pif(0)
     {
     }
-    
+
 // homogeneous raw constructor
-    SmartInterface(If *rhs) 
+    SmartInterface(If *rhs)
     {
-        if (m_pif = rhs) 
+        if (m_pif = rhs)
             m_pif->AddRef();
     }
-    
+
 // homogeneous smart constructor
-    SmartInterface(const SameSmartType& rhs) 
+    SmartInterface(const SameSmartType& rhs)
     {
-        if (m_pif = rhs.m_pif) 
+        if (m_pif = rhs.m_pif)
             m_pif->AddRef();
     }
-    
+
     operator SmartToken (void) const
     {
         return SmartToken(m_pif);
     }
 
 // heterogeneous raw constructor (see homo version)
-    
+
 // heterogeneous smart constructor (AddRef's instead of QI)
-    SmartInterface(const SmartToken& rhs) 
+    SmartInterface(const SmartToken& rhs)
         : m_pif(0)
     {
-        if (m_pif = rhs.m_pif) 
+        if (m_pif = rhs.m_pif)
             m_pif->AddRef();
     }
-    
+
 // destructor
     ~SmartInterface(void)
     {
@@ -523,7 +523,7 @@ public:
     }
 
 // Attach/Detach operations
-    
+
 // homogeneous raw attachment
     void Attach(If * rhs)
     {
@@ -534,21 +534,21 @@ public:
                 m_pif->AddRef();
         }
     }
-    
+
 // homogeneous smart attachment
     void Attach(const SameSmartType& rhs)
     {
         Attach(rhs.m_pif);
     }
-    
+
 // heterogeneous raw attachment (see homo version)
-    
+
 // heterogeneous smart attachment
     void Attach(const SmartToken& rhs)
     {
         Attach(rhs.m_pif);
     }
-    
+
     void Detach(void)
     {
         SafeRelease();
@@ -562,18 +562,18 @@ public:
         Attach(rhs);
         return *this;
     }
-    
+
 // homogeneous smart assignment
     SameSmartType& operator = (const SameSmartType& rhs)
     {
         Attach(rhs);
         return *this;
     }
-    
+
 // heterogeneous raw assignment (see homo version)
 
 // heterogeneous smart assignment
-    SameSmartType& operator = (const SmartToken& rhs) 
+    SameSmartType& operator = (const SmartToken& rhs)
     {
         Attach(rhs);
         return *this;
@@ -601,8 +601,8 @@ public:
     }
 
 
-// CoCreateInstance wrappers    
-    HRESULT Instantiate(REFCLSID rclsid, 
+// CoCreateInstance wrappers
+    HRESULT Instantiate(REFCLSID rclsid,
         DWORD dwClsCtx = CLSCTX_ALL,
         IUnknown *pUnkOuter = 0)
     {
@@ -610,8 +610,8 @@ public:
         return CoCreateInstance(rclsid, pUnkOuter, dwClsCtx,
             GetIID(), AsPPVArg());
     }
-    
-    HRESULT Instantiate(LPCOLESTR szProgID, 
+
+    HRESULT Instantiate(LPCOLESTR szProgID,
         DWORD dwClsCtx = CLSCTX_ALL,
         IUnknown *pUnkOuter = 0)
     {
@@ -621,7 +621,7 @@ public:
             result = Instantiate(clsid, dwClsCtx, pUnkOuter);
         return result;
     }
-  
+
     HRESULT BindToObject(IMoniker *pmk, IBindCtx *pbc = 0, IMoniker *pmkToLeft = 0)
     {
         Detach();
@@ -662,7 +662,7 @@ public:
 
         return hr;
     }
-  
+
 // operations
     const IID& GetIID(void) const
     {
@@ -674,34 +674,34 @@ public:
         SafeRelease();
         return (void * FAR*)&m_pif;
     }
-    
+
 // note: no If * operator is allowed, as it makes it very
 //       easy to break the protocol of COM. Instead, these
 //       four operations require the user to be explicit
 
     If * GetAddRefedInterface(void) const
-    { 
+    {
         if (m_pif)
             m_pif->AddRef();
         return m_pif;
     }
 
     If * GetNonAddRefedInterface(void) const
-    { 
+    {
         return m_pif;
     }
 
     If **GetReleasedInterfaceReference(void)
-    { 
+    {
         SafeRelease();
         return &m_pif;
     }
-        
+
     If **GetNonReleasedInterfaceReference(void)
-    { 
+    {
         return &m_pif;
     }
-        
+
     BOOL operator ! (void) const
     {
         return m_pif == 0;
@@ -711,15 +711,15 @@ public:
     {
         return m_pif != 0;
     }
-    
+
     // instead of operator bool, we return a fake ptr type to allow if (pFoo) usage
     // but to disallow if (pFoo == pBar) which is probably wrong
     class PseudoBool {};
-    operator PseudoBool * (void) const 
+    operator PseudoBool * (void) const
     {
         return (PseudoBool *)m_pif;
     }
-    
+
     // the arrow operator returns a pointer with AddRef and Release disabled
     class NoAddRefOrRelease : public If {
     private:
@@ -736,7 +736,7 @@ public:
 
 
 #define SI(InterfaceName) \
-    SmartInterface<InterfaceName, &IID_##InterfaceName> 
+    SmartInterface<InterfaceName, &IID_##InterfaceName>
 
 #define DECLARE_SMART_INTERFACE(InterfaceName) \
   typedef SI(I##InterfaceName) Smart##InterfaceName

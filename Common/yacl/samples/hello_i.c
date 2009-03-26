@@ -14,7 +14,7 @@
 //@@MIDL_FILE_HEADING(  )
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
 
 #ifndef __IID_DEFINED__

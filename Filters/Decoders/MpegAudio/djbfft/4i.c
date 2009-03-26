@@ -171,7 +171,7 @@ extern const complex d65536[];
   a3.re = t8; \
   a2.im = t2; \
   }
- 
+
 
 #define UNTRANSFORMHALF(a0,a1,a2,a3) { \
   t6 = sqrthalf; \

@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -73,7 +73,7 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer(void)
 {
 
-    REGPINTYPES InputTypes[] = {    
+    REGPINTYPES InputTypes[] = {
         {&MEDIATYPE_DVD_ENCRYPTED_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
         {&MEDIATYPE_MPEG2_PACK, &MEDIASUBTYPE_MPEG2_VIDEO},
         {&MEDIATYPE_MPEG2_PES, &MEDIASUBTYPE_MPEG2_VIDEO},
@@ -82,25 +82,25 @@ STDAPI DllRegisterServer(void)
         {&MEDIATYPE_Video, &MEDIASUBTYPE_MPEG1Payload},
     };
 
-    REGPINTYPES OutputTypes[] = {   
+    REGPINTYPES OutputTypes[] = {
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YUY2},
         {&MEDIATYPE_Video, &MEDIASUBTYPE_YV12},
         {&MEDIATYPE_Video, &MEDIASUBTYPE_NV12},
         {&CLSID_CDScaler, &MEDIASUBTYPE_YUY2},
         {&CLSID_CDScaler, &MEDIASUBTYPE_YV12},
     };
-    
-    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL}, 
+
+    REGFILTERPINS2 Pins[2] = {{ 0, 1, countof(InputTypes), InputTypes, 0, NULL, &GUID_NULL},
                               { REG_PINFLAG_B_OUTPUT , 1, countof(OutputTypes), OutputTypes, 0, NULL, &GUID_NULL}};
 
     REGFILTER2 RegInfo;
-   
+
     RegInfo.dwVersion = 2;
     RegInfo.dwMerit = MERIT_PREFERRED;
     RegInfo.cPins2 = 2;
     RegInfo.rgPins2 = Pins;
-    
-  
+
+
     HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"DScaler Mpeg2 Video Decoder", &RegInfo);
     CHECK(hr);
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);

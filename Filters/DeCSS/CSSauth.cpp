@@ -109,7 +109,7 @@ static void CSSgenbits(unsigned char *output, int len,unsigned char const *s)
             b1_combined = BIT1(combined);
             val |= BIT0(combined) << bit;
         }
-    
+
         *--output = val;
     } while (--len > 0);
 }

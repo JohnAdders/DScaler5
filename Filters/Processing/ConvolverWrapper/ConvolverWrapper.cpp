@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,7 +39,7 @@ CConvolverWrapper::CConvolverWrapper() :
     }
     m_AudioInPin->AddRef();
     m_AudioInPin->SetupObject(this, L"Input");
-    
+
     m_AudioOutPin = new CDSOutputPin();
     if(m_AudioOutPin == NULL)
     {
@@ -292,7 +292,7 @@ HRESULT CConvolverWrapper::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, CDSBasePi
 
         if(TypeNum < 0) return E_INVALIDARG;
         if(TypeNum >= 1) return VFW_S_NO_MORE_ITEMS;
-        
+
         return CopyMediaType(pmt, &m_AudioInPin->m_ConnectedMediaType);;
     }
     else
@@ -313,7 +313,7 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
     }
 
     // if there was a discontinuity then we need to ask for the buffer
-    // differently 
+    // differently
     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
     {
         m_IsDiscontinuity = true;
@@ -325,7 +325,7 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
     {
        hr = m_Convolver->ProcessInput(0, InputBuffer.GetNonAddRefedInterface(), 0, 0, 0);
        CHECK(hr);
-       
+
        if(hr == S_OK)
        {
             SI(IMediaSample) OutputSample;
@@ -362,7 +362,7 @@ HRESULT CConvolverWrapper::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROP
                 {
                     OutputSample->SetDiscontinuity(FALSE);
                 }
-                
+
                 if(pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID)
                 {
                     if(pSampleProperties->dwSampleFlags & AM_SAMPLE_STOPVALID)

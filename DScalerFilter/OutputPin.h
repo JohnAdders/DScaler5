@@ -8,18 +8,18 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ///////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #include "EnumMediaTypes.h"
 
@@ -28,7 +28,7 @@ class CInputPin;
 
 /////////////////////////////////////////////////////////////////////////////
 // COutputPin
-class ATL_NO_VTABLE COutputPin : 
+class ATL_NO_VTABLE COutputPin :
     public CComObjectRootEx<CComMultiThreadModel>,
     public IPin,
     public IUpdateMediaTypes,
@@ -94,7 +94,7 @@ public:
                                     LONGLONG Source,
                                     const GUID *pSourceFormat
                                 );
-    STDMETHOD(SetPositions)( 
+    STDMETHOD(SetPositions)(
                             LONGLONG *pCurrent,
                             DWORD dwCurrentFlags,
                             LONGLONG *pStop,
@@ -113,7 +113,7 @@ public:
     HRESULT ChangeOutputFormat(const AM_MEDIA_TYPE* InputType);
     HRESULT SetMediaType(const AM_MEDIA_TYPE* NewType);
 
-        
+
 public:
     CDScaler* m_Filter;
     CInputPin* m_InputPin;

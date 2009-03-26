@@ -27,7 +27,7 @@
  * \author Tristan Leteurtre <tristan.leteurtre@anevia.com>
  * \brief DVB subtitling descriptor parsing.
  *
- * DVB subtitling descriptor parsing, according to ETSI EN 300 468 
+ * DVB subtitling descriptor parsing, according to ETSI EN 300 468
  * section 6.2.36.
  */
 
@@ -54,7 +54,7 @@ extern "C" {
  */
 typedef struct dvbpsi_subtitle_s
 {
-  uint8_t      i_iso6392_language_code[3];   
+  uint8_t      i_iso6392_language_code[3];
   uint8_t      i_subtitling_type;
   uint16_t      i_composition_page_id;
   uint16_t      i_ancillary_page_id;

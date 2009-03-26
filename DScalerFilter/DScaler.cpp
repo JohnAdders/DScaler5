@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -25,14 +25,14 @@
 #include "OutputPin.h"
 
 // define any parameters used
-MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] = 
+MP_PARAMINFO CDScaler::m_ParamInfos[CDScaler::PARAMS_LASTONE] =
 {
     { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment X" },
     { MPT_INT, 0, 1, 50, 1, L"None", L"Aspect Ratio Adjustment Y" },
-    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Is Input Anamorphic" }, 
-    { MPT_ENUM, 0, 0, 1, 0, L"None", L"Deinterlace Mode" }, 
-    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Manual Pulldown Mode" }, 
-    { MPT_ENUM, 0, FULLRATEVIDEO, PULLDOWN_32, 0, L"None", L"Pulldown Mode" }, 
+    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Is Input Anamorphic" },
+    { MPT_ENUM, 0, 0, 1, 0, L"None", L"Deinterlace Mode" },
+    { MPT_BOOL, 0, 0, 1, 0, L"None", L"Manual Pulldown Mode" },
+    { MPT_ENUM, 0, FULLRATEVIDEO, PULLDOWN_32, 0, L"None", L"Pulldown Mode" },
     { MPT_INT, 0, 0, 4, 0, L"None", L"Pulldown Mode Index" },
 };
 
@@ -94,7 +94,7 @@ STDMETHODIMP CDScaler::EnumPins(IEnumPins **ppEnum)
     NewEnum->SetFilter(this);
     NewEnum->AddRef();
     *ppEnum = NewEnum;
-    
+
     return S_OK;
 }
 
@@ -400,7 +400,7 @@ STDMETHODIMP CDScaler::SetParam(DWORD dwParamIndex,MP_DATA value)
             break;
         case DEINTERLACEMODE:
             m_RebuildRequired = TRUE;
-            break;  
+            break;
         case MANUALPULLDOWN:
             break;
         case PULLDOWNMODE:
@@ -631,10 +631,10 @@ HRESULT CDScaler::LoadDMOs()
         hr = DMO.CoCreateInstance(DMOClsid, NULL, CLSCTX_INPROC);
         if(SUCCEEDED(hr))
         {
-            CComQIPtr<IDScalerVideoFilterPlugin> DScalerDMO = DMO;        
+            CComQIPtr<IDScalerVideoFilterPlugin> DScalerDMO = DMO;
             if(DScalerDMO != NULL)
             {
-                CComQIPtr<IDeinterlace> DeinterlaceDMO = DMO;        
+                CComQIPtr<IDeinterlace> DeinterlaceDMO = DMO;
                 if(DeinterlaceDMO != NULL)
                 {
                     m_Deinterlacers.push_back(DMO.Detach());
@@ -677,16 +677,16 @@ HRESULT CDScaler::LoadDMOs()
 void CDScaler::UnloadDMOs()
 {
     // release our hold on all the Deinterlacing DMO's
-    EmptyVector(m_Deinterlacers); 
+    EmptyVector(m_Deinterlacers);
     // release our hold on all the Filter DMO's
-    EmptyList(m_Filters); 
+    EmptyList(m_Filters);
 }
 
 
 void CDScaler::EmptyList(std::list<IMediaObject*>& List)
 {
-    for(std::list<IMediaObject*>::iterator it = List.begin(); 
-        it != List.end(); 
+    for(std::list<IMediaObject*>::iterator it = List.begin();
+        it != List.end();
         ++it)
     {
         (*it)->Release();
@@ -696,8 +696,8 @@ void CDScaler::EmptyList(std::list<IMediaObject*>& List)
 
 void CDScaler::EmptyVector(std::vector<IMediaObject*>& Vector)
 {
-    for(std::vector<IMediaObject*>::iterator it = Vector.begin(); 
-        it != Vector.end(); 
+    for(std::vector<IMediaObject*>::iterator it = Vector.begin();
+        it != Vector.end();
         ++it)
     {
         (*it)->Release();
@@ -727,7 +727,7 @@ HRESULT CDScaler::CheckProcessingLine()
         CHECK(hr);
         m_TypesChanged = FALSE;
     }
-    
+
     if(m_ChangeTypes)
     {
         m_ChangeTypes = FALSE;
@@ -742,7 +742,7 @@ HRESULT CDScaler::CheckProcessingLine()
 HRESULT CDScaler::RebuildProcessingLine()
 {
     HRESULT hr = S_OK;
-    
+
     // set it to the new one
     m_CurrentDeinterlacingMethod = m_Deinterlacers[(size_t)m_ParamValues[DEINTERLACEMODE]];
     CComQIPtr<IDScalerVideoFilterPlugin> pVPI = m_CurrentDeinterlacingMethod;

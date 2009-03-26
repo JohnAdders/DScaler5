@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -36,7 +36,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
         hr = m_CCOutPin->GetOutputSample(pSample.GetReleasedInterfaceReference(), NULL, NULL, false);
         CHECK(hr);
         BYTE* pData = NULL;
-        
+
         hr = pSample->GetPointer(&pData);
         CHECK(hr);
         if(pData == NULL)
@@ -53,7 +53,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
 
             hr = m_CCOutPin->SendSample(pSample.GetNonAddRefedInterface());
             CHECK(hr);
-        }            
+        }
         else
         {
             LOG(DBGLOG_FLOW, ("Too much CC data got %d to fit in %d \n", UserDataLen + 4, pSample->GetSize()));
@@ -81,7 +81,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
     else if(UserDataLen >= 6 && *(DWORD*)UserData == 0x34394147)
     {
         // process ATSC sub title data
-        // what I'm trying to do here is convert the ATSC data into the 
+        // what I'm trying to do here is convert the ATSC data into the
         // DVD CC format so that we can keep a simple output pin
         // Not sure if this works properly or not due to limited test material
         //
@@ -94,7 +94,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
             {
                 const BYTE* pInData = UserData + 5;
                 int Count = *pInData++ & 0x1F;
-            
+
                 // skip emergency data
                 ++pInData;
 
@@ -102,7 +102,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
                 hr = m_CCOutPin->GetOutputSample(pSample.GetReleasedInterfaceReference(), NULL, NULL, false);
                 CHECK(hr);
                 BYTE* pOutData = NULL;
-                
+
                 hr = pSample->GetPointer(&pOutData);
                 CHECK(hr);
                 if(pOutData == NULL)
@@ -129,7 +129,7 @@ HRESULT CMpegDecoder::ProcessUserData(mpeg2_state_t State, const BYTE* const Use
                         // for the DVD format we seem to need to pass
                         // pairs of CC triplets
                         // this format is similar to what appears on
-                        // some DVD's I've tested with and so appears to be 
+                        // some DVD's I've tested with and so appears to be
                         // valid
                         *pOutData++ = 0xFF;
                         pInData++;

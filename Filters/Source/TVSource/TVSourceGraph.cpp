@@ -13,7 +13,7 @@
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details
-// 
+//
 // You should have received a copy of the GNU General Public
 // License along with this package; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -35,7 +35,7 @@ HRESULT getCaptureCardFilter(std::wstring cardName, SI(IBaseFilter)& filter)
     // Create an enumerator for the video capture category.
     hr = devEnum->CreateClassEnumerator(CLSID_VideoInputDeviceCategory, enumMoniker.GetReleasedInterfaceReference(), 0);
     if(FAILED(hr)) return hr;
-    
+
     // we get false for empty which means that there are no capture cards
     if(hr == S_FALSE)
     {
@@ -50,7 +50,7 @@ HRESULT getCaptureCardFilter(std::wstring cardName, SI(IBaseFilter)& filter)
         if (FAILED(hr))
         {
             continue;  // Skip this one, maybe the next one will work.
-        } 
+        }
 
         // Find the description or friendly name.
         VARIANT varName;
@@ -67,7 +67,7 @@ HRESULT getCaptureCardFilter(std::wstring cardName, SI(IBaseFilter)& filter)
             {
                 return moniker->BindToObject(0, 0, IID_IBaseFilter, (void**)filter.GetReleasedInterfaceReference());
             }
-            VariantClear(&varName); 
+            VariantClear(&varName);
         }
     }
     return E_POINTER;

@@ -16,7 +16,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#pragma once 
+#pragma once
 
 #define FEATURE_MMX            0x00000020
 #define FEATURE_3DNOW          0x00000080

@@ -6,13 +6,13 @@
 // the table's registry entries and optionally registers a type library.
 //
 //     RegistryTableUpdateRegistry - adds/removes registry entries for table
-//     
+//
 
 #ifndef _REGTABLE_CPP
 #define _REGTABLE_CPP
 
 #include <windows.h>
-#include <olectl.h> 
+#include <olectl.h>
 #include "regtable.h"
 
 LONG RegDeleteAllKeys(HKEY hkeyRoot, const char *pszKeyName)
@@ -21,18 +21,18 @@ LONG RegDeleteAllKeys(HKEY hkeyRoot, const char *pszKeyName)
     if (pszKeyName && lstrlenA(pszKeyName))
     {
         HKEY    hkey;
-        err = RegOpenKeyExA(hkeyRoot, pszKeyName, 0, 
+        err = RegOpenKeyExA(hkeyRoot, pszKeyName, 0,
                            KEY_ENUMERATE_SUB_KEYS | DELETE, &hkey );
         if(err == ERROR_SUCCESS)
         {
             while (err == ERROR_SUCCESS )
             {
                 enum { MAX_KEY_LEN = 1024 };
-                char szSubKey[MAX_KEY_LEN]; 
+                char szSubKey[MAX_KEY_LEN];
                 DWORD   dwSubKeyLength = MAX_KEY_LEN;
                 err = RegEnumKeyExA(hkey, 0, szSubKey,
                                     &dwSubKeyLength, 0, 0, 0, 0);
-                
+
                 if(err == ERROR_NO_MORE_ITEMS)
                 {
                     err = RegDeleteKeyA(hkeyRoot, pszKeyName);
@@ -51,10 +51,10 @@ LONG RegDeleteAllKeys(HKEY hkeyRoot, const char *pszKeyName)
 
 
 // the routine that inserts/deletes Registry keys based on the table
-EXTERN_C HRESULT STDAPICALLTYPE 
-RegistryTableUpdateRegistry(HINSTANCE hInstance, 
-                            REGISTRY_ENTRY *pEntries, 
-                            BOOL bRegisterModuleAsTypeLib, 
+EXTERN_C HRESULT STDAPICALLTYPE
+RegistryTableUpdateRegistry(HINSTANCE hInstance,
+                            REGISTRY_ENTRY *pEntries,
+                            BOOL bRegisterModuleAsTypeLib,
                             BOOL bInstalling)
 {
     HRESULT hr = S_OK;
@@ -72,7 +72,7 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
             mbstowcs(szTypeLibName, szModuleName, MAX_PATH);
 #endif
             hr = LoadTypeLib(szTypeLibName, &pTypeLib);
-            if (SUCCEEDED(hr)) 
+            if (SUCCEEDED(hr))
             {
                 hr = RegisterTypeLib(pTypeLib, szTypeLibName, 0);
                 pTypeLib->Release();
@@ -85,7 +85,7 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
             REGISTRY_ENTRY *pHead = pEntries;
             char szKey[4096];
             HKEY hkeyRoot = 0;
-        
+
             while (pEntries->fFlags != -1)
             {
                 char szFullKey[4096];
@@ -104,9 +104,9 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                 }
                 if (hkeyRoot == 0)
                 {
-                    RegistryTableUpdateRegistry(hInstance, 
-                                                pHead, 
-                                                bRegisterModuleAsTypeLib, 
+                    RegistryTableUpdateRegistry(hInstance,
+                                                pHead,
+                                                bRegisterModuleAsTypeLib,
                                                 FALSE);
                     return SELFREG_E_CLASS;
 
@@ -115,11 +115,11 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                 if (pEntries->fFlags & (REGFLAG_DELETE_BEFORE_REGISTERING|REGFLAG_DELETE_WHEN_REGISTERING))
                 {
                     LONG err = RegDeleteAllKeys(hkeyRoot, szFullKey);
-                    if (err != ERROR_SUCCESS && err != ERROR_FILE_NOT_FOUND) 
+                    if (err != ERROR_SUCCESS && err != ERROR_FILE_NOT_FOUND)
                     {
-                        RegistryTableUpdateRegistry(hInstance, 
-                                                    pHead, 
-                                                    bRegisterModuleAsTypeLib, 
+                        RegistryTableUpdateRegistry(hInstance,
+                                                    pHead,
+                                                    bRegisterModuleAsTypeLib,
                                                     FALSE);
                         return SELFREG_E_CLASS;
                     }
@@ -136,9 +136,9 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                         RegCloseKey(hkey);
                         if (hkeyRoot == 0)
                         {
-                            RegistryTableUpdateRegistry(hInstance, 
-                                                        pHead, 
-                                                        bRegisterModuleAsTypeLib, 
+                            RegistryTableUpdateRegistry(hInstance,
+                                                        pHead,
+                                                        bRegisterModuleAsTypeLib,
                                                         FALSE);
                             return SELFREG_E_CLASS;
 
@@ -146,9 +146,9 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                     }
                     else
                     {
-                        RegistryTableUpdateRegistry(hInstance, 
-                                                    pHead, 
-                                                    bRegisterModuleAsTypeLib, 
+                        RegistryTableUpdateRegistry(hInstance,
+                                                    pHead,
+                                                    bRegisterModuleAsTypeLib,
                                                     FALSE);
                         return SELFREG_E_CLASS;
 
@@ -172,7 +172,7 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
             mbstowcs(szTypeLibName, szModuleName, MAX_PATH);
 #endif
             hr = LoadTypeLib(szTypeLibName, &pTypeLib);
-            if (SUCCEEDED(hr)) 
+            if (SUCCEEDED(hr))
             {
                 TLIBATTR *ptla = 0;
                 hr = pTypeLib->GetLibAttr(&ptla);
@@ -190,7 +190,7 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
         {
             char szKey[4096];
             HKEY hkeyRoot = 0;
-        
+
             while (pEntries->fFlags != -1)
             {
                 char szFullKey[4096];
@@ -206,14 +206,14 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                     lstrcatA(szFullKey, "\\");
                     lstrcatA(szFullKey, pEntries->pszKey);
                 }
-                if ((hkeyRoot != 0) 
+                if ((hkeyRoot != 0)
                     && !(pEntries->fFlags & REGFLAG_NEVER_DELETE)
                     && !(pEntries->fFlags & REGFLAG_DELETE_WHEN_REGISTERING))
                 {
                     LONG err = RegDeleteAllKeys(hkeyRoot, szFullKey);
                     if (err != ERROR_SUCCESS && err != ERROR_FILE_NOT_FOUND)
                         hr = SELFREG_E_CLASS;
-                    
+
                 }
                 pEntries++;
             }

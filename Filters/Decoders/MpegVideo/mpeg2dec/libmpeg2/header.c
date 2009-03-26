@@ -306,8 +306,8 @@ static inline void finalize_sequence (mpeg2_sequence_t * sequence)
     height *= sequence->display_width;
 
     } else {
-    if (sequence->byte_rate == 50 * 0x3ffff) 
-        sequence->byte_rate = 0;        /* mpeg-1 VBR */ 
+    if (sequence->byte_rate == 50 * 0x3ffff)
+        sequence->byte_rate = 0;        /* mpeg-1 VBR */
 
     switch (sequence->pixel_width) {
     case 0:    case 15:    /* illegal */
@@ -373,7 +373,7 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
         }
     }
 
-    // JA 7/Mar/2005 removed 
+    // JA 7/Mar/2005 removed
     if (i == sizeof (video_modes) / sizeof (video_modes[0]) ||
     (sequence->pixel_width == 1 && sequence->pixel_height == 1) /*||
     width != sequence->display_width || height != sequence->display_height*/)
@@ -384,7 +384,7 @@ int mpeg2_guess_aspect (const mpeg2_sequence_t * sequence,
     for (pix_width = 1; width * pix_width <= 352; pix_width <<= 1);
     width *= pix_width;
 
-    if (! (sequence->flags & SEQ_FLAG_MPEG2)) 
+    if (! (sequence->flags & SEQ_FLAG_MPEG2))
     {
         // if the pixel_width isn't 2000 then it should already be correct
         if (width < 704 || sequence->pixel_width != 2000)
@@ -856,7 +856,7 @@ int mpeg2_header_user_data (mpeg2dec_t * mpeg2dec)
 {
     mpeg2dec->user_data_len += mpeg2dec->chunk_ptr - 1 - mpeg2dec->chunk_start;
     mpeg2dec->chunk_start = mpeg2dec->chunk_ptr - 1;
-    
+
     return 0;
 }
 

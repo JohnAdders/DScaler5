@@ -241,7 +241,7 @@ yuvtoyuy2row_avg2_mmx_loop:
     psrlq        mm1, 1
     pand        mm1, mm7
     paddb        mm0, mm1
-    
+
     movq        mm5, mm4
     movq        mm1, mm0
 
@@ -366,7 +366,7 @@ memcpy_accel_sse_loop:
     cmp     ecx, 0
     je        memcpy_accel_sse_end
 memcpy_accel_sse_loop2:
-    mov        dl,[esi] 
+    mov        dl,[esi]
     mov        [edi], dl
     inc        esi
     inc        edi
@@ -418,7 +418,7 @@ memcpy_accel_mmx_loop:
     cmp     ecx, 0
     je        memcpy_accel_mmx_end
 memcpy_accel_mmx_loop2:
-    mov        dl, [esi] 
+    mov        dl, [esi]
     mov        [edi], dl
     inc        esi
     inc        edi

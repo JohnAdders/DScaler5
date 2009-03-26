@@ -8,12 +8,12 @@
 // modify it under the terms of the GNU Lesser General Public
 // License as published by the Free Software Foundation; either
 // version 2.1 of the License, or (at your option) any later version.
-// 
+//
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 // Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -42,7 +42,7 @@ CDScaler::CDScaler() :
     m_FieldsInBuffer = 0;
 
     LOG(DBGLOG_FLOW, ("CDScaler::CreatePins\n"));
-    
+
     m_VideoInPin = new CDSInputPin;
     if(m_VideoInPin == NULL)
     {
@@ -50,7 +50,7 @@ CDScaler::CDScaler() :
     }
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Input");
-    
+
     m_OutputPins[0] = new CDSVideoOutPin();
     if(m_VideoOutPin == NULL)
     {
@@ -96,7 +96,7 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
         break;
     case DEINTERLACEMODE:
         m_RebuildRequired = TRUE;
-        break;  
+        break;
     case MANUALPULLDOWN:
         break;
     case PULLDOWNMODE:
@@ -106,7 +106,7 @@ HRESULT CDScaler::ParamChanged(DWORD dwParamIndex)
         break;
     case FILMDETECTMODE:
         m_RebuildRequired = TRUE;
-        break;  
+        break;
     default:
         break;
     }
@@ -234,7 +234,7 @@ STDMETHODIMP CDScaler::get_Authors(BSTR* Authors)
 STDMETHODIMP CDScaler::get_StatisticValue(DWORD Index, BSTR* StatValue)
 {
     HRESULT hr = S_OK;
-    
+
     CProtectCode WhileVarInScope(m_VideoInPin);
 
     switch(Index)
@@ -295,10 +295,10 @@ HRESULT CDScaler::LoadDMOs()
         hr = DMO.CreateInstance(DMOClsid, CLSCTX_INPROC);
         if(SUCCEEDED(hr))
         {
-            SI(IDScalerVideoFilterPlugin) DScalerDMO = DMO;        
+            SI(IDScalerVideoFilterPlugin) DScalerDMO = DMO;
             if(DScalerDMO)
             {
-                SI(IDeinterlace) DeinterlaceDMO = DMO;        
+                SI(IDeinterlace) DeinterlaceDMO = DMO;
                 if(DeinterlaceDMO)
                 {
                     m_Deinterlacers.push_back(DMO.GetAddRefedInterface());
@@ -307,7 +307,7 @@ HRESULT CDScaler::LoadDMOs()
                 }
                 else
                 {
-                    SI(IFilmDetect) FilmDetectDMO = DMO;        
+                    SI(IFilmDetect) FilmDetectDMO = DMO;
                     if(FilmDetectDMO)
                     {
                         m_FilmDetectors.push_back(DMO.GetAddRefedInterface());
@@ -367,18 +367,18 @@ HRESULT CDScaler::LoadDMOs()
 void CDScaler::UnloadDMOs()
 {
     // release our hold on all the Deinterlacing DMO's
-    EmptyVector(m_Deinterlacers); 
+    EmptyVector(m_Deinterlacers);
     // release our hold on all the Film Detect DMO's
-    EmptyVector(m_FilmDetectors); 
+    EmptyVector(m_FilmDetectors);
     // release our hold on all the Filter DMO's
-    EmptyList(m_Filters); 
+    EmptyList(m_Filters);
 }
 
 
 void CDScaler::EmptyList(std::list<IMediaObject*>& List)
 {
-    for(std::list<IMediaObject*>::iterator it = List.begin(); 
-        it != List.end(); 
+    for(std::list<IMediaObject*>::iterator it = List.begin();
+        it != List.end();
         ++it)
     {
         (*it)->Release();
@@ -388,8 +388,8 @@ void CDScaler::EmptyList(std::list<IMediaObject*>& List)
 
 void CDScaler::EmptyVector(std::vector<IMediaObject*>& Vector)
 {
-    for(std::vector<IMediaObject*>::iterator it = Vector.begin(); 
-        it != Vector.end(); 
+    for(std::vector<IMediaObject*>::iterator it = Vector.begin();
+        it != Vector.end();
         ++it)
     {
         (*it)->Release();
@@ -431,7 +431,7 @@ HRESULT CDScaler::CheckProcessingLine()
 HRESULT CDScaler::RebuildProcessingLine()
 {
     HRESULT hr = S_OK;
-    
+
     // set it to the new one
     m_CurrentDeinterlacingMethod = m_Deinterlacers[GetParamInt(DEINTERLACEMODE)];
     SI(IDScalerVideoFilterPlugin) pVPI = m_CurrentDeinterlacingMethod;
@@ -679,10 +679,10 @@ HRESULT CDScaler::UpdateMovementMap()
     SI(IInterlacedField) pNewerBuffer;
     SI(IInterlacedField) pOlderBuffer;
 
-    HRESULT hr = GetField(0, pNewerBuffer.GetReleasedInterfaceReference()); 
+    HRESULT hr = GetField(0, pNewerBuffer.GetReleasedInterfaceReference());
     if(FAILED(hr)) return hr;
 
-    hr = GetField(2, pOlderBuffer.GetReleasedInterfaceReference()); 
+    hr = GetField(2, pOlderBuffer.GetReleasedInterfaceReference());
     if(FAILED(hr)) return hr;
 
     BOOLEAN IsTopLine = FALSE;
@@ -697,14 +697,14 @@ HRESULT CDScaler::UpdateMovementMap()
 
     BYTE* pMovementMap = m_MovementMap.GetMap();
 
-    
+
     hr = pNewerBuffer->GetBufferAndLength(&pInputDataNewer, &InputLengthNewer);
     if(FAILED(hr)) return hr;
 
     hr = pOlderBuffer->GetBufferAndLength(&pInputDataOlder, &InputLengthOlder);
     if(FAILED(hr)) return hr;
 
-    // do 4:2:2 format up here and we need to 
+    // do 4:2:2 format up here and we need to
     // worry about deinterlacing both luma and chroma
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
     {
@@ -745,7 +745,7 @@ HRESULT CDScaler::UpdateMovementMap()
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
             pMovementMap += InputInfo->bmiHeader.biWidth;
         }
-        
+
         int i;
 
         for(i = 0; i < InputInfo->bmiHeader.biHeight/2; ++i)
@@ -806,7 +806,7 @@ HRESULT CDScaler::UpdateMovementMap()
             pInputDataOlder += InputInfo->bmiHeader.biWidth;
             pMovementMap += InputInfo->bmiHeader.biWidth;
         }
-        
+
     }
 
     return hr;
@@ -850,8 +850,8 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
             }
             hr = OutSample->SetTime(&m_LastStartEnd, FrameEndTime);
             CHECK(hr);
-        
-            LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Weave]\n", 
+
+            LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Weave]\n",
                             m_LastStartEnd, *FrameEndTime));
 
             m_LastStartEnd = *FrameEndTime;
@@ -861,11 +861,11 @@ HRESULT CDScaler::WeaveOutput(REFERENCE_TIME* FrameEndTime)
             hr = OutSample->SetTime(NULL, NULL);
             CHECK(hr);
         }
-        
+
         // finally send the processed sample on it's way
         hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
     }
-    // if we are at the start then we might need to send 
+    // if we are at the start then we might need to send
     // a couple of frames in before getting a response
     else if(hr == S_FALSE)
     {
@@ -911,14 +911,14 @@ HRESULT CDScaler::DeinterlaceOutput(REFERENCE_TIME& FrameEndTime)
         hr = OutSample->SetTime(&m_LastStartEnd, &FrameEndTime);
         CHECK(hr);
 
-        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Deint]\n", 
+        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [Deint]\n",
                         m_LastStartEnd, FrameEndTime));
 
 
         // finally send the processed sample on it's way
         hr = m_VideoOutPin->m_MemInputPin->Receive(OutSample.GetNonAddRefedInterface());
     }
-    // if we are at the start then we might need to send 
+    // if we are at the start then we might need to send
     // a couple of frames in before getting a response
     else if(hr == S_FALSE)
     {
@@ -1033,12 +1033,12 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
     {
         result = !!(pmt->majortype == MEDIATYPE_Video || pmt->majortype == CLSID_CDScaler);
 
-        result &= (pmt->formattype == FORMAT_VIDEOINFO2 || 
+        result &= (pmt->formattype == FORMAT_VIDEOINFO2 ||
                 (pmt->formattype == FORMAT_VideoInfo && pPin == m_VideoInPin));
 
-        result &= (pmt->subtype == MEDIASUBTYPE_YUY2 || 
+        result &= (pmt->subtype == MEDIASUBTYPE_YUY2 ||
                pmt->subtype == MEDIASUBTYPE_YV12);
-    
+
         if(result)
         {
             BITMAPINFOHEADER* BitmapInfo;
@@ -1053,7 +1053,7 @@ bool CDScaler::IsThisATypeWeCanWorkWith(const AM_MEDIA_TYPE* pmt, CDSBasePin* pP
                 BitmapInfo = &Format->bmiHeader;
             }
 
-            // check that the incoming format is SDTV    
+            // check that the incoming format is SDTV
             result &= (BitmapInfo->biHeight >= -576 && BitmapInfo->biHeight <= 576);
 
             //result &= (BitmapInfo->biWidth <= 768);
@@ -1138,7 +1138,7 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
     if((pSampleProperties->dwSampleFlags & AM_SAMPLE_TIMEVALID) == AM_SAMPLE_TIMEVALID)
     {
         // if there was a discontinuity then we need to ask for the buffer
-        // differently 
+        // differently
         if(pSampleProperties->dwSampleFlags & AM_SAMPLE_DATADISCONTINUITY)
         {
             m_IsDiscontinuity = true;
@@ -1161,7 +1161,7 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
             }
         }
 
-        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [TypeSpec %x Flags %x]\n", 
+        LOG(DBGLOG_FLOW, ("%010I64d - %010I64d [TypeSpec %x Flags %x]\n",
                         pSampleProperties->tStart, pSampleProperties->tStop,
                         pSampleProperties->dwTypeSpecificFlags,
                         pSampleProperties->dwSampleFlags));
@@ -1209,7 +1209,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1218,7 +1218,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1230,7 +1230,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_AFTERNEXT_32;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_AFTERNEXT_32;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1239,7 +1239,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + 2 * (InSampleProperties->tStop - InSampleProperties->tStart) / 3;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_32;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1248,7 +1248,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_32;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1263,7 +1263,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1272,7 +1272,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1284,7 +1284,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStart + (InSampleProperties->tStop - InSampleProperties->tStart) / 2;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_NEXT_22;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1293,7 +1293,7 @@ HRESULT CDScaler::PushSample(IMediaSample* InputSample, AM_SAMPLE2_PROPERTIES* I
             m_IncomingFields[0].m_EndTime = InSampleProperties->tStop;
             if(InSampleProperties->dwTypeSpecificFlags & AM_VIDEO_FLAG_WEAVE)
             {
-                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;    
+                m_IncomingFields[0].m_Hint = WEAVE_WITH_PREV_22;
             }
             hr = InternalProcessOutput();
             CHECK(hr);
@@ -1418,7 +1418,7 @@ HRESULT CDScaler::CreateInternalMediaTypes()
     if(BitmapInfo->biHeight == 576)
     {
         NewFormat->dwInterlaceFlags |= AMINTERLACE_Field1First;
-    }    
+    }
 
 
     if(GetParamBool(INPUTISANAMORPHIC) != 0)
@@ -1455,7 +1455,7 @@ void CDScaler::DumpField(IInterlacedField* Field, LPCSTR FileName)
 
     BYTE* pInputData;
     DWORD InputLength;
-    
+
     Field->GetBufferAndLength(&pInputData, &InputLength);
 
     if(InputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
@@ -1543,7 +1543,7 @@ void CDScaler::DumpOutput(IMediaBuffer* OutBuffer, LPCSTR FileName)
 
     BYTE* pData;
     DWORD Length;
-    
+
     OutBuffer->GetBufferAndLength(&pData, &Length);
 
     if(OutputInfo->bmiHeader.biCompression == MAKEFOURCC('Y','U','Y','2'))
