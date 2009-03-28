@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil;..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
 				StringPooling="true"
 				RuntimeLibrary="0"

@@ -197,10 +197,10 @@ HRESULT CDSVideoOutPin::CheckForReconnection()
 {
     HRESULT hr = S_OK;
 
-    m_NeedToAttachFormat = false;
-
-    if(m_Negotiator.NeedReconnect())
+    if(m_Negotiator.NeedReconnect() || m_NeedToAttachFormat)
     {
+	    m_NeedToAttachFormat = false;
+
         m_InsideReconnect = true;
 
         switch(m_ConnectedType)
@@ -546,8 +546,8 @@ HRESULT CDSVideoOutPin::AdjustRenderersMediaType()
 
 STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
 {
-    LOG(DBGLOG_ALL, ("CDSOutputPin::QueryAccept\n"));
-    LogMediaType(pmt, "CDSOutputPin::QueryAccept", DBGLOG_FLOW);
+    LOG(DBGLOG_ALL, ("CDSVideoOutPin::QueryAccept\n"));
+    LogMediaType(pmt, "CDSVideoOutPin::QueryAccept", DBGLOG_FLOW);
 
     if(m_Filter->IsThisATypeWeCanWorkWith(pmt, this) == false)
     {
@@ -568,6 +568,8 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
             // accept pitch changes from upstream
             if(pitch > wout)
             {
+			    LOG(DBGLOG_FLOW, ("CDSVideoOutPin::Got Pitch change request\n"));
+				SetType(pmt);
                 m_Negotiator.SetConnectedType(pmt);
                 m_NeedToAttachFormat = true;
             }
