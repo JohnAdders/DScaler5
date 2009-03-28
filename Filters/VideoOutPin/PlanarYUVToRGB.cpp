@@ -56,7 +56,7 @@ bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
         switch(dbpp)
         {
         case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_ISSE*/; break; // TODO: fix _ISSE (555->565)
-        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_ISSE; break;
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
         case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_ISSE; break;
         }
     }
@@ -65,7 +65,7 @@ bool BitBltFromI420ToRGB(int w, int h, BYTE* dst, int dstpitch, int dbpp, BYTE* 
         switch(dbpp)
         {
         case 16: asm_YUVtoRGB_row = asm_YUVtoRGB16_row/*_MMX*/; break; // TODO: fix _MMX (555->565)
-        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row_MMX; break;
+        case 24: asm_YUVtoRGB_row = asm_YUVtoRGB24_row; break;
         case 32: asm_YUVtoRGB_row = asm_YUVtoRGB32_row_MMX; break;
         }
     }

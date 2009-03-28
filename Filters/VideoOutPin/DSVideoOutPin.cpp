@@ -562,7 +562,7 @@ STDMETHODIMP CDSVideoOutPin::QueryAccept(const AM_MEDIA_TYPE *pmt)
     }
     else
     {
-        if(m_InsideReconnect ||  IsConnected())
+        if(m_InsideReconnect || IsConnected())
         {
             // if we are in the middle of a reconnection then we need to
             // accept pitch changes from upstream

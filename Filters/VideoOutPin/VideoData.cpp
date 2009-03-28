@@ -99,14 +99,14 @@ CVideoData::CVideoData(const AM_MEDIA_TYPE* MediaType, SI(IMediaSample)& Sample)
         m_Height = abs(m_Height);
         break;
     case MAKEFOURCC('N', 'V', '1', '2'):
-        m_Data[1] = Buffer + bih->biWidth * bih->biHeight;
         m_Height = abs(m_Height);
+        m_Data[1] = Buffer + bih->biWidth * m_Height;
         break;
     case MAKEFOURCC('Y', 'V', '1', '2'):
         // Data is Y V U
-        m_Data[2] = Buffer + bih->biWidth * bih->biHeight;
-        m_Data[1] = m_Data[2] + bih->biWidth * bih->biHeight / 4;
         m_Height = abs(m_Height);
+        m_Data[2] = Buffer + bih->biWidth * m_Height;
+        m_Data[1] = m_Data[2] + bih->biWidth * m_Height / 4;
         break;
     default:
         throw std::logic_error("Invalid Format");
