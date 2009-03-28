@@ -494,7 +494,7 @@ HRESULT CDSOutputPin::NegotiateAllocator(IPin *pReceivePin)
     // if we haven't already choosen an allocator
     if(m_Allocator == NULL)
     {
-        // ask the conencted filter for it's allocator
+        // ask the connected filter for it's allocator
         // otherwise supply our own
         hr = m_MemInputPin->GetAllocator(m_Allocator.GetReleasedInterfaceReference());
         if(m_Allocator)
@@ -618,7 +618,13 @@ HRESULT CDSOutputPin::NegotiateBufferSize(IPin *pReceivePin)
         hr = m_Allocator->SetProperties(&Props, &PropsAct);
     }
 
-    LOG(DBGLOG_FLOW, ("Allocator hr = %08x Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", hr, PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+    if(FAILED(hr))
+    {
+        hr = m_Allocator->GetProperties(&PropsAct);
+        CHECK(hr);
+
+        LOG(DBGLOG_FLOW, ("Allocator hr = %08x Negotiated Buffers - %d Size - %d Align - %d Prefix %d\n", hr, PropsAct.cBuffers, PropsAct.cbBuffer, PropsAct.cbAlign, PropsAct.cbPrefix));
+    }
 
     return hr;
 }

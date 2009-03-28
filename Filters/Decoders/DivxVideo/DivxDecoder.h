@@ -23,6 +23,7 @@
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
+#include "VideoFormatNegotiator.h"
 
 extern "C"
 {
@@ -202,6 +203,8 @@ private:
     int (*m_OldGetBuffer)(struct AVCodecContext *c, AVFrame *pic);
     void (*m_OldReleaseBuffer)(struct AVCodecContext *c, AVFrame *pic);
     int (*m_OldRegetBuffer)(struct AVCodecContext *c, AVFrame *pic);
+
+    CVideoFormatNegotiator Negotiator;
 
 };
 

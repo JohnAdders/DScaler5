@@ -47,6 +47,7 @@
 #include "DSCSSInputPin.h"
 #include "DSBufferedInputPin.h"
 #include "DSVideoOutPin.h"
+#include "VideoData.h"
 #include "MediaBufferWrapper.h"
 #include "MediaTypes.h"
 #include "DSUtil.h"
@@ -78,7 +79,7 @@ CMpegDecoder::CMpegDecoder() :
     m_SubpictureInPin->SetupObject(this, L"SubPicture");
 
     // can't use m_VideoOutPin due to casting
-    m_OutputPins[0] = new CDSVideoOutPin();
+    m_OutputPins[0] = new CDSVideoOutPin(m_Negotiator);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 3"));
@@ -749,8 +750,8 @@ HRESULT CMpegDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_MpegHeight = abs(m_MpegHeight);
         m_ControlFlags = 0;
         m_PanAndScanDVD = false;
-        m_VideoOutPin->SetPanScanX(0);
-        m_VideoOutPin->SetPanScanY(0);
+        m_ImageOffsetX = 0;
+        m_ImageOffsetY = 0;
         m_FilmCameraModeHint = false;
         m_LetterBoxed = false;
         m_AFD = 0;
@@ -1223,13 +1224,27 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
         pOut->SetSyncPoint(TRUE);
     }
 
-    BYTE** buf = &m_CurrentPicture->m_Buf[0];
+    BYTE* Buf[4] = {
+                        m_CurrentPicture->m_Buf[0],
+                        m_CurrentPicture->m_Buf[1],
+                        m_CurrentPicture->m_Buf[2],
+                        0
+                   };
 
     if(FAILED(hr = pOut->GetPointer(&pDataOut)))
     {
         LogBadHRESULT(hr, __FILE__, __LINE__);
         return hr;
     }
+
+    // Was in VideoOutputPin
+    if(m_InternalPitch < m_OutputWidth)
+    {
+        LOG(DBGLOG_FLOW, ("Got picture before new sequence\n"));
+        return S_OK;
+    }
+
+    GUID InputFormat;
 
     if(m_ChromaType == CHROMA_420)
     {
@@ -1240,24 +1255,46 @@ HRESULT CMpegDecoder::Deliver(bool fRepeatLast)
             // so that it can be used in predictions
             m_SubPicBuffer = *m_CurrentPicture;
 
-            buf = &m_SubPicBuffer.m_Buf[0];
+            Buf[0] = m_SubPicBuffer.m_Buf[0];
+            Buf[1] = m_SubPicBuffer.m_Buf[1];
+            Buf[2] = m_SubPicBuffer.m_Buf[2];
 
-            RenderSubpics(m_CurrentPicture->m_rtStart, buf, m_InternalPitch, m_OutputHeight);
+            RenderSubpics(m_CurrentPicture->m_rtStart, Buf, m_InternalPitch, m_OutputHeight);
         }
         else
         {
             ClearOldSubpics(m_CurrentPicture->m_rtStart);
         }
-        m_VideoOutPin->Copy420(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch, (m_ProgressiveChroma || (m_NextFrameDeint == DIWeave)));
+
+        Buf[0] += m_ImageOffsetX + m_InternalPitch * m_ImageOffsetY;
+        Buf[1] += m_ImageOffsetX / 2 + m_InternalPitch * m_ImageOffsetY / 4;
+        Buf[2] += m_ImageOffsetX / 2 + m_InternalPitch * m_ImageOffsetY / 4;
+
+        InputFormat = MEDIASUBTYPE_YV12;
     }
     else if(m_ChromaType == CHROMA_422)
     {
-        m_VideoOutPin->Copy422(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+        Buf[0] += m_ImageOffsetX + m_InternalPitch * m_ImageOffsetY;
+        Buf[1] += m_ImageOffsetX / 2 + m_InternalPitch * m_ImageOffsetY / 2;
+        Buf[2] += m_ImageOffsetX / 2 + m_InternalPitch * m_ImageOffsetY / 2;
+
+        InputFormat = MEDIASUBTYPE_P422;
     }
     else
     {
-        m_VideoOutPin->Copy444(pDataOut, buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+        Buf[0] += m_ImageOffsetX + m_InternalPitch * m_ImageOffsetY;
+        Buf[1] += m_ImageOffsetX + m_InternalPitch * m_ImageOffsetY;
+        Buf[2] += m_ImageOffsetX + m_InternalPitch * m_ImageOffsetY;
+
+        InputFormat = MEDIASUBTYPE_P444;
     }
+
+    // wrap up the input and output buffers
+    CVideoData Input(InputFormat, Buf, m_OutputWidth, m_OutputHeight, m_InternalPitch);
+    CVideoData Output(m_VideoOutPin->GetMediaType(), pOut);
+
+    // copy the data to whatever format we've negotiated
+    CVideoData::Copy(Input, Output, (m_ProgressiveChroma || (m_NextFrameDeint == DIWeave)));
 
     hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
     if(FAILED(hr))
@@ -1804,13 +1841,13 @@ void CMpegDecoder::LetterBox(long YAdjust, long XAdjust, bool IsTop)
     long OriginalHeight = m_OutputHeight;
     m_OutputHeight = m_OutputHeight * XAdjust;
     m_OutputHeight /= YAdjust;
-    m_OutputHeight &= ~1;
+    m_OutputHeight &= ~3;
     m_ARAdjustX = YAdjust;
     m_ARAdjustY = XAdjust;
 
     if(!IsTop)
     {
-        m_VideoOutPin->SetPanScanY(m_VideoOutPin->GetPanScanY() + (OriginalHeight - m_OutputHeight) / 2);
+        m_ImageOffsetY += (OriginalHeight - m_OutputHeight) / 2;
     }
 }
 
@@ -1819,11 +1856,11 @@ void CMpegDecoder::PillarBox(long YAdjust, long XAdjust)
     long OriginalWidth = m_OutputWidth;
     m_OutputWidth = m_OutputWidth * XAdjust;
     m_OutputWidth /= YAdjust;
-    m_OutputWidth &= ~1;
+    m_OutputWidth &= ~3;
     m_ARAdjustX = XAdjust;
     m_ARAdjustY = YAdjust;
 
-    m_VideoOutPin->SetPanScanX(m_VideoOutPin->GetPanScanX() + (OriginalWidth - m_OutputWidth) / 2);
+    m_ImageOffsetX += (OriginalWidth - m_OutputWidth) / 2 ;
 }
 
 void CMpegDecoder::CorrectOutputSize()
@@ -1847,19 +1884,20 @@ void CMpegDecoder::CorrectOutputSize()
     if(m_MpegWidth == 720 && GetParamBool(ANALOGBLANKING))
     {
         m_OutputWidth = 704;
-        m_VideoOutPin->SetPanScanX(8);
+        m_ImageOffsetX = 8;
     }
     else if(m_MpegWidth == 544 && GetParamBool(ANALOGBLANKING))
     {
         m_OutputWidth = 532;
-        m_VideoOutPin->SetPanScanX(6);
+        m_ImageOffsetX = 6;
     }
     else
     {
         m_OutputWidth = m_MpegWidth;
-        m_VideoOutPin->SetPanScanX(0);
+        m_ImageOffsetX = 0;
     }
-    m_VideoOutPin->SetPanScanY(0);
+    
+    m_ImageOffsetX = 0;
 
     if(m_AFD)
     {
@@ -2047,7 +2085,7 @@ void CMpegDecoder::CorrectOutputSize()
     {
         if(m_MpegWidth >= 704)
         {
-            m_VideoOutPin->SetPanScanX((m_MpegWidth - 540) / 2);
+            m_ImageOffsetX = (m_MpegWidth - 540) / 2;
             m_OutputWidth = 540;
             m_ARMpegX = 4;
             m_ARMpegY = 3;

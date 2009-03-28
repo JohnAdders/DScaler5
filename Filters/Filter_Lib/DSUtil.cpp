@@ -167,9 +167,16 @@ bool ExtractDim(const AM_MEDIA_TYPE* pmt, int& w, int& h, long& arx, long& ary, 
         {
             w = pSourceRect->right;
         }
-        if(pSourceRect->bottom != 0 && pSourceRect->bottom < h)
+        if(pSourceRect->bottom != 0)
         {
-            h = pSourceRect->bottom;
+            if(h > 0 && pSourceRect->bottom < h)
+            {
+                h = pSourceRect->bottom;
+            }
+            if(h < 0 && pSourceRect->bottom < -h)
+            {
+                h = -pSourceRect->bottom;
+            }
         }
     }
 

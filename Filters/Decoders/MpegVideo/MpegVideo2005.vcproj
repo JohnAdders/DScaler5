@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="MpegVideo"
 	ProjectGUID="{514BBF2F-B9E5-4D01-94DE-563236588058}"
+	RootNamespace="MpegVideo"
 	>
 	<Platforms>
 		<Platform
@@ -47,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common;..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -144,7 +145,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common;..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

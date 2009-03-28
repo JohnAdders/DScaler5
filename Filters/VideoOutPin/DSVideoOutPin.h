@@ -21,6 +21,7 @@
 #pragma once
 
 #include "DSOutputPin.h"
+#include "VideoFormatNegotiator.h"
 
 class CDSVideoOutPin : public CDSOutputPin
 {
@@ -37,7 +38,7 @@ BEGIN_INTERFACE_TABLE(CDSVideoOutPin)
 END_INTERFACE_TABLE()
 
 public:
-    CDSVideoOutPin();
+    CDSVideoOutPin(CVideoFormatNegotiator& Negotiator);
     ~CDSVideoOutPin();
 
     STDMETHOD(QueryAccept)(const AM_MEDIA_TYPE *pmt);
@@ -54,22 +55,11 @@ public:
     HRESULT ReconnectWM10();
     int GetDroppedFrames();
 
-
-    void Copy420(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn, bool ProgressiveChroma);
-    void Copy422(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-    void Copy444(BYTE* pOut, BYTE** ppIn, DWORD w, DWORD h, DWORD pitchIn);
-
     HRESULT GetOutputSample(IMediaSample** OutSample, REFERENCE_TIME* rtStart, REFERENCE_TIME* rtStop, bool PrevFrameSkipped);
     void NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType);
     HRESULT SendSample(IMediaSample* OutSample);
     HRESULT AdjustRenderersMediaType();
     void SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame);
-    REFERENCE_TIME GetAvgTimePerFrame() {return m_AvgTimePerFrame;};
-
-    void SetPanScanX(DWORD OffsetX);
-    void SetPanScanY(DWORD OffsetY);
-    DWORD GetPanScanX();
-    DWORD GetPanScanY();
 
     void SetAspectX(DWORD AspectX);
     void SetAspectY(DWORD AspectY);
@@ -97,23 +87,12 @@ public:
 
 
 private:
-    bool m_DoPanAndScan;
-    DWORD m_PanScanOffsetX;
-    DWORD m_PanScanOffsetY;
-    DWORD m_AspectX;
-    DWORD m_AspectY;
-    int m_Width;
-    int m_Height;
+    int GetDroppedFrames(IPin* InputPin);
+
     OUT_TYPE m_ConnectedType;
     bool m_NeedToAttachFormat;
-    int m_CurrentWidth;
-    int m_CurrentHeight;
-    long m_CurrentAspectX;
-    long m_CurrentAspectY;
     bool m_InsideReconnect;
-    REFERENCE_TIME m_AvgTimePerFrame;
-    int GetDroppedFrames(IPin* InputPin);
-    AM_MEDIA_TYPE m_InternalMT;
+    CVideoFormatNegotiator& m_Negotiator;
 };
 
 #define VIDEOTYPEFLAG_PREVENT_VIDEOINFOHEADER 1

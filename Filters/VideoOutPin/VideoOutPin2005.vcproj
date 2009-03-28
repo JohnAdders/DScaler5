@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="VideoOutPin"
 	ProjectGUID="{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}"
+	RootNamespace="VideoOutPin"
 	>
 	<Platforms>
 		<Platform
@@ -285,6 +286,14 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath=".\VideoData.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\VideoFormatNegotiator.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -304,6 +313,14 @@
 			</File>
 			<File
 				RelativePath="StdAfx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VideoData.h"
+				>
+			</File>
+			<File
+				RelativePath=".\VideoFormatNegotiator.h"
 				>
 			</File>
 		</Filter>

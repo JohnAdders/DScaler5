@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="DivxVideo"
 	ProjectGUID="{514BBF2F-B9E5-4D01-94DE-563236588058}"
+	RootNamespace="DivxVideo"
 	>
 	<Platforms>
 		<Platform
@@ -149,7 +150,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil;..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"

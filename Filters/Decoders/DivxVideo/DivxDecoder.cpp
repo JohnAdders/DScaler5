@@ -28,6 +28,7 @@
 #include "DSInputPin.h"
 #include "DSBufferedInputPin.h"
 #include "DSVideoOutPin.h"
+#include "VideoData.h"
 #include "MediaBufferWrapper.h"
 #include "MediaTypes.h"
 #include "MoreUuids.h"
@@ -49,8 +50,10 @@ CDivxDecoder::CDivxDecoder() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Video In");
 
+
+
     // can't use m_VideoOutPin due to casting
-    m_OutputPins[0] = new CDSVideoOutPin();
+    m_OutputPins[0] = new CDSVideoOutPin(Negotiator);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 3"));
@@ -493,8 +496,6 @@ HRESULT CDivxDecoder::NotifyFormatChange(const AM_MEDIA_TYPE* pMediaType, CDSBas
         m_VideoOutPin->SetAspectY(m_ARDivxY);
         m_VideoOutPin->SetWidth(m_DivxWidth);
         m_VideoOutPin->SetHeight(m_DivxHeight);
-        m_VideoOutPin->SetPanScanX(0);
-        m_VideoOutPin->SetPanScanY(0);
 
         m_VideoOutPin->SetAvgTimePerFrame(m_AvgTimePerFrame);
 
@@ -823,15 +824,18 @@ HRESULT CDivxDecoder::Deliver(AVFrame& NextFrame, CFrameBuffer* CurrentPicture)
             pOut->SetSyncPoint(TRUE);
         }
 
-        BYTE** buf = (BYTE**)&(NextFrame.data[0]);
-
         if(FAILED(hr = pOut->GetPointer(&pDataOut)))
         {
             LogBadHRESULT(hr, __FILE__, __LINE__);
             return hr;
         }
 
-        m_VideoOutPin->Copy420(pDataOut, buf, m_DivxWidth, m_DivxHeight, NextFrame.linesize[0], true);
+        // wrap up the input and output buffers
+        CVideoData Input(MEDIASUBTYPE_YV12, (BYTE**)&(NextFrame.data[0]), m_DivxWidth, m_DivxHeight, NextFrame.linesize[0]);
+        CVideoData Output(m_VideoOutPin->GetMediaType(), pOut);
+
+        // copy the data to whatever format we've negotiated
+        CVideoData::Copy(Input, Output, true);
 
         hr = m_VideoOutPin->SendSample(pOut.GetNonAddRefedInterface());
         if(FAILED(hr))

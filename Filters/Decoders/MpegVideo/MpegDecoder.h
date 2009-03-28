@@ -23,6 +23,7 @@
 
 #include "resource.h"       // main symbols
 #include "DSBaseFilter.h"
+#include "VideoFormatNegotiator.h"
 
 extern "C"
 {
@@ -372,6 +373,9 @@ private:
     void PillarBox(long YAdjust, long XAdjust);
     void ForceDelivery();
     bool m_LastPictureWasStill;
+    long m_ImageOffsetX;
+    long m_ImageOffsetY;
+    CVideoFormatNegotiator m_Negotiator;
 };
 
 #define m_VideoInPin m_InputPins[0]
