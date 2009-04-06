@@ -29,10 +29,10 @@ public:
     ~CVideoFormatNegotiator();
 
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
-    HRESULT CreateInternalTypeVMR(const AM_MEDIA_TYPE* pmt, bool NeedReconnect);
-    HRESULT CreateInternalTypeOverlay(const AM_MEDIA_TYPE* pmt, bool NeedReconnect);
-    HRESULT CreateInternalTypeOther(const AM_MEDIA_TYPE* pmt, bool NeedReconnect);
-    HRESULT CreateInternalTypeWM10(const AM_MEDIA_TYPE* pmt, bool NeedReconnect);
+    HRESULT CreateInternalTypeVMR(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect);
+    HRESULT CreateInternalTypeOverlay(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect);
+    HRESULT CreateInternalTypeOther(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect);
+    HRESULT CreateInternalTypeWM10(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect);
     HRESULT SetConnectedType(const AM_MEDIA_TYPE* pmt);
     HRESULT AdjustRenderersMediaType(const AM_MEDIA_TYPE* pmt);
     AM_MEDIA_TYPE* GetMediaType() {return &m_InternalMT;};

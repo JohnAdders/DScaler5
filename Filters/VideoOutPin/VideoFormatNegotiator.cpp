@@ -181,7 +181,7 @@ HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int 
     return S_OK;
 }
 
-HRESULT CVideoFormatNegotiator::CreateInternalTypeVMR(const AM_MEDIA_TYPE* pmt, bool NeedReconnect)
+HRESULT CVideoFormatNegotiator::CreateInternalTypeVMR(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect)
 {
     HRESULT hr = S_OK;
     CopyMediaType(&m_InternalMT, pmt);
@@ -242,7 +242,7 @@ HRESULT CVideoFormatNegotiator::CreateInternalTypeVMR(const AM_MEDIA_TYPE* pmt, 
     return hr;
 }
 
-HRESULT CVideoFormatNegotiator::CreateInternalTypeOverlay(const AM_MEDIA_TYPE* pmt, bool NeedReconnect)
+HRESULT CVideoFormatNegotiator::CreateInternalTypeOverlay(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect)
 {
     HRESULT hr = S_OK;
 
@@ -299,7 +299,7 @@ HRESULT CVideoFormatNegotiator::CreateInternalTypeOverlay(const AM_MEDIA_TYPE* p
     return hr;
 }
 
-HRESULT CVideoFormatNegotiator::CreateInternalTypeOther(const AM_MEDIA_TYPE* pmt, bool NeedReconnect)
+HRESULT CVideoFormatNegotiator::CreateInternalTypeOther(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect)
 {
     HRESULT hr = S_OK;
 
@@ -350,7 +350,7 @@ HRESULT CVideoFormatNegotiator::CreateInternalTypeOther(const AM_MEDIA_TYPE* pmt
     return hr;
 }
 
-HRESULT CVideoFormatNegotiator::CreateInternalTypeWM10(const AM_MEDIA_TYPE* pmt, bool NeedReconnect)
+HRESULT CVideoFormatNegotiator::CreateInternalTypeWM10(const AM_MEDIA_TYPE* pmt, bool& NeedReconnect)
 {
     HRESULT hr = S_OK;
 
