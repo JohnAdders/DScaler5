@@ -42,6 +42,7 @@ public:
     int GetHeight() {return m_Height;};
     DWORD GetAspectX() {return m_AspectX;};
     DWORD GetAspectY() {return m_AspectY;};
+	REFERENCE_TIME GetAvgTimePerFrame() {return m_AvgTimePerFrame;};
 
     void SetAspectX(DWORD AspectX);
     void SetAspectY(DWORD AspectY);
