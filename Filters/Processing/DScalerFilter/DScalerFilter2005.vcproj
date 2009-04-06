@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="DScalerFilter"
 	ProjectGUID="{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}"
+	RootNamespace="DScalerFilter"
 	Keyword="AtlProj"
 	>
 	<Platforms>
@@ -47,7 +48,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -146,7 +147,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\..\GenDMOProp,..\..\..\Common,..\..\VideoOutPin"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"

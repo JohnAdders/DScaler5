@@ -51,7 +51,7 @@ CDScaler::CDScaler() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Input");
 
-    m_OutputPins[0] = new CDSVideoOutPin();
+    m_OutputPins[0] = new CDSVideoOutPin(m_Negotiator);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 2"));
@@ -1149,7 +1149,7 @@ HRESULT CDScaler::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIES* p
             pSampleProperties->tStop <= pSampleProperties->tStart ||
             (pSampleProperties->tStop - pSampleProperties->tStart) == 1)
         {
-            pSampleProperties->tStop = pSampleProperties->tStart + m_VideoOutPin->GetAvgTimePerFrame();
+            pSampleProperties->tStop = pSampleProperties->tStart + m_Negotiator.GetAvgTimePerFrame();
         }
 
         if(m_VideoInPin->m_ConnectedMediaType.formattype == FORMAT_VideoInfo)

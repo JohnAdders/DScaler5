@@ -25,6 +25,8 @@
 #include "DSBaseFilter.h"
 #include "moreuuids.h"
 #include "Statistics.h"
+#include "VideoFormatNegotiator.h"
+
 
 class CDScaler :
     public CDSBaseFilter,
@@ -254,6 +256,7 @@ private:
     REFERENCE_TIME m_FieldTiming;
     CMap m_MovementMap;
     long m_CatchUpModulo;
+    CVideoFormatNegotiator m_Negotiator;
 };
 
 #define m_VideoInPin m_InputPins[0]
