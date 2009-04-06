@@ -614,8 +614,8 @@ HRESULT CDivxDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTIE
     {
         AVFrame NextFrame;
 
-        buffer.assign((uint8_t*)(pDataIn + Count), (uint8_t*)(pDataIn + len));
         buffer.resize(len - Count + 8, 0);
+        buffer.assign((uint8_t*)(pDataIn + Count), (uint8_t*)(pDataIn + len));
 
         int Used = avcodec_decode_video(m_CodecContext, &NextFrame, &GotPicture, &buffer[0], len - Count);
 
