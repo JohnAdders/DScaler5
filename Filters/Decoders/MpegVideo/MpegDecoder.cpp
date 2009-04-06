@@ -6,7 +6,7 @@
 //  http://www.gabest.org
 //
 ///////////////////////////////////////////////////////////////////////////////
-//
+
 //  This Program is free software; you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation; either version 2, or (at your option)
@@ -1897,8 +1897,6 @@ void CMpegDecoder::CorrectOutputSize()
         m_ImageOffsetX = 0;
     }
     
-    m_ImageOffsetX = 0;
-
     if(m_AFD)
     {
         // reset all the adjustments
