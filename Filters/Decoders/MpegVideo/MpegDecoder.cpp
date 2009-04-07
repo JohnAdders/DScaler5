@@ -58,7 +58,8 @@ extern HINSTANCE g_hInstance;
 const long CMpegDecoder::MAX_SPEED = 4;
 
 CMpegDecoder::CMpegDecoder() :
-    CDSBaseFilter(L"MpegVideo Filter", 2, 2)
+    CDSBaseFilter(L"MpegVideo Filter", 2, 2),
+		m_Negotiator(CVideoFormatNegotiator::NORMAL_420, true)
 {
     LOG(DBGLOG_FLOW, ("CMpegDecoder::CreatePins\n"));
 

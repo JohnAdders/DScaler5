@@ -29,15 +29,44 @@
 //#include "evcode.h"
 #include "MoreUuids.h"
 
-CVideoFormatNegotiator::CVideoFormatNegotiator()
+CVideoFormatNegotiator::CVideoFormatNegotiator(eVideoFormatType Type, bool AllowInterlaced) :
+	m_AllowInterlaced(AllowInterlaced),
+    m_AspectX(0),
+    m_AspectY(0),
+    m_Width(0),
+    m_Height(0),
+    m_AvgTimePerFrame(333333)
 {
     LOG(DBGLOG_ALL, ("CVideoFormatNegotiator::CVideoFormatNegotiator\n"));
-    m_AspectX = 0;
-    m_AspectY = 0;
-    m_Width = 0;
-    m_Height = 0;
-    m_AvgTimePerFrame = 333333;
     InitMediaType(&m_InternalMT);
+
+	switch(Type)
+	{
+	case NORMAL_420:
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_NV12, 1, 12, '21VN'));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_YV12, 1, 12, '21VY'));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS));
+		break;
+	case SUBPICTURE:
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_AI44, 1, 8, '44AI'));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_AYUV, 1, 32, 'VUYA'));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB1555, 1, 16, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB1555, 1, 16, BI_BITFIELDS));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB));
+        m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS));
+        break;
+	}
+
 }
 
 CVideoFormatNegotiator::~CVideoFormatNegotiator()
@@ -48,28 +77,11 @@ CVideoFormatNegotiator::~CVideoFormatNegotiator()
 
 HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags)
 {
-    struct {const GUID* subtype; WORD biPlanes, biBitCount; DWORD biCompression;} fmts[] =
-    {
-        {&MEDIASUBTYPE_NV12, 1, 12, '21VN'},
-        {&MEDIASUBTYPE_YV12, 1, 12, '21VY'},
-        {&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'},
-        {&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB},
-        {&MEDIASUBTYPE_RGB32, 1, 32, BI_RGB},
-        {&MEDIASUBTYPE_RGB24, 1, 24, BI_RGB},
-        {&MEDIASUBTYPE_RGB565, 1, 16, BI_RGB},
-        {&MEDIASUBTYPE_RGB555, 1, 16, BI_RGB},
-        {&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS},
-        {&MEDIASUBTYPE_RGB32, 1, 32, BI_BITFIELDS},
-        {&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS},
-        {&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS},
-        {&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS},
-    };
-
     int VariationsPerType = 3;
     int InterlacedIndex = 0;
     int VIHIndex = 2;
 
-    if(VideoControlFlags & VIDEOTYPEFLAG_PROGRESSIVE)
+    if((!m_AllowInterlaced) || (VideoControlFlags & VIDEOTYPEFLAG_PROGRESSIVE))
     {
         VariationsPerType--;
         InterlacedIndex = -1;
@@ -82,15 +94,19 @@ HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int 
         VIHIndex = -1;
     }
 
-    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
+	// reorder the types so that the preferred one is first
+	if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
     {
-        TypeNum += VariationsPerType;
+		PutFormatToTop(MEDIASUBTYPE_YV12);
     }
-
-    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
+	else if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
     {
-        TypeNum += 2 * VariationsPerType;
+		PutFormatToTop(MEDIASUBTYPE_YUY2);
     }
+	else
+	{
+		PutFormatToTop(MEDIASUBTYPE_NV12);
+	}
 
 
     // this will make sure we won't connect to the old renderer in dvd mode
@@ -106,7 +122,7 @@ HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int 
     }
     else
     {
-        if(TypeNum >= (int)(VariationsPerType * countof(fmts)))
+        if(TypeNum >= (int)(VariationsPerType * m_Formats.size()))
             return VFW_S_NO_MORE_ITEMS;
     }
 
@@ -120,16 +136,16 @@ HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int 
     {
         pmt->majortype = MEDIATYPE_Video;
     }
-    pmt->subtype = *fmts[FormatNum].subtype;
+    pmt->subtype = *m_Formats[FormatNum].subtype;
 
     BITMAPINFOHEADER bihOut;
     memset(&bihOut, 0, sizeof(bihOut));
     bihOut.biSize = sizeof(bihOut);
     bihOut.biWidth = m_Width;
     bihOut.biHeight = m_Height;
-    bihOut.biPlanes = fmts[FormatNum].biPlanes;
-    bihOut.biBitCount = fmts[FormatNum].biBitCount;
-    bihOut.biCompression = fmts[FormatNum].biCompression;
+    bihOut.biPlanes = m_Formats[FormatNum].biPlanes;
+    bihOut.biBitCount = m_Formats[FormatNum].biBitCount;
+    bihOut.biCompression = m_Formats[FormatNum].biCompression;
     bihOut.biSizeImage = bihOut.biWidth * bihOut.biHeight * bihOut.biBitCount>>3;
 
     if(TypeNum%VariationsPerType == VIHIndex)
@@ -508,4 +524,24 @@ void CVideoFormatNegotiator::SetWidth(int Width)
 void CVideoFormatNegotiator::SetHeight(int Height)
 {
     m_Height = Height;
+}
+
+void CVideoFormatNegotiator::PutFormatToTop(const GUID& SubTypeToPutFormatToTop)
+{
+	for(size_t i(1) ; i < m_Formats.size(); ++i)
+	{
+		if(*m_Formats[i].subtype == SubTypeToPutFormatToTop)
+		{
+			std::swap(m_Formats[0], m_Formats[i]);
+			return;
+		}
+	}
+}
+
+CVideoFormatNegotiator::CVideoFormat::CVideoFormat(const GUID* subtype_, WORD biPlanes_, WORD biBitCount_,  DWORD biCompression_) :
+		subtype(subtype_),
+		biPlanes(biPlanes_),
+		biBitCount(biBitCount_),
+		biCompression(biCompression_)
+{
 }

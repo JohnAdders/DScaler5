@@ -204,7 +204,7 @@ private:
     void (*m_OldReleaseBuffer)(struct AVCodecContext *c, AVFrame *pic);
     int (*m_OldRegetBuffer)(struct AVCodecContext *c, AVFrame *pic);
 
-    CVideoFormatNegotiator Negotiator;
+    CVideoFormatNegotiator m_Negotiator;
 
 };
 

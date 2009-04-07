@@ -38,7 +38,8 @@ extern HINSTANCE g_hInstance;
 
 
 CDivxDecoder::CDivxDecoder() :
-    CDSBaseFilter(L"DivxVideo Filter", 1, 1)
+    CDSBaseFilter(L"DivxVideo Filter", 1, 1),
+	m_Negotiator(CVideoFormatNegotiator::NORMAL_420, true)
 {
     LOG(DBGLOG_FLOW, ("CDivxDecoder::CreatePins\n"));
 
@@ -50,10 +51,8 @@ CDivxDecoder::CDivxDecoder() :
     m_VideoInPin->AddRef();
     m_VideoInPin->SetupObject(this, L"Video In");
 
-
-
     // can't use m_VideoOutPin due to casting
-    m_OutputPins[0] = new CDSVideoOutPin(Negotiator);
+    m_OutputPins[0] = new CDSVideoOutPin(m_Negotiator);
     if(m_VideoOutPin == NULL)
     {
         throw(std::runtime_error("Can't create memory for pin 3"));

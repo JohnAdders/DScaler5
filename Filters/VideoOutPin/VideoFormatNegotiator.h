@@ -25,7 +25,13 @@
 class CVideoFormatNegotiator
 {
 public:
-    CVideoFormatNegotiator();
+	typedef enum
+	{
+		NORMAL_420,
+		SUBPICTURE,
+	} eVideoFormatType;
+
+	CVideoFormatNegotiator(eVideoFormatType Type, bool AllowInterlaced);
     ~CVideoFormatNegotiator();
 
     HRESULT CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int TypeNum, DWORD VideoControlFlags, DWORD ControlFlags);
@@ -51,6 +57,18 @@ public:
     void SetAvgTimePerFrame(REFERENCE_TIME AvgTimePerFrame);
 
 private:
+	void PutFormatToTop(const GUID& SubTypeToPutToTop);
+	class CVideoFormat
+	{
+	public:
+		CVideoFormat(const GUID* subtype, WORD biPlanes, WORD biBitCount, DWORD biCompression);
+		const GUID* subtype; 
+		WORD biPlanes;
+		WORD biBitCount; 
+		DWORD biCompression;
+	};
+	std::vector<CVideoFormat> m_Formats;
+	bool m_AllowInterlaced;
     AM_MEDIA_TYPE m_InternalMT;
     DWORD m_AspectX;
     DWORD m_AspectY;
