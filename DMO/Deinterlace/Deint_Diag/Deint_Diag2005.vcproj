@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="Deint_Diag"
 	ProjectGUID="{DFAA664F-E75A-4AAC-9E05-412955E2CE67}"
+	RootNamespace="Deint_Diag"
 	Keyword="MFCProj"
 	>
 	<Platforms>

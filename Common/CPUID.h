@@ -25,8 +25,17 @@
 #define FEATURE_SSE            0x00002000
 #define FEATURE_SSE2           0x00004000
 
+#ifdef _M_AMD64
+
+__inline void CPU_SetupFeatureFlag(void) {};
+static UINT CpuFeatureFlags = 0;
+
+#else
+
 extern "C"
 {
     void CPU_SetupFeatureFlag(void);
     extern UINT CpuFeatureFlags;        // TRB 12/20/00 Processor capability flags
 }
+
+#endif

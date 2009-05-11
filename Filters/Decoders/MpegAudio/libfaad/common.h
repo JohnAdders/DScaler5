@@ -32,6 +32,11 @@
 extern "C" {
 #endif
 
+#if defined(_WIN32) && defined(_M_AMD64)
+    #undef _WIN32
+    #define STDC_HEADERS 1
+#endif
+
 #define INLINE __inline
 #if defined(_WIN32) && !defined(_WIN32_WCE)
 #define ALIGN __declspec(align(16))

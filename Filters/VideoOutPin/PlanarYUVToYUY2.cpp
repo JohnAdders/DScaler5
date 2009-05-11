@@ -41,6 +41,20 @@
 
 void memcpy_accel(void* dst, const void* src, size_t len);
 
+
+#ifdef _M_AMD64
+
+    void yuvtoyuy2row_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width) {};
+    void yuvtoyuy2row_avg_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv) {};
+    void yuvtoyuy2row_avg_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv) {};
+    void yuvtoyuy2row_avg2_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv) {};
+    void yuvtoyuy2row_avg2_SSEMMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width, DWORD pitchuv) {};
+    void memcpy_accel_SSE(void* dst, const void* src, size_t len) {};
+    void memcpy_accel_MMX(void* dst, const void* src, size_t len) {};
+    void uvtonv12row_MMX(BYTE* dst, BYTE* srcu, BYTE* srcv, DWORD width) {};
+
+#else
+
 extern "C"
 {
     void yuvtoyuy2row_MMX(BYTE* dst, BYTE* srcy, BYTE* srcu, BYTE* srcv, DWORD width);
@@ -52,6 +66,8 @@ extern "C"
     void memcpy_accel_MMX(void* dst, const void* src, size_t len);
     void uvtonv12row_MMX(BYTE* dst, BYTE* srcu, BYTE* srcv, DWORD width);
 }
+
+#endif
 
 bool BitBltFromI420ToI420(int w, int h, BYTE* dsty, BYTE* dstu, BYTE* dstv, int dstpitch, BYTE* srcy, BYTE* srcu, BYTE* srcv, int srcpitch)
 {

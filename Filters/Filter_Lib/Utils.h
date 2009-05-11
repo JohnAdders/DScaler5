@@ -60,8 +60,16 @@ void LogBadHRESULT(HRESULT hr, LPCSTR File, DWORD Line);
 #define LogBadHRESULT(hr, File, Line)
 #endif
 
+#ifdef _M_AMD64
+__inline void EndMMX() {};
+__inline void EndSSE() {};
+
+#else
+
 extern "C"
 {
     void EndMMX();
     void EndSSE();
 }
+
+#endif

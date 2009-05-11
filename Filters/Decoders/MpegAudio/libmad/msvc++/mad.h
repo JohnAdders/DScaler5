@@ -24,7 +24,11 @@
 extern "C" {
 # endif
 
+#ifdef _M_AMD64
+# define FPM_64BIT
+#else
 # define FPM_INTEL
+#endif
 
 
 

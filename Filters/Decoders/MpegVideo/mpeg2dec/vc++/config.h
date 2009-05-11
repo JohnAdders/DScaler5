@@ -16,7 +16,9 @@
 /* #undef ARCH_SPARC */
 
 /* x86 architecture */
+#ifndef _M_AMD64
 #define ARCH_X86
+#endif
 
 /* maximum supported data alignment */
 /* #undef ATTRIBUTE_ALIGNED_MAX */
