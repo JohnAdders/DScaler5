@@ -20,7 +20,7 @@
  */
 
 /**
- * @file rangecoder.c
+ * @file libavcodec/rangecoder.c
  * Range coder.
  * based upon
  *    "Range encoding: an algorithm for removing redundancy from a digitised
@@ -109,14 +109,20 @@ int ff_rac_terminate(RangeCoder *c){
     return c->bytestream - c->bytestream_start;
 }
 
-#if 0 //selftest
+#ifdef TEST
 #define SIZE 10240
+
+#include "libavutil/lfg.h"
+
 int main(void){
     RangeCoder c;
     uint8_t b[9*SIZE];
     uint8_t r[9*SIZE];
     int i;
     uint8_t state[10]= {0};
+    AVLFG prng;
+
+    av_lfg_init(&prng, 1);
 
     ff_init_range_encoder(&c, b, SIZE);
     ff_build_rac_states(&c, 0.05*(1LL<<32), 128+64+32+16);
@@ -124,7 +130,7 @@ int main(void){
     memset(state, 128, sizeof(state));
 
     for(i=0; i<SIZE; i++){
-        r[i]= random()%7;
+        r[i] = av_lfg_get(&prng) % 7;
     }
 
     for(i=0; i<SIZE; i++){
@@ -133,7 +139,7 @@ START_TIMER
 STOP_TIMER("put_rac")
     }
 
-    ff_put_rac_terminate(&c);
+    ff_rac_terminate(&c);
 
     ff_init_range_decoder(&c, b, SIZE);
 
@@ -148,4 +154,4 @@ STOP_TIMER("get_rac")
 
     return 0;
 }
-#endif
+#endif /* TEST */

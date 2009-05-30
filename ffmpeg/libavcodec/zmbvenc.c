@@ -20,13 +20,14 @@
  */
 
 /**
- * @file zmbvenc.c
+ * @file libavcodec/zmbvenc.c
  * Zip Motion Blocks Video encoder
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 #include <zlib.h>
@@ -54,6 +55,8 @@ typedef struct ZmbvEncContext {
     z_stream zstream;
 } ZmbvEncContext;
 
+static int score_tab[256];
+
 /** Block comparing function
  * XXX should be optimized and moved to DSPContext
  * TODO handle out of edge ME
@@ -62,13 +65,18 @@ static inline int block_cmp(uint8_t *src, int stride, uint8_t *src2, int stride2
 {
     int sum = 0;
     int i, j;
+    uint8_t histogram[256]={0};
 
     for(j = 0; j < bh; j++){
         for(i = 0; i < bw; i++)
-            sum += src[i] ^ src2[i];
+            histogram[src[i] ^ src2[i]]++;
         src += stride;
         src2 += stride2;
     }
+
+    for(i=1; i<256; i++)
+        sum+= score_tab[histogram[i]];
+
     return sum;
 }
 
@@ -109,7 +117,6 @@ static int encode_frame(AVCodecContext *avctx, uint8_t *buf, int buf_size, void 
     AVFrame * const p = &c->pic;
     uint8_t *src, *prev;
     uint32_t *palptr;
-    int zret = Z_OK;
     int len = 0;
     int keyframe, chpal;
     int fl;
@@ -218,7 +225,7 @@ static int encode_frame(AVCodecContext *avctx, uint8_t *buf, int buf_size, void 
     c->zstream.next_out = c->comp_buf;
     c->zstream.avail_out = c->comp_size;
     c->zstream.total_out = 0;
-    if((zret = deflate(&c->zstream, Z_SYNC_FLUSH)) != Z_OK){
+    if(deflate(&c->zstream, Z_SYNC_FLUSH) != Z_OK){
         av_log(avctx, AV_LOG_ERROR, "Error compressing data\n");
         return -1;
     }
@@ -231,15 +238,18 @@ static int encode_frame(AVCodecContext *avctx, uint8_t *buf, int buf_size, void 
 /**
  * Init zmbv encoder
  */
-static int encode_init(AVCodecContext *avctx)
+static av_cold int encode_init(AVCodecContext *avctx)
 {
     ZmbvEncContext * const c = avctx->priv_data;
     int zret; // Zlib return code
+    int i;
     int lvl = 9;
+
+    for(i=1; i<256; i++)
+        score_tab[i]= -i * log(i/(double)(ZMBV_BLOCK*ZMBV_BLOCK)) * (256/M_LN2);
 
     c->avctx = avctx;
 
-    c->pic.data[0] = NULL;
     c->curfrm = 0;
     c->keyint = avctx->keyint_min;
     c->range = 8;
@@ -274,7 +284,7 @@ static int encode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "Can't allocate compression buffer.\n");
         return -1;
     }
-    c->pstride = (avctx->width + 15) & ~15;
+    c->pstride = FFALIGN(avctx->width, 16);
     if ((c->prev = av_malloc(c->pstride * avctx->height)) == NULL) {
         av_log(avctx, AV_LOG_ERROR, "Can't allocate picture.\n");
         return -1;
@@ -289,6 +299,8 @@ static int encode_init(AVCodecContext *avctx)
         return -1;
     }
 
+    avctx->coded_frame = (AVFrame*)&c->pic;
+
     return 0;
 }
 
@@ -297,7 +309,7 @@ static int encode_init(AVCodecContext *avctx)
 /**
  * Uninit zmbv encoder
  */
-static int encode_end(AVCodecContext *avctx)
+static av_cold int encode_end(AVCodecContext *avctx)
 {
     ZmbvEncContext * const c = avctx->priv_data;
 
@@ -318,5 +330,6 @@ AVCodec zmbv_encoder = {
     encode_init,
     encode_frame,
     encode_end,
-    .pix_fmts = (enum PixelFormat[]){PIX_FMT_PAL8, -1},
+    .pix_fmts = (enum PixelFormat[]){PIX_FMT_PAL8, PIX_FMT_NONE},
+    .long_name = NULL_IF_CONFIG_SMALL("Zip Motion Blocks Video"),
 };

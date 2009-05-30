@@ -1,6 +1,6 @@
 /*
  * VC3/DNxHD decoder.
- * Copyright (c) 2007 SmartJog S.A., Baptiste Coudurier <baptiste dot coudurier at smartjog dot com>.
+ * Copyright (c) 2007 SmartJog S.A., Baptiste Coudurier <baptiste dot coudurier at smartjog dot com>
  *
  * This file is part of FFmpeg.
  *
@@ -23,10 +23,9 @@
 //#define DEBUG
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "get_bits.h"
 #include "dnxhddata.h"
 #include "dsputil.h"
-#include "mpegvideo.h"
 
 typedef struct {
     AVCodecContext *avctx;
@@ -48,7 +47,7 @@ typedef struct {
 #define DNXHD_VLC_BITS 9
 #define DNXHD_DC_VLC_BITS 7
 
-static int dnxhd_decode_init(AVCodecContext *avctx)
+static av_cold int dnxhd_decode_init(AVCodecContext *avctx)
 {
     DNXHDContext *ctx = avctx->priv_data;
 
@@ -84,7 +83,7 @@ static int dnxhd_init_vlc(DNXHDContext *ctx, int cid)
     return 0;
 }
 
-static int dnxhd_decode_header(DNXHDContext *ctx, uint8_t *buf, int buf_size, int first_field)
+static int dnxhd_decode_header(DNXHDContext *ctx, const uint8_t *buf, int buf_size, int first_field)
 {
     static const uint8_t header_prefix[] = { 0x00, 0x00, 0x02, 0x80, 0x01 };
     int i;
@@ -99,7 +98,7 @@ static int dnxhd_decode_header(DNXHDContext *ctx, uint8_t *buf, int buf_size, in
     if (buf[5] & 2) { /* interlaced */
         ctx->cur_field = buf[5] & 1;
         ctx->picture.interlaced_frame = 1;
-        ctx->picture.top_field_first = first_field && ctx->cur_field == 1;
+        ctx->picture.top_field_first = first_field ^ ctx->cur_field;
         av_log(ctx->avctx, AV_LOG_DEBUG, "interlaced %d, cur field %d\n", buf[5] & 3, ctx->cur_field);
     }
 
@@ -220,14 +219,12 @@ static int dnxhd_decode_macroblock(DNXHDContext *ctx, int x, int y)
     int dct_offset;
     int qscale, i;
 
-    ctx->dsp.clear_blocks(ctx->blocks[0]);
-    ctx->dsp.clear_blocks(ctx->blocks[2]); // FIXME change clear blocks to take block amount
-
     qscale = get_bits(&ctx->gb, 11);
     skip_bits1(&ctx->gb);
     //av_log(ctx->avctx, AV_LOG_DEBUG, "qscale %d\n", qscale);
 
     for (i = 0; i < 8; i++) {
+        ctx->dsp.clear_block(ctx->blocks[i]);
         dnxhd_decode_dct_block(ctx, ctx->blocks[i], i, qscale);
     }
 
@@ -263,7 +260,7 @@ static int dnxhd_decode_macroblock(DNXHDContext *ctx, int x, int y)
     return 0;
 }
 
-static int dnxhd_decode_macroblocks(DNXHDContext *ctx, uint8_t *buf, int buf_size)
+static int dnxhd_decode_macroblocks(DNXHDContext *ctx, const uint8_t *buf, int buf_size)
 {
     int x, y;
     for (y = 0; y < ctx->mb_height; y++) {
@@ -281,8 +278,10 @@ static int dnxhd_decode_macroblocks(DNXHDContext *ctx, uint8_t *buf, int buf_siz
 }
 
 static int dnxhd_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
-                              uint8_t *buf, int buf_size)
+                              AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     DNXHDContext *ctx = avctx->priv_data;
     AVFrame *picture = data;
     int first_field = 1;
@@ -321,7 +320,7 @@ static int dnxhd_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     return buf_size;
 }
 
-static int dnxhd_decode_close(AVCodecContext *avctx)
+static av_cold int dnxhd_decode_close(AVCodecContext *avctx)
 {
     DNXHDContext *ctx = avctx->priv_data;
 
@@ -343,4 +342,5 @@ AVCodec dnxhd_decoder = {
     dnxhd_decode_close,
     dnxhd_decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("VC3/DNxHD"),
 };

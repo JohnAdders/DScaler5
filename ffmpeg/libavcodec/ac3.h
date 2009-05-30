@@ -1,6 +1,6 @@
 /*
- * Common code between AC3 encoder and decoder
- * Copyright (c) 2000, 2001, 2002 Fabrice Bellard.
+ * Common code between the AC-3 encoder and decoder
+ * Copyright (c) 2000, 2001, 2002 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -20,19 +20,19 @@
  */
 
 /**
- * @file ac3.h
- * Common code between AC3 encoder and decoder.
+ * @file libavcodec/ac3.h
+ * Common code between the AC-3 encoder and decoder.
  */
 
-#ifndef FFMPEG_AC3_H
-#define FFMPEG_AC3_H
+#ifndef AVCODEC_AC3_H
+#define AVCODEC_AC3_H
 
 #include "ac3tab.h"
 
 #define AC3_MAX_CODED_FRAME_SIZE 3840 /* in bytes */
 #define AC3_MAX_CHANNELS 6 /* including LFE channel */
 
-#define NB_BLOCKS 6 /* number of PCM blocks inside an AC3 frame */
+#define NB_BLOCKS 6 /* number of PCM blocks inside an AC-3 frame */
 #define AC3_FRAME_SIZE (NB_BLOCKS * 256)
 
 /* exponent encoding strategy */
@@ -84,6 +84,12 @@ typedef struct {
     uint8_t bitstream_id;
     uint8_t channel_mode;
     uint8_t lfe_on;
+    uint8_t frame_type;
+    int substreamid;                        ///< substream identification
+    int center_mix_level;                   ///< Center mix level index
+    int surround_mix_level;                 ///< Surround mix level index
+    uint16_t channel_map;
+    int num_blocks;                         ///< number of audio blocks
     /** @} */
 
     /** @defgroup derived Derived values
@@ -94,10 +100,16 @@ typedef struct {
     uint32_t bit_rate;
     uint8_t channels;
     uint16_t frame_size;
-    uint8_t num_blocks;
+    int64_t channel_layout;
     /** @} */
 } AC3HeaderInfo;
 
+typedef enum {
+    EAC3_FRAME_TYPE_INDEPENDENT = 0,
+    EAC3_FRAME_TYPE_DEPENDENT,
+    EAC3_FRAME_TYPE_AC3_CONVERT,
+    EAC3_FRAME_TYPE_RESERVED
+} EAC3FrameType;
 
 void ac3_common_init(void);
 
@@ -138,12 +150,13 @@ void ff_ac3_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
  * @param[in]  dba_lengths  length of each segment
  * @param[in]  dba_values   delta bit allocation for each segment
  * @param[out] mask         calculated masking curve
+ * @return returns 0 for success, non-zero for error
  */
-void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
-                                int start, int end, int fast_gain, int is_lfe,
-                                int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
-                                uint8_t *dba_lengths, uint8_t *dba_values,
-                                int16_t *mask);
+int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
+                               int start, int end, int fast_gain, int is_lfe,
+                               int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
+                               uint8_t *dba_lengths, uint8_t *dba_values,
+                               int16_t *mask);
 
 /**
  * Calculates bit allocation pointers.
@@ -171,4 +184,4 @@ void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
                                    uint8_t *dba_offsets, uint8_t *dba_lengths,
                                    uint8_t *dba_values);
 
-#endif /* FFMPEG_AC3_H */
+#endif /* AVCODEC_AC3_H */

@@ -35,9 +35,9 @@ static unsigned char dpcmValues[MAX_DPCM];
 typedef struct
 {
     short lastSample[2];
-} ROQDPCMContext_t;
+} ROQDPCMContext;
 
-static void roq_dpcm_table_init(void)
+static av_cold void roq_dpcm_table_init(void)
 {
     int i;
 
@@ -49,9 +49,9 @@ static void roq_dpcm_table_init(void)
     }
 }
 
-static int roq_dpcm_encode_init(AVCodecContext *avctx)
+static av_cold int roq_dpcm_encode_init(AVCodecContext *avctx)
 {
-    ROQDPCMContext_t *context = avctx->priv_data;
+    ROQDPCMContext *context = avctx->priv_data;
 
     if (avctx->channels > 2) {
         av_log(avctx, AV_LOG_ERROR, "Audio must be mono or stereo\n");
@@ -123,7 +123,7 @@ static int roq_dpcm_encode_frame(AVCodecContext *avctx,
     short *in;
     unsigned char *out;
 
-    ROQDPCMContext_t *context = avctx->priv_data;
+    ROQDPCMContext *context = avctx->priv_data;
 
     stereo = (avctx->channels == 2);
 
@@ -158,7 +158,7 @@ static int roq_dpcm_encode_frame(AVCodecContext *avctx,
     return out - frame;
 }
 
-static int roq_dpcm_encode_close(AVCodecContext *avctx)
+static av_cold int roq_dpcm_encode_close(AVCodecContext *avctx)
 {
     av_freep(&avctx->coded_frame);
 
@@ -169,9 +169,11 @@ AVCodec roq_dpcm_encoder = {
     "roq_dpcm",
     CODEC_TYPE_AUDIO,
     CODEC_ID_ROQ_DPCM,
-    sizeof(ROQDPCMContext_t),
+    sizeof(ROQDPCMContext),
     roq_dpcm_encode_init,
     roq_dpcm_encode_frame,
     roq_dpcm_encode_close,
     NULL,
+    .sample_fmts = (enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .long_name = NULL_IF_CONFIG_SMALL("id RoQ DPCM"),
 };

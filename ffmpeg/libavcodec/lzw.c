@@ -1,7 +1,7 @@
 /*
  * LZW decoder
- * Copyright (c) 2003 Fabrice Bellard.
- * Copyright (c) 2006 Konstantin Shishkov.
+ * Copyright (c) 2003 Fabrice Bellard
+ * Copyright (c) 2006 Konstantin Shishkov
  *
  * This file is part of FFmpeg.
  *
@@ -21,7 +21,7 @@
  */
 
 /**
- * @file lzw.c
+ * @file libavcodec/lzw.c
  * @brief LZW decoding routines
  * @author Fabrice Bellard
  * Modified for use in TIFF by Konstantin Shishkov
@@ -42,7 +42,7 @@ static const uint16_t mask[17] =
 };
 
 struct LZWState {
-    uint8_t *pbuf, *ebuf;
+    const uint8_t *pbuf, *ebuf;
     int bbits;
     unsigned int bbuf;
 
@@ -91,7 +91,7 @@ static int lzw_get_code(struct LZWState * s)
     return c & s->curmask;
 }
 
-uint8_t* ff_lzw_cur_ptr(LZWState *p)
+const uint8_t* ff_lzw_cur_ptr(LZWState *p)
 {
     return ((struct LZWState*)p)->pbuf;
 }
@@ -109,12 +109,12 @@ void ff_lzw_decode_tail(LZWState *p)
         s->pbuf= s->ebuf;
 }
 
-void ff_lzw_decode_open(LZWState **p)
+av_cold void ff_lzw_decode_open(LZWState **p)
 {
     *p = av_mallocz(sizeof(struct LZWState));
 }
 
-void ff_lzw_decode_close(LZWState **p)
+av_cold void ff_lzw_decode_close(LZWState **p)
 {
     av_freep(p);
 }
@@ -127,11 +127,11 @@ void ff_lzw_decode_close(LZWState **p)
  * @param buf_size input data size
  * @param mode decoder working mode - either GIF or TIFF
  */
-int ff_lzw_decode_init(LZWState *p, int csize, uint8_t *buf, int buf_size, int mode)
+int ff_lzw_decode_init(LZWState *p, int csize, const uint8_t *buf, int buf_size, int mode)
 {
     struct LZWState *s = (struct LZWState *)p;
 
-    if(csize < 1 || csize > LZW_MAXBITS)
+    if(csize < 1 || csize >= LZW_MAXBITS)
         return -1;
     /* read buffer */
     s->pbuf = buf;

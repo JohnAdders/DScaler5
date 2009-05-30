@@ -20,7 +20,7 @@
  */
 
 /**
- * @file h263_parser.c
+ * @file libavcodec/h263_parser.c
  * H.263 parser
  */
 
@@ -77,7 +77,7 @@ static int h263_parse(AVCodecParserContext *s,
         return buf_size;
     }
 
-    *poutbuf = (uint8_t *)buf;
+    *poutbuf = buf;
     *poutbuf_size = buf_size;
     return next;
 }

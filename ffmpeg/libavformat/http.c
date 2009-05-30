@@ -1,6 +1,6 @@
 /*
  * HTTP protocol for ffmpeg client
- * Copyright (c) 2000, 2001 Fabrice Bellard.
+ * Copyright (c) 2000, 2001 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -18,13 +18,13 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/base64.h"
+#include "libavutil/avstring.h"
 #include "avformat.h"
 #include <unistd.h>
 #include "network.h"
 #include "os_support.h"
-
-#include "base64.h"
-#include "avstring.h"
 
 /* XXX: POST protocol is not completely implemented because ffmpeg uses
    only a subset of it. */
@@ -41,7 +41,7 @@ typedef struct {
     unsigned char buffer[BUFFER_SIZE], *buf_ptr, *buf_end;
     int line_count;
     int http_code;
-    offset_t off, filesize;
+    int64_t off, filesize;
     char location[URL_SIZE];
 } HTTPContext;
 
@@ -212,14 +212,14 @@ static int http_connect(URLContext *h, const char *path, const char *hoststr,
     int post, err, ch;
     char line[1024], *q;
     char *auth_b64;
-    int auth_b64_len = strlen(auth)* 4 / 3 + 12;
-    offset_t off = s->off;
+    int auth_b64_len = (strlen(auth) + 2) / 3 * 4 + 1;
+    int64_t off = s->off;
 
 
     /* send http header */
     post = h->flags & URL_WRONLY;
     auth_b64 = av_malloc(auth_b64_len);
-    av_base64_encode(auth_b64, auth_b64_len, (uint8_t *)auth, strlen(auth));
+    av_base64_encode(auth_b64, auth_b64_len, auth, strlen(auth));
     snprintf(s->buffer, sizeof(s->buffer),
              "%s %s HTTP/1.1\r\n"
              "User-Agent: %s\r\n"
@@ -316,11 +316,11 @@ static int http_close(URLContext *h)
     return 0;
 }
 
-static offset_t http_seek(URLContext *h, offset_t off, int whence)
+static int64_t http_seek(URLContext *h, int64_t off, int whence)
 {
     HTTPContext *s = h->priv_data;
     URLContext *old_hd = s->hd;
-    offset_t old_off = s->off;
+    int64_t old_off = s->off;
 
     if (whence == AVSEEK_SIZE)
         return s->filesize;
@@ -345,6 +345,13 @@ static offset_t http_seek(URLContext *h, offset_t off, int whence)
     return off;
 }
 
+static int
+http_get_file_handle(URLContext *h)
+{
+    HTTPContext *s = h->priv_data;
+    return url_get_file_handle(s->hd);
+}
+
 URLProtocol http_protocol = {
     "http",
     http_open,
@@ -352,4 +359,5 @@ URLProtocol http_protocol = {
     http_write,
     http_seek,
     http_close,
+    .url_get_file_handle = http_get_file_handle,
 };

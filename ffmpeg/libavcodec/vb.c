@@ -20,7 +20,7 @@
  */
 
 /**
- * @file vb.c
+ * @file libavcodec/vb.c
  * VB Video decoder
  */
 
@@ -44,7 +44,7 @@ typedef struct VBDecContext {
 
     uint8_t *frame, *prev_frame;
     uint32_t pal[256];
-    uint8_t *stream;
+    const uint8_t *stream;
 } VBDecContext;
 
 static const uint16_t vb_patterns[64] = {
@@ -82,7 +82,7 @@ static inline int check_line(uint8_t *buf, uint8_t *start, uint8_t *end)
     return buf >= start && (buf + 4) <= end;
 }
 
-static int vb_decode_framedata(VBDecContext *c, uint8_t *buf, int offset)
+static int vb_decode_framedata(VBDecContext *c, const uint8_t *buf, int offset)
 {
     uint8_t *prev, *cur;
     int blk, blocks, t, blk2;
@@ -173,8 +173,10 @@ static int vb_decode_framedata(VBDecContext *c, uint8_t *buf, int offset)
     return 0;
 }
 
-static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8_t *buf, int buf_size)
+static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     VBDecContext * const c = avctx->priv_data;
     uint8_t *outptr, *srcptr;
     int i, j;
@@ -234,7 +236,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
     return buf_size;
 }
 
-static int decode_init(AVCodecContext *avctx)
+static av_cold int decode_init(AVCodecContext *avctx)
 {
     VBDecContext * const c = avctx->priv_data;
 
@@ -257,7 +259,7 @@ static int decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-static int decode_end(AVCodecContext *avctx)
+static av_cold int decode_end(AVCodecContext *avctx)
 {
     VBDecContext *c = avctx->priv_data;
 
@@ -277,6 +279,7 @@ AVCodec vb_decoder = {
     decode_init,
     NULL,
     decode_end,
-    decode_frame
+    decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("Beam Software VB"),
 };
 

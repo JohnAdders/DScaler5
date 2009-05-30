@@ -20,7 +20,7 @@
  */
 
 /**
- * @file sp5xdec.c
+ * @file libavcodec/sp5xdec.c
  * Sunplus JPEG decoder (SP5X).
  */
 
@@ -32,20 +32,23 @@
 
 static int sp5x_decode_frame(AVCodecContext *avctx,
                               void *data, int *data_size,
-                              uint8_t *buf, int buf_size)
+                              AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
+    AVPacket avpkt_recoded;
 #if 0
     MJpegDecodeContext *s = avctx->priv_data;
 #endif
     const int qscale = 5;
-    uint8_t *buf_ptr, *buf_end, *recoded;
+    const uint8_t *buf_ptr;
+    uint8_t *recoded;
     int i = 0, j = 0;
 
     if (!avctx->width || !avctx->height)
         return -1;
 
     buf_ptr = buf;
-    buf_end = buf + buf_size;
 
 #if 1
     recoded = av_mallocz(buf_size + 1024);
@@ -88,7 +91,10 @@ static int sp5x_decode_frame(AVCodecContext *avctx,
     recoded[j++] = 0xD9;
 
     avctx->flags &= ~CODEC_FLAG_EMU_EDGE;
-    i = ff_mjpeg_decode_frame(avctx, data, data_size, recoded, j);
+    av_init_packet(&avpkt_recoded);
+    avpkt_recoded.data = recoded;
+    avpkt_recoded.size = j;
+    i = ff_mjpeg_decode_frame(avctx, data, data_size, &avpkt_recoded);
 
     av_free(recoded);
 
@@ -124,7 +130,7 @@ static int sp5x_decode_frame(AVCodecContext *avctx,
         return -1;
     }
 
-    s->picture.pict_type = I_TYPE;
+    s->picture.pict_type = FF_I_TYPE;
     s->picture.key_frame = 1;
 
     for (i = 0; i < 3; i++)
@@ -197,7 +203,8 @@ AVCodec sp5x_decoder = {
     ff_mjpeg_decode_end,
     sp5x_decode_frame,
     CODEC_CAP_DR1,
-    NULL
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("Sunplus JPEG (SP5X)"),
 };
 
 AVCodec amv_decoder = {
@@ -208,5 +215,6 @@ AVCodec amv_decoder = {
     ff_mjpeg_decode_init,
     NULL,
     ff_mjpeg_decode_end,
-    sp5x_decode_frame
+    sp5x_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("AMV Video"),
 };

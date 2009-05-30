@@ -18,19 +18,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "avstring.h"
+#include "libavutil/avstring.h"
+#include "libavutil/base64.h"
 #include "avformat.h"
+#include "internal.h"
+#include "avc.h"
 #include "rtp.h"
 
-#ifdef CONFIG_RTP_MUXER
+#if CONFIG_RTP_MUXER
 #define MAX_EXTRADATA_SIZE ((INT_MAX - 10) / 2)
 
 struct sdp_session_level {
     int sdp_version;      /**< protocol version (currently 0) */
-    int id;               /**< session id */
+    int id;               /**< session ID */
     int version;          /**< session version */
     int start_time;       /**< session start time (NTP time, in seconds),
-                             or 0 in case of permanent session */
+                               or 0 in case of permanent session */
     int end_time;         /**< session end time (NTP time, in seconds),
                                or 0 if the session is not bounded */
     int ttl;              /**< TTL, in case of multicast stream */
@@ -40,7 +43,7 @@ struct sdp_session_level {
     const char *name;     /**< session name (can be an empty string) */
 };
 
-static void dest_write(char *buff, int size, const char *dest_addr, int ttl)
+static void sdp_write_address(char *buff, int size, const char *dest_addr, int ttl)
 {
     if (dest_addr) {
         if (ttl > 0) {
@@ -54,18 +57,18 @@ static void dest_write(char *buff, int size, const char *dest_addr, int ttl)
 static void sdp_write_header(char *buff, int size, struct sdp_session_level *s)
 {
     av_strlcatf(buff, size, "v=%d\r\n"
-                            "o=- %d %d IN IPV4 %s\r\n"
+                            "o=- %d %d IN IP4 %s\r\n"
                             "t=%d %d\r\n"
                             "s=%s\r\n"
-                            "a=tool:libavformat\r\n",
+                            "a=tool:libavformat " AV_STRINGIFY(LIBAVFORMAT_VERSION) "\r\n",
                             s->sdp_version,
                             s->id, s->version, s->src_addr,
                             s->start_time, s->end_time,
-                            s->name[0] ? s->name : "No Name");
-    dest_write(buff, size, s->dst_addr, s->ttl);
+                            s->name);
+    sdp_write_address(buff, size, s->dst_addr, s->ttl);
 }
 
-static int get_address(char *dest_addr, int size, int *ttl, const char *url)
+static int sdp_get_address(char *dest_addr, int size, int *ttl, const char *url)
 {
     int port;
     const char *p;
@@ -90,56 +93,97 @@ static int get_address(char *dest_addr, int size, int *ttl, const char *url)
     return port;
 }
 
-static void digit_to_char(char *dst, uint8_t src)
+#define MAX_PSET_SIZE 1024
+static char *extradata2psets(AVCodecContext *c)
 {
-    if (src < 10) {
-        *dst = '0' + src;
-    } else {
-        *dst = 'A' + src - 10;
-    }
-}
+    char *psets, *p;
+    const uint8_t *r;
+    const char *pset_string = "; sprop-parameter-sets=";
 
-static char *data_to_hex(char *buff, const uint8_t *src, int s)
-{
-    int i;
+    if (c->extradata_size > MAX_EXTRADATA_SIZE) {
+        av_log(c, AV_LOG_ERROR, "Too much extradata!\n");
 
-    for(i = 0; i < s; i++) {
-        digit_to_char(buff + 2 * i, src[i] >> 4);
-        digit_to_char(buff + 2 * i + 1, src[i] & 0xF);
+        return NULL;
     }
 
-    return buff;
+    psets = av_mallocz(MAX_PSET_SIZE);
+    if (psets == NULL) {
+        av_log(c, AV_LOG_ERROR, "Cannot allocate memory for the parameter sets.\n");
+        return NULL;
+    }
+    memcpy(psets, pset_string, strlen(pset_string));
+    p = psets + strlen(pset_string);
+    r = ff_avc_find_startcode(c->extradata, c->extradata + c->extradata_size);
+    while (r < c->extradata + c->extradata_size) {
+        const uint8_t *r1;
+        uint8_t nal_type;
+
+        while (!*(r++));
+        nal_type = *r & 0x1f;
+        r1 = ff_avc_find_startcode(r, c->extradata + c->extradata_size);
+        if (nal_type != 7 && nal_type != 8) { /* Only output SPS and PPS */
+            r = r1;
+            continue;
+        }
+        if (p != (psets + strlen(pset_string))) {
+            *p = ',';
+            p++;
+        }
+        if (av_base64_encode(p, MAX_PSET_SIZE - (p - psets), r, r1 - r) == NULL) {
+            av_log(c, AV_LOG_ERROR, "Cannot Base64-encode %td %td!\n", MAX_PSET_SIZE - (p - psets), r1 - r);
+            av_free(psets);
+
+            return NULL;
+        }
+        p += strlen(p);
+        r = r1;
+    }
+
+    return psets;
 }
 
-static char *extradata2config(const uint8_t *extradata, int extradata_size)
+static char *extradata2config(AVCodecContext *c)
 {
     char *config;
 
-    if (extradata_size > MAX_EXTRADATA_SIZE) {
-        av_log(NULL, AV_LOG_ERROR, "Too many extra data!\n");
+    if (c->extradata_size > MAX_EXTRADATA_SIZE) {
+        av_log(c, AV_LOG_ERROR, "Too much extradata!\n");
 
         return NULL;
     }
-    config = av_malloc(10 + extradata_size * 2);
+    config = av_malloc(10 + c->extradata_size * 2);
     if (config == NULL) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot allocate memory for the config info\n");
+        av_log(c, AV_LOG_ERROR, "Cannot allocate memory for the config info.\n");
         return NULL;
     }
     memcpy(config, "; config=", 9);
-    data_to_hex(config + 9, extradata, extradata_size);
-    config[9 + extradata_size * 2] = 0;
+    ff_data_to_hex(config + 9, c->extradata, c->extradata_size);
+    config[9 + c->extradata_size * 2] = 0;
 
     return config;
 }
 
-static char *sdp_media_attributes(char *buff, int size, AVCodecContext *c, int payload_type)
+static char *sdp_write_media_attributes(char *buff, int size, AVCodecContext *c, int payload_type)
 {
     char *config = NULL;
 
     switch (c->codec_id) {
+        case CODEC_ID_H264:
+            if (c->extradata_size) {
+                config = extradata2psets(c);
+            }
+            av_strlcatf(buff, size, "a=rtpmap:%d H264/90000\r\n"
+                                    "a=fmtp:%d packetization-mode=1%s\r\n",
+                                     payload_type,
+                                     payload_type, config ? config : "");
+            break;
+        case CODEC_ID_H263:
+        case CODEC_ID_H263P:
+            av_strlcatf(buff, size, "a=rtpmap:%d H263-2000/90000\r\n", payload_type);
+            break;
         case CODEC_ID_MPEG4:
             if (c->extradata_size) {
-                config = extradata2config(c->extradata, c->extradata_size);
+                config = extradata2config(c);
             }
             av_strlcatf(buff, size, "a=rtpmap:%d MP4V-ES/90000\r\n"
                                     "a=fmtp:%d profile-level-id=1%s\r\n",
@@ -148,12 +192,12 @@ static char *sdp_media_attributes(char *buff, int size, AVCodecContext *c, int p
             break;
         case CODEC_ID_AAC:
             if (c->extradata_size) {
-                config = extradata2config(c->extradata, c->extradata_size);
+                config = extradata2config(c);
             } else {
                 /* FIXME: maybe we can forge config information based on the
                  *        codec parameters...
                  */
-                av_log(NULL, AV_LOG_ERROR, "AAC with no global headers is currently not supported\n");
+                av_log(c, AV_LOG_ERROR, "AAC with no global headers is currently not supported.\n");
                 return NULL;
             }
             if (config == NULL) {
@@ -184,8 +228,20 @@ static char *sdp_media_attributes(char *buff, int size, AVCodecContext *c, int p
                                          payload_type,
                                          c->sample_rate, c->channels);
             break;
+        case CODEC_ID_AMR_NB:
+            av_strlcatf(buff, size, "a=rtpmap:%d AMR/%d/%d\r\n"
+                                    "a=fmtp:%d octet-align=1\r\n",
+                                     payload_type, c->sample_rate, c->channels,
+                                     payload_type);
+            break;
+        case CODEC_ID_AMR_WB:
+            av_strlcatf(buff, size, "a=rtpmap:%d AMR-WB/%d/%d\r\n"
+                                    "a=fmtp:%d octet-align=1\r\n",
+                                     payload_type, c->sample_rate, c->channels,
+                                     payload_type);
+            break;
         default:
-            /* Nothing special to do, here... */
+            /* Nothing special to do here... */
             break;
     }
 
@@ -199,7 +255,7 @@ static void sdp_write_media(char *buff, int size, AVCodecContext *c, const char 
     const char *type;
     int payload_type;
 
-    payload_type = rtp_get_payload_type(c);
+    payload_type = ff_rtp_get_payload_type(c);
     if (payload_type < 0) {
         payload_type = 96;  /* FIXME: how to assign a private pt? rtp.c is broken too */
     }
@@ -212,13 +268,17 @@ static void sdp_write_media(char *buff, int size, AVCodecContext *c, const char 
     }
 
     av_strlcatf(buff, size, "m=%s %d RTP/AVP %d\r\n", type, port, payload_type);
-    dest_write(buff, size, dest_addr, ttl);
+    sdp_write_address(buff, size, dest_addr, ttl);
+    if (c->bit_rate) {
+        av_strlcatf(buff, size, "b=AS:%d\r\n", c->bit_rate / 1000);
+    }
 
-    sdp_media_attributes(buff, size, c, payload_type);
+    sdp_write_media_attributes(buff, size, c, payload_type);
 }
 
 int avf_sdp_create(AVFormatContext *ac[], int n_files, char *buff, int size)
 {
+    AVMetadataTag *title = av_metadata_get(ac[0]->metadata, "title", NULL, 0);
     struct sdp_session_level s;
     int i, j, port, ttl;
     char dst[32];
@@ -227,12 +287,12 @@ int avf_sdp_create(AVFormatContext *ac[], int n_files, char *buff, int size)
     memset(&s, 0, sizeof(struct sdp_session_level));
     s.user = "-";
     s.src_addr = "127.0.0.1";    /* FIXME: Properly set this */
-    s.name = ac[0]->title;
+    s.name = title ? title->value : "No Name";
 
     port = 0;
     ttl = 0;
     if (n_files == 1) {
-        port = get_address(dst, sizeof(dst), &ttl, ac[0]->filename);
+        port = sdp_get_address(dst, sizeof(dst), &ttl, ac[0]->filename);
         if (port > 0) {
             s.dst_addr = dst;
             s.ttl = ttl;
@@ -243,7 +303,7 @@ int avf_sdp_create(AVFormatContext *ac[], int n_files, char *buff, int size)
     dst[0] = 0;
     for (i = 0; i < n_files; i++) {
         if (n_files != 1) {
-            port = get_address(dst, sizeof(dst), &ttl, ac[i]->filename);
+            port = sdp_get_address(dst, sizeof(dst), &ttl, ac[i]->filename);
         }
         for (j = 0; j < ac[i]->nb_streams; j++) {
             sdp_write_media(buff, size,

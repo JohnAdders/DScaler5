@@ -20,14 +20,14 @@
  */
 
 /**
- * @file bethsoftvideo.c
+ * @file libavcodec/bethsoftvideo.c
  * @brief Bethesda Softworks VID Video Decoder
  * @author Nicholas Tung [ntung (at. ntung com] (2007-03)
  * @sa http://wiki.multimedia.cx/index.php?title=Bethsoft_VID
  * @sa http://www.svatopluk.com/andux/docs/dfvid.html
  */
 
-#include "common.h"
+#include "libavutil/common.h"
 #include "dsputil.h"
 #include "bethsoftvideo.h"
 #include "bytestream.h"
@@ -36,7 +36,7 @@ typedef struct BethsoftvidContext {
     AVFrame frame;
 } BethsoftvidContext;
 
-static int bethsoftvid_decode_init(AVCodecContext *avctx)
+static av_cold int bethsoftvid_decode_init(AVCodecContext *avctx)
 {
     BethsoftvidContext *vid = avctx->priv_data;
     vid->frame.reference = 1;
@@ -46,7 +46,7 @@ static int bethsoftvid_decode_init(AVCodecContext *avctx)
     return 0;
 }
 
-static void set_palette(AVFrame * frame, uint8_t * palette_buffer)
+static void set_palette(AVFrame * frame, const uint8_t * palette_buffer)
 {
     uint32_t * palette = (uint32_t *)frame->data[1];
     int a;
@@ -58,8 +58,10 @@ static void set_palette(AVFrame * frame, uint8_t * palette_buffer)
 
 static int bethsoftvid_decode_frame(AVCodecContext *avctx,
                               void *data, int *data_size,
-                              uint8_t *buf, int buf_size)
+                              AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     BethsoftvidContext * vid = avctx->priv_data;
     char block_type;
     uint8_t * dst;
@@ -120,7 +122,7 @@ static int bethsoftvid_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int bethsoftvid_decode_end(AVCodecContext *avctx)
+static av_cold int bethsoftvid_decode_end(AVCodecContext *avctx)
 {
     BethsoftvidContext * vid = avctx->priv_data;
     if(vid->frame.data[0])
@@ -136,4 +138,5 @@ AVCodec bethsoftvid_decoder = {
     .init = bethsoftvid_decode_init,
     .close = bethsoftvid_decode_end,
     .decode = bethsoftvid_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("Bethesda VID video"),
 };

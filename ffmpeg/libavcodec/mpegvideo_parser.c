@@ -1,6 +1,6 @@
 /*
  * MPEG1 / MPEG2 video parser
- * Copyright (c) 2000,2001 Fabrice Bellard.
+ * Copyright (c) 2000,2001 Fabrice Bellard
  * Copyright (c) 2002-2004 Michael Niedermayer <michaelni@gmx.at>
  *
  * This file is part of FFmpeg.
@@ -78,7 +78,7 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                         pc->height |=( vert_size_ext << 12);
                         avctx->bit_rate += (bit_rate_ext << 18) * 400;
                         avcodec_set_dimensions(avctx, pc->width, pc->height);
-                        avctx->time_base.den = pc->frame_rate.den * (frame_rate_ext_n + 1);
+                        avctx->time_base.den = pc->frame_rate.den * (frame_rate_ext_n + 1) * 2;
                         avctx->time_base.num = pc->frame_rate.num * (frame_rate_ext_d + 1);
                         avctx->codec_id = CODEC_ID_MPEG2VIDEO;
                         avctx->sub_id = 2; /* forces MPEG2 */
@@ -92,21 +92,17 @@ static void mpegvideo_extract_headers(AVCodecParserContext *s,
                         progressive_frame = buf[4] & (1 << 7);
 
                         /* check if we must repeat the frame */
+                        s->repeat_pict = 1;
                         if (repeat_first_field) {
                             if (pc->progressive_sequence) {
                                 if (top_field_first)
-                                    s->repeat_pict = 4;
+                                    s->repeat_pict = 5;
                                 else
-                                    s->repeat_pict = 2;
+                                    s->repeat_pict = 3;
                             } else if (progressive_frame) {
-                                s->repeat_pict = 1;
+                                s->repeat_pict = 2;
                             }
                         }
-
-                        /* the packet only represents half a frame
-                           XXX,FIXME maybe find a different solution */
-                        if(picture_structure != 3)
-                            s->repeat_pict = -1;
                     }
                     break;
                 }
@@ -138,7 +134,7 @@ static int mpegvideo_parse(AVCodecParserContext *s,
     if(s->flags & PARSER_FLAG_COMPLETE_FRAMES){
         next= buf_size;
     }else{
-        next= ff_mpeg1_find_frame_end(pc, buf, buf_size);
+        next= ff_mpeg1_find_frame_end(pc, buf, buf_size, s);
 
         if (ff_combine_frame(pc, next, &buf, &buf_size) < 0) {
             *poutbuf = NULL;
@@ -181,5 +177,4 @@ AVCodecParser mpegvideo_parser = {
     NULL,
     mpegvideo_parse,
     ff_parse1_close,
-    mpegvideo_split,
 };

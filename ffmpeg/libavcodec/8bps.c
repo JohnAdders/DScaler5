@@ -20,8 +20,8 @@
  */
 
 /**
- * @file 8bps.c
- * QT 8BPS Video Decoder by Roberto Togni <rtogni at bresciaonline dot it>
+ * @file libavcodec/8bps.c
+ * QT 8BPS Video Decoder by Roberto Togni
  * For more information about the 8BPS format, visit:
  *   http://www.pcisys.net/~melanson/codecs/
  *
@@ -34,10 +34,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 
-static const enum PixelFormat pixfmt_rgb24[] = {PIX_FMT_BGR24, PIX_FMT_RGB32, -1};
+static const enum PixelFormat pixfmt_rgb24[] = {PIX_FMT_BGR24, PIX_FMT_RGB32, PIX_FMT_NONE};
 
 /*
  * Decoder context
@@ -57,14 +58,16 @@ typedef struct EightBpsContext {
  * Decode a frame
  *
  */
-static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8_t *buf, int buf_size)
+static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, AVPacket *avpkt)
 {
+        const uint8_t *buf = avpkt->data;
+        int buf_size = avpkt->size;
         EightBpsContext * const c = avctx->priv_data;
-        unsigned char *encoded = (unsigned char *)buf;
+        const unsigned char *encoded = buf;
         unsigned char *pixptr, *pixptr_end;
         unsigned int height = avctx->height; // Real image height
         unsigned int dlen, p, row;
-        unsigned char *lp, *dp;
+        const unsigned char *lp, *dp;
         unsigned char count;
         unsigned int px_inc;
         unsigned int planes = c->planes;
@@ -97,7 +100,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
                 for(row = 0; row < height; row++) {
                         pixptr = c->pic.data[0] + row * c->pic.linesize[0] + planemap[p];
                         pixptr_end = pixptr + c->pic.linesize[0];
-                        dlen = be2me_16(*(unsigned short *)(lp+row*2));
+                        dlen = be2me_16(*(const unsigned short *)(lp+row*2));
                         /* Decode a row of this plane */
                         while(dlen > 0) {
                                 if(dp + 1 >= buf+buf_size) return -1;
@@ -148,7 +151,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *data_size, uint8
  * Init 8BPS decoder
  *
  */
-static int decode_init(AVCodecContext *avctx)
+static av_cold int decode_init(AVCodecContext *avctx)
 {
         EightBpsContext * const c = avctx->priv_data;
 
@@ -160,7 +163,7 @@ static int decode_init(AVCodecContext *avctx)
         return 1;
     }
 
-        switch (avctx->bits_per_sample) {
+        switch (avctx->bits_per_coded_sample) {
                 case 8:
                         avctx->pix_fmt = PIX_FMT_PAL8;
                         c->planes = 1;
@@ -193,7 +196,7 @@ static int decode_init(AVCodecContext *avctx)
 #endif
                         break;
                 default:
-                        av_log(avctx, AV_LOG_ERROR, "Error: Unsupported color depth: %u.\n", avctx->bits_per_sample);
+                        av_log(avctx, AV_LOG_ERROR, "Error: Unsupported color depth: %u.\n", avctx->bits_per_coded_sample);
                         return -1;
         }
 
@@ -208,7 +211,7 @@ static int decode_init(AVCodecContext *avctx)
  * Uninit 8BPS decoder
  *
  */
-static int decode_end(AVCodecContext *avctx)
+static av_cold int decode_end(AVCodecContext *avctx)
 {
         EightBpsContext * const c = avctx->priv_data;
 
@@ -230,4 +233,5 @@ AVCodec eightbps_decoder = {
         decode_end,
         decode_frame,
         CODEC_CAP_DR1,
+        .long_name = NULL_IF_CONFIG_SMALL("QuickTime 8BPS video"),
 };

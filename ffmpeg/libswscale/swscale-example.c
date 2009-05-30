@@ -3,18 +3,18 @@
  *
  * This file is part of FFmpeg.
  *
- * FFmpeg is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * FFmpeg is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * FFmpeg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with FFmpeg; if not, write to the Free Software
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
@@ -25,10 +25,10 @@
 #include <stdarg.h>
 
 #undef HAVE_AV_CONFIG_H
-#include "avutil.h"
+#include "libavutil/avutil.h"
+#include "libavutil/lfg.h"
 #include "swscale.h"
 #include "swscale_internal.h"
-#include "rgb2rgb.h"
 
 static uint64_t getSSD(uint8_t *src1, uint8_t *src2, int stride1, int stride2, int w, int h){
     int x,y;
@@ -49,19 +49,20 @@ static uint64_t getSSD(uint8_t *src1, uint8_t *src2, int stride1, int stride2, i
 
 // test by ref -> src -> dst -> out & compare out against ref
 // ref & out are YV12
-static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat, int dstFormat,
+static int doTest(uint8_t *ref[4], int refStride[4], int w, int h, int srcFormat, int dstFormat,
                   int srcW, int srcH, int dstW, int dstH, int flags){
-    uint8_t *src[3];
-    uint8_t *dst[3];
-    uint8_t *out[3];
-    int srcStride[3], dstStride[3];
+    uint8_t *src[4] = {0};
+    uint8_t *dst[4] = {0};
+    uint8_t *out[4] = {0};
+    int srcStride[4], dstStride[4];
     int i;
-    uint64_t ssdY, ssdU, ssdV;
-    struct SwsContext *srcContext, *dstContext, *outContext;
+    uint64_t ssdY, ssdU, ssdV, ssdA=0;
+    struct SwsContext *srcContext = NULL, *dstContext = NULL,
+                      *outContext = NULL;
     int res;
 
     res = 0;
-    for (i=0; i<3; i++){
+    for (i=0; i<4; i++){
         // avoid stride % bpp != 0
         if (srcFormat==PIX_FMT_RGB24 || srcFormat==PIX_FMT_BGR24)
             srcStride[i]= srcW*3;
@@ -76,7 +77,7 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
         src[i]= (uint8_t*) malloc(srcStride[i]*srcH);
         dst[i]= (uint8_t*) malloc(dstStride[i]*dstH);
         out[i]= (uint8_t*) malloc(refStride[i]*h);
-        if ((src[i] == NULL) || (dst[i] == NULL) || (out[i] == NULL)) {
+        if (!src[i] || !dst[i] || !out[i]) {
             perror("Malloc");
             res = -1;
 
@@ -84,18 +85,17 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
         }
     }
 
-    dstContext = outContext = NULL;
-    srcContext= sws_getContext(w, h, PIX_FMT_YUV420P, srcW, srcH, srcFormat, flags, NULL, NULL, NULL);
-    if (srcContext == NULL) {
+    srcContext= sws_getContext(w, h, PIX_FMT_YUVA420P, srcW, srcH, srcFormat, flags, NULL, NULL, NULL);
+    if (!srcContext) {
         fprintf(stderr, "Failed to get %s ---> %s\n",
-                sws_format_name(PIX_FMT_YUV420P),
+                sws_format_name(PIX_FMT_YUVA420P),
                 sws_format_name(srcFormat));
         res = -1;
 
         goto end;
     }
     dstContext= sws_getContext(srcW, srcH, srcFormat, dstW, dstH, dstFormat, flags, NULL, NULL, NULL);
-    if (dstContext == NULL) {
+    if (!dstContext) {
         fprintf(stderr, "Failed to get %s ---> %s\n",
                 sws_format_name(srcFormat),
                 sws_format_name(dstFormat));
@@ -103,11 +103,11 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
 
         goto end;
     }
-    outContext= sws_getContext(dstW, dstH, dstFormat, w, h, PIX_FMT_YUV420P, flags, NULL, NULL, NULL);
-    if (outContext == NULL) {
+    outContext= sws_getContext(dstW, dstH, dstFormat, w, h, PIX_FMT_YUVA420P, flags, NULL, NULL, NULL);
+    if (!outContext) {
         fprintf(stderr, "Failed to get %s ---> %s\n",
                 sws_format_name(dstFormat),
-                sws_format_name(PIX_FMT_YUV420P));
+                sws_format_name(PIX_FMT_YUVA420P));
         res = -1;
 
         goto end;
@@ -119,27 +119,24 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
     sws_scale(dstContext, src, srcStride, 0, srcH, dst, dstStride);
     sws_scale(outContext, dst, dstStride, 0, dstH, out, refStride);
 
-#if defined(ARCH_X86)
-    asm volatile ("emms\n\t");
-#endif
-
     ssdY= getSSD(ref[0], out[0], refStride[0], refStride[0], w, h);
     ssdU= getSSD(ref[1], out[1], refStride[1], refStride[1], (w+1)>>1, (h+1)>>1);
     ssdV= getSSD(ref[2], out[2], refStride[2], refStride[2], (w+1)>>1, (h+1)>>1);
+    if (isALPHA(srcFormat) && isALPHA(dstFormat))
+        ssdA= getSSD(ref[3], out[3], refStride[3], refStride[3], w, h);
 
     if (srcFormat == PIX_FMT_GRAY8 || dstFormat==PIX_FMT_GRAY8) ssdU=ssdV=0; //FIXME check that output is really gray
 
     ssdY/= w*h;
     ssdU/= w*h/4;
     ssdV/= w*h/4;
+    ssdA/= w*h;
 
-    if (ssdY>100 || ssdU>100 || ssdV>100){
-        printf(" %s %dx%d -> %s %4dx%4d flags=%2d SSD=%5lld,%5lld,%5lld\n",
-               sws_format_name(srcFormat), srcW, srcH,
-               sws_format_name(dstFormat), dstW, dstH,
-               flags,
-               ssdY, ssdU, ssdV);
-    }
+    printf(" %s %dx%d -> %s %4dx%4d flags=%2d SSD=%5"PRId64",%5"PRId64",%5"PRId64",%5"PRId64"\n",
+           sws_format_name(srcFormat), srcW, srcH,
+           sws_format_name(dstFormat), dstW, dstH,
+           flags, ssdY, ssdU, ssdV, ssdA);
+    fflush(stdout);
 
     end:
 
@@ -147,7 +144,7 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
     sws_freeContext(dstContext);
     sws_freeContext(outContext);
 
-    for (i=0; i<3; i++){
+    for (i=0; i<4; i++){
         free(src[i]);
         free(dst[i]);
         free(out[i]);
@@ -156,11 +153,7 @@ static int doTest(uint8_t *ref[3], int refStride[3], int w, int h, int srcFormat
     return res;
 }
 
-void fast_memcpy(void *a, void *b, int s){ //FIXME
-    memcpy(a, b, s);
-}
-
-static void selfTest(uint8_t *src[3], int stride[3], int w, int h){
+static void selfTest(uint8_t *src[4], int stride[4], int w, int h){
     enum PixelFormat srcFormat, dstFormat;
     int srcW, srcH, dstW, dstH;
     int flags;
@@ -170,6 +163,7 @@ static void selfTest(uint8_t *src[3], int stride[3], int w, int h){
             printf("%s -> %s\n",
                    sws_format_name(srcFormat),
                    sws_format_name(dstFormat));
+            fflush(stdout);
 
             srcW= w;
             srcH= h;
@@ -199,31 +193,25 @@ int main(int argc, char **argv){
     uint8_t *rgb_data = malloc (W*H*4);
     uint8_t *rgb_src[3]= {rgb_data, NULL, NULL};
     int rgb_stride[3]={4*W, 0, 0};
-    uint8_t *data = malloc (3*W*H);
-    uint8_t *src[3]= {data, data+W*H, data+W*H*2};
-    int stride[3]={W, W, W};
+    uint8_t *data = malloc (4*W*H);
+    uint8_t *src[4]= {data, data+W*H, data+W*H*2, data+W*H*3};
+    int stride[4]={W, W, W, W};
     int x, y;
     struct SwsContext *sws;
+    AVLFG rand;
 
-    sws= sws_getContext(W/12, H/12, PIX_FMT_RGB32, W, H, PIX_FMT_YUV420P, 2, NULL, NULL, NULL);
+    sws= sws_getContext(W/12, H/12, PIX_FMT_RGB32, W, H, PIX_FMT_YUVA420P, 2, NULL, NULL, NULL);
+
+    av_lfg_init(&rand, 1);
 
     for (y=0; y<H; y++){
         for (x=0; x<W*4; x++){
-            rgb_data[ x + y*4*W]= random();
+            rgb_data[ x + y*4*W]= av_lfg_get(&rand);
         }
     }
-#if defined(ARCH_X86)
-    sws_rgb2rgb_init(SWS_CPU_CAPS_MMX*0);
-#else
-    sws_rgb2rgb_init(0);
-#endif
-    sws_scale(sws, rgb_src, rgb_stride, 0, H   , src, stride);
+    sws_scale(sws, rgb_src, rgb_stride, 0, H, src, stride);
 
-#if defined(ARCH_X86)
-    asm volatile ("emms\n\t");
-#endif
-
-    selfTest(src,  stride, W, H);
+    selfTest(src, stride, W, H);
 
     return 123;
 }

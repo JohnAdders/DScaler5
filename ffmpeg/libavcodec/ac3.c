@@ -1,6 +1,6 @@
 /*
- * Common code between AC3 encoder and decoder
- * Copyright (c) 2000 Fabrice Bellard.
+ * Common code between the AC-3 encoder and decoder
+ * Copyright (c) 2000 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -20,13 +20,13 @@
  */
 
 /**
- * @file ac3.c
- * Common code between AC3 encoder and decoder.
+ * @file libavcodec/ac3.c
+ * Common code between the AC-3 encoder and decoder.
  */
 
 #include "avcodec.h"
 #include "ac3.h"
-#include "bitstream.h"
+#include "get_bits.h"
 
 static uint8_t band_start_tab[51];
 static uint8_t bin_to_band_tab[253];
@@ -80,11 +80,11 @@ void ff_ac3_bit_alloc_calc_psd(int8_t *exp, int start, int end, int16_t *psd,
     } while (end > band_start_tab[k]);
 }
 
-void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
-                                int start, int end, int fast_gain, int is_lfe,
-                                int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
-                                uint8_t *dba_lengths, uint8_t *dba_values,
-                                int16_t *mask)
+int ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
+                               int start, int end, int fast_gain, int is_lfe,
+                               int dba_mode, int dba_nsegs, uint8_t *dba_offsets,
+                               uint8_t *dba_lengths, uint8_t *dba_values,
+                               int16_t *mask)
 {
     int16_t excite[50]; /* excitation */
     int bin, k;
@@ -156,9 +156,13 @@ void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
 
     if (dba_mode == DBA_REUSE || dba_mode == DBA_NEW) {
         int band, seg, delta;
+        if (dba_nsegs >= 8)
+            return -1;
         band = 0;
         for (seg = 0; seg < dba_nsegs; seg++) {
             band += dba_offsets[seg];
+            if (band >= 50 || dba_lengths[seg] > 50-band)
+                return -1;
             if (dba_values[seg] >= 4) {
                 delta = (dba_values[seg] - 3) << 7;
             } else {
@@ -170,6 +174,7 @@ void ff_ac3_bit_alloc_calc_mask(AC3BitAllocParameters *s, int16_t *band_psd,
             }
         }
     }
+    return 0;
 }
 
 void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
@@ -197,7 +202,7 @@ void ff_ac3_bit_alloc_calc_bap(int16_t *mask, int16_t *psd, int start, int end,
     } while (end > band_start_tab[j++]);
 }
 
-/* AC3 bit allocation. The algorithm is the one described in the AC3
+/* AC-3 bit allocation. The algorithm is the one described in the AC-3
    spec. */
 void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
                                    int8_t *exp, int start, int end,
@@ -225,7 +230,7 @@ void ac3_parametric_bit_allocation(AC3BitAllocParameters *s, uint8_t *bap,
  * note: This function must remain thread safe because it is called by the
  *       AVParser init code.
  */
-void ac3_common_init(void)
+av_cold void ac3_common_init(void)
 {
     int i, j, k, l, v;
     /* compute bndtab and masktab from bandsz */

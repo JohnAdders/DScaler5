@@ -1,7 +1,4 @@
-ffmpeg sources grabbed 20/11/07
+ffmpeg sources grabbed 30/05/09
 
-Patch applied from
-
-http://kurtnoise.free.fr/misc/ffmpeg_eac3_mlp_r11045.patch
 
 

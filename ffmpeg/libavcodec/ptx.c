@@ -19,13 +19,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 typedef struct PTXContext {
     AVFrame picture;
 } PTXContext;
 
-static int ptx_init(AVCodecContext *avctx) {
+static av_cold int ptx_init(AVCodecContext *avctx) {
     PTXContext *s = avctx->priv_data;
 
     avcodec_get_frame_defaults(&s->picture);
@@ -35,7 +36,8 @@ static int ptx_init(AVCodecContext *avctx) {
 }
 
 static int ptx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
-                            uint8_t *buf, int buf_size) {
+                            AVPacket *avpkt) {
+    const uint8_t *buf = avpkt->data;
     PTXContext * const s = avctx->priv_data;
     AVFrame *picture = data;
     AVFrame * const p = &s->picture;
@@ -94,7 +96,7 @@ static int ptx_decode_frame(AVCodecContext *avctx, void *data, int *data_size,
     return offset + w*h*bytes_per_pixel;
 }
 
-static int ptx_end(AVCodecContext *avctx) {
+static av_cold int ptx_end(AVCodecContext *avctx) {
     PTXContext *s = avctx->priv_data;
 
     if(s->picture.data[0])
@@ -113,5 +115,6 @@ AVCodec ptx_decoder = {
     ptx_end,
     ptx_decode_frame,
     0,
-    NULL
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("V.Flash PTX image"),
 };

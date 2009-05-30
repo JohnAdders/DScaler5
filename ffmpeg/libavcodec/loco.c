@@ -20,13 +20,14 @@
  */
 
 /**
- * @file loco.c
+ * @file libavcodec/loco.c
  * LOCO codec.
  */
 
 #include "avcodec.h"
-#include "bitstream.h"
+#include "get_bits.h"
 #include "golomb.h"
+#include "mathops.h"
 
 enum LOCO_MODE {LOCO_UNKN=0, LOCO_CYUY2=-1, LOCO_CRGB=-2, LOCO_CRGBA=-3, LOCO_CYV12=-4,
  LOCO_YUY2=1, LOCO_UYVY=2, LOCO_RGB=3, LOCO_RGBA=4, LOCO_YV12=5};
@@ -116,7 +117,7 @@ static inline int loco_predict(uint8_t* data, int stride, int step)
 }
 
 static int loco_decode_plane(LOCOContext *l, uint8_t *data, int width, int height,
-                             int stride, uint8_t *buf, int buf_size, int step)
+                             int stride, const uint8_t *buf, int buf_size, int step)
 {
     RICEContext rc;
     int val;
@@ -152,13 +153,15 @@ static int loco_decode_plane(LOCOContext *l, uint8_t *data, int width, int heigh
         data += stride;
     }
 
-    return ((get_bits_count(&rc.gb) + 7) >> 3);
+    return (get_bits_count(&rc.gb) + 7) >> 3;
 }
 
 static int decode_frame(AVCodecContext *avctx,
                         void *data, int *data_size,
-                        uint8_t *buf, int buf_size)
+                        AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     LOCOContext * const l = avctx->priv_data;
     AVFrame * const p= (AVFrame*)&l->pic;
     int decoded;
@@ -225,7 +228,7 @@ static int decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int decode_init(AVCodecContext *avctx){
+static av_cold int decode_init(AVCodecContext *avctx){
     LOCOContext * const l = avctx->priv_data;
     int version;
 
@@ -282,4 +285,5 @@ AVCodec loco_decoder = {
     NULL,
     decode_frame,
     CODEC_CAP_DR1,
+    .long_name = NULL_IF_CONFIG_SMALL("LOCO"),
 };

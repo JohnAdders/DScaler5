@@ -1,6 +1,6 @@
 /*
  * Raw Video Encoder
- * Copyright (c) 2001 Fabrice Bellard.
+ * Copyright (c) 2001 Fabrice Bellard
  *
  * This file is part of FFmpeg.
  *
@@ -20,14 +20,15 @@
  */
 
 /**
- * @file rawenc.c
+ * @file libavcodec/rawenc.c
  * Raw Video Encoder
  */
 
 #include "avcodec.h"
 #include "raw.h"
+#include "libavutil/intreadwrite.h"
 
-static int raw_init_encoder(AVCodecContext *avctx)
+static av_cold int raw_init_encoder(AVCodecContext *avctx)
 {
     avctx->coded_frame = (AVFrame *)avctx->priv_data;
     avctx->coded_frame->pict_type = FF_I_TYPE;
@@ -40,8 +41,16 @@ static int raw_init_encoder(AVCodecContext *avctx)
 static int raw_encode(AVCodecContext *avctx,
                             unsigned char *frame, int buf_size, void *data)
 {
-    return avpicture_layout((AVPicture *)data, avctx->pix_fmt, avctx->width,
+    int ret = avpicture_layout((AVPicture *)data, avctx->pix_fmt, avctx->width,
                                                avctx->height, frame, buf_size);
+
+    if(avctx->codec_tag == AV_RL32("yuv2") && ret > 0 &&
+       avctx->pix_fmt   == PIX_FMT_YUYV422) {
+        int x;
+        for(x = 1; x < avctx->height*avctx->width*2; x += 2)
+            frame[x] ^= 0x80;
+    }
+    return ret;
 }
 
 AVCodec rawvideo_encoder = {
@@ -51,4 +60,5 @@ AVCodec rawvideo_encoder = {
     sizeof(AVFrame),
     raw_init_encoder,
     raw_encode,
+    .long_name = NULL_IF_CONFIG_SMALL("raw video"),
 };

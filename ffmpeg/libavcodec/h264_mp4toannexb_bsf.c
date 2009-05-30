@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2007 Benoit Fouet <benoit.fouet@purplelabs.com>
+ * H.264 MP4 to Annex B byte stream format filter
+ * Copyright (c) 2007 Benoit Fouet <benoit.fouet@free.fr>
  *
  * This file is part of FFmpeg.
  *
@@ -18,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 typedef struct H264BSFContext {
@@ -41,8 +43,8 @@ static void alloc_and_copy(uint8_t **poutbuf,          int *poutbuf_size,
     if (!offset)
         AV_WB32(*poutbuf+sps_pps_size, 1);
     else {
-        (*poutbuf+offset)[0] = (*poutbuf+offset)[1] = 0;
-        (*poutbuf+offset)[2] = 1;
+        (*poutbuf+offset+sps_pps_size)[0] = (*poutbuf+offset+sps_pps_size)[1] = 0;
+        (*poutbuf+offset+sps_pps_size)[2] = 1;
     }
 }
 

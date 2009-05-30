@@ -18,10 +18,12 @@
  * License along with FFmpeg; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
+
+#include "libavutil/intreadwrite.h"
 #include "avcodec.h"
 
 /**
- * @file ws-snd.c
+ * @file libavcodec/ws-snd1.c
  * Westwood SNDx codecs.
  *
  * Reference documents about VQA format and its audio codecs
@@ -36,17 +38,20 @@ static const char ws_adpcm_4bit[] = {
 
 #define CLIP8(a) if(a>127)a=127;if(a<-128)a=-128;
 
-static int ws_snd_decode_init(AVCodecContext * avctx)
+static av_cold int ws_snd_decode_init(AVCodecContext * avctx)
 {
 //    WSSNDContext *c = avctx->priv_data;
 
+    avctx->sample_fmt = SAMPLE_FMT_S16;
     return 0;
 }
 
 static int ws_snd_decode_frame(AVCodecContext *avctx,
                 void *data, int *data_size,
-                uint8_t *buf, int buf_size)
+                AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
 //    WSSNDContext *c = avctx->priv_data;
 
     int in_size, out_size;
@@ -149,4 +154,5 @@ AVCodec ws_snd1_decoder = {
     NULL,
     NULL,
     ws_snd_decode_frame,
+    .long_name = NULL_IF_CONFIG_SMALL("Westwood Audio (SND1)"),
 };

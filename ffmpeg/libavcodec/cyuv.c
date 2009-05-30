@@ -24,7 +24,7 @@
  */
 
 /**
- * @file cyuv.c
+ * @file libavcodec/cyuv.c
  * Creative YUV (CYUV) Video Decoder.
  */
 
@@ -35,7 +35,6 @@
 
 #include "avcodec.h"
 #include "dsputil.h"
-#include "mpegvideo.h"
 
 
 typedef struct CyuvDecodeContext {
@@ -44,7 +43,7 @@ typedef struct CyuvDecodeContext {
     AVFrame frame;
 } CyuvDecodeContext;
 
-static int cyuv_decode_init(AVCodecContext *avctx)
+static av_cold int cyuv_decode_init(AVCodecContext *avctx)
 {
     CyuvDecodeContext *s = avctx->priv_data;
 
@@ -61,8 +60,10 @@ static int cyuv_decode_init(AVCodecContext *avctx)
 
 static int cyuv_decode_frame(AVCodecContext *avctx,
                              void *data, int *data_size,
-                             uint8_t *buf, int buf_size)
+                             AVPacket *avpkt)
 {
+    const uint8_t *buf = avpkt->data;
+    int buf_size = avpkt->size;
     CyuvDecodeContext *s=avctx->priv_data;
 
     unsigned char *y_plane;
@@ -73,9 +74,9 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
     int v_ptr;
 
     /* prediction error tables (make it clear that they are signed values) */
-    signed char *y_table = (signed char*)buf +  0;
-    signed char *u_table = (signed char*)buf + 16;
-    signed char *v_table = (signed char*)buf + 32;
+    const signed char *y_table = (const signed char*)buf +  0;
+    const signed char *u_table = (const signed char*)buf + 16;
+    const signed char *v_table = (const signed char*)buf + 32;
 
     unsigned char y_pred, u_pred, v_pred;
     int stream_ptr;
@@ -164,13 +165,6 @@ static int cyuv_decode_frame(AVCodecContext *avctx,
     return buf_size;
 }
 
-static int cyuv_decode_end(AVCodecContext *avctx)
-{
-/*    CyuvDecodeContext *s = avctx->priv_data;*/
-
-    return 0;
-}
-
 AVCodec cyuv_decoder = {
     "cyuv",
     CODEC_TYPE_VIDEO,
@@ -178,9 +172,10 @@ AVCodec cyuv_decoder = {
     sizeof(CyuvDecodeContext),
     cyuv_decode_init,
     NULL,
-    cyuv_decode_end,
+    NULL,
     cyuv_decode_frame,
     CODEC_CAP_DR1,
-    NULL
+    NULL,
+    .long_name = NULL_IF_CONFIG_SMALL("Creative YUV (CYUV)"),
 };
 
