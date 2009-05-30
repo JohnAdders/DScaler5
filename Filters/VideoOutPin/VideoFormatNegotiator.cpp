@@ -30,7 +30,7 @@
 #include "MoreUuids.h"
 
 CVideoFormatNegotiator::CVideoFormatNegotiator(eVideoFormatType Type, bool AllowInterlaced) :
-	m_AllowInterlaced(AllowInterlaced),
+    m_AllowInterlaced(AllowInterlaced),
     m_AspectX(0),
     m_AspectY(0),
     m_Width(0),
@@ -40,9 +40,9 @@ CVideoFormatNegotiator::CVideoFormatNegotiator(eVideoFormatType Type, bool Allow
     LOG(DBGLOG_ALL, ("CVideoFormatNegotiator::CVideoFormatNegotiator\n"));
     InitMediaType(&m_InternalMT);
 
-	switch(Type)
-	{
-	case NORMAL_420:
+    switch(Type)
+    {
+    case NORMAL_420:
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_NV12, 1, 12, '21VN'));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_YV12, 1, 12, '21VY'));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_YUY2, 1, 16, '2YUY'));
@@ -56,8 +56,8 @@ CVideoFormatNegotiator::CVideoFormatNegotiator(eVideoFormatType Type, bool Allow
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB24, 1, 24, BI_BITFIELDS));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB565, 1, 16, BI_BITFIELDS));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_RGB555, 1, 16, BI_BITFIELDS));
-		break;
-	case SUBPICTURE:
+        break;
+    case SUBPICTURE:
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_AI44, 1, 8, '44AI'));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_AYUV, 1, 32, 'VUYA'));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB1555, 1, 16, BI_RGB));
@@ -65,7 +65,7 @@ CVideoFormatNegotiator::CVideoFormatNegotiator(eVideoFormatType Type, bool Allow
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_RGB));
         m_Formats.push_back(CVideoFormat(&MEDIASUBTYPE_ARGB32, 1, 32, BI_BITFIELDS));
         break;
-	}
+    }
 
 }
 
@@ -94,19 +94,19 @@ HRESULT CVideoFormatNegotiator::CreateSuitableMediaType(AM_MEDIA_TYPE* pmt, int 
         VIHIndex = -1;
     }
 
-	// reorder the types so that the preferred one is first
-	if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
+    // reorder the types so that the preferred one is first
+    if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YV12)
     {
-		PutFormatToTop(MEDIASUBTYPE_YV12);
+        PutFormatToTop(MEDIASUBTYPE_YV12);
     }
-	else if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
+    else if(VideoControlFlags & VIDEOTYPEFLAG_FORCE_YUY2)
     {
-		PutFormatToTop(MEDIASUBTYPE_YUY2);
+        PutFormatToTop(MEDIASUBTYPE_YUY2);
     }
-	else
-	{
-		PutFormatToTop(MEDIASUBTYPE_NV12);
-	}
+    else
+    {
+        PutFormatToTop(MEDIASUBTYPE_NV12);
+    }
 
 
     // this will make sure we won't connect to the old renderer in dvd mode
@@ -528,20 +528,20 @@ void CVideoFormatNegotiator::SetHeight(int Height)
 
 void CVideoFormatNegotiator::PutFormatToTop(const GUID& SubTypeToPutFormatToTop)
 {
-	for(size_t i(1) ; i < m_Formats.size(); ++i)
-	{
-		if(*m_Formats[i].subtype == SubTypeToPutFormatToTop)
-		{
-			std::swap(m_Formats[0], m_Formats[i]);
-			return;
-		}
-	}
+    for(size_t i(1) ; i < m_Formats.size(); ++i)
+    {
+        if(*m_Formats[i].subtype == SubTypeToPutFormatToTop)
+        {
+            std::swap(m_Formats[0], m_Formats[i]);
+            return;
+        }
+    }
 }
 
 CVideoFormatNegotiator::CVideoFormat::CVideoFormat(const GUID* subtype_, WORD biPlanes_, WORD biBitCount_,  DWORD biCompression_) :
-		subtype(subtype_),
-		biPlanes(biPlanes_),
-		biBitCount(biBitCount_),
-		biCompression(biCompression_)
+        subtype(subtype_),
+        biPlanes(biPlanes_),
+        biBitCount(biBitCount_),
+        biCompression(biCompression_)
 {
 }

@@ -39,7 +39,7 @@ extern HINSTANCE g_hInstance;
 
 CDivxDecoder::CDivxDecoder() :
     CDSBaseFilter(L"DivxVideo Filter", 1, 1),
-	m_Negotiator(CVideoFormatNegotiator::NORMAL_420, true)
+    m_Negotiator(CVideoFormatNegotiator::NORMAL_420, true)
 {
     LOG(DBGLOG_FLOW, ("CDivxDecoder::CreatePins\n"));
 

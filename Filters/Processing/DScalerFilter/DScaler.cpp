@@ -29,7 +29,7 @@ extern HINSTANCE g_hInstance;
 
 CDScaler::CDScaler() :
     CDSBaseFilter(L"DScaler Filter", 1, 1),
-	m_Negotiator(CVideoFormatNegotiator::NORMAL_420, false)
+    m_Negotiator(CVideoFormatNegotiator::NORMAL_420, false)
 {
     InitMediaType(&m_InternalMTInput);
     m_TypesChanged = TRUE;
