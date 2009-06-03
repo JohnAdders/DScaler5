@@ -911,7 +911,7 @@ HRESULT CDivxDecoder::ResetDivxDecoder()
     m_CodecContext->codec_tag = m_FourCC;
     m_CodecContext->error_concealment = 0;
     m_CodecContext->workaround_bugs = FF_BUG_AUTODETECT;
-    m_CodecContext->error_resilience = FF_ER_CAREFUL;
+    m_CodecContext->error_recognition = FF_ER_CAREFUL;
 #ifdef DEBUG
     m_CodecContext->debug = FF_DEBUG_STARTCODE | FF_DEBUG_BITSTREAM;
 #endif
@@ -1029,11 +1029,11 @@ void CDivxDecoder::avlog(void*,int,const char* szFormat, va_list Args)
     int result=_vsnprintf(szMessage,2048, szFormat, Args);
     if(result==-1)
     {
-        OutputDebugString("DebugString too long, truncated!!\n");
+        OutputDebugStringA("DebugString too long, truncated!!\n");
     }
     else
     {
-        OutputDebugString(szMessage);
+        OutputDebugStringA(szMessage);
     }
 }
 
