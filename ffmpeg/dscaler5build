@@ -1,12 +1,10 @@
 #!/bin/sh
-./dscaler5config
+./configure --extra-cflags="-mno-cygwin -mms-bitfields" --extra-ldflags="-Wl,--add-stdcall-alias,--enable-auto-input" --enable-memalign-hack --target-os=mingw32 --enable-shared --disable-static --disable-debug --disable-encoders --disable-muxers --disable-devices --enable-gpl
 make clean
 make
 mkdir ../Debug
 mkdir ../Release
-cp libavcodec/avcodec-51.dll ../Debug
-cp libavcodec/avcodec-51.dll ../Release
-cp libavformat/avformat-52.dll ../Debug
-cp libavformat/avformat-52.dll ../Release
-cp libavutil/avutil-49.dll ../Debug
-cp libavutil/avutil-49.dll ../Release
+./dscalercopyfile.sh libavcodec/avcodec-52 Debug Release
+./dscalercopyfile.sh libavformat/avformat-52 Debug Release
+./dscalercopyfile.sh libavutil/avutil-50 Debug Release
+./dscalercopyfile.sh libswscale/swscale-0 Debug Release

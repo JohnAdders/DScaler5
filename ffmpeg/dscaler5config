@@ -1,2 +1,0 @@
-#!/bin/sh
-./configure --extra-cflags="-DCONFIG_AUDIO_NONSHORT -mno-cygwin -mms-bitfields" --extra-ldflags="-Wl,-add-stdcall-alias" --enable-memalign-hack --target-os=mingw32 --enable-shared --disable-static --disable-ffmpeg --disable-ffserver --disable-ffplay --disable-debug --disable-encoders --disable-muxers --disable-devices --enable-gpl
