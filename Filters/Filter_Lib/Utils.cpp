@@ -175,9 +175,9 @@ const char* GetGUIDName(const GUID &guid)
     }
     BYTE *Uuid=NULL;
     static char uuidbuffer[50];
-    UuidToString(const_cast<UUID*>(&guid), &Uuid);
+    UuidToStringA(const_cast<UUID*>(&guid), &Uuid);
     sprintf(uuidbuffer,"{%s}",Uuid);
-    RpcStringFree(&Uuid);
+    RpcStringFreeA(&Uuid);
     return uuidbuffer;
 }
 
@@ -193,9 +193,9 @@ void _LOG(LPCSTR szFormat, ...)
     va_end(Args);
     if(result==-1)
     {
-        OutputDebugString("DebugString too long, truncated!!\n");
+        OutputDebugStringA("DebugString too long, truncated!!\n");
     }
-    OutputDebugString(szMessage);
+    OutputDebugStringA(szMessage);
 }
 
 void LogSample(IMediaSample* Sample, LPCSTR Desc)
@@ -378,7 +378,7 @@ HRESULT UnregisterFilter(const CLSID& clsidFilter)
 bool IsRunningInGraphEdit()
 {
     char szCmdLine[MAX_PATH*2 + 1];
-    strncpy(szCmdLine, GetCommandLine(), MAX_PATH*2);
+    strncpy(szCmdLine, GetCommandLineA(), MAX_PATH*2);
     _strlwr(szCmdLine);
     return (strstr(szCmdLine, "graphedt.exe") != NULL);
 }

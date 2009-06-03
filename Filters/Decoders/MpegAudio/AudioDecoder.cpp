@@ -1583,10 +1583,10 @@ void CAudioDecoder::avlog(void*,int,const char* szFormat, va_list Args)
     int result=_vsnprintf(szMessage,2048, szFormat, Args);
     if(result==-1)
     {
-        OutputDebugString("DebugString too long, truncated!!\n");
+        OutputDebugStringA("DebugString too long, truncated!!\n");
     }
     else
     {
-        OutputDebugString(szMessage);
+        OutputDebugStringA(szMessage);
     }
 }

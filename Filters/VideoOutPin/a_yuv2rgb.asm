@@ -27,7 +27,7 @@ segment .data
 
 segment .const
 
-        align    16
+align    16
 
 MMX_10w        dd    0x00100010, 0x00100010
 MMX_80w        dd    0x00800080, 0x00800080
@@ -50,7 +50,7 @@ MMX_Vcoeff0    dd    0x00000066, 0xFFCC0000
 MMX_Vcoeff1    dd    0xFFCC0000, 0x0066FFCC
 MMX_Vcoeff2    dd    0x0066FFCC, 0x00000066
 
-    .code
+segment .code
 
     global _asm_YUVtoRGB32_row
     global _asm_YUVtoRGB24_row
@@ -1904,6 +1904,3 @@ col_loop_ISSE16:
     pop    esi
     pop    ebx
     ret
-
-end
-

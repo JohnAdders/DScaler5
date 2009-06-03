@@ -138,7 +138,7 @@ typedef int16_t quantizer_t;
 #define SAMPLE(x) (sample_t)((x) * (1 << 30))
 #define LEVEL(x) (level_t)((x) * (1 << 26))
 
-#if 0
+#if defined (_M_AMD64)
 #define MUL(a,b) ((int)(((int64_t)(a) * (b) + (1 << 29)) >> 30))
 #define MUL_L(a,b) ((int)(((int64_t)(a) * (b) + (1 << 25)) >> 26))
 #elif 1

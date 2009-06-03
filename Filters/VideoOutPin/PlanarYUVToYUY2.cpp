@@ -36,6 +36,7 @@
 #include "stdafx.h"
 #include "PlanarYUVToYUY2.h"
 #include "CPUID.h"
+#include "mmintrin.h"
 
 #pragma warning(disable : 4799) // no emms... blahblahblah
 
@@ -454,12 +455,12 @@ bool BitBltFromI444ToYUY2(int w, int h, BYTE* dst, int dstpitch, BYTE* srcy, BYT
 void memcpy_accel(void* dst, const void* src, size_t len)
 {
     if((CpuFeatureFlags & FEATURE_SSE) && len >= 128
-        && !((DWORD)src&15) && !((DWORD)dst&15))
+        && !((LONG_PTR)src&15) && !((LONG_PTR)dst&15))
     {
         memcpy_accel_SSE(dst, src, len);
     }
     else if((CpuFeatureFlags & FEATURE_MMX) && len >= 64
-        && !((DWORD)src&7) && !((DWORD)dst&7))
+        && !((LONG_PTR)src&7) && !((LONG_PTR)dst&7))
     {
         memcpy_accel_MMX(dst, src, len);
     }

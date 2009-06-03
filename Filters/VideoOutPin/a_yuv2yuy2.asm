@@ -33,7 +33,7 @@ segment .const
 
     MMX_mask    dd    0x7f7f7f7f, 0x7f7f7f7f
 
-    .code
+segment .code
 
 proc _uvtonv12row_MMX, 0
     %$dst arg
@@ -467,5 +467,3 @@ memcpy_accel_mmx_end:
     pop        esi
     pop        edi
 endproc
-
-end
