@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /Yu"stdafx.h" /FD /GZ /c
-# ADD CPP /nologo /MTd /W3 /Gm /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /FR /Yu"stdafx.h" /FD /GZ /c
+# ADD CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /I "..\Common" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /FR /Yu"stdafx.h" /FD /GZ /c
 # ADD BASE RSC /l 0x809 /d "_DEBUG"
 # ADD RSC /l 0x809 /d "_DEBUG"
 BSC32=bscmake.exe
@@ -51,11 +51,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\Debug/GenDMOProp.dll" /pdbtype:sept
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib  Dmoguids.lib /nologo /subsystem:windows /dll /debug /machine:I386 /out:"..\Debug/GenDMOProp.dll" /pdbtype:sept
 # Begin Custom Build - Performing registration
 OutDir=.\Debug
-TargetPath=\Source\deinterlace\DScaler5\Debug\GenDMOProp.dll
-InputPath=\Source\deinterlace\DScaler5\Debug\GenDMOProp.dll
+TargetPath=\source\other\deinterlace\DScaler5\Debug\GenDMOProp.dll
+InputPath=\source\other\deinterlace\DScaler5\Debug\GenDMOProp.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -82,7 +82,7 @@ PostBuild_Cmds=cmd /c copy .\GenDMOProp.h ..\Common
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_STATIC_REGISTRY" /D "_ATL_MIN_CRT" /Yu"stdafx.h" /FD /c
-# ADD CPP /nologo /MT /W3 /O1 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_STATIC_REGISTRY" /D "_ATL_MIN_CRT" /FR /Yu"stdafx.h" /FD /c
+# ADD CPP /nologo /MT /W3 /GX /O1 /I "..\Common" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ATL_STATIC_REGISTRY" /D "_ATL_MIN_CRT" /FR /Yu"stdafx.h" /FD /c
 # ADD BASE RSC /l 0x809 /d "NDEBUG"
 # ADD RSC /l 0x809 /d "NDEBUG"
 BSC32=bscmake.exe
@@ -90,11 +90,11 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386
-# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\Release/GenDMOProp.dll"
+# ADD LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib Dmoguids.lib /nologo /subsystem:windows /dll /machine:I386 /out:"..\Release/GenDMOProp.dll"
 # Begin Custom Build - Performing registration
 OutDir=.\Release
-TargetPath=\Source\deinterlace\DScaler5\Release\GenDMOProp.dll
-InputPath=\Source\deinterlace\DScaler5\Release\GenDMOProp.dll
+TargetPath=\source\other\deinterlace\DScaler5\Release\GenDMOProp.dll
+InputPath=\source\other\deinterlace\DScaler5\Release\GenDMOProp.dll
 SOURCE="$(InputPath)"
 
 "$(OutDir)\regsvr32.trg" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -143,6 +143,10 @@ SOURCE=.\LicensePropPage.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\Common\SimplePropertyPage.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\StatisticsPropPage.cpp
 # End Source File
 # Begin Source File
@@ -168,6 +172,10 @@ SOURCE=.\Resource.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\Common\SimplePropertyPage.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\StatisticsPropPage.h
 # End Source File
 # Begin Source File
@@ -178,18 +186,6 @@ SOURCE=.\StdAfx.h
 # Begin Group "Resource Files"
 
 # PROP Default_Filter "ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe"
-# Begin Source File
-
-SOURCE=.\GenDMOPropPage.rgs
-# End Source File
-# Begin Source File
-
-SOURCE=.\LicensePropPage.rgs
-# End Source File
-# Begin Source File
-
-SOURCE=.\StatisticsPropPage.rgs
-# End Source File
 # End Group
 # End Target
 # End Project

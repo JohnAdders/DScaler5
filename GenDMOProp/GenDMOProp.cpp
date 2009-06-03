@@ -22,35 +22,36 @@
 #include "stdafx.h"
 #include "resource.h"
 #include <initguid.h>
-#include "GenDMOProp.h"
-
-#include "GenDMOProp_i.c"
 #include "GenDMOPropPage.h"
 #include "LicensePropPage.h"
 #include "StatisticsPropPage.h"
 
+#include "GenDMOProp_i.c"
+#include "yacl\include\combook.cpp"
 
-CComModule _Module;
+HINSTANCE g_hInstance = NULL;
 
-BEGIN_OBJECT_MAP(ObjectMap)
-OBJECT_ENTRY(CLSID_GenDMOPropPage, CGenDMOPropPage)
-OBJECT_ENTRY(CLSID_LicensePropPage, CLicensePropPage)
-OBJECT_ENTRY(CLSID_StatisticsPropPage, CStatisticsPropPage)
-END_OBJECT_MAP()
+BEGIN_COCLASS_TABLE(Classes)
+    IMPLEMENTS_COCLASS(GenDMOPropPage)
+    IMPLEMENTS_COCLASS(LicensePropPage)
+    IMPLEMENTS_COCLASS(StatisticsPropPage)
+END_COCLASS_TABLE()
+
+IMPLEMENT_DLL_MODULE_ROUTINES()
 
 /////////////////////////////////////////////////////////////////////////////
 // DLL Entry Point
 
-extern "C"
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 {
     if (dwReason == DLL_PROCESS_ATTACH)
     {
-        _Module.Init(ObjectMap, hInstance, &LIBID_GENDMOPROPLib);
+        g_hInstance = hInstance;
         DisableThreadLibraryCalls(hInstance);
     }
     else if (dwReason == DLL_PROCESS_DETACH)
-        _Module.Term();
+    {
+    }
     return TRUE;    // ok
 }
 
@@ -59,15 +60,15 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 
 STDAPI DllCanUnloadNow(void)
 {
-    return (_Module.GetLockCount()==0) ? S_OK : S_FALSE;
+    return ModuleIsIdle() ? S_OK : S_FALSE;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 // Returns a class factory to create an object of the requested type
 
-STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void **ppv)
 {
-    return _Module.GetClassObject(rclsid, riid, ppv);
+    return ClassTableGetClassObject(Classes, rclsid, riid, ppv);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -76,7 +77,7 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 STDAPI DllRegisterServer(void)
 {
     // registers object, typelib and all interfaces in typelib
-    return _Module.RegisterServer(TRUE);
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -84,7 +85,5 @@ STDAPI DllRegisterServer(void)
 
 STDAPI DllUnregisterServer(void)
 {
-    return _Module.UnregisterServer(TRUE);
+    return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
-
-

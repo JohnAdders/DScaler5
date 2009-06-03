@@ -24,23 +24,20 @@
 #include "StatisticsPropPage.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CStatisticsPropPage
+// StatisticsPropPage
 
-CStatisticsPropPage::CStatisticsPropPage()
+StatisticsPropPage::StatisticsPropPage() :
+    SimplePropertyPage(MAKEINTRESOURCE(IDD_STATISTICSPROPPAGE), IDS_TITLEStatisticsPropPage, IDS_DOCSTRINGStatisticsPropPage, IDS_HelpFile, 0)
 {
-    m_dwTitleID = IDS_TITLEStatisticsPropPage;
-    m_dwHelpFileID = IDS_HELPFILELicensePropPage;
-    m_dwDocStringID = IDS_DOCSTRINGStatisticsPropPage;
 }
 
-STDMETHODIMP CStatisticsPropPage::Apply(void)
+STDMETHODIMP StatisticsPropPage::Apply(void)
 {
-    ATLTRACE(_T("CStatisticsPropPage::Apply\n"));
-    m_bDirty = FALSE;
+    SetIsDirty(FALSE);
     return S_OK;
 }
 
-STDMETHODIMP CStatisticsPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
+STDMETHODIMP StatisticsPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
 {
     if(cObjects != 1)
     {
@@ -52,39 +49,44 @@ STDMETHODIMP CStatisticsPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     return S_OK;
 }
 
-STDMETHODIMP CStatisticsPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
+HRESULT StatisticsPropPage::OnActivate()
 {
     if(m_Statistics == NULL)
     {
         return E_UNEXPECTED;
     }
 
-    HRESULT hr = IPropertyPageImpl<CStatisticsPropPage>::Activate(hWndParent,pRect,bModal);
-    if(FAILED(hr))
-    {
-        return hr;
-    }
-
-
     DWORD NumProps;
 
-    hr = m_Statistics->get_NumStatistics(&NumProps);
+    HRESULT hr = m_Statistics->get_NumStatistics(&NumProps);
     if(FAILED(hr)) return hr;
 
-    SendMessageW(GetDlgItem(IDC_LIST1), LB_RESETCONTENT, 0, 0);
-
+    SendMessageW(GetDlgItem(m_hWnd, IDC_LIST1), LB_RESETCONTENT, 0, 0);
 
     for(DWORD i = 0; i < NumProps; ++i)
     {
         BSTR Name = NULL;
         hr = m_Statistics->get_StatisticName(i, &Name);
         if(FAILED(hr)) return hr;
-        SendMessageW(GetDlgItem(IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Name);
+        SendMessageW(GetDlgItem(m_hWnd, IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Name);
+        SysFreeString(Name);
         BSTR Value = NULL;
         hr = m_Statistics->get_StatisticValue(i, &Value);
         if(FAILED(hr)) return hr;
-        SendMessageW(GetDlgItem(IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Value);
+        SendMessageW(GetDlgItem(m_hWnd, IDC_LIST1), LB_INSERTSTRING , -1, (LPARAM)Value);
+        SysFreeString(Value);
     }
 
     return S_OK;
 }
+
+HRESULT StatisticsPropPage::OnDeactivate()
+{
+    return S_OK;
+}
+
+INT_PTR StatisticsPropPage::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
+}
+

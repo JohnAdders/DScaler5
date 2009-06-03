@@ -23,44 +23,31 @@
 #define __LICENSEPROPPAGE_H_
 
 #include "resource.h"       // main symbols
+#include "GenDMOProp.h"
+#include "SimplePropertyPage.h"
 
-EXTERN_C const CLSID CLSID_LicensePropPage;
 
 /////////////////////////////////////////////////////////////////////////////
-// CLicensePropPage
-class ATL_NO_VTABLE CLicensePropPage :
-    public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CLicensePropPage, &CLSID_LicensePropPage>,
-    public IPropertyPageImpl<CLicensePropPage>,
-    public CDialogImpl<CLicensePropPage>
+// LicensePropPage
+class LicensePropPage :
+      public SimplePropertyPage
 {
 public:
-    CLicensePropPage();
+    LicensePropPage();
 
-    enum {IDD = IDD_LICENSEPROPPAGE};
-
-DECLARE_REGISTRY_RESOURCEID(IDR_LICENSEPROPPAGE)
-
-DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-BEGIN_COM_MAP(CLicensePropPage)
-    COM_INTERFACE_ENTRY(IPropertyPage)
-END_COM_MAP()
-
-BEGIN_MSG_MAP(CLicensePropPage)
-    CHAIN_MSG_MAP(IPropertyPageImpl<CLicensePropPage>)
-END_MSG_MAP()
-// Handler prototypes:
-//  LRESULT MessageHandler(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
-//  LRESULT CommandHandler(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-//  LRESULT NotifyHandler(int idCtrl, LPNMHDR pnmh, BOOL& bHandled);
+IMPLEMENT_AGGREGATABLE_COCLASS(LicensePropPage, "{FDA2243F-7BAA-11D7-B84B-0002A5623377}", "'LicensePropPage Class", "GenDMOProp.'LicensePropPage.1", "GenDMOProp.'LicensePropPage", "both")
+    IMPLEMENTS_INTERFACE(IPropertyPage)
+    IMPLEMENTS_INTERFACE(IUnknown)
+END_INTERFACE_TABLE()
 
     STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
-    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 
 private:
-    CComQIPtr<IAmFreeSoftwareLicensed> m_License;
+    virtual INT_PTR DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+    virtual HRESULT OnActivate();
+    virtual HRESULT OnDeactivate();
+    SI(IAmFreeSoftwareLicensed) m_License;
 };
 
 #endif //__LICENSEPROPPAGE_H_

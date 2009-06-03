@@ -23,54 +23,36 @@
 #define __GENDMOPROPPAGE_H_
 
 #include "resource.h"       // main symbols
-
-EXTERN_C const CLSID CLSID_GenDMOPropPage;
+#include "GenDMOProp.h"
+#include "SimplePropertyPage.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CGenDMOPropPage
-class ATL_NO_VTABLE CGenDMOPropPage :
-    public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CGenDMOPropPage, &CLSID_GenDMOPropPage>,
-    public IPropertyPageImpl<CGenDMOPropPage>,
-    public CDialogImpl<CGenDMOPropPage>
+// GenDMOPropPage
+class GenDMOPropPage :
+      public SimplePropertyPage
 {
 public:
-    CGenDMOPropPage();
-    ~CGenDMOPropPage();
+    GenDMOPropPage();
+    ~GenDMOPropPage();
 
-    enum {IDD = IDD_GENDMOPROPPAGE};
+IMPLEMENT_AGGREGATABLE_COCLASS(GenDMOPropPage, "{0E938757-7AED-11D7-B84B-0002A5623377}", "GenDMOPropPage Class", "GenDMOProp.GenDMOPropPage.1", "GenDMOProp.GenDMOPropPage", "both")
+    IMPLEMENTS_INTERFACE(IPropertyPage)
+    IMPLEMENTS_INTERFACE(IUnknown)
+END_INTERFACE_TABLE()
 
-DECLARE_REGISTRY_RESOURCEID(IDR_GENDMOPROPPAGE)
-
-DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-BEGIN_COM_MAP(CGenDMOPropPage)
-    COM_INTERFACE_ENTRY(IPropertyPage)
-END_COM_MAP()
-
-BEGIN_MSG_MAP(CGenDMOPropPage)
-    COMMAND_HANDLER(IDC_PARAMETERLIST, LBN_SELCHANGE, OnListSelChange)
-    COMMAND_HANDLER(IDC_EDIT, EN_CHANGE, OnEditChange);
-    COMMAND_HANDLER(IDC_COMBO, CBN_SELCHANGE, OnComboChange);
-    COMMAND_HANDLER(IDC_CHECK, BN_CLICKED, OnCheckBoxClick);
-    COMMAND_HANDLER(IDC_RESETDEFAULTS, BN_CLICKED, OnBnClickedResetdefaults)
-    CHAIN_MSG_MAP(IPropertyPageImpl<CGenDMOPropPage>)
-END_MSG_MAP()
 // Handler prototypes:
-    LRESULT OnListSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnComboChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
-    LRESULT OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/);
+    void OnListSelChange(UINT wNotifyCode, int wID, HWND hWndCtl);
+    void OnEditChange(UINT wNotifyCode, int wID, HWND hWndCtl);
+    void OnComboChange(UINT wNotifyCode, int wID, HWND hWndCtl);
+    void OnCheckBoxClick(UINT wNotifyCode, int wID, HWND hWndCtl);
+    void OnBnClickedResetdefaults(UINT wNotifyCode, int wID, HWND hWndCtl);
 
-    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
     STDMETHOD(Apply)(void);
     STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
-    STDMETHOD(Deactivate)(void);
     BOOL HasAnythingChanged();
-    void SetDirty(BOOL bDirty);
 
 private:
+    void OnCommand(HWND hDlg, int id, HWND hwndCtl, UINT codeNotify);
     void GetValueFromControls();
     void GetIntValue();
     void GetFloatValue();
@@ -85,17 +67,21 @@ private:
     void GetTextSize(WCHAR *wcItem,SIZE &size);
 
 private:
-    CComQIPtr<IMediaParamInfo> m_MediaParamInfo;
-    CComQIPtr<IMediaParams> m_MediaParams;
-    CComQIPtr<ISaveDefaults> m_SaveDefaults;
-    CWindow m_EditBox;
-    CWindow m_ListBox;
-    CWindow m_CheckBox;
-    CWindow m_Slider;
-    CWindow m_Scrollbar;
-    CWindow m_Combo;
-    CWindow m_DefaultsBtn;
-    CWindow m_BoolDesc;
+    virtual INT_PTR DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+    virtual HRESULT OnActivate();
+    virtual HRESULT OnDeactivate();
+
+    SI(IMediaParamInfo) m_MediaParamInfo;
+    SI(IMediaParams) m_MediaParams;
+    SI(ISaveDefaults) m_SaveDefaults;
+    HWND m_EditBox;
+    HWND m_ListBox;
+    HWND m_CheckBox;
+    HWND m_Slider;
+    HWND m_Scrollbar;
+    HWND m_Combo;
+    HWND m_DefaultsBtn;
+    HWND m_BoolDesc;
     MP_DATA* m_Params;
     MP_PARAMINFO* m_ParamInfos;
     WCHAR** m_ParamTexts;

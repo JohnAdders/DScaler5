@@ -23,40 +23,30 @@
 #define __STATISTICSPROPPAGE_H_
 
 #include "resource.h"       // main symbols
-
-EXTERN_C const CLSID CLSID_StatisticsPropPage;
+#include "GenDMOProp.h"
+#include "SimplePropertyPage.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CStatisticsPropPage
-class ATL_NO_VTABLE CStatisticsPropPage :
-    public CComObjectRootEx<CComMultiThreadModel>,
-    public CComCoClass<CStatisticsPropPage, &CLSID_LicensePropPage>,
-    public IPropertyPageImpl<CStatisticsPropPage>,
-    public CDialogImpl<CStatisticsPropPage>
+// StatisticsPropPage
+class StatisticsPropPage :
+      public SimplePropertyPage
 {
 public:
-    CStatisticsPropPage();
+    StatisticsPropPage();
 
-    enum {IDD = IDD_STATISTICSPROPPAGE};
+IMPLEMENT_AGGREGATABLE_COCLASS(StatisticsPropPage, "{3DDF3FE5-24D4-4289-9143-E1FFD70CD934}", "StatisticsPropPage Class", "GenDMOProp.StatisticsPropPage.1", "GenDMOProp.StatisticsPropPage", "both")
+    IMPLEMENTS_INTERFACE(IPropertyPage)
+    IMPLEMENTS_INTERFACE(IUnknown)
+END_INTERFACE_TABLE()
 
-DECLARE_REGISTRY_RESOURCEID(IDR_STATISTICSPROPPAGE)
-
-DECLARE_PROTECT_FINAL_CONSTRUCT()
-
-BEGIN_COM_MAP(CStatisticsPropPage)
-    COM_INTERFACE_ENTRY(IPropertyPage)
-END_COM_MAP()
-
-BEGIN_MSG_MAP(CStatisticsPropPage)
-    CHAIN_MSG_MAP(IPropertyPageImpl<CStatisticsPropPage>)
-END_MSG_MAP()
-
+    STDMETHOD(SetObjects)(ULONG cObjects, IUnknown **ppUnk);
     STDMETHOD(Apply)(void);
-    STDMETHOD(SetObjects)(ULONG cObjects,IUnknown **ppUnk);
-    STDMETHOD(Activate)(HWND hWndParent,LPCRECT pRect,BOOL bModal);
 
 private:
-    CComQIPtr<IHaveStatistics> m_Statistics;
+    virtual INT_PTR DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+    virtual HRESULT OnActivate();
+    virtual HRESULT OnDeactivate();
+    SI(IHaveStatistics) m_Statistics;
 };
 
 #endif //__LICENSEPROPPAGE_H_

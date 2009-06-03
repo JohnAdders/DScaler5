@@ -28,25 +28,25 @@
 #ifndef _INTTABLE_H
 #define _INTTABLE_H
 
-typedef HRESULT (STDAPICALLTYPE *INTERFACE_FINDER)(void *pThis, DWORD dwData, REFIID riid, void **ppv);
+typedef HRESULT (STDAPICALLTYPE *INTERFACE_FINDER)(void *pThis, LONG_PTR dwData, REFIID riid, void **ppv);
 #define ENTRY_IS_OFFSET INTERFACE_FINDER(-1)
 
 // basic table layout
 typedef struct _INTERFACE_ENTRY
 {
-    const IID * pIID;           // the IID to match
-    INTERFACE_FINDER pfnFinder; // finder function
-    long        dwData;         // aux data for finder function
+    const IID*       pIID;           // the IID to match
+    INTERFACE_FINDER pfnFinder;      // finder function
+    LONG_PTR         dwData;         // aux data for finder function
 } INTERFACE_ENTRY;
 
 // the routine that implements QueryInterface basd on the table
 EXTERN_C HRESULT STDAPICALLTYPE InterfaceTableQueryInterface(void *pThis, const INTERFACE_ENTRY *pTable, REFIID riid, void **ppv);
 
 #define BASE_OFFSET(ClassName, BaseName) \
-    (DWORD(static_cast<BaseName*>(reinterpret_cast<ClassName*>(0x10000000))) - 0x10000000)
+    (LONG_PTR(static_cast<BaseName*>(reinterpret_cast<ClassName*>(0x10000000))) - 0x10000000)
 
 #define COMPOSITE_OFFSET(ClassName, BaseName, MemberType, MemberName) \
-    (DWORD(static_cast<BaseName*>(reinterpret_cast<MemberType*>(0x10000000 + offsetof(ClassName, MemberName)))) - 0x10000000)
+    (LONG_PTR(static_cast<BaseName*>(reinterpret_cast<MemberType*>(0x10000000 + offsetof(ClassName, MemberName)))) - 0x10000000)
 
 #define BEGIN_INTERFACE_TABLE(ClassName) \
 typedef ClassName _InterfaceTableClassName;\

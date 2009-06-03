@@ -25,20 +25,28 @@
 #include ".\gendmoproppage.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CGenDMOPropPage
+// GenDMOPropPage
 
-CGenDMOPropPage::CGenDMOPropPage()
+GenDMOPropPage::GenDMOPropPage() :
+    SimplePropertyPage(MAKEINTRESOURCE(IDD_GENDMOPROPPAGE), IDS_TITLEGenDMOPropPage, IDS_DOCSTRINGGenDMOPropPage, IDS_HelpFile, 0)
 {
-    m_dwTitleID = IDS_TITLEGenDMOPropPage;
-    m_dwHelpFileID = IDS_HELPFILEGenDMOPropPage;
-    m_dwDocStringID = IDS_DOCSTRINGGenDMOPropPage;
     m_NumParams = 0;
     m_ParamTexts = 0;
     m_Params = 0;
     m_ParamInfos = 0;
+
+    m_ListBox = NULL;
+    m_EditBox = NULL;
+    m_CheckBox = NULL;
+    m_Slider = NULL;
+    m_Scrollbar = NULL;
+    m_Combo = NULL;
+    m_DefaultsBtn = NULL;
+    m_BoolDesc = NULL;
+
 }
 
-CGenDMOPropPage::~CGenDMOPropPage()
+GenDMOPropPage::~GenDMOPropPage()
 {
     for(DWORD i(0); i < m_NumParams; ++i)
     {
@@ -53,30 +61,28 @@ CGenDMOPropPage::~CGenDMOPropPage()
     m_ParamInfos = NULL;
 }
 
-STDMETHODIMP CGenDMOPropPage::Deactivate()
+HRESULT GenDMOPropPage::OnDeactivate()
 {
     // as a side effect this updates the
     // values from the controls before
     // we destroy the window
-    SetDirty(HasAnythingChanged());
+    SetIsDirty(HasAnythingChanged());
 
-    m_ListBox.Detach();
-    m_EditBox.Detach();
-    m_CheckBox.Detach();
-    m_Slider.Detach();
-    m_Scrollbar.Detach();
-    m_Combo.Detach();
-    m_DefaultsBtn.Detach();
-    m_BoolDesc.Detach();
+    m_ListBox = NULL;
+    m_EditBox = NULL;
+    m_CheckBox = NULL;
+    m_Slider = NULL;
+    m_Scrollbar = NULL;
+    m_Combo = NULL;
+    m_DefaultsBtn = NULL;
+    m_BoolDesc = NULL;
 
-    return IPropertyPageImpl<CGenDMOPropPage>::Deactivate();
+    return S_OK;
 }
 
-STDMETHODIMP CGenDMOPropPage::Apply(void)
+HRESULT GenDMOPropPage::Apply(void)
 {
-    ATLTRACE(_T("CGenDMOPropPage::Apply\n"));
-
-    if(IsWindow())
+    if(IsWindow(m_hWnd) && m_MediaParams)
     {
         GetValueFromControls();
     }
@@ -106,14 +112,14 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
 
     if(ShowMessage)
     {
-        MessageBox("Some of the properties you attempted to change cannot be altered "
-                   "while filter is connected, you will need to restart the program "
-                   "for the change to take effect.", "Warning", MB_OK);
+        MessageBoxW(m_hWnd, L"Some of the properties you attempted to change cannot be altered "
+                            L"while filter is connected, you will need to restart the program "
+                            L"for the change to take effect.", L"Warning", MB_OK);
     }
 
-    m_bDirty = FALSE;
+    SetIsDirty(FALSE);
 
-    if(::IsWindow(m_hWnd))
+    if(IsWindow(m_hWnd))
     {
         SetupControls();
     }
@@ -121,7 +127,7 @@ STDMETHODIMP CGenDMOPropPage::Apply(void)
     return S_OK;
 }
 
-STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
+STDMETHODIMP GenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
 {
     if(cObjects != 1)
     {
@@ -176,57 +182,52 @@ STDMETHODIMP CGenDMOPropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
     }
     else
     {
-        m_MediaParamInfo.Release();
-        m_MediaParams.Release();
+        m_MediaParamInfo.Detach();
+        m_MediaParams.Detach();
     }
 
     return S_OK;
 }
 
-STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
+HRESULT GenDMOPropPage::OnActivate()
 {
     if(m_MediaParamInfo == NULL || m_MediaParams == NULL)
     {
         return E_UNEXPECTED;
     }
 
-    HRESULT hr = IPropertyPageImpl<CGenDMOPropPage>::Activate(hWndParent,pRect,bModal);
-    if(FAILED(hr))
-    {
-        return hr;
-    }
-    if(::IsWindow(m_hWnd))
+    if(IsWindow(m_hWnd))
     {
         // Initialize the dialog
-        m_ListBox.Attach(GetDlgItem(IDC_PARAMETERLIST));
-        m_EditBox.Attach(GetDlgItem(IDC_EDIT));
-        m_CheckBox.Attach(GetDlgItem(IDC_CHECK));
-        m_Slider.Attach(GetDlgItem(IDC_SLIDER));
-        m_Scrollbar.Attach(GetDlgItem(IDC_SCROLLBAR));
-        m_Combo.Attach(GetDlgItem(IDC_COMBO));
-        m_DefaultsBtn.Attach(GetDlgItem(IDC_SAVEDEFAULTS));
-        m_BoolDesc.Attach(GetDlgItem(IDC_BOOLDESC));
+        m_ListBox = GetDlgItem(m_hWnd, IDC_PARAMETERLIST);
+        m_EditBox = GetDlgItem(m_hWnd, IDC_EDIT);
+        m_CheckBox = GetDlgItem(m_hWnd, IDC_CHECK);
+        m_Slider = GetDlgItem(m_hWnd, IDC_SLIDER);
+        m_Scrollbar = GetDlgItem(m_hWnd, IDC_SCROLLBAR);
+        m_Combo = GetDlgItem(m_hWnd, IDC_COMBO);
+        m_DefaultsBtn = GetDlgItem(m_hWnd, IDC_SAVEDEFAULTS);
+        m_BoolDesc = GetDlgItem(m_hWnd, IDC_BOOLDESC);
 
-        m_EditBox.ShowWindow(SW_HIDE);
-        m_CheckBox.ShowWindow(SW_HIDE);
-        m_Slider.ShowWindow(SW_HIDE);
-        m_Scrollbar.ShowWindow(SW_HIDE);
-        m_Combo.ShowWindow(SW_HIDE);
-        m_BoolDesc.ShowWindow(SW_HIDE);
+        ShowWindow(m_EditBox, SW_HIDE);
+        ShowWindow(m_CheckBox, SW_HIDE);
+        ShowWindow(m_Slider, SW_HIDE);
+        ShowWindow(m_Scrollbar, SW_HIDE);
+        ShowWindow(m_Combo, SW_HIDE);
+        ShowWindow(m_BoolDesc, SW_HIDE);
 
         if(!m_SaveDefaults)
         {
-            m_DefaultsBtn.ShowWindow(SW_HIDE);
+            ShowWindow(m_DefaultsBtn, SW_HIDE);
         }
 
         // load up the names into the list box
-        m_ListBox.SendMessage(LB_RESETCONTENT, 0, 0);
-        m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT,0,0);
+        SendMessage(m_ListBox, LB_RESETCONTENT, 0, 0);
+        SendMessage(m_ListBox, LB_SETHORIZONTALEXTENT,0,0);
 
         int MaxWidth=0;
         for(DWORD i(0); i < m_NumParams; ++i)
         {
-            SendMessageW(m_ListBox.m_hWnd, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
+            SendMessageW(m_ListBox, LB_ADDSTRING, 0, (LPARAM)m_ParamTexts[i]);
 
             // get the size of the text and adjust the horizontal scrollbar if nessesary
             SIZE size;
@@ -234,7 +235,7 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
             if(size.cx > MaxWidth)
             {
                 MaxWidth = size.cx;
-                m_ListBox.SendMessage(LB_SETHORIZONTALEXTENT, MaxWidth + 4, 0);
+                SendMessage(m_ListBox, LB_SETHORIZONTALEXTENT, MaxWidth + 4, 0);
             }
         }
         m_CurrentParam = 0;
@@ -242,68 +243,64 @@ STDMETHODIMP CGenDMOPropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal
         SetupControls();
     }
 
-    return hr;
+    return S_OK;
 }
 
-void CGenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
+void GenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
 {
-    HDC hDC = m_ListBox.GetDC();
-    HFONT hListBoxFont = m_ListBox.GetFont();
+    HDC hDC = GetDC(m_ListBox);
+    HFONT hListBoxFont = (HFONT)SendMessage(m_ListBox, WM_GETFONT, 0, 0);
     if(hListBoxFont != NULL)
     {
         HFONT hOldFont = (HFONT)SelectObject(hDC,(HGDIOBJ)hListBoxFont);
         GetTextExtentPoint32W(hDC, wcItem, wcslen(wcItem), &size);
         SelectObject(hDC,hOldFont);
     }
-    ReleaseDC(hDC);
+    ReleaseDC(m_ListBox, hDC);
 }
 
 
 
-void CGenDMOPropPage::SetupControls()
+void GenDMOPropPage::SetupControls()
 {
     if(m_NumParams == 0)
     {
         return;
     }
-    m_EditBox.ShowWindow(SW_HIDE);
-    m_CheckBox.ShowWindow(SW_HIDE);
-    m_Slider.ShowWindow(SW_HIDE);
-    m_Scrollbar.ShowWindow(SW_HIDE);
-    m_Combo.ShowWindow(SW_HIDE);
-    m_BoolDesc.ShowWindow(SW_HIDE);
+    ShowWindow(m_EditBox, SW_HIDE);
+    ShowWindow(m_CheckBox, SW_HIDE);
+    ShowWindow(m_Slider, SW_HIDE);
+    ShowWindow(m_Scrollbar, SW_HIDE);
+    ShowWindow(m_Combo, SW_HIDE);
+    ShowWindow(m_BoolDesc, SW_HIDE);
 
     if(m_CurrentParam > m_NumParams)
     {
         // avoid crashing
         return;
     }
-    m_ListBox.SendMessage(LB_SETCURSEL, m_CurrentParam, 0);
+    SendMessage(m_ListBox, LB_SETCURSEL, m_CurrentParam, 0);
 
     WCHAR* CurParamText = &m_ParamTexts[m_CurrentParam][0];
 
     switch(m_ParamInfos[m_CurrentParam].mpType)
     {
     case MPT_INT:
-        m_EditBox.ShowWindow(SW_SHOW);
-        //m_Slider.ShowWindow(SW_SHOW);
-        //m_Scrollbar.ShowWindow(SW_SHOW);
+        ShowWindow(m_EditBox, SW_SHOW);
         SetupIntValue();
         break;
     case MPT_FLOAT:
-        m_EditBox.ShowWindow(SW_SHOW);
-        //m_Slider.ShowWindow(SW_SHOW);
-        //m_Scrollbar.ShowWindow(SW_SHOW);
+        ShowWindow(m_EditBox, SW_SHOW);
         SetupFloatValue();
         break;
     case MPT_BOOL:
-        m_CheckBox.ShowWindow(SW_SHOW);
-        m_BoolDesc.ShowWindow(SW_SHOW);
-        SendMessageW(m_BoolDesc.m_hWnd, WM_SETTEXT, 0, (LPARAM)CurParamText);
+        ShowWindow(m_CheckBox, SW_SHOW);
+        ShowWindow(m_BoolDesc, SW_SHOW);
+        SendMessageW(m_BoolDesc, WM_SETTEXT, 0, (LPARAM)CurParamText);
         SetupBoolValue();
         break;
     case MPT_ENUM:
-        m_Combo.ShowWindow(SW_SHOW);
+        ShowWindow(m_Combo, SW_SHOW);
         SetupEnumCombo();
         SetupEnumValue();
         break;
@@ -316,54 +313,54 @@ void CGenDMOPropPage::SetupControls()
     if(CurParamText == L'\0') return;
 
     // select the units
-    SendMessageW(GetDlgItem(IDC_UNITS), WM_SETTEXT, 0, (LPARAM)CurParamText);
+    SendMessageW(GetDlgItem(m_hWnd, IDC_UNITS), WM_SETTEXT, 0, (LPARAM)CurParamText);
 
 }
 
-void CGenDMOPropPage::SetupIntValue()
+void GenDMOPropPage::SetupIntValue()
 {
     BSTR Text = NULL;
     HRESULT hr = VarBstrFromI4((long)m_Params[m_CurrentParam], 0x0409, LOCALE_NOUSEROVERRIDE, &Text);
     if(SUCCEEDED(hr))
     {
-        SendMessageW(m_EditBox.m_hWnd, WM_SETTEXT, 0, (LPARAM)Text);
+        SendMessageW(m_EditBox, WM_SETTEXT, 0, (LPARAM)Text);
         SysFreeString(Text);
     }
 }
 
-void CGenDMOPropPage::SetupFloatValue()
+void GenDMOPropPage::SetupFloatValue()
 {
     BSTR Text = NULL;
     HRESULT hr = VarBstrFromR4((float)m_Params[m_CurrentParam], 0x0409, LOCALE_NOUSEROVERRIDE, &Text);
     if(SUCCEEDED(hr))
     {
-        SendMessageW(m_EditBox.m_hWnd, WM_SETTEXT, 0, (LPARAM)Text);
+        SendMessageW(m_EditBox, WM_SETTEXT, 0, (LPARAM)Text);
         SysFreeString(Text);
     }
 }
 
-void CGenDMOPropPage::SetupBoolValue()
+void GenDMOPropPage::SetupBoolValue()
 {
     if(m_Params[m_CurrentParam] != 0)
     {
-        m_CheckBox.SendMessage(BM_SETCHECK, BST_CHECKED, 0);
+        SendMessage(m_CheckBox, BM_SETCHECK, BST_CHECKED, 0);
     }
     else
     {
-        m_CheckBox.SendMessage(BM_SETCHECK, BST_UNCHECKED, 0);
+        SendMessage(m_CheckBox, BM_SETCHECK, BST_UNCHECKED, 0);
     }
 }
 
-void CGenDMOPropPage::SetupEnumValue()
+void GenDMOPropPage::SetupEnumValue()
 {
     long Sel = (long)m_Params[m_CurrentParam];
-    m_CheckBox.SendMessage(CB_SETCURSEL, Sel, 0);
+    SendMessage(m_CheckBox, CB_SETCURSEL, Sel, 0);
 }
 
-void CGenDMOPropPage::SetupEnumCombo()
+void GenDMOPropPage::SetupEnumCombo()
 {
     //empty combo
-    m_Combo.SendMessage(CB_RESETCONTENT, 0, 0);
+    SendMessage(m_Combo, CB_RESETCONTENT, 0, 0);
 
     WCHAR* CurString = &m_ParamTexts[m_CurrentParam][0];
 
@@ -377,17 +374,17 @@ void CGenDMOPropPage::SetupEnumCombo()
     // so we keep going until we find an empty string
     while(*CurString != L'\0')
     {
-        SendMessageW(m_Combo.m_hWnd, CB_ADDSTRING, 0, (LPARAM)CurString);
+        SendMessageW(m_Combo, CB_ADDSTRING, 0, (LPARAM)CurString);
         CurString += wcslen(CurString) + 1;
     }
-    long Items = m_Combo.SendMessage(CB_GETCOUNT, 0, 0);
+    long Items = SendMessage(m_Combo, CB_GETCOUNT, 0, 0);
     if((long)m_Params[m_CurrentParam] < Items)
     {
-        m_Combo.SendMessage(CB_SETCURSEL, (long)m_Params[m_CurrentParam], 0);
+        SendMessage(m_Combo, CB_SETCURSEL, (long)m_Params[m_CurrentParam], 0);
     }
 }
 
-void CGenDMOPropPage::GetValueFromControls()
+void GenDMOPropPage::GetValueFromControls()
 {
     if(m_ParamInfos == NULL)
     {
@@ -412,55 +409,49 @@ void CGenDMOPropPage::GetValueFromControls()
     }
 }
 
-void CGenDMOPropPage::GetIntValue()
+void GenDMOPropPage::GetIntValue()
 {
-    BSTR Text = NULL;
-    m_EditBox.GetWindowText(Text);
+    std::vector<wchar_t> Text(128);
+    GetWindowTextW(m_EditBox, &Text[0], 128);
     long NewValue;
-    HRESULT hr = VarI4FromStr(Text, 0x0409, LOCALE_NOUSEROVERRIDE, &NewValue);
+    HRESULT hr = VarI4FromStr(&Text[0], 0x0409, LOCALE_NOUSEROVERRIDE, &NewValue);
     if(SUCCEEDED(hr))
     {
         m_Params[m_CurrentParam] = (MP_DATA)NewValue;
     }
-    SysFreeString(Text);
 }
 
-void CGenDMOPropPage::GetFloatValue()
+void GenDMOPropPage::GetFloatValue()
 {
-    BSTR Text = NULL;
-    m_EditBox.GetWindowText(Text);
+    std::vector<wchar_t> Text(128);
+    GetWindowTextW(m_EditBox, &Text[0], 128);
     float NewValue;
-    HRESULT hr = VarR4FromStr(Text, 0x0409, LOCALE_NOUSEROVERRIDE, &NewValue);
+    HRESULT hr = VarR4FromStr(&Text[0], 0x0409, LOCALE_NOUSEROVERRIDE, &NewValue);
     if(SUCCEEDED(hr))
     {
         m_Params[m_CurrentParam] = (MP_DATA)NewValue;
     }
-    SysFreeString(Text);
 }
 
-void CGenDMOPropPage::GetBoolValue()
+void GenDMOPropPage::GetBoolValue()
 {
-    m_Params[m_CurrentParam] = (MP_DATA)(BOOL)(m_CheckBox.SendMessage(BM_GETCHECK, 0, 0) == BST_CHECKED);
+    m_Params[m_CurrentParam] = (MP_DATA)(BOOL)(SendMessage(m_CheckBox, BM_GETCHECK, 0, 0) == BST_CHECKED);
 }
 
-void CGenDMOPropPage::GetEnumValue()
+void GenDMOPropPage::GetEnumValue()
 {
-    m_Params[m_CurrentParam] = (MP_DATA)(long)m_Combo.SendMessage(CB_GETCURSEL, 0, 0);
+    m_Params[m_CurrentParam] = (MP_DATA)(long)SendMessage(m_Combo, CB_GETCURSEL, 0, 0);
 }
 
-LRESULT CGenDMOPropPage::OnListSelChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+void GenDMOPropPage::OnListSelChange(UINT wNotifyCode, int wID, HWND hWndCtl)
 {
     GetValueFromControls();
-    if(!m_bDirty)
-    {
-        SetDirty(HasAnythingChanged());
-    }
-    m_CurrentParam = m_ListBox.SendMessage(LB_GETCURSEL, 0, 0);
+    SetIsDirty(HasAnythingChanged());
+    m_CurrentParam = SendMessage(m_ListBox, LB_GETCURSEL, 0, 0);
     SetupControls();
-    return 0;
 }
 
-BOOL CGenDMOPropPage::HasAnythingChanged()
+BOOL GenDMOPropPage::HasAnythingChanged()
 {
     GetValueFromControls();
 
@@ -477,46 +468,22 @@ BOOL CGenDMOPropPage::HasAnythingChanged()
     return FALSE;
 }
 
-LRESULT CGenDMOPropPage::OnEditChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+void GenDMOPropPage::OnEditChange(UINT wNotifyCode, int wID, HWND hWndCtl)
 {
-    if(!m_bDirty)
-    {
-        SetDirty(HasAnythingChanged());
-    }
-    return 0;
+    SetIsDirty(HasAnythingChanged());
 }
 
-LRESULT CGenDMOPropPage::OnComboChange(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+void GenDMOPropPage::OnComboChange(UINT wNotifyCode, int wID, HWND hWndCtl)
 {
-    if(!m_bDirty)
-    {
-        SetDirty(HasAnythingChanged());
-    }
-    return 0;
+    SetIsDirty(HasAnythingChanged());
 }
 
-LRESULT CGenDMOPropPage::OnCheckBoxClick(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
+void GenDMOPropPage::OnCheckBoxClick(UINT wNotifyCode, int wID, HWND hWndCtl)
 {
-    if(!m_bDirty)
-    {
-        SetDirty(HasAnythingChanged());
-    }
-    return 0;
+    SetIsDirty(HasAnythingChanged());
 }
 
-
-// we need to override this to get
-// the normal apply and cancel  behaviour
-void CGenDMOPropPage::SetDirty(BOOL bDirty)
-{
-    if (m_bDirty != bDirty)
-    {
-        m_bDirty = bDirty;
-        m_pPageSite->OnStatusChange(bDirty ? PROPPAGESTATUS_DIRTY : 0);
-    }
-}
-
-LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*wID*/, HWND /*hWndCtl*/, BOOL& /*bHandled*/)
+void GenDMOPropPage::OnBnClickedResetdefaults(UINT wNotifyCode, int wID, HWND hWndCtl)
 {
     for (DWORD i(0); i < m_NumParams; ++i)
     {
@@ -524,7 +491,54 @@ LRESULT CGenDMOPropPage::OnBnClickedResetdefaults(WORD /*wNotifyCode*/, WORD /*w
     }
 
     SetupControls();
-    SetDirty(HasAnythingChanged());
-    return 0;
+    SetIsDirty(HasAnythingChanged());
+}
+
+void GenDMOPropPage::OnCommand(HWND hDlg, int id, HWND hwndCtl, UINT codeNotify)
+{
+    switch(id)
+    {
+    case IDC_PARAMETERLIST:
+        if(LBN_SELCHANGE == codeNotify)
+        {
+            OnListSelChange(codeNotify, id, hwndCtl);
+        }
+        break;
+    case IDC_EDIT:
+        if(EN_CHANGE == codeNotify)
+        {
+            OnEditChange(codeNotify, id, hwndCtl);
+        }
+        break;
+    case IDC_COMBO:
+        if(CBN_SELCHANGE == codeNotify)
+        {
+            OnComboChange(codeNotify, id, hwndCtl);
+        }
+        break;
+    case IDC_CHECK:
+        if(BN_CLICKED == codeNotify)
+        {
+            OnCheckBoxClick(codeNotify, id, hwndCtl);
+        }
+        break;
+    case IDC_RESETDEFAULTS:
+        if(BN_CLICKED == codeNotify)
+        {
+            OnBnClickedResetdefaults(codeNotify, id, hwndCtl);
+        }
+        break;
+    }
+}
+
+
+INT_PTR GenDMOPropPage::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch(message)
+    {
+    HANDLE_MSG(hDlg, WM_COMMAND, OnCommand);
+    default:
+        return FALSE;
+    }
 }
 

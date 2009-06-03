@@ -224,5 +224,3 @@ proc _EndSSE, 0
     emms
     sfence
 endproc
-
-segment .data

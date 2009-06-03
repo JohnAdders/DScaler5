@@ -24,84 +24,85 @@
 #include "LicensePropPage.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CLicensePropPage
+// LicensePropPage
 
-CLicensePropPage::CLicensePropPage()
+extern HINSTANCE g_hInstance;
+
+
+LicensePropPage::LicensePropPage() :
+    SimplePropertyPage(MAKEINTRESOURCE(IDD_LICENSEPROPPAGE), IDS_TITLELicensePropPage, IDS_DOCSTRINGLicensePropPage, IDS_HelpFile, 0)
 {
-    m_dwTitleID = IDS_TITLELicensePropPage;
-    m_dwHelpFileID = IDS_HELPFILELicensePropPage;
-    m_dwDocStringID = IDS_DOCSTRINGLicensePropPage;
 }
 
-STDMETHODIMP CLicensePropPage::Apply(void)
+STDMETHODIMP LicensePropPage::Apply(void)
 {
-    ATLTRACE(_T("CLicensePropPage::Apply\n"));
-    m_bDirty = FALSE;
+    SetIsDirty(FALSE);
     return S_OK;
 }
 
-STDMETHODIMP CLicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
+STDMETHODIMP LicensePropPage::SetObjects(ULONG cObjects,IUnknown **ppUnk)
 {
     if(cObjects != 1)
     {
         return E_UNEXPECTED;
     }
+
     m_License = *ppUnk;
 
     return S_OK;
 }
 
-STDMETHODIMP CLicensePropPage::Activate(HWND hWndParent,LPCRECT pRect,BOOL bModal)
+HRESULT LicensePropPage::OnActivate()
 {
     if(m_License == NULL)
     {
         return E_UNEXPECTED;
-    }
-
-    HRESULT hr = IPropertyPageImpl<CLicensePropPage>::Activate(hWndParent,pRect,bModal);
-    if(FAILED(hr))
-    {
-        return hr;
     }
 
     BSTR Name = NULL;
     eFreeLicense LicenceType;
     BSTR Authors = NULL;
 
-    if(m_License == NULL)
-    {
-        return E_UNEXPECTED;
-    }
-
-    hr = m_License->get_Name(&Name);
+    HRESULT hr = m_License->get_Name(&Name);
     if(FAILED(hr)) return hr;
     hr = m_License->get_License(&LicenceType);
     if(FAILED(hr)) return hr;
     hr = m_License->get_Authors(&Authors);
     if(FAILED(hr)) return hr;
 
-    SendMessageW(GetDlgItem(IDC_NAME), WM_SETTEXT, 0, (LPARAM)Name);
-    CComBSTR LicenseText;
+    SendMessageW(GetDlgItem(m_hWnd, IDC_NAME), WM_SETTEXT, 0, (LPARAM)Name);
+    std::vector<wchar_t> LicenseText(512);
 
-    SendMessageW(GetDlgItem(IDC_COPYRIGHT), WM_SETTEXT, 0, (LPARAM)Authors);
+    SendMessageW(GetDlgItem(m_hWnd, IDC_COPYRIGHT), WM_SETTEXT, 0, (LPARAM)Authors);
 
     if(LicenceType == GPL)
     {
-        LicenseText.LoadString(IDS_GPL);
+        LoadStringW(g_hInstance, IDS_GPL, &LicenseText[0], 512);
+        SendMessageW(GetDlgItem(m_hWnd, IDC_LICENSE), WM_SETTEXT, 0, (LPARAM)&LicenseText[0]);
     }
     else if(LicenceType == LGPL)
     {
-        LicenseText.LoadString(IDS_LGPL);
+        LoadStringW(g_hInstance, IDS_LGPL, &LicenseText[0], 512);
+        SendMessageW(GetDlgItem(m_hWnd, IDC_LICENSE), WM_SETTEXT, 0, (LPARAM)&LicenseText[0]);
     }
     else
     {
-        LicenseText = L"Unknown License";
+        SendMessageW(GetDlgItem(m_hWnd, IDC_LICENSE), WM_SETTEXT, 0, (LPARAM)L"Unknown License");
     }
-    SendMessageW(GetDlgItem(IDC_LICENSE), WM_SETTEXT, 0, (LPARAM)(BSTR)LicenseText);
 
-    SendMessageW(GetDlgItem(IDC_HOMEPAGE), WM_SETTEXT, 0, (LPARAM)L"");
+    SendMessageW(GetDlgItem(m_hWnd, IDC_HOMEPAGE), WM_SETTEXT, 0, (LPARAM)L"");
 
     SysFreeString(Name);
     SysFreeString(Authors);
     return S_OK;
+}
+
+HRESULT LicensePropPage::OnDeactivate()
+{
+    return S_OK;
+}
+
+INT_PTR LicensePropPage::DialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
 }

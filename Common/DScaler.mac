@@ -39,7 +39,7 @@
 
 %imacro endproc 0
 %ifnctx proc
-%error Mismatched `endproc'/`proc'
+%error Mismatched endproc proc
 %else
 		leave
 		ret 0
