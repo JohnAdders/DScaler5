@@ -4,6 +4,7 @@
 	Version="8.00"
 	Name="MpegAudio"
 	ProjectGUID="{AB9F7727-3934-4FDA-B998-24012EA27D28}"
+	RootNamespace="MpegAudio"
 	>
 	<Platforms>
 		<Platform
@@ -18,22 +19,19 @@
 	<Configurations>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="..\..\..\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -56,15 +54,9 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Release/MpegAudio.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -79,14 +71,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Release/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Release"
-				IgnoreDefaultLibraryNames="libc.lib"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
-				ProgramDatabaseFile=".\Release/MpegAudio.pdb"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegAudio.lib"
 				TargetMachine="1"
@@ -117,23 +107,109 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			Name="Release|x64"
+			OutputDirectory="..\..\..\$(ConfigurationName)64"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				TypeLibraryName=".\Release/MpegAudio.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderFile=".\Release/MpegAudio.pch"
+				BrowseInformation="1"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2057"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile=".\MpegAudio.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				ImportLibrary=".\Release/MpegAudio.lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|Win32"
+			OutputDirectory="..\..\..\$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -154,16 +230,10 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Debug/MpegAudio.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -178,14 +248,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Debug/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Debug"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/MpegAudio.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegAudio.lib"
 				TargetMachine="1"
@@ -216,23 +284,107 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release Fixed Point|Win32"
-			OutputDirectory=".\Release_Fixed_Point"
-			IntermediateDirectory=".\Release_Fixed_Point"
+			Name="Debug|x64"
+			OutputDirectory="..\..\..\$(ConfigurationName)64"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				TypeLibraryName=".\Debug/MpegAudio.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderFile=".\Debug/MpegAudio.pch"
+				BrowseInformation="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2057"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile=".\MpegAudio.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				ImportLibrary=".\Debug/MpegAudio.lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release Fixed Point|Win32"
+			OutputDirectory="..\..\..\Release"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -248,19 +400,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Release_Fixed_Point/MpegAudio.pch"
-				AssemblerListingLocation=".\Release_Fixed_Point/"
-				ObjectFile=".\Release_Fixed_Point/"
-				ProgramDataBaseFileName=".\Release_Fixed_Point/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -275,14 +421,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Release/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Release"
-				IgnoreDefaultLibraryNames="libc.lib"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
-				ProgramDatabaseFile=".\Release_Fixed_Point/MpegAudio.pdb"
+				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
 				TargetMachine="1"
@@ -313,23 +457,105 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Debug Fixed Point|Win32"
-			OutputDirectory=".\Debug_Fixed_Point"
-			IntermediateDirectory=".\Debug_Fixed_Point"
+			Name="Release Fixed Point|x64"
+			OutputDirectory="..\..\..\Release64"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				TypeLibraryName=".\Release_Fixed_Point/MpegAudio.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\Filter_Lib;..\..\DeCSS;..\..\..\GenDMOProp;..\..\..\Common;..\..\..\ffmpeg\libavcodec\;..\..\..\ffmpeg;..\..\..\ffmpeg\libavutil"
+				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderFile=".\Release_Fixed_Point/MpegAudio.pch"
+				BrowseInformation="1"
+				WarningLevel="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2057"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
+				ModuleDefinitionFile=".\MpegAudio.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug Fixed Point|Win32"
+			OutputDirectory="..\..\..\Debug"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -345,21 +571,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_FIXED;LIBDTS_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Debug_Fixed_Point/MpegAudio.pch"
-				AssemblerListingLocation=".\Debug_Fixed_Point/"
-				ObjectFile=".\Debug_Fixed_Point/"
-				ProgramDataBaseFileName=".\Debug_Fixed_Point/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -374,14 +594,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Debug/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Debug"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug_Fixed_Point/MpegAudio.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
 				TargetMachine="1"
@@ -412,322 +630,19 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				TypeLibraryName=".\Release/MpegAudio.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE"
-				StringPooling="true"
-				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Release/MpegAudio.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
-				BrowseInformation="1"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Release/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Release"
-				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\MpegAudio.def"
-				ProgramDatabaseFile=".\Release/MpegAudio.pdb"
-				SubSystem="2"
-				ImportLibrary=".\Release/MpegAudio.lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/MpegAudio.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
-				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Debug/MpegAudio.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
-				BrowseInformation="1"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				DebugInformationFormat="3"
-				CompileAs="0"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Debug/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Debug"
-				ModuleDefinitionFile=".\MpegAudio.def"
-				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug/MpegAudio.pdb"
-				SubSystem="2"
-				ImportLibrary=".\Debug/MpegAudio.lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release Fixed Point|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				TypeLibraryName=".\Release_Fixed_Point/MpegAudio.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
-				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Release_Fixed_Point/MpegAudio.pch"
-				AssemblerListingLocation=".\Release_Fixed_Point/"
-				ObjectFile=".\Release_Fixed_Point/"
-				ProgramDataBaseFileName=".\Release_Fixed_Point/"
-				BrowseInformation="1"
-				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Release\Filter_Lib.lib .\libmad\msvc++\Release\libmad.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Release/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Release"
-				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\MpegAudio.def"
-				ProgramDatabaseFile=".\Release_Fixed_Point/MpegAudio.pdb"
-				SubSystem="2"
-				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
-				TargetMachine="17"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
 			Name="Debug Fixed Point|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="..\..\..\Debug64"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				Description="Performing registration"
-				CommandLine="regsvr32 /s /c &quot;$(TargetPath)&quot;&#x0D;&#x0A;echo regsvr32 exec. time &gt; &quot;$(OutDir)\regsvr32.trg&quot;&#x0D;&#x0A;"
-				Outputs="$(OutDir)\regsvr32.trg"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -744,21 +659,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common..\..\..\ffmpeg\libavcodec\,..\..\..\ffmpeg\,..\..\..\ffmpeg\libavutil"
+				AdditionalIncludeDirectories="..\..\Filter_Lib;..\..\DeCSS;..\..\..\GenDMOProp;..\..\..\Common;..\..\..\ffmpeg\libavcodec\;..\..\..\ffmpeg\;..\..\..\ffmpeg\libavutil"
 				PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;LIBA52_FIXED;LIBDTS_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
 				PrecompiledHeaderFile=".\Debug_Fixed_Point/MpegAudio.pch"
-				AssemblerListingLocation=".\Debug_Fixed_Point/"
-				ObjectFile=".\Debug_Fixed_Point/"
-				ProgramDataBaseFileName=".\Debug_Fixed_Point/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -773,14 +682,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib ..\..\Filter_Lib\Debug\Filter_Lib.lib .\libmad\msvc++\Debug\libmad.lib avcodec-51.lib avutil-49.lib"
-				OutputFile="..\..\..\Debug/MpegAudio.dll"
-				LinkIncremental="1"
-				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="..\..\..\Debug"
+				RegisterOutput="true"
+				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalLibraryDirectories="$(OutDir)"
+				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\Debug_Fixed_Point/MpegAudio.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
 				TargetMachine="17"
@@ -844,194 +751,10 @@
 			<File
 				RelativePath="AudioDecoder.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="AudioDecoder_A52.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\AudioDecoder_AAC.cpp"
@@ -1040,290 +763,14 @@
 			<File
 				RelativePath="AudioDecoder_DTS.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="AudioDecoder_MAD.cpp"
+				RelativePath=".\AudioDecoder_MAD.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="AudioDecoder_PCM.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\AudioDecoder_Rate.cpp"
@@ -1332,194 +779,10 @@
 			<File
 				RelativePath="Dither.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="MpegAudio.cpp"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="MpegAudio.def"
@@ -1537,49 +800,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						UsePrecompiledHeader="1"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
-						UsePrecompiledHeader="1"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug Fixed Point|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
-						UsePrecompiledHeader="1"
-						BrowseInformation="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1587,11 +808,15 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DJBFFT;LIBA52_DOUBLE;NOLOGGING;LIBDTS_DOUBLE;$(NoInherit)"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1600,11 +825,15 @@
 					<Tool
 						Name="VCCLCompilerTool"
 						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_DOUBLE;LIBDTS_DOUBLE;LIBA52_DJBFFT;$(NoInherit)"
-						BasicRuntimeChecks="3"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release Fixed Point|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1612,11 +841,15 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED;$(NoInherit)"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug Fixed Point|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -1624,12 +857,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_MBCS;LIBA52_FIXED;LIBDTS_FIXED;$(NoInherit)"
-						BasicRuntimeChecks="3"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
 					/>
 				</FileConfiguration>
 			</File>

@@ -19,13 +19,12 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory=".\Debug"
-			IntermediateDirectory=".\Debug"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -51,15 +50,9 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Debug/Filter_Lib.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -74,7 +67,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\Filter_Lib.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -95,12 +87,12 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -127,15 +119,11 @@
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Debug/Filter_Lib.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
-				CompileAs="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -150,7 +138,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Debug\Filter_Lib.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -171,13 +158,13 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory=".\Release"
-			IntermediateDirectory=".\Release"
+			OutputDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -196,22 +183,14 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\Common,..\..\GenDMOProp"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;NOLOGGING"
-				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Release/Filter_Lib.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -226,7 +205,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\Filter_Lib.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -250,10 +228,10 @@
 			OutputDirectory="$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="4"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="2"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -273,8 +251,6 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				InlineFunctionExpansion="1"
 				AdditionalIncludeDirectories="..\..\Common,..\..\GenDMOProp"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;NOLOGGING"
 				StringPooling="true"
@@ -282,13 +258,10 @@
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				PrecompiledHeaderThrough="stdafx.h"
-				PrecompiledHeaderFile=".\Release/Filter_Lib.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
+				BrowseInformation="1"
 				WarningLevel="3"
-				SuppressStartupBanner="true"
-				CompileAs="0"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -303,7 +276,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile=".\Release\Filter_Lib.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -339,7 +311,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -350,7 +322,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -360,7 +332,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -371,7 +343,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -379,98 +351,10 @@
 			<File
 				RelativePath="DSBaseFilter.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="DSBasePin.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\DSBufferedInputPin.cpp"
@@ -479,98 +363,10 @@
 			<File
 				RelativePath="DSInputPin.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="DSOutputPin.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\DSUtil.cpp"
@@ -579,194 +375,18 @@
 			<File
 				RelativePath="EnumMediaTypes.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="EnumPins.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="InputMemAlloc.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="MediaBufferWrapper.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MediaTypes.cpp"
@@ -784,12 +404,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -797,12 +412,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
 						UsePrecompiledHeader="1"
-						BrowseInformation="1"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -810,9 +420,6 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
@@ -821,9 +428,6 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
@@ -831,50 +435,6 @@
 			<File
 				RelativePath="Utils.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="0"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-						BasicRuntimeChecks="3"
-						BrowseInformation="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						Optimization="2"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
