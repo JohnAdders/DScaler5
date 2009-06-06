@@ -365,7 +365,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 
                         if (ffmpeg::avcodec_open(m_CodecContext, m_Codec) < 0)
                         {
-                            av_free(m_CodecContext);
+                            ffmpeg::av_free(m_CodecContext);
                             m_CodecContext = NULL;
                             m_Codec = NULL;
                             return E_UNEXPECTED;
@@ -375,7 +375,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                     static std::vector<int16_t> samples(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 16);
                     int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
 
-                    int decodedBytes =  ffmpeg::avcodec_decode_audio2(m_CodecContext, pSamples, &frameSize, p, size);
+                    int decodedBytes =  ffmpeg::avcodec_decode_audio2(m_CodecContext, (__int16*)pSamples, &frameSize, (unsigned __int8*)p, size);
                     if(decodedBytes > 0)
                     {
                         if(m_CodecContext->sample_fmt == ffmpeg::SAMPLE_FMT_FLT)
@@ -587,8 +587,8 @@ void CAudioDecoder::FinishAC3()
 
     if(m_CodecContext != NULL)
     {
-        avcodec_close(m_CodecContext);
-        av_free(m_CodecContext);
+        ffmpeg::avcodec_close(m_CodecContext);
+        ffmpeg::av_free(m_CodecContext);
         m_Codec = NULL;
         m_CodecContext = NULL;
     }

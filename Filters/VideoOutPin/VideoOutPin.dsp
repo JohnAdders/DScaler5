@@ -182,6 +182,10 @@ SOURCE=.\DSVideoOutPin.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\FrameBuffer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\PlanarYUVToRGB.cpp
 # End Source File
 # Begin Source File
@@ -193,6 +197,14 @@ SOURCE=.\PlanarYUVToYUY2.cpp
 SOURCE=.\StdAfx.cpp
 # ADD CPP /Yc"stdafx.h"
 # End Source File
+# Begin Source File
+
+SOURCE=.\VideoData.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\VideoFormatNegotiator.cpp
+# End Source File
 # End Group
 # Begin Group "Header Files"
 
@@ -200,6 +212,10 @@ SOURCE=.\StdAfx.cpp
 # Begin Source File
 
 SOURCE=.\DSVideoOutPin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\FrameBuffer.h
 # End Source File
 # Begin Source File
 
@@ -212,6 +228,18 @@ SOURCE=.\PlanarYUVToYUY2.h
 # Begin Source File
 
 SOURCE=.\StdAfx.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\VideoData.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\VideoFormatList.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\VideoFormatNegotiator.h
 # End Source File
 # End Group
 # Begin Source File
