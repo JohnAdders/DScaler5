@@ -79,7 +79,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegAudio.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -169,7 +168,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegAudio.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -256,7 +254,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegAudio.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -344,7 +341,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegAudio.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -429,7 +425,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -515,7 +510,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -602,7 +596,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -690,7 +683,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

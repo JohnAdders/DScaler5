@@ -19,7 +19,6 @@
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			UseOfATL="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
@@ -84,7 +83,6 @@
 				ProgramDatabaseFile=".\Release/TVSourceFilter.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Release/TVSourceFilter.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -116,7 +114,6 @@
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -182,7 +179,6 @@
 				ProgramDatabaseFile=".\Debug/TVSourceFilter.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/TVSourceFilter.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"

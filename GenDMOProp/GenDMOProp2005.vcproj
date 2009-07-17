@@ -79,7 +79,6 @@
 				ProgramDatabaseFile=".\Debug/GenDMOProp.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/GenDMOProp.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -169,7 +168,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug/GenDMOProp.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -259,7 +257,6 @@
 				ProgramDatabaseFile="..\Release/GenDMOProp.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Release/GenDMOProp.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -351,7 +348,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/GenDMOProp.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

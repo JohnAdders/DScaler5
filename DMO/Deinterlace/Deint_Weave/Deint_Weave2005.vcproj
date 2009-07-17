@@ -19,7 +19,6 @@
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -86,7 +85,6 @@
 				ProgramDatabaseFile=".\Release/Deint_Weave.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Release/Deint_Weave.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -118,7 +116,6 @@
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="2"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
@@ -186,7 +183,6 @@
 				ProgramDatabaseFile=".\Debug/Deint_Weave.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/Deint_Weave.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"

@@ -79,7 +79,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -172,7 +171,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -256,7 +254,6 @@
 				ModuleDefinitionFile=".\DivxVideo.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -346,7 +343,6 @@
 				ModuleDefinitionFile=".\DivxVideo.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"

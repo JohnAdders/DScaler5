@@ -79,7 +79,6 @@
 				ProgramDatabaseFile="..\..\..\Release/MpegVideo.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegVideo.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -167,7 +166,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegVideo.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -261,7 +259,6 @@
 				ProgramDatabaseFile=".\Debug/MpegVideo.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegVideo.lib"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -351,7 +348,6 @@
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegVideo.lib"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
