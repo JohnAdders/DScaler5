@@ -545,7 +545,7 @@ void CTSReader::ProcessingThread(void* pParam)
         hr = pThis->PushFile(hFile);
         CloseHandle(hFile);
 
-        long namelength(wcslen(pThis->m_FileName));
+        size_t namelength(wcslen(pThis->m_FileName));
 
         if(namelength >= 4)
         {

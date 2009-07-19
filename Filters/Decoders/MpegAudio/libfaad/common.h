@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 #if defined(_WIN32) && defined(_M_AMD64)
-    #undef _WIN32
+    //#undef _WIN32
     #define STDC_HEADERS 1
 #endif
 
@@ -301,7 +301,7 @@ char *strchr(), *strrchr();
   }
 
 
-  #ifdef _WIN32
+  #if defined(_WIN32) && !defined(_M_AMD64)
     #define HAS_LRINTF
     static INLINE int lrintf(float f)
     {
