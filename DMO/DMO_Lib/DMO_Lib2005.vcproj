@@ -310,7 +310,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -320,7 +320,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasmw -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>

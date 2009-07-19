@@ -95,7 +95,7 @@ InputPath=.\a_yuv2rgb.asm
 InputName=a_yuv2rgb
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -107,7 +107,7 @@ InputPath=.\a_yuv2rgb.asm
 InputName=a_yuv2rgb
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -126,7 +126,7 @@ InputPath=.\a_yuv2yuy2.asm
 InputName=a_yuv2yuy2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -138,7 +138,7 @@ InputPath=.\a_yuv2yuy2.asm
 InputName=a_yuv2yuy2
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -157,7 +157,7 @@ InputPath=.\a_yuvtable.asm
 InputName=a_yuvtable
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -169,7 +169,7 @@ InputPath=.\a_yuvtable.asm
 InputName=a_yuvtable
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 

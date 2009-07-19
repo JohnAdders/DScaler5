@@ -79,7 +79,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/TVSourceFilter.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -175,7 +175,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\TVSourceFilter.def"
@@ -270,7 +270,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/TVSourceFilter.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -367,7 +367,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				ModuleDefinitionFile=".\TVSourceFilter.def"

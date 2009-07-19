@@ -72,98 +72,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/MpegVideo.dll"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="..\..\..\Release/MpegVideo.pdb"
-				SubSystem="2"
-				ImportLibrary=".\Release/MpegVideo.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|x64"
-			OutputDirectory="..\..\..\$(ConfigurationName)64"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="1"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-				Description=""
-				CommandLine=""
-				Outputs=""
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				TypeLibraryName=".\Release/MpegVideo.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common;..\..\VideoOutPin"
-				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
-				RuntimeLibrary="0"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderThrough="stdafx.h"
-				BrowseInformation="1"
-				WarningLevel="3"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="2057"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
-				ModuleDefinitionFile=".\MpegVideo.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Release/MpegVideo.lib"
 			/>
@@ -252,13 +165,100 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/MpegVideo.dll"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/MpegVideo.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Debug/MpegVideo.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="..\..\..\$(ConfigurationName)64"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				TypeLibraryName=".\Release/MpegVideo.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="..\..\Filter_Lib,..\..\DeCSS,..\..\..\GenDMOProp,..\..\..\Common;..\..\VideoOutPin"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;NOLOGGING"
+				RuntimeLibrary="0"
+				UsePrecompiledHeader="2"
+				PrecompiledHeaderThrough="stdafx.h"
+				BrowseInformation="1"
+				WarningLevel="3"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="2057"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				ModuleDefinitionFile=".\MpegVideo.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				ImportLibrary=".\Release/MpegVideo.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -343,7 +343,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -426,7 +426,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|x64"
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -434,7 +434,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|Win32"
+					Name="Release|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

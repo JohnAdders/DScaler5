@@ -145,7 +145,7 @@ InputPath=.\Deint_Diag_Core.asm
 InputName=Deint_Diag_Core
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -157,7 +157,7 @@ InputPath=.\Deint_Diag_Core.asm
 InputName=Deint_Diag_Core
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 

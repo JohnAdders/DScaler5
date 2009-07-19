@@ -115,7 +115,7 @@ InputPath=..\..\Common\CPUID.asm
 InputName=CPUID
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 
@@ -127,7 +127,7 @@ InputPath=..\..\Common\CPUID.asm
 InputName=CPUID
 
 "$(IntDir)\$(InputName).obj" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
-	nasmw -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
+	nasm -f win32 -o $(IntDir)\$(InputName).obj -p "..\..\Common\DScaler.mac" $(InputPath)
 
 # End Custom Build
 

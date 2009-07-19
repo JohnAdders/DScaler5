@@ -73,99 +73,10 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib gdi32.lib Dmoguids.lib"
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/GenDMOProp.pdb"
-				SubSystem="2"
-				ImportLibrary=".\Debug/GenDMOProp.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-				CommandLine="cmd /c copy .\GenDMOProp.h ..\Common"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="..\$(ConfigurationName)64"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="2"
-			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="false"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-				Description=""
-				CommandLine=""
-				Outputs=""
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-				TypeLibraryName=".\Debug/GenDMOProp.tlb"
-				HeaderFileName=""
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\Common"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="2"
-				BrowseInformation="1"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="2057"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
-				ModuleDefinitionFile=".\GenDMOProp.def"
-				GenerateDebugInformation="true"
 				SubSystem="2"
 				ImportLibrary=".\Debug/GenDMOProp.lib"
 			/>
@@ -250,13 +161,102 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib gdi32.lib Dmoguids.lib"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="..\Release/GenDMOProp.pdb"
 				SubSystem="2"
 				ImportLibrary=".\Release/GenDMOProp.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+				CommandLine="cmd /c copy .\GenDMOProp.h ..\Common"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="..\$(ConfigurationName)64"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="2"
+			UseOfMFC="0"
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+				Description=""
+				CommandLine=""
+				Outputs=""
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+				TypeLibraryName=".\Debug/GenDMOProp.tlb"
+				HeaderFileName=""
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\Common"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="2"
+				BrowseInformation="1"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="2057"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				RegisterOutput="true"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib gdi32.lib Dmoguids.lib"
+				ModuleDefinitionFile=".\GenDMOProp.def"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				ImportLibrary=".\Debug/GenDMOProp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -342,7 +342,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib gdi32.lib Dmoguids.lib"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
@@ -406,7 +406,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCMIDLTool"
@@ -417,7 +417,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCMIDLTool"
@@ -452,7 +452,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCResourceCompilerTool"
@@ -461,7 +461,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCResourceCompilerTool"
@@ -507,7 +507,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Debug|x64"
+					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -515,7 +515,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
+					Name="Debug|x64"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

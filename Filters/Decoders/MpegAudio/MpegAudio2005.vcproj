@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -161,7 +161,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -247,7 +247,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -334,7 +334,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -418,7 +418,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -503,7 +503,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -589,7 +589,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
@@ -676,7 +676,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\MpegAudio.def"
