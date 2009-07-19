@@ -72,7 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Release/MpegVideo.dll"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
@@ -161,7 +161,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -252,7 +252,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				OutputFile="..\..\..\Debug/MpegVideo.dll"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
@@ -343,7 +343,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib"
 				ModuleDefinitionFile=".\MpegVideo.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"

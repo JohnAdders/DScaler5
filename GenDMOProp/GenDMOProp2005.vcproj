@@ -73,7 +73,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="Dmoguids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/GenDMOProp.pdb"
@@ -163,7 +163,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="DmoGuids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -250,7 +250,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="Dmoguids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
@@ -342,7 +342,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
-				AdditionalDependencies="DmoGuids.lib"
+				AdditionalDependencies="user32.lib advapi32.lib ole32.lib gdi32.lib Dmoguids.lib"
 				IgnoreDefaultLibraryNames=""
 				ModuleDefinitionFile=".\GenDMOProp.def"
 				GenerateDebugInformation="true"
