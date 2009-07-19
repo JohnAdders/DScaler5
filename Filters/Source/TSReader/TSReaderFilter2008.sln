@@ -1,0 +1,59 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TSReaderFilter", "TSReaderFilter2008.vcproj", "{ED6400D4-001D-4856-B788-788DE7F375C5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib2008.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp2008.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdvbpsi", "libdvbpsi\vc++\libdvbpsi2008.vcproj", "{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Debug|Win32.Build.0 = Debug|Win32
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Debug|x64.ActiveCfg = Debug|x64
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Debug|x64.Build.0 = Debug|x64
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Release|Win32.ActiveCfg = Release|Win32
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Release|Win32.Build.0 = Release|Win32
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Release|x64.ActiveCfg = Release|x64
+		{ED6400D4-001D-4856-B788-788DE7F375C5}.Release|x64.Build.0 = Release|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|Win32.Build.0 = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|x64.ActiveCfg = Debug|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|x64.Build.0 = Debug|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|Win32.ActiveCfg = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|Win32.Build.0 = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|x64.ActiveCfg = Release|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|x64.Build.0 = Release|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|Win32.Build.0 = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|x64.ActiveCfg = Debug|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|x64.Build.0 = Debug|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|Win32.ActiveCfg = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|Win32.Build.0 = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|x64.ActiveCfg = Release|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|x64.Build.0 = Release|x64
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Debug|Win32.Build.0 = Debug|Win32
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Debug|x64.ActiveCfg = Debug|x64
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Debug|x64.Build.0 = Debug|x64
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Release|Win32.ActiveCfg = Release|Win32
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Release|Win32.Build.0 = Release|Win32
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Release|x64.ActiveCfg = Release|x64
+		{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

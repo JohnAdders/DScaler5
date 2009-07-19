@@ -1,0 +1,45 @@
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AudioDetect", "AudioDetect2008.vcproj", "{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp2008.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib2008.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Debug|Win32.Build.0 = Debug|Win32
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Debug|x64.ActiveCfg = Debug|x64
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Debug|x64.Build.0 = Debug|x64
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Release|Win32.ActiveCfg = Release|Win32
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Release|Win32.Build.0 = Release|Win32
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Release|x64.ActiveCfg = Release|x64
+		{B17E743A-76CE-4B0A-8416-1DE9058EF5F3}.Release|x64.Build.0 = Release|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|Win32.Build.0 = Debug|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|x64.ActiveCfg = Debug|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Debug|x64.Build.0 = Debug|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|Win32.ActiveCfg = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|Win32.Build.0 = Release|Win32
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|x64.ActiveCfg = Release|x64
+		{0F39947C-180A-48C7-B5DE-454B968ADEB6}.Release|x64.Build.0 = Release|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|Win32.Build.0 = Debug|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|x64.ActiveCfg = Debug|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Debug|x64.Build.0 = Debug|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|Win32.ActiveCfg = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|Win32.Build.0 = Release|Win32
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|x64.ActiveCfg = Release|x64
+		{F4892194-4D03-4CAC-85C0-351DCE97B1A8}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
