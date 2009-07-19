@@ -2,6 +2,7 @@
 // Microsoft Visual C++ generated include file.
 // Used by GenDMOProp.rc
 //
+#define IDC_STATIC                      -1
 #define IDS_PROJNAME                    100
 #define IDS_TITLEGenDMOPropPage         101
 #define IDS_HELPFILEGenDMOPropPage      102
