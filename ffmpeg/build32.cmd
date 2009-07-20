@@ -17,9 +17,5 @@ if not "x%VS90COMNTOOLS%" == "x" call "%VS90COMNTOOLS%vsvars32.bat"
 set MSYSTEM=MINGW32
 set DISPLAY=
 set PATH=%MSYSROOT%bin\;%MSYSROOT%mingw\bin\;%PATH%
-echo %PATH%
-lib
-pause
 sh %~dp0dscaler5build
-pause
 :EOF
