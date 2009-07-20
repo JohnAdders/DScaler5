@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="MpegAudio"
 	ProjectGUID="{AB9F7727-3934-4FDA-B998-24012EA27D28}"
 	RootNamespace="MpegAudio"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -78,6 +79,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release/MpegAudio.lib"
 			/>
 			<Tool
@@ -97,9 +100,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -167,6 +167,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release/MpegAudio.lib"
 			/>
 			<Tool
@@ -186,9 +188,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -253,6 +252,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug/MpegAudio.lib"
 			/>
 			<Tool
@@ -272,9 +273,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -340,6 +338,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug/MpegAudio.lib"
 			/>
 			<Tool
@@ -359,9 +359,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -424,6 +421,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
 			/>
 			<Tool
@@ -443,9 +442,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -509,6 +505,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release_Fixed_Point/MpegAudio.lib"
 			/>
 			<Tool
@@ -528,9 +526,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -595,6 +590,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
 			/>
 			<Tool
@@ -614,9 +611,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -682,6 +676,8 @@
 				ModuleDefinitionFile=".\MpegAudio.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug_Fixed_Point/MpegAudio.lib"
 			/>
 			<Tool
@@ -703,9 +699,6 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -713,26 +706,21 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
-			RelativePathToProject=".\djbfft\djbfft2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
-			RelativePathToProject="..\..\Filter_Lib\Filter_Lib2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
-			RelativePathToProject="..\..\..\GenDMOProp\GenDMOProp2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{DABBA817-B2FC-49AA-B872-2AAFAE560337}"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
-			RelativePathToProject=".\dtsdec\vc++\libdts2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
-			RelativePathToProject=".\libmad\msvc++\libmad2008.vcproj"
 		/>
 	</References>
 	<Files>

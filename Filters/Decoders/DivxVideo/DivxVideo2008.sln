@@ -1,31 +1,15 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib2008.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp2008.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoOutPin", "..\..\VideoOutPin\VideoOutPin2008.vcproj", "{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DivxVideo", "DivxVideo2008.vcproj", "{514BBF2F-B9E5-4D01-94DE-563236588058}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{AC92CAEE-0134-42A6-8F11-AC7948AB8E87} = {AC92CAEE-0134-42A6-8F11-AC7948AB8E87}
 	EndProjectSection

@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="libfaad"
-	ProjectGUID="{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}"
-	RootNamespace="libfaad"
+	Name="liba52"
+	ProjectGUID="{1B665132-E865-4D51-AAED-D65E0A241727}"
+	RootNamespace="liba52"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -26,6 +26,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -44,18 +45,18 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;"
+				AdditionalIncludeDirectories=".,../include,../../djbfft"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIBA52_DOUBLE;LIBA52_DJBFFT"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libfaad.pch"
+				PrecompiledHeaderFile=".\Release/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -63,14 +64,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -116,14 +116,18 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,../include,../../djbfft"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIBA52_DOUBLE;LIBA52_DJBFFT"
+				StringPooling="true"
 				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libfaad.pch"
+				PrecompiledHeaderFile=".\Release/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -131,14 +135,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -182,13 +185,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;"
+				AdditionalIncludeDirectories=".,../include,../../djbfft"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIBA52_DOUBLE;LIBA52_DJBFFT"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libfaad.pch"
+				PrecompiledHeaderFile=".\Debug/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -199,14 +202,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -251,13 +253,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;"
+				AdditionalIncludeDirectories=".,../include,../../djbfft"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIBA52_DOUBLE;LIBA52_DJBFFT"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libfaad.pch"
+				PrecompiledHeaderFile=".\Debug/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -268,14 +270,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -319,13 +320,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;FIXED_POINT"
+				AdditionalIncludeDirectories=".,../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIBA52_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libfaad.pch"
+				PrecompiledHeaderFile=".\Debug_Fixed_Point/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -336,14 +337,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -388,13 +388,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="0"
-				PreprocessorDefinitions="_DEBUG;WIN32;_LIB;FIXED_POINT"
+				AdditionalIncludeDirectories=".,../include"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIBA52_FIXED"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libfaad.pch"
+				PrecompiledHeaderFile=".\Debug_Fixed_Point/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -405,14 +405,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -438,6 +437,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="1"
+			WholeProgramOptimization="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -456,18 +456,18 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;FIXED_POINT"
+				AdditionalIncludeDirectories=".,../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIBA52_FIXED"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libfaad.pch"
+				PrecompiledHeaderFile=".\Release_Fixed_Point/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -475,14 +475,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -528,14 +527,18 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalOptions=""
-				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;FIXED_POINT"
+				Optimization="2"
+				InlineFunctionExpansion="1"
+				AdditionalIncludeDirectories=".,../include"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIBA52_FIXED"
+				StringPooling="true"
 				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libfaad.pch"
+				PrecompiledHeaderFile=".\Release_Fixed_Point/liba52.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -543,14 +546,13 @@
 			<Tool
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="NDEBUG"
-				Culture="1043"
+				Culture="1033"
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalOptions=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -577,143 +579,23 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 			>
 			<File
-				RelativePath="bits.c"
+				RelativePath="..\liba52\bit_allocate.c"
 				>
 			</File>
 			<File
-				RelativePath="cfft.c"
+				RelativePath="..\liba52\bitstream.c"
 				>
 			</File>
 			<File
-				RelativePath="common.c"
+				RelativePath="..\liba52\downmix.c"
 				>
 			</File>
 			<File
-				RelativePath="decoder.c"
+				RelativePath="..\liba52\imdct.c"
 				>
 			</File>
 			<File
-				RelativePath="drc.c"
-				>
-			</File>
-			<File
-				RelativePath="error.c"
-				>
-			</File>
-			<File
-				RelativePath="filtbank.c"
-				>
-			</File>
-			<File
-				RelativePath="hcr.c"
-				>
-			</File>
-			<File
-				RelativePath="huffman.c"
-				>
-			</File>
-			<File
-				RelativePath="ic_predict.c"
-				>
-			</File>
-			<File
-				RelativePath="is.c"
-				>
-			</File>
-			<File
-				RelativePath="lt_predict.c"
-				>
-			</File>
-			<File
-				RelativePath="mdct.c"
-				>
-			</File>
-			<File
-				RelativePath="mp4.c"
-				>
-			</File>
-			<File
-				RelativePath="ms.c"
-				>
-			</File>
-			<File
-				RelativePath="output.c"
-				>
-			</File>
-			<File
-				RelativePath="pns.c"
-				>
-			</File>
-			<File
-				RelativePath="pulse.c"
-				>
-			</File>
-			<File
-				RelativePath="rvlc.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_dct.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_dec.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_e_nf.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_fbt.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_hfadj.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_hfgen.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_huff.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_qmf.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_syntax.c"
-				>
-			</File>
-			<File
-				RelativePath="sbr_tf_grid.c"
-				>
-			</File>
-			<File
-				RelativePath="specrec.c"
-				>
-			</File>
-			<File
-				RelativePath="ssr.c"
-				>
-			</File>
-			<File
-				RelativePath="ssr_fb.c"
-				>
-			</File>
-			<File
-				RelativePath="ssr_ipqf.c"
-				>
-			</File>
-			<File
-				RelativePath="syntax.c"
-				>
-			</File>
-			<File
-				RelativePath="tns.c"
+				RelativePath="..\liba52\parse.c"
 				>
 			</File>
 		</Filter>
@@ -722,221 +604,21 @@
 			Filter="h;hpp;hxx;hm;inl"
 			>
 			<File
-				RelativePath="analysis.h"
+				RelativePath="..\include\a52.h"
 				>
 			</File>
 			<File
-				RelativePath="bits.h"
+				RelativePath="..\liba52\a52_internal.h"
 				>
 			</File>
 			<File
-				RelativePath="cfft.h"
+				RelativePath="..\liba52\bitstream.h"
 				>
 			</File>
 			<File
-				RelativePath="cfft_tab.h"
+				RelativePath="..\liba52\tables.h"
 				>
 			</File>
-			<File
-				RelativePath="common.h"
-				>
-			</File>
-			<File
-				RelativePath="decoder.h"
-				>
-			</File>
-			<File
-				RelativePath="drc.h"
-				>
-			</File>
-			<File
-				RelativePath="error.h"
-				>
-			</File>
-			<File
-				RelativePath="filtbank.h"
-				>
-			</File>
-			<File
-				RelativePath="fixed.h"
-				>
-			</File>
-			<File
-				RelativePath="codebook\hcb.h"
-				>
-			</File>
-			<File
-				RelativePath="huffman.h"
-				>
-			</File>
-			<File
-				RelativePath="ic_predict.h"
-				>
-			</File>
-			<File
-				RelativePath="iq_table.h"
-				>
-			</File>
-			<File
-				RelativePath="is.h"
-				>
-			</File>
-			<File
-				RelativePath="kbd_win.h"
-				>
-			</File>
-			<File
-				RelativePath="lt_predict.h"
-				>
-			</File>
-			<File
-				RelativePath="mdct.h"
-				>
-			</File>
-			<File
-				RelativePath="mp4.h"
-				>
-			</File>
-			<File
-				RelativePath="ms.h"
-				>
-			</File>
-			<File
-				RelativePath="output.h"
-				>
-			</File>
-			<File
-				RelativePath="pns.h"
-				>
-			</File>
-			<File
-				RelativePath="pulse.h"
-				>
-			</File>
-			<File
-				RelativePath="rvlc.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_dct.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_dec.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_e_nf.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_fbt.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_hfadj.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_hfgen.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_huff.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_noise.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_qmf.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_syntax.h"
-				>
-			</File>
-			<File
-				RelativePath="sbr_tf_grid.h"
-				>
-			</File>
-			<File
-				RelativePath="sine_win.h"
-				>
-			</File>
-			<File
-				RelativePath="specrec.h"
-				>
-			</File>
-			<File
-				RelativePath="ssr.h"
-				>
-			</File>
-			<File
-				RelativePath="structs.h"
-				>
-			</File>
-			<File
-				RelativePath="syntax.h"
-				>
-			</File>
-			<File
-				RelativePath="tns.h"
-				>
-			</File>
-			<Filter
-				Name="codebook"
-				>
-				<File
-					RelativePath="codebook\hcb_1.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_10.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_11.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_2.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_3.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_4.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_5.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_6.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_7.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_8.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_9.h"
-					>
-				</File>
-				<File
-					RelativePath="codebook\hcb_sf.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

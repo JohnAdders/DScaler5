@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="VideoOutPin"
 	ProjectGUID="{AC92CAEE-0134-42A6-8F11-AC7948AB8E87}"
 	RootNamespace="VideoOutPin"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -306,7 +307,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -317,7 +318,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -327,7 +328,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -338,7 +339,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -352,7 +353,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -363,7 +364,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -373,7 +374,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -384,7 +385,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -398,7 +399,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -409,7 +410,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -419,7 +420,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win32 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>
@@ -430,7 +431,7 @@
 					<Tool
 						Name="VCCustomBuildTool"
 						Description="$(InputName)"
-						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)"
+						CommandLine="nasm -f win64 -o $(IntDir)\$(InputName).obj -p &quot;..\..\Common\DScaler.mac&quot; $(InputPath)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
 					/>
 				</FileConfiguration>

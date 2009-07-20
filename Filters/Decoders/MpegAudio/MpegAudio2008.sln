@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdts", "dtsdec\vc++\libdts2008.vcproj", "{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
@@ -13,40 +13,20 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmad", "libmad\msvc++\lib
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filter_Lib", "..\..\Filter_Lib\Filter_Lib2008.vcproj", "{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenDMOProp", "..\..\..\GenDMOProp\GenDMOProp2008.vcproj", "{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "djbfft", "djbfft\djbfft2008.vcproj", "{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DeCSS", "..\..\DeCSS\DeCSS2008.vcproj", "{D7C544C4-B5C5-41E2-A575-0B13312692FD}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{0F39947C-180A-48C7-B5DE-454B968ADEB6} = {0F39947C-180A-48C7-B5DE-454B968ADEB6}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MpegAudio", "MpegAudio2008.vcproj", "{AB9F7727-3934-4FDA-B998-24012EA27D28}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 	ProjectSection(ProjectDependencies) = postProject
 		{1B665132-E865-4D51-AAED-D65E0A241727} = {1B665132-E865-4D51-AAED-D65E0A241727}
 		{F4892194-4D03-4CAC-85C0-351DCE97B1A8} = {F4892194-4D03-4CAC-85C0-351DCE97B1A8}
@@ -61,10 +41,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liba52", "a52dec\vc++\liba5
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfaad", "libfaad\libfaad2008.vcproj", "{5EFCFACB-1835-422C-ACDA-E3B3A2F51387}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
