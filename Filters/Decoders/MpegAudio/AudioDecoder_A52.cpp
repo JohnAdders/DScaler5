@@ -326,7 +326,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                 {
                     if(m_CodecContext == NULL)
                     {
-                        m_Codec = ffmpeg::avcodec_find_decoder(ffmpeg::CODEC_ID_AC3);
+                        m_Codec = ffmpeg::avcodec_find_decoder(ffmpeg::CODEC_ID_EAC3);
                         if(m_Codec == NULL)
                         {
                             return E_UNEXPECTED;
@@ -347,19 +347,19 @@ HRESULT CAudioDecoder::ProcessAC3()
                         {
                         case SPCFG_STEREO:
                         case SPCFG_DOLBY:
-                            m_CodecContext->request_channels = min(scmap.nChannels, 2);
+                            m_CodecContext->request_channel_layout = min(scmap.nChannels, 2);
                             break;
                         case SPCFG_2F2R:
-                            m_CodecContext->request_channels = min(scmap.nChannels, 4);
+                            m_CodecContext->request_channel_layout = min(scmap.nChannels, 4);
                             break;
                         case SPCFG_2F2R1S:
-                            m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            m_CodecContext->request_channel_layout = min(scmap.nChannels, 5);
                             break;
                         case SPCFG_3F2R:
-                            m_CodecContext->request_channels = min(scmap.nChannels, 5);
+                            m_CodecContext->request_channel_layout = min(scmap.nChannels, 5);
                             break;
                         case SPCFG_3F2R1S:
-                            m_CodecContext->request_channels = min(scmap.nChannels, 6);
+                            m_CodecContext->request_channel_layout = min(scmap.nChannels, 6);
                             break;
                         }
 
@@ -371,18 +371,26 @@ HRESULT CAudioDecoder::ProcessAC3()
                             return E_UNEXPECTED;
                         }
                     }
-                    int frameSize(AVCODEC_MAX_AUDIO_FRAME_SIZE);
-                    static std::vector<int16_t> samples(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 16);
+
+					
+					int frameSize(AVCODEC_MAX_AUDIO_FRAME_SIZE);
+                    static std::vector<int16_t> samplesBuff(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 32);
+					int16_t* samples = &samplesBuff[0];
                     int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
 
-                    int decodedBytes =  ffmpeg::avcodec_decode_audio2(m_CodecContext, (__int16*)pSamples, &frameSize, (unsigned __int8*)p, size);
+					ffmpeg::AVPacket avpkt;
+					av_init_packet(&avpkt);
+					avpkt.data = (unsigned __int8*)p;
+					avpkt.size = size;
+
+					int decodedBytes =  ffmpeg::avcodec_decode_audio3(m_CodecContext, (__int16*)pSamples, &frameSize, &avpkt);
                     if(decodedBytes > 0)
                     {
                         if(m_CodecContext->sample_fmt == ffmpeg::SAMPLE_FMT_FLT)
                         {
                             CONV_FUNC_FLOAT* pConvFunc = pConvFuncsFloat[m_OutputSampleType];
                             float* pfSamples = (float*)pSamples;
-                            for(int j = 0; j < frameSize / 4 / m_CodecContext->request_channels; j++)
+                            for(int j = 0; j < frameSize / 4 / m_CodecContext->request_channel_layout; j++)
                             {
                                 if(m_BytesLeftInBuffer == 0)
                                 {
@@ -390,7 +398,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                                     CHECK(hr);
                                 }
 
-                                for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
+                                for(int ch = 0; ch < m_CodecContext->request_channel_layout; ch++)
                                 {
                                     pConvFunc(m_pDataOut, *pfSamples++);
                                 }
@@ -410,7 +418,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                         else
                         {
                             CONV_FUNC16* pConvFunc = pConvFuncs16[m_OutputSampleType];
-                            for(int j = 0; j < frameSize / 2 / m_CodecContext->request_channels; j++)
+                            for(int j = 0; j < frameSize / 2 / m_CodecContext->request_channel_layout; j++)
                             {
                                 if(m_BytesLeftInBuffer == 0)
                                 {
@@ -418,7 +426,7 @@ HRESULT CAudioDecoder::ProcessAC3()
                                     CHECK(hr);
                                 }
 
-                                for(int ch = 0; ch < m_CodecContext->request_channels; ch++)
+                                for(int ch = 0; ch < m_CodecContext->request_channel_layout; ch++)
                                 {
                                     pConvFunc(m_pDataOut, *pSamples++);
                                 }
