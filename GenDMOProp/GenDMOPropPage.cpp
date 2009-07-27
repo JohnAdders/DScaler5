@@ -253,7 +253,7 @@ void GenDMOPropPage::GetTextSize(WCHAR *wcItem, SIZE &size)
     if(hListBoxFont != NULL)
     {
         HFONT hOldFont = (HFONT)SelectObject(hDC,(HGDIOBJ)hListBoxFont);
-        GetTextExtentPoint32W(hDC, wcItem, wcslen(wcItem), &size);
+        GetTextExtentPoint32W(hDC, wcItem, (int)wcslen(wcItem), &size);
         SelectObject(hDC,hOldFont);
     }
     ReleaseDC(m_ListBox, hDC);
@@ -377,8 +377,8 @@ void GenDMOPropPage::SetupEnumCombo()
         SendMessageW(m_Combo, CB_ADDSTRING, 0, (LPARAM)CurString);
         CurString += wcslen(CurString) + 1;
     }
-    long Items = SendMessage(m_Combo, CB_GETCOUNT, 0, 0);
-    if((long)m_Params[m_CurrentParam] < Items)
+    LRESULT Items = SendMessage(m_Combo, CB_GETCOUNT, 0, 0);
+    if((LRESULT)m_Params[m_CurrentParam] < Items)
     {
         SendMessage(m_Combo, CB_SETCURSEL, (long)m_Params[m_CurrentParam], 0);
     }

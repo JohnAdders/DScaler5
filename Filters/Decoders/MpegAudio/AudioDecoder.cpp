@@ -575,7 +575,7 @@ HRESULT CAudioDecoder::ProcessSample(IMediaSample* InSample, AM_SAMPLE2_PROPERTI
 
     m_Preroll = ((pSampleProperties->dwSampleFlags & AM_SAMPLE_PREROLL) == AM_SAMPLE_PREROLL);
 
-    int tmp = m_buff.size();
+    size_t tmp = m_buff.size();
     m_buff.resize(m_buff.size() + len);
     memcpy(&m_buff[0] + tmp, pDataIn, len);
     len += tmp;

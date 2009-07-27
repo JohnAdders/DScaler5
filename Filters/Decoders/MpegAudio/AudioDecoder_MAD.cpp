@@ -58,7 +58,7 @@ static CONV_FUNC* pConvFuncs[CAudioDecoder::OUTSAMPLE_LASTONE] =
 
 HRESULT CAudioDecoder::ProcessMPA()
 {
-    mad_stream_buffer(&m_stream, &m_buff[0], m_buff.size());
+	mad_stream_buffer(&m_stream, &m_buff[0], (unsigned long)m_buff.size());
     HRESULT hr = S_OK;
 
     while(1)

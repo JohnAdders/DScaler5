@@ -113,7 +113,7 @@ HRESULT CAudioDecoder::ProcessAAC()
 {
     BYTE* p = &m_buff[0];
     BYTE* base = &m_buff[0];
-    unsigned long insize = m_buff.size();
+    size_t insize = m_buff.size();
     HRESULT hr = S_OK;
 
     faacDecFrameInfo frameInfo;

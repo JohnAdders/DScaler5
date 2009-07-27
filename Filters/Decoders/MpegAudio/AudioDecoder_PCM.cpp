@@ -65,7 +65,7 @@ HRESULT CAudioDecoder::ProcessLPCM()
 {
     WAVEFORMATEX* wfein = (WAVEFORMATEX*)m_AudioInPin->GetMediaType()->pbFormat;
 
-    DWORD LenIn = m_buff.size();
+    size_t LenIn = m_buff.size();
 
     HRESULT hr = S_OK;
     int Padding = (m_ChannelsRequested - 2) * m_SampleSize;

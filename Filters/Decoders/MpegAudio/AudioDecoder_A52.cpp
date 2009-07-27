@@ -376,7 +376,7 @@ HRESULT CAudioDecoder::ProcessAC3()
 					int frameSize(AVCODEC_MAX_AUDIO_FRAME_SIZE);
                     static std::vector<int16_t> samplesBuff(AVCODEC_MAX_AUDIO_FRAME_SIZE / 2 + 32);
 					int16_t* samples = &samplesBuff[0];
-                    int16_t* pSamples = (int16_t*)(((DWORD)&samples[0] + 15) & 0xfffffFF0);
+                    int16_t* pSamples = (int16_t*)(((ULONG_PTR)&samples[0] + 15) & (~15));
 
 					ffmpeg::AVPacket avpkt;
 					av_init_packet(&avpkt);

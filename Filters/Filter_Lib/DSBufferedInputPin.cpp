@@ -204,7 +204,7 @@ void CDSBufferedInputPin::ProcessingThread(void* pParam)
 
 HRESULT CDSBufferedInputPin::ProcessBufferedSamples()
 {
-    long size = 1;
+    size_t size = 1;
     HRESULT hr = S_OK;
 
     CProtectCode WhileVarInScope(&m_WorkerThreadLock);

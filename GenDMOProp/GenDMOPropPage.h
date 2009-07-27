@@ -86,7 +86,7 @@ private:
     MP_PARAMINFO* m_ParamInfos;
     WCHAR** m_ParamTexts;
     DWORD m_NumParams;
-    DWORD m_CurrentParam;
+    LRESULT m_CurrentParam;
 };
 
 #endif //__GENDMOPROPPAGE_H_
