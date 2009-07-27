@@ -48,7 +48,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libmpeg2.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -114,7 +113,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/libmpeg2.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -180,7 +178,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libmpeg2.pch"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 				CompileAs="0"
@@ -248,7 +245,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/libmpeg2.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 				CompileAs="0"

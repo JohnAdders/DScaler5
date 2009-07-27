@@ -50,7 +50,6 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/djbfft.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -117,7 +116,6 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Release/djbfft.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -182,7 +180,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/djbfft.pch"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -248,7 +245,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\Debug/djbfft.pch"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>

@@ -46,7 +46,6 @@
 				PreprocessorDefinitions="FPM_DEFAULT;_LIB;HAVE_CONFIG_H;ASO_ZEROCHECK;WIN32;_DEBUG;DEBUG"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile=".\Debug/libmad.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -113,7 +112,6 @@
 				PreprocessorDefinitions="FPM_DEFAULT;_LIB;HAVE_CONFIG_H;ASO_ZEROCHECK;WIN32;_DEBUG;DEBUG"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
-				PrecompiledHeaderFile=".\Debug/libmad.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -182,7 +180,6 @@
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				PrecompiledHeaderFile=".\Release/libmad.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>
@@ -247,7 +244,6 @@
 				AdditionalIncludeDirectories="."
 				PreprocessorDefinitions="NDEBUG;FPM_64BIT;WIN32;_LIB;HAVE_CONFIG_H;ASO_ZEROCHECK"
 				RuntimeLibrary="0"
-				PrecompiledHeaderFile=".\Release/libmad.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>

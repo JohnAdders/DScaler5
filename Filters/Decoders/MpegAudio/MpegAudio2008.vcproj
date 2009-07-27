@@ -55,7 +55,6 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>
@@ -143,7 +142,6 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>
@@ -227,7 +225,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -313,7 +310,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -397,7 +393,6 @@
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release_Fixed_Point/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>
@@ -481,7 +476,6 @@
 				PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;LIBA52_FIXED;NOLOGGING;LIBDTS_FIXED"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release_Fixed_Point/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 			/>
@@ -565,7 +559,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug_Fixed_Point/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
@@ -651,7 +644,6 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Debug_Fixed_Point/MpegAudio.pch"
 				BrowseInformation="1"
 				WarningLevel="3"
 				DebugInformationFormat="3"
