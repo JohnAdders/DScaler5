@@ -279,7 +279,7 @@ HRESULT CAudioDecoder::GetAllocatorRequirements(ALLOCATOR_PROPERTIES* pPropertie
     {
         // we specify a fixed size buffer and so size is already
         // taken care of
-        pProperties->cBuffers = 3;
+        pProperties->cBuffers = 12;
         pProperties->cbBuffer = 0;
         pProperties->cbAlign = 1;
         pProperties->cbPrefix = 0;
