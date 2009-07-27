@@ -1,5 +1,6 @@
 #!/bin/sh
-./configure --enable-cross-compile --cross-prefix=x86_64-pc-mingw32- --extra-cflags="-D__MINGW32_MAJOR_VERSION=4 -mno-cygwin -mms-bitfields" --extra-ldflags="--add-stdcall-alias,--enable-auto-import" --target-os=mingw32 --enable-memalign-hack --arch=x86_64 --disable-static --enable-shared --disable-debug --disable-network --disable-avisynth --disable-demuxer=vfwcap --disable-encoders --disable-muxers --disable-devices --enable-gpl
+./configure --enable-cross-compile --cross-prefix=x86_64-pc-mingw32- --extra-cflags="-D__MINGW32_MAJOR_VERSION=4" --target-os=mingw32 --enable-memalign-hack --arch=x86_64 --disable-static --enable-shared --disable-debug --disable-network --disable-avisynth --disable-demuxer=vfwcap --disable-encoders --disable-muxers --disable-devices --enable-gpl
+#./configure --enable-cross-compile --cross-prefix=x86_64-pc-mingw32- --extra-cflags="-D__MINGW32_MAJOR_VERSION=4 -mno-cygwin -mms-bitfields" --extra-ldflags="--add-stdcall-alias,--enable-auto-import" --target-os=mingw32 --enable-memalign-hack --arch=x86_64 --disable-static --enable-shared --disable-debug --disable-network --disable-avisynth --disable-demuxer=vfwcap --disable-encoders --disable-muxers --disable-devices --enable-gpl
 make clean
 make
 mkdir ../Debug64
