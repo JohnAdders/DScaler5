@@ -924,6 +924,10 @@ HRESULT CDivxDecoder::ResetDivxDecoder()
 
     if(m_ExtraSize > 0 && !m_ExtraData.empty())
     {
+		if(m_CodecID == CODEC_ID_VC1)
+		{
+			m_ExtraData[0] = m_ExtraSize;
+		}
         m_CodecContext->extradata = (uint8_t*) &m_ExtraData[0];
         m_CodecContext->extradata_size = m_ExtraSize;
     }
