@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="TSReaderFilter"
 	ProjectGUID="{ED6400D4-001D-4856-B788-788DE7F375C5}"
 	RootNamespace="TSReaderFilter"
 	Keyword="AtlProj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -82,6 +83,8 @@
 				ModuleDefinitionFile=".\TSReaderFilter.def"
 				ProgramDatabaseFile=".\Release/TSReaderFilter.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release/TSReaderFilter.lib"
 			/>
 			<Tool
@@ -101,9 +104,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -173,6 +173,8 @@
 				ModuleDefinitionFile=".\TSReaderFilter.def"
 				ProgramDatabaseFile=".\Release/TSReaderFilter.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Release/TSReaderFilter.lib"
 				TargetMachine="17"
 			/>
@@ -193,9 +195,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -266,6 +265,8 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/TSReaderFilter.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug/TSReaderFilter.lib"
 			/>
 			<Tool
@@ -285,9 +286,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -358,6 +356,8 @@
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/TSReaderFilter.pdb"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				ImportLibrary=".\Debug/TSReaderFilter.lib"
 				TargetMachine="17"
 			/>
@@ -380,9 +380,6 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
-				Name="VCWebDeploymentTool"
-			/>
-			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -390,7 +387,6 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{4E805F8C-4927-43D8-B6E4-C8F82AF670C3}"
-			RelativePathToProject=".\libdvbpsi\vc++\libdvbpsi2008.vcproj"
 		/>
 	</References>
 	<Files>
