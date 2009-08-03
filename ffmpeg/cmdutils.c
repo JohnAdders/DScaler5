@@ -125,11 +125,19 @@ void parse_options(int argc, char **argv, const OptionDef *options,
         opt = argv[optindex++];
 
         if (handleoptions && opt[0] == '-' && opt[1] != '\0') {
+            int bool_val = 1;
             if (opt[1] == '-' && opt[2] == '\0') {
                 handleoptions = 0;
                 continue;
             }
             po= find_option(options, opt + 1);
+            if (!po->name && opt[1] == 'n' && opt[2] == 'o') {
+                /* handle 'no' bool option */
+                po = find_option(options, opt + 3);
+                if (!(po->name && (po->flags & OPT_BOOL)))
+                    goto unknown_opt;
+                bool_val = 0;
+            }
             if (!po->name)
                 po= find_option(options, "default");
             if (!po->name) {
@@ -150,7 +158,7 @@ unknown_opt:
                 str = av_strdup(arg);
                 *po->u.str_arg = str;
             } else if (po->flags & OPT_BOOL) {
-                *po->u.int_arg = 1;
+                *po->u.int_arg = bool_val;
             } else if (po->flags & OPT_INT) {
                 *po->u.int_arg = parse_number_or_die(opt+1, arg, OPT_INT64, INT_MIN, INT_MAX);
             } else if (po->flags & OPT_INT64) {
@@ -210,6 +218,41 @@ int opt_default(const char *opt, const char *arg){
 
     if(avcodec_opts[0]->debug || avformat_opts->debug)
         av_log_set_level(AV_LOG_DEBUG);
+    return 0;
+}
+
+int opt_loglevel(const char *opt, const char *arg)
+{
+    const struct { const char *name; int level; } log_levels[] = {
+        { "quiet"  , AV_LOG_QUIET   },
+        { "panic"  , AV_LOG_PANIC   },
+        { "fatal"  , AV_LOG_FATAL   },
+        { "error"  , AV_LOG_ERROR   },
+        { "warning", AV_LOG_WARNING },
+        { "info"   , AV_LOG_INFO    },
+        { "verbose", AV_LOG_VERBOSE },
+        { "debug"  , AV_LOG_DEBUG   },
+    };
+    char *tail;
+    int level;
+    int i;
+
+    for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++) {
+        if (!strcmp(log_levels[i].name, arg)) {
+            av_log_set_level(log_levels[i].level);
+            return 0;
+        }
+    }
+
+    level = strtol(arg, &tail, 10);
+    if (*tail) {
+        fprintf(stderr, "Invalid loglevel \"%s\". "
+                        "Possible levels are numbers or:\n", arg);
+        for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++)
+            fprintf(stderr, "\"%s\"\n", log_levels[i].name);
+        exit(1);
+    }
+    av_log_set_level(level);
     return 0;
 }
 
@@ -312,6 +355,20 @@ void show_license(void)
     "This version of %s has nonfree parts compiled in.\n"
     "Therefore it is not legally redistributable.\n",
     program_name
+#elif CONFIG_GPLV3
+    "%s is free software; you can redistribute it and/or modify\n"
+    "it under the terms of the GNU General Public License as published by\n"
+    "the Free Software Foundation; either version 3 of the License, or\n"
+    "(at your option) any later version.\n"
+    "\n"
+    "%s is distributed in the hope that it will be useful,\n"
+    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+    "GNU General Public License for more details.\n"
+    "\n"
+    "You should have received a copy of the GNU General Public License\n"
+    "along with %s.  If not, see <http://www.gnu.org/licenses/>.\n",
+    program_name, program_name, program_name
 #elif CONFIG_GPL
     "%s is free software; you can redistribute it and/or modify\n"
     "it under the terms of the GNU General Public License as published by\n"
@@ -326,6 +383,20 @@ void show_license(void)
     "You should have received a copy of the GNU General Public License\n"
     "along with %s; if not, write to the Free Software\n"
     "Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA\n",
+    program_name, program_name, program_name
+#elif CONFIG_LGPLV3
+    "%s is free software; you can redistribute it and/or modify\n"
+    "it under the terms of the GNU Lesser General Public License as published by\n"
+    "the Free Software Foundation; either version 3 of the License, or\n"
+    "(at your option) any later version.\n"
+    "\n"
+    "%s is distributed in the hope that it will be useful,\n"
+    "but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+    "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+    "GNU Lesser General Public License for more details.\n"
+    "\n"
+    "You should have received a copy of the GNU Lesser General Public License\n"
+    "along with %s.  If not, see <http://www.gnu.org/licenses/>.\n",
     program_name, program_name, program_name
 #else
     "%s is free software; you can redistribute it and/or\n"

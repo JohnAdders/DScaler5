@@ -21,6 +21,15 @@ version <next>:
 - V210 decoder and encoder
 - remaining GPL parts in AC-3 decoder converted to LGPL
 - QCP demuxer
+- SoX native format muxer and demuxer
+- AMR-NB decoding/encoding, AMR-WB decoding via OpenCORE libraries
+- DPX image decoder
+- Electronic Arts Madcow decoder
+- DivX (XSUB) subtitle encoder
+- nonfree libamr support for AMR-NB/WB decoding/encoding removed
+- Experimental AAC encoder
+- RTP depacketization of ASF and RTSP from WMS servers
+- RTMP support in libavformat
 
 
 

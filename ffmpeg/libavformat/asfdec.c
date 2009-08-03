@@ -221,7 +221,7 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
             asf->hdr.min_pktsize        = get_le32(pb);
             asf->hdr.max_pktsize        = get_le32(pb);
             asf->hdr.max_bitrate        = get_le32(pb);
-            asf->packet_size = asf->hdr.max_pktsize;
+            s->packet_size = asf->hdr.max_pktsize;
         } else if (!guidcmp(&g, &ff_asf_stream_header)) {
             enum CodecType type;
             int type_specific_size, sizeX;
@@ -289,7 +289,7 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
 
             st->codec->codec_type = type;
             if (type == CODEC_TYPE_AUDIO) {
-                get_wav_header(pb, st->codec, type_specific_size);
+                ff_get_wav_header(pb, st->codec, type_specific_size);
                 if (is_dvr_ms_audio) {
                     // codec_id and codec_tag are unreliable in dvr_ms
                     // files. Set them later by probing stream.
@@ -364,7 +364,7 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 /* This is true for all paletted codecs implemented in ffmpeg */
                 if (st->codec->extradata_size && (st->codec->bits_per_coded_sample <= 8)) {
                     st->codec->palctrl = av_mallocz(sizeof(AVPaletteControl));
-#ifdef WORDS_BIGENDIAN
+#if HAVE_BIGENDIAN
                     for (i = 0; i < FFMIN(st->codec->extradata_size, AVPALETTE_SIZE)/4; i++)
                         st->codec->palctrl->palette[i] = bswap_32(((uint32_t*)st->codec->extradata)[i]);
 #else
@@ -375,7 +375,7 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
                 }
 
                 st->codec->codec_tag = tag1;
-                st->codec->codec_id = codec_get_id(codec_bmp_tags, tag1);
+                st->codec->codec_id = ff_codec_get_id(ff_codec_bmp_tags, tag1);
                 if(tag1 == MKTAG('D', 'V', 'R', ' '))
                     st->need_parsing = AVSTREAM_PARSE_FULL;
             }
@@ -582,14 +582,23 @@ static int asf_read_header(AVFormatContext *s, AVFormatParameters *ap)
     default: var = defval; break; \
     }
 
-int ff_asf_get_packet(AVFormatContext *s, ByteIOContext *pb)
+/**
+ * Load a single ASF packet into the demuxer.
+ * @param s demux context
+ * @param pb context to read data from
+ * @returns 0 on success, <0 on error
+ */
+static int ff_asf_get_packet(AVFormatContext *s, ByteIOContext *pb)
 {
     ASFContext *asf = s->priv_data;
     uint32_t packet_length, padsize;
     int rsize = 8;
     int c, d, e, off;
 
-    off= (url_ftell(pb) - s->data_offset) % asf->packet_size + 3;
+    // if we do not know packet size, allow skipping up to 32 kB
+    off= 32768;
+    if (s->packet_size > 0)
+        off= (url_ftell(pb) - s->data_offset) % s->packet_size + 3;
 
     c=d=e=-1;
     while(off-- > 0){
@@ -600,6 +609,14 @@ int ff_asf_get_packet(AVFormatContext *s, ByteIOContext *pb)
     }
 
     if (c != 0x82) {
+        /**
+         * This code allows handling of -EAGAIN at packet boundaries (i.e.
+         * if the packet sync code above triggers -EAGAIN). This does not
+         * imply complete -EAGAIN handling support at random positions in
+         * the stream.
+         */
+        if (url_ferror(pb) == AVERROR(EAGAIN))
+            return AVERROR(EAGAIN);
         if (!url_feof(pb))
             av_log(s, AV_LOG_ERROR, "ff asf bad header %x  at:%"PRId64"\n", c, url_ftell(pb));
     }
@@ -619,12 +636,12 @@ int ff_asf_get_packet(AVFormatContext *s, ByteIOContext *pb)
     asf->packet_flags    = c;
     asf->packet_property = d;
 
-    DO_2BITS(asf->packet_flags >> 5, packet_length, asf->packet_size);
+    DO_2BITS(asf->packet_flags >> 5, packet_length, s->packet_size);
     DO_2BITS(asf->packet_flags >> 1, padsize, 0); // sequence ignored
     DO_2BITS(asf->packet_flags >> 3, padsize, 0); // padding length
 
     //the following checks prevent overflows and infinite loops
-    if(packet_length >= (1U<<29)){
+    if(!packet_length || packet_length >= (1U<<29)){
         av_log(s, AV_LOG_ERROR, "invalid packet_length %d at:%"PRId64"\n", packet_length, url_ftell(pb));
         return -1;
     }
@@ -648,7 +665,7 @@ int ff_asf_get_packet(AVFormatContext *s, ByteIOContext *pb)
     if (packet_length < asf->hdr.min_pktsize)
         padsize += asf->hdr.min_pktsize - packet_length;
     asf->packet_padsize = padsize;
-    dprintf(s, "packet: size=%d padsize=%d  left=%d\n", asf->packet_size, asf->packet_padsize, asf->packet_size_left);
+    dprintf(s, "packet: size=%d padsize=%d  left=%d\n", s->packet_size, asf->packet_padsize, asf->packet_size_left);
     return 0;
 }
 
@@ -726,7 +743,16 @@ static int asf_read_frame_header(AVFormatContext *s, ByteIOContext *pb){
     return 0;
 }
 
-int ff_asf_parse_packet(AVFormatContext *s, ByteIOContext *pb, AVPacket *pkt)
+/**
+ * Parse data from individual ASF packets (which were previously loaded
+ * with asf_get_packet()).
+ * @param s demux context
+ * @param pb context to read data from
+ * @param pkt pointer to store packet data into
+ * @returns 0 if data was stored in pkt, <0 on error or 1 if more ASF
+ *          packets need to be loaded (through asf_get_packet())
+ */
+static int ff_asf_parse_packet(AVFormatContext *s, ByteIOContext *pb, AVPacket *pkt)
 {
     ASFContext *asf = s->priv_data;
     ASFStream *asf_st = 0;
@@ -820,7 +846,7 @@ int ff_asf_parse_packet(AVFormatContext *s, ByteIOContext *pb, AVPacket *pkt)
 
         /* read data */
         //printf("READ PACKET s:%d  os:%d  o:%d,%d  l:%d   DATA:%p\n",
-        //       asf->packet_size, asf_st->pkt.size, asf->packet_frag_offset,
+        //       s->packet_size, asf_st->pkt.size, asf->packet_frag_offset,
         //       asf_st->frag_offset, asf->packet_frag_size, asf_st->pkt.data);
         asf->packet_size_left -= asf->packet_frag_size;
         if (asf->packet_size_left < 0)
@@ -963,7 +989,6 @@ static int asf_read_close(AVFormatContext *s)
 
 static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos, int64_t pos_limit)
 {
-    ASFContext *asf = s->priv_data;
     AVPacket pkt1, *pkt = &pkt1;
     ASFStream *asf_st;
     int64_t pts;
@@ -975,7 +1000,8 @@ static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos,
         start_pos[i]= pos;
     }
 
-    pos= (pos+asf->packet_size-1-s->data_offset)/asf->packet_size*asf->packet_size+ s->data_offset;
+    if (s->packet_size > 0)
+        pos= (pos+s->packet_size-1-s->data_offset)/s->packet_size*s->packet_size+ s->data_offset;
     *ppos= pos;
     url_fseek(s->pb, pos, SEEK_SET);
 
@@ -995,7 +1021,7 @@ static int64_t asf_read_pts(AVFormatContext *s, int stream_index, int64_t *ppos,
 
             asf_st= s->streams[i]->priv_data;
 
-//            assert((asf_st->packet_pos - s->data_offset) % asf->packet_size == 0);
+//            assert((asf_st->packet_pos - s->data_offset) % s->packet_size == 0);
             pos= asf_st->packet_pos;
 
             av_add_index_entry(s->streams[i], pos, pts, pkt->size, pos - start_pos[i] + 1, AVINDEX_KEYFRAME);
@@ -1034,11 +1060,11 @@ static void asf_build_simple_index(AVFormatContext *s, int stream_index)
         for (i=0;i<ict;i++){
             int pktnum=get_le32(s->pb);
             int pktct =get_le16(s->pb);
-            int64_t pos      = s->data_offset + asf->packet_size*(int64_t)pktnum;
+            int64_t pos      = s->data_offset + s->packet_size*(int64_t)pktnum;
             int64_t index_pts= av_rescale(itime, i, 10000);
 
             av_log(s, AV_LOG_DEBUG, "pktnum:%d, pktct:%d\n", pktnum, pktct);
-            av_add_index_entry(s->streams[stream_index], pos, index_pts, asf->packet_size, 0, AVINDEX_KEYFRAME);
+            av_add_index_entry(s->streams[stream_index], pos, index_pts, s->packet_size, 0, AVINDEX_KEYFRAME);
         }
         asf->index_read= 1;
     }
@@ -1052,7 +1078,7 @@ static int asf_read_seek(AVFormatContext *s, int stream_index, int64_t pts, int 
     int64_t pos;
     int index;
 
-    if (asf->packet_size <= 0)
+    if (s->packet_size <= 0)
         return -1;
 
     /* Try using the protocol's read_seek if available */

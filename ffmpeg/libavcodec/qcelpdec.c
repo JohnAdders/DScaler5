@@ -38,6 +38,7 @@
 #include "celp_math.h"
 #include "celp_filters.h"
 #include "acelp_vectors.h"
+#include "lsp.h"
 
 #undef NDEBUG
 #include <assert.h>
@@ -74,13 +75,6 @@ typedef struct
     uint16_t first16bits;
     uint8_t  warned_buf_mismatch_bitrate;
 } QCELPContext;
-
-/**
- * Reconstructs LPC coefficients from the line spectral pair frequencies.
- *
- * TIA/EIA/IS-733 2.4.3.3.5
- */
-void ff_celp_lspf2lpc(const double *lspf, float *lpc);
 
 /**
  * Initialize the speech codec according to the specification.
@@ -432,7 +426,7 @@ static float compute_gain_ctrl(const float *v_ref, const float *v_in, const int 
     if(scalefactor)
         scalefactor = sqrt(ff_dot_productf(v_ref, v_ref, len) / scalefactor);
     else
-        ff_log_missing_feature(NULL, "Zero energy for gain control", 1);
+        av_log_missing_feature(NULL, "Zero energy for gain control", 1);
     return scalefactor;
 }
 
@@ -604,14 +598,14 @@ static void apply_pitch_filters(QCELPContext *q, float *cdn_vector)
  */
 static void lspf2lpc(const float *lspf, float *lpc)
 {
-    double lsf[10];
+    double lsp[10];
     double bandwidth_expansion_coeff = QCELP_BANDWIDTH_EXPANSION_COEFF;
     int   i;
 
     for (i=0; i<10; i++)
-        lsf[i] = cos(M_PI * lspf[i]);
+        lsp[i] = cos(M_PI * lspf[i]);
 
-    ff_celp_lspf2lpc(lsf, lpc);
+    ff_acelp_lspd2lpc(lsp, lpc);
 
     for (i=0; i<10; i++)
     {
@@ -716,7 +710,7 @@ static qcelp_packet_rate determine_bitrate(AVCodecContext *avctx, const int buf_
     if(bitrate == SILENCE)
     {
         //FIXME: Remove experimental warning when tested with samples.
-        ff_log_ask_for_sample(avctx, "'Blank frame handling is experimental.");
+        av_log_ask_for_sample(avctx, "'Blank frame handling is experimental.");
     }
     return bitrate;
 }

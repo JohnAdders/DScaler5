@@ -59,7 +59,6 @@ untested special converters
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
-#include <unistd.h>
 #include "config.h"
 #include <assert.h>
 #if HAVE_SYS_MMAN_H
@@ -90,7 +89,6 @@ unsigned swscale_version(void)
 //#define HAVE_AMD3DNOW
 //#undef HAVE_MMX
 //#undef ARCH_X86
-//#define WORDS_BIGENDIAN
 #define DITHER1XBPP
 
 #define FAST_BGR2YV12 // use 7 bit coefficients instead of 15 bit
@@ -108,6 +106,8 @@ unsigned swscale_version(void)
         || (x)==PIX_FMT_YUVA420P    \
         || (x)==PIX_FMT_YUYV422     \
         || (x)==PIX_FMT_UYVY422     \
+        || (x)==PIX_FMT_RGB48BE     \
+        || (x)==PIX_FMT_RGB48LE     \
         || (x)==PIX_FMT_RGB32       \
         || (x)==PIX_FMT_RGB32_1     \
         || (x)==PIX_FMT_BGR24       \
@@ -281,17 +281,17 @@ static unsigned char clip_table[768];
 
 static SwsVector *sws_getConvVec(SwsVector *a, SwsVector *b);
 
-static const uint8_t  __attribute__((aligned(8))) dither_2x2_4[2][8]={
+DECLARE_ALIGNED(8, static const uint8_t, dither_2x2_4[2][8])={
 {  1,   3,   1,   3,   1,   3,   1,   3, },
 {  2,   0,   2,   0,   2,   0,   2,   0, },
 };
 
-static const uint8_t  __attribute__((aligned(8))) dither_2x2_8[2][8]={
+DECLARE_ALIGNED(8, static const uint8_t, dither_2x2_8[2][8])={
 {  6,   2,   6,   2,   6,   2,   6,   2, },
 {  0,   4,   0,   4,   0,   4,   0,   4, },
 };
 
-const uint8_t  __attribute__((aligned(8))) dither_8x8_32[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_32[8][8])={
 { 17,   9,  23,  15,  16,   8,  22,  14, },
 {  5,  29,   3,  27,   4,  28,   2,  26, },
 { 21,  13,  19,  11,  20,  12,  18,  10, },
@@ -303,7 +303,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_32[8][8]={
 };
 
 #if 0
-const uint8_t  __attribute__((aligned(8))) dither_8x8_64[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_64[8][8])={
 {  0,  48,  12,  60,   3,  51,  15,  63, },
 { 32,  16,  44,  28,  35,  19,  47,  31, },
 {  8,  56,   4,  52,  11,  59,   7,  55, },
@@ -315,7 +315,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_64[8][8]={
 };
 #endif
 
-const uint8_t  __attribute__((aligned(8))) dither_8x8_73[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_73[8][8])={
 {  0,  55,  14,  68,   3,  58,  17,  72, },
 { 37,  18,  50,  32,  40,  22,  54,  35, },
 {  9,  64,   5,  59,  13,  67,   8,  63, },
@@ -327,7 +327,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_73[8][8]={
 };
 
 #if 0
-const uint8_t  __attribute__((aligned(8))) dither_8x8_128[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_128[8][8])={
 { 68,  36,  92,  60,  66,  34,  90,  58, },
 { 20, 116,  12, 108,  18, 114,  10, 106, },
 { 84,  52,  76,  44,  82,  50,  74,  42, },
@@ -340,7 +340,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_128[8][8]={
 #endif
 
 #if 1
-const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_220[8][8])={
 {117,  62, 158, 103, 113,  58, 155, 100, },
 { 34, 199,  21, 186,  31, 196,  17, 182, },
 {144,  89, 131,  76, 141,  86, 127,  72, },
@@ -352,7 +352,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
 };
 #elif 1
 // tries to correct a gamma of 1.5
-const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_220[8][8])={
 {  0, 143,  18, 200,   2, 156,  25, 215, },
 { 78,  28, 125,  64,  89,  36, 138,  74, },
 { 10, 180,   3, 161,  16, 195,   8, 175, },
@@ -364,7 +364,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
 };
 #elif 1
 // tries to correct a gamma of 2.0
-const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_220[8][8])={
 {  0, 124,   8, 193,   0, 140,  12, 213, },
 { 55,  14, 104,  42,  66,  19, 119,  52, },
 {  3, 168,   1, 145,   6, 187,   3, 162, },
@@ -376,7 +376,7 @@ const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
 };
 #else
 // tries to correct a gamma of 2.5
-const uint8_t  __attribute__((aligned(8))) dither_8x8_220[8][8]={
+DECLARE_ALIGNED(8, const uint8_t, dither_8x8_220[8][8])={
 {  0, 107,   3, 187,   0, 125,   6, 212, },
 { 39,   7,  86,  28,  49,  11, 102,  36, },
 {  1, 158,   0, 131,   3, 180,   1, 151, },
@@ -851,6 +851,24 @@ static inline void yuv2nv12XinC(const int16_t *lumFilter, const int16_t **lumSrc
 #define YSCALE_YUV_2_ANYRGB_C(func, func2, func_g16, func_monoblack)\
     switch(c->dstFormat)\
     {\
+    case PIX_FMT_RGB48BE:\
+    case PIX_FMT_RGB48LE:\
+        func(uint8_t,0)\
+            ((uint8_t*)dest)[ 0]= r[Y1];\
+            ((uint8_t*)dest)[ 1]= r[Y1];\
+            ((uint8_t*)dest)[ 2]= g[Y1];\
+            ((uint8_t*)dest)[ 3]= g[Y1];\
+            ((uint8_t*)dest)[ 4]= b[Y1];\
+            ((uint8_t*)dest)[ 5]= b[Y1];\
+            ((uint8_t*)dest)[ 6]= r[Y2];\
+            ((uint8_t*)dest)[ 7]= r[Y2];\
+            ((uint8_t*)dest)[ 8]= g[Y2];\
+            ((uint8_t*)dest)[ 9]= g[Y2];\
+            ((uint8_t*)dest)[10]= b[Y2];\
+            ((uint8_t*)dest)[11]= b[Y2];\
+            dest+=12;\
+        }\
+        break;\
     case PIX_FMT_RGBA:\
     case PIX_FMT_BGRA:\
         if (CONFIG_SMALL){\
@@ -1122,6 +1140,48 @@ static void fillPlane(uint8_t* plane, int stride, int width, int height, int y, 
     }
 }
 
+static inline void rgb48ToY(uint8_t *dst, const uint8_t *src, int width)
+{
+    int i;
+    for (i = 0; i < width; i++) {
+        int r = src[i*6+0];
+        int g = src[i*6+2];
+        int b = src[i*6+4];
+
+        dst[i] = (RY*r + GY*g + BY*b + (33<<(RGB2YUV_SHIFT-1))) >> RGB2YUV_SHIFT;
+    }
+}
+
+static inline void rgb48ToUV(uint8_t *dstU, uint8_t *dstV,
+                             uint8_t *src1, uint8_t *src2, int width)
+{
+    int i;
+    assert(src1==src2);
+    for (i = 0; i < width; i++) {
+        int r = src1[6*i + 0];
+        int g = src1[6*i + 2];
+        int b = src1[6*i + 4];
+
+        dstU[i] = (RU*r + GU*g + BU*b + (257<<(RGB2YUV_SHIFT-1))) >> RGB2YUV_SHIFT;
+        dstV[i] = (RV*r + GV*g + BV*b + (257<<(RGB2YUV_SHIFT-1))) >> RGB2YUV_SHIFT;
+    }
+}
+
+static inline void rgb48ToUV_half(uint8_t *dstU, uint8_t *dstV,
+                                  uint8_t *src1, uint8_t *src2, int width)
+{
+    int i;
+    assert(src1==src2);
+    for (i = 0; i < width; i++) {
+        int r= src1[12*i + 0] + src1[12*i + 6];
+        int g= src1[12*i + 2] + src1[12*i + 8];
+        int b= src1[12*i + 4] + src1[12*i + 10];
+
+        dstU[i]= (RU*r + GU*g + BU*b + (257<<RGB2YUV_SHIFT)) >> (RGB2YUV_SHIFT+1);
+        dstV[i]= (RV*r + GV*g + BV*b + (257<<RGB2YUV_SHIFT)) >> (RGB2YUV_SHIFT+1);
+    }
+}
+
 #define BGR2Y(type, name, shr, shg, shb, maskr, maskg, maskb, RY, GY, BY, S)\
 static inline void name(uint8_t *dst, const uint8_t *src, long width, uint32_t *unused)\
 {\
@@ -1239,13 +1299,12 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 
 //Note: we have C, MMX, MMX2, 3DNOW versions, there is no 3DNOW+MMX2 one
 //Plain C versions
-#if !HAVE_MMX || CONFIG_RUNTIME_CPUDETECT || !CONFIG_GPL
+#if ((!HAVE_MMX || !CONFIG_GPL) && !HAVE_ALTIVEC) || CONFIG_RUNTIME_CPUDETECT
 #define COMPILE_C
 #endif
 
 #if ARCH_PPC
-#if (HAVE_ALTIVEC || CONFIG_RUNTIME_CPUDETECT) && CONFIG_GPL
-#undef COMPILE_C
+#if HAVE_ALTIVEC || CONFIG_RUNTIME_CPUDETECT
 #define COMPILE_ALTIVEC
 #endif
 #endif //ARCH_PPC
@@ -1265,14 +1324,10 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 #endif
 #endif //ARCH_X86
 
-#undef HAVE_MMX
-#undef HAVE_MMX2
-#undef HAVE_AMD3DNOW
-#undef HAVE_ALTIVEC
-#define HAVE_MMX 0
-#define HAVE_MMX2 0
-#define HAVE_AMD3DNOW 0
-#define HAVE_ALTIVEC 0
+#define COMPILE_TEMPLATE_MMX 0
+#define COMPILE_TEMPLATE_MMX2 0
+#define COMPILE_TEMPLATE_AMD3DNOW 0
+#define COMPILE_TEMPLATE_ALTIVEC 0
 
 #ifdef COMPILE_C
 #define RENAME(a) a ## _C
@@ -1281,8 +1336,8 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 
 #ifdef COMPILE_ALTIVEC
 #undef RENAME
-#undef HAVE_ALTIVEC
-#define HAVE_ALTIVEC 1
+#undef COMPILE_TEMPLATE_ALTIVEC
+#define COMPILE_TEMPLATE_ALTIVEC 1
 #define RENAME(a) a ## _altivec
 #include "swscale_template.c"
 #endif
@@ -1292,12 +1347,12 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 //MMX versions
 #ifdef COMPILE_MMX
 #undef RENAME
-#undef HAVE_MMX
-#undef HAVE_MMX2
-#undef HAVE_AMD3DNOW
-#define HAVE_MMX 1
-#define HAVE_MMX2 0
-#define HAVE_AMD3DNOW 0
+#undef COMPILE_TEMPLATE_MMX
+#undef COMPILE_TEMPLATE_MMX2
+#undef COMPILE_TEMPLATE_AMD3DNOW
+#define COMPILE_TEMPLATE_MMX 1
+#define COMPILE_TEMPLATE_MMX2 0
+#define COMPILE_TEMPLATE_AMD3DNOW 0
 #define RENAME(a) a ## _MMX
 #include "swscale_template.c"
 #endif
@@ -1305,12 +1360,12 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 //MMX2 versions
 #ifdef COMPILE_MMX2
 #undef RENAME
-#undef HAVE_MMX
-#undef HAVE_MMX2
-#undef HAVE_AMD3DNOW
-#define HAVE_MMX 1
-#define HAVE_MMX2 1
-#define HAVE_AMD3DNOW 0
+#undef COMPILE_TEMPLATE_MMX
+#undef COMPILE_TEMPLATE_MMX2
+#undef COMPILE_TEMPLATE_AMD3DNOW
+#define COMPILE_TEMPLATE_MMX 1
+#define COMPILE_TEMPLATE_MMX2 1
+#define COMPILE_TEMPLATE_AMD3DNOW 0
 #define RENAME(a) a ## _MMX2
 #include "swscale_template.c"
 #endif
@@ -1318,19 +1373,17 @@ static inline void monoblack2Y(uint8_t *dst, const uint8_t *src, long width, uin
 //3DNOW versions
 #ifdef COMPILE_3DNOW
 #undef RENAME
-#undef HAVE_MMX
-#undef HAVE_MMX2
-#undef HAVE_AMD3DNOW
-#define HAVE_MMX 1
-#define HAVE_MMX2 0
-#define HAVE_AMD3DNOW 1
+#undef COMPILE_TEMPLATE_MMX
+#undef COMPILE_TEMPLATE_MMX2
+#undef COMPILE_TEMPLATE_AMD3DNOW
+#define COMPILE_TEMPLATE_MMX 1
+#define COMPILE_TEMPLATE_MMX2 0
+#define COMPILE_TEMPLATE_AMD3DNOW 1
 #define RENAME(a) a ## _3DNow
 #include "swscale_template.c"
 #endif
 
 #endif //ARCH_X86
-
-// minor note: the HAVE_xyz are messed up after this line so don't use them
 
 static double getSplineCoeff(double a, double b, double c, double d, double dist)
 {
@@ -1397,9 +1450,7 @@ static inline int initFilter(int16_t **outFilter, int16_t **filterPos, int *outF
     {
         int i;
         int xDstInSrc;
-        if      (flags&SWS_BICUBIC) filterSize= 4;
-        else if (flags&SWS_X      ) filterSize= 4;
-        else                        filterSize= 2; // SWS_BILINEAR / SWS_AREA
+        filterSize= 2;
         filter= av_malloc(dstW*sizeof(*filter)*filterSize);
 
         xDstInSrc= xInc/2 - 0x8000;
@@ -1837,6 +1888,13 @@ static void initMMX2HScaler(int dstW, int xInc, uint8_t *funnyCode, int16_t *fil
             int b=((xpos+xInc)>>16) - xx;
             int c=((xpos+xInc*2)>>16) - xx;
             int d=((xpos+xInc*3)>>16) - xx;
+            int inc                = (d+1<4);
+            uint8_t *fragment      = (d+1<4) ? fragmentB       : fragmentA;
+            x86_reg imm8OfPShufW1  = (d+1<4) ? imm8OfPShufW1B  : imm8OfPShufW1A;
+            x86_reg imm8OfPShufW2  = (d+1<4) ? imm8OfPShufW2B  : imm8OfPShufW2A;
+            x86_reg fragmentLength = (d+1<4) ? fragmentLengthB : fragmentLengthA;
+            int maxShift= 3-(d+inc);
+            int shift=0;
 
             filter[i  ] = (( xpos         & 0xFFFF) ^ 0xFFFF)>>9;
             filter[i+1] = (((xpos+xInc  ) & 0xFFFF) ^ 0xFFFF)>>9;
@@ -1844,53 +1902,24 @@ static void initMMX2HScaler(int dstW, int xInc, uint8_t *funnyCode, int16_t *fil
             filter[i+3] = (((xpos+xInc*3) & 0xFFFF) ^ 0xFFFF)>>9;
             filterPos[i/2]= xx;
 
-            if (d+1<4)
+            memcpy(funnyCode + fragmentPos, fragment, fragmentLength);
+
+            funnyCode[fragmentPos + imm8OfPShufW1]=
+                (a+inc) | ((b+inc)<<2) | ((c+inc)<<4) | ((d+inc)<<6);
+            funnyCode[fragmentPos + imm8OfPShufW2]=
+                a | (b<<2) | (c<<4) | (d<<6);
+
+            if (i+4-inc>=dstW) shift=maxShift; //avoid overread
+            else if ((filterPos[i/2]&3) <= maxShift) shift=filterPos[i/2]&3; //Align
+
+            if (shift && i>=shift)
             {
-                int maxShift= 3-(d+1);
-                int shift=0;
-
-                memcpy(funnyCode + fragmentPos, fragmentB, fragmentLengthB);
-
-                funnyCode[fragmentPos + imm8OfPShufW1B]=
-                    (a+1) | ((b+1)<<2) | ((c+1)<<4) | ((d+1)<<6);
-                funnyCode[fragmentPos + imm8OfPShufW2B]=
-                    a | (b<<2) | (c<<4) | (d<<6);
-
-                if (i+3>=dstW) shift=maxShift; //avoid overread
-                else if ((filterPos[i/2]&3) <= maxShift) shift=filterPos[i/2]&3; //Align
-
-                if (shift && i>=shift)
-                {
-                    funnyCode[fragmentPos + imm8OfPShufW1B]+= 0x55*shift;
-                    funnyCode[fragmentPos + imm8OfPShufW2B]+= 0x55*shift;
-                    filterPos[i/2]-=shift;
-                }
-
-                fragmentPos+= fragmentLengthB;
+                funnyCode[fragmentPos + imm8OfPShufW1]+= 0x55*shift;
+                funnyCode[fragmentPos + imm8OfPShufW2]+= 0x55*shift;
+                filterPos[i/2]-=shift;
             }
-            else
-            {
-                int maxShift= 3-d;
-                int shift=0;
 
-                memcpy(funnyCode + fragmentPos, fragmentA, fragmentLengthA);
-
-                funnyCode[fragmentPos + imm8OfPShufW1A]=
-                funnyCode[fragmentPos + imm8OfPShufW2A]=
-                    a | (b<<2) | (c<<4) | (d<<6);
-
-                if (i+4>=dstW) shift=maxShift; //avoid overread
-                else if ((filterPos[i/2]&3) <= maxShift) shift=filterPos[i/2]&3; //partial align
-
-                if (shift && i>=shift)
-                {
-                    funnyCode[fragmentPos + imm8OfPShufW1A]+= 0x55*shift;
-                    funnyCode[fragmentPos + imm8OfPShufW2A]+= 0x55*shift;
-                    filterPos[i/2]-=shift;
-                }
-
-                fragmentPos+= fragmentLengthA;
-            }
+            fragmentPos+= fragmentLength;
 
             funnyCode[fragmentPos]= RET;
         }
@@ -1911,10 +1940,10 @@ static void globalInit(void){
 
 static SwsFunc getSwsFunc(SwsContext *c)
 {
-#if CONFIG_RUNTIME_CPUDETECT && CONFIG_GPL
+#if CONFIG_RUNTIME_CPUDETECT
     int flags = c->flags;
 
-#if ARCH_X86
+#if ARCH_X86 && CONFIG_GPL
     // ordered per speed fastest first
     if (flags & SWS_CPU_CAPS_MMX2) {
         sws_init_swScale_MMX2(c);
@@ -1942,18 +1971,18 @@ static SwsFunc getSwsFunc(SwsContext *c)
 #endif
     sws_init_swScale_C(c);
     return swScale_C;
-#endif /* ARCH_X86 */
+#endif /* ARCH_X86 && CONFIG_GPL */
 #else //CONFIG_RUNTIME_CPUDETECT
-#if   HAVE_MMX2
+#if   COMPILE_TEMPLATE_MMX2
     sws_init_swScale_MMX2(c);
     return swScale_MMX2;
-#elif HAVE_AMD3DNOW
+#elif COMPILE_TEMPLATE_AMD3DNOW
     sws_init_swScale_3DNow(c);
     return swScale_3DNow;
-#elif HAVE_MMX
+#elif COMPILE_TEMPLATE_MMX
     sws_init_swScale_MMX(c);
     return swScale_MMX;
-#elif HAVE_ALTIVEC
+#elif COMPILE_TEMPLATE_ALTIVEC
     sws_init_swScale_altivec(c);
     return swScale_altivec;
 #else
@@ -2504,15 +2533,15 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat, int d
         __asm__ volatile("emms\n\t"::: "memory");
 #endif
 
-#if !CONFIG_RUNTIME_CPUDETECT || !CONFIG_GPL //ensure that the flags match the compiled variant if cpudetect is off
+#if !CONFIG_RUNTIME_CPUDETECT //ensure that the flags match the compiled variant if cpudetect is off
     flags &= ~(SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2|SWS_CPU_CAPS_3DNOW|SWS_CPU_CAPS_ALTIVEC|SWS_CPU_CAPS_BFIN);
-#if   HAVE_MMX2
+#if   COMPILE_TEMPLATE_MMX2
     flags |= SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_MMX2;
-#elif HAVE_AMD3DNOW
+#elif COMPILE_TEMPLATE_AMD3DNOW
     flags |= SWS_CPU_CAPS_MMX|SWS_CPU_CAPS_3DNOW;
-#elif HAVE_MMX
+#elif COMPILE_TEMPLATE_MMX
     flags |= SWS_CPU_CAPS_MMX;
-#elif HAVE_ALTIVEC
+#elif COMPILE_TEMPLATE_ALTIVEC
     flags |= SWS_CPU_CAPS_ALTIVEC;
 #elif ARCH_BFIN
     flags |= SWS_CPU_CAPS_BFIN;
@@ -2622,9 +2651,6 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat, int d
         c->param[1] = SWS_PARAM_DEFAULT;
     }
 
-    c->chrIntHSubSample= c->chrDstHSubSample;
-    c->chrIntVSubSample= c->chrSrcVSubSample;
-
     // Note the -((-x)>>y) is so that we always round toward +inf.
     c->chrSrcW= -((-srcW) >> c->chrSrcHSubSample);
     c->chrSrcH= -((-srcH) >> c->chrSrcVSubSample);
@@ -2670,6 +2696,8 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat, int d
            && srcFormat != PIX_FMT_MONOWHITE && dstFormat != PIX_FMT_MONOWHITE
                                              && dstFormat != PIX_FMT_RGB32_1
                                              && dstFormat != PIX_FMT_BGR32_1
+           && srcFormat != PIX_FMT_RGB48LE   && dstFormat != PIX_FMT_RGB48LE
+           && srcFormat != PIX_FMT_RGB48BE   && dstFormat != PIX_FMT_RGB48BE
            && (!needsDither || (c->flags&(SWS_FAST_BILINEAR|SWS_POINT))))
              c->swScale= rgb2rgbWrapper;
 
@@ -2731,7 +2759,9 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat, int d
             || (isGray(dstFormat) && isGray(srcFormat))
             || (isPlanarYUV(srcFormat) && isPlanarYUV(dstFormat)
                 && c->chrDstHSubSample == c->chrSrcHSubSample
-                && c->chrDstVSubSample == c->chrSrcVSubSample))
+                && c->chrDstVSubSample == c->chrSrcVSubSample
+                && dstFormat != PIX_FMT_NV12 && dstFormat != PIX_FMT_NV21
+                && srcFormat != PIX_FMT_NV12 && srcFormat != PIX_FMT_NV21))
         {
             if (isPacked(c->srcFormat))
                 c->swScale= packedCopy;
@@ -3102,25 +3132,25 @@ int sws_scale(SwsContext *c, uint8_t* src[], int srcStride[], int srcSliceY,
 
             switch(c->dstFormat) {
             case PIX_FMT_BGR32:
-#ifndef WORDS_BIGENDIAN
+#if !HAVE_BIGENDIAN
             case PIX_FMT_RGB24:
 #endif
                 c->pal_rgb[i]=  r + (g<<8) + (b<<16);
                 break;
             case PIX_FMT_BGR32_1:
-#ifdef  WORDS_BIGENDIAN
+#if HAVE_BIGENDIAN
             case PIX_FMT_BGR24:
 #endif
                 c->pal_rgb[i]= (r + (g<<8) + (b<<16)) << 8;
                 break;
             case PIX_FMT_RGB32_1:
-#ifdef  WORDS_BIGENDIAN
+#if HAVE_BIGENDIAN
             case PIX_FMT_RGB24:
 #endif
                 c->pal_rgb[i]= (b + (g<<8) + (r<<16)) << 8;
                 break;
             case PIX_FMT_RGB32:
-#ifndef WORDS_BIGENDIAN
+#if !HAVE_BIGENDIAN
             case PIX_FMT_BGR24:
 #endif
             default:
