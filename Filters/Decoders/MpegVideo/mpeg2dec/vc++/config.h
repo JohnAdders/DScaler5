@@ -1,7 +1,9 @@
 /* vc++/config.h - manually adapted from include/config.h.in */
 
 /* Suppress warnings relating to mismatched declarations */
+#ifdef _MSC_VER
 #pragma warning (disable:4028)
+#endif
 
 /* autodetect accelerations */
 #define ACCEL_DETECT
@@ -16,9 +18,7 @@
 /* #undef ARCH_SPARC */
 
 /* x86 architecture */
-#ifndef _M_AMD64
 #define ARCH_X86
-#endif
 
 /* maximum supported data alignment */
 /* #undef ATTRIBUTE_ALIGNED_MAX */
@@ -132,7 +132,11 @@
 #define SIZEOF_SHORT 2
 
 /* The size of a `void*', as computed by sizeof. */
+#ifdef _M_AMD64
+#define SIZEOF_VOIDP 8
+#else
 #define SIZEOF_VOIDP 4
+#endif
 
 /* Define to 1 if you have the ANSI C header files. */
 #define STDC_HEADERS 1

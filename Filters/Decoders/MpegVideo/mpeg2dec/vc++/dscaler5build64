@@ -1,0 +1,5 @@
+x86_64-pc-mingw32-gcc -I../vc++ -I../include -Wall -Werror -O3 -D_M_AMD64 -fomit-frame-pointer -fno-leading-underscore -c ../libmpeg2/cpu_accel.c -o cpu_accel.64.obj
+x86_64-pc-mingw32-gcc -I../vc++ -I../include -Wall -Werror -O3 -D_M_AMD64 -fomit-frame-pointer -fno-leading-underscore -c ../libmpeg2/cpu_accel.c -o cpu_accel.64.obj
+x86_64-pc-mingw32-gcc -I../vc++ -I../include -Wall -Werror -O3 -D_M_AMD64 -fomit-frame-pointer -fno-leading-underscore -c ../libmpeg2/cpu_state.c -o cpu_state.64.obj
+x86_64-pc-mingw32-gcc -I../vc++ -I../include -Wall -Werror -O3 -D_M_AMD64 -fomit-frame-pointer -fno-leading-underscore -c ../libmpeg2/idct_mmx.c -o idct_mmx.64.obj
+x86_64-pc-mingw32-gcc -I../vc++ -I../include -Wall -Werror -O3 -D_M_AMD64 -fomit-frame-pointer -fno-leading-underscore -c ../libmpeg2/motion_comp_mmx.c -o motion_comp_mmx.64.obj

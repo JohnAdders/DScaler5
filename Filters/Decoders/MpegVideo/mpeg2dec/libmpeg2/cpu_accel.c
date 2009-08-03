@@ -29,6 +29,15 @@
 #include "attributes.h"
 #include "mpeg2_internal.h"
 
+#ifdef _M_AMD64
+static inline uint32_t arch_accel (uint32_t accel)
+{
+    accel |= MPEG2_ACCEL_X86_MMX;
+	accel |= MPEG2_ACCEL_X86_3DNOW;
+	accel |= MPEG2_ACCEL_X86_MMXEXT;
+	return accel;
+}
+#else /* _M_AMD64 */
 #ifdef ARCH_X86
 static inline uint32_t arch_accel (uint32_t accel)
 {
@@ -112,6 +121,7 @@ static inline uint32_t arch_accel (uint32_t accel)
     return accel;
 }
 #endif /* ARCH_X86 */
+#endif/* _M_AMD64 */
 
 #if defined(ACCEL_DETECT) && (defined(ARCH_PPC) || defined(ARCH_SPARC))
 #include <signal.h>

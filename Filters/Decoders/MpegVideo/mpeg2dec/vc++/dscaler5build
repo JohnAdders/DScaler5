@@ -1,0 +1,5 @@
+gcc -I../vc++ -I../include -Wall -Werror -O3 -fomit-frame-pointer -c ../libmpeg2/cpu_accel.c -o cpu_accel.obj
+gcc -I../vc++ -I../include -Wall -Werror -O3 -fomit-frame-pointer -c ../libmpeg2/cpu_accel.c -o cpu_accel.obj
+gcc -I../vc++ -I../include -Wall -Werror -O3 -fomit-frame-pointer -c ../libmpeg2/cpu_state.c -o cpu_state.obj
+gcc -I../vc++ -I../include -Wall -Werror -O3 -fomit-frame-pointer -c ../libmpeg2/idct_mmx.c -o idct_mmx.obj
+gcc -I../vc++ -I../include -Wall -Werror -O3 -fomit-frame-pointer -c ../libmpeg2/motion_comp_mmx.c -o motion_comp_mmx.obj

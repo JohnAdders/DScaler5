@@ -404,10 +404,10 @@ static inline void idct_col (int16_t * const col, const int offset)
 #define T3 43790
 #define C4 23170
 
-    static const short _T1[] ATTR_ALIGN(8) = {T1,T1,T1,T1};
-    static const short _T2[] ATTR_ALIGN(8) = {T2,T2,T2,T2};
-    static const short _T3[] ATTR_ALIGN(8) = {T3,T3,T3,T3};
-    static const short _C4[] ATTR_ALIGN(8) = {C4,C4,C4,C4};
+    static ATTR_ALIGN(const short _T1[], 8) = {T1,T1,T1,T1};
+    static ATTR_ALIGN(const short _T2[], 8) = {T2,T2,T2,T2};
+    static ATTR_ALIGN(const short _T3[], 8) = {T3,T3,T3,T3};
+    static ATTR_ALIGN(const short _C4[], 8) = {C4,C4,C4,C4};
 
     /* column code adapted from peter gubanov */
     /* http://www.elecard.com/peter/idct.shtml */
@@ -541,33 +541,33 @@ static inline void idct_col (int16_t * const col, const int offset)
 }
 
 
-static const int32_t rounder0[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder0[], 8) =
     rounder ((1 << (COL_SHIFT - 1)) - 0.5);
-static const int32_t rounder4[] ATTR_ALIGN(8) = rounder (0);
-static const int32_t rounder1[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder4[], 8) = rounder (0);
+static ATTR_ALIGN(const int32_t rounder1[], 8) =
     rounder (1.25683487303);    /* C1*(C1/C4+C1+C7)/2 */
-static const int32_t rounder7[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder7[], 8) =
     rounder (-0.25);        /* C1*(C7/C4+C7-C1)/2 */
-static const int32_t rounder2[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder2[], 8) =
     rounder (0.60355339059);    /* C2 * (C6+C2)/2 */
-static const int32_t rounder6[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder6[], 8) =
     rounder (-0.25);        /* C2 * (C6-C2)/2 */
-static const int32_t rounder3[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder3[], 8) =
     rounder (0.087788325588);    /* C3*(-C3/C4+C3+C5)/2 */
-static const int32_t rounder5[] ATTR_ALIGN(8) =
+static ATTR_ALIGN(const int32_t rounder5[], 8) =
     rounder (-0.441341716183);    /* C3*(-C5/C4+C5-C3)/2 */
 
 
 #define declare_idct(idct,table,idct_row_head,idct_row,idct_row_tail,idct_row_mid)    \
 static inline void idct (int16_t * const block)                \
 {                                    \
-    static const int16_t table04[] ATTR_ALIGN(16) =            \
+    static ATTR_ALIGN(const int16_t table04[], 16) =            \
     table (22725, 21407, 19266, 16384, 12873,  8867, 4520);        \
-    static const int16_t table17[] ATTR_ALIGN(16) =            \
+    static ATTR_ALIGN(const int16_t table17[], 16) =            \
     table (31521, 29692, 26722, 22725, 17855, 12299, 6270);        \
-    static const int16_t table26[] ATTR_ALIGN(16) =            \
+    static ATTR_ALIGN(const int16_t table26[], 16) =            \
     table (29692, 27969, 25172, 21407, 16819, 11585, 5906);        \
-    static const int16_t table35[] ATTR_ALIGN(16) =            \
+    static ATTR_ALIGN(const int16_t table35[], 16) =            \
     table (26722, 25172, 22654, 19266, 15137, 10426, 5315);        \
                                     \
     idct_row_head (block, 0*8, table04);                \
