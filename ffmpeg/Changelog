@@ -30,6 +30,7 @@ version <next>:
 - Experimental AAC encoder
 - RTP depacketization of ASF and RTSP from WMS servers
 - RTMP support in libavformat
+- spectral extension support in the E-AC-3 decoder
 
 
 
