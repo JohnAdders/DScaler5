@@ -33,8 +33,8 @@
 
 static void decode_mb(MpegEncContext *s){
     s->dest[0] = s->current_picture.data[0] + (s->mb_y * 16* s->linesize  ) + s->mb_x * 16;
-    s->dest[1] = s->current_picture.data[1] + (s->mb_y * 8 * s->uvlinesize) + s->mb_x * 8;
-    s->dest[2] = s->current_picture.data[2] + (s->mb_y * 8 * s->uvlinesize) + s->mb_x * 8;
+    s->dest[1] = s->current_picture.data[1] + (s->mb_y * (16>>s->chroma_y_shift) * s->uvlinesize) + s->mb_x * (16>>s->chroma_x_shift);
+    s->dest[2] = s->current_picture.data[2] + (s->mb_y * (16>>s->chroma_y_shift) * s->uvlinesize) + s->mb_x * (16>>s->chroma_x_shift);
 
     MPV_decode_mb(s, s->block);
 }
@@ -685,13 +685,14 @@ void ff_er_frame_end(MpegEncContext *s){
     if(!s->error_recognition || s->error_count==0 || s->avctx->lowres ||
        s->avctx->hwaccel ||
        s->avctx->codec->capabilities&CODEC_CAP_HWACCEL_VDPAU ||
+       s->picture_structure != PICT_FRAME || // we dont support ER of field pictures yet, though it should not crash if enabled
        s->error_count==3*s->mb_width*(s->avctx->skip_top + s->avctx->skip_bottom)) return;
 
     if(s->current_picture.motion_val[0] == NULL){
         av_log(s->avctx, AV_LOG_ERROR, "Warning MVs not available\n");
 
         for(i=0; i<2; i++){
-            pic->ref_index[i]= av_mallocz(size * sizeof(uint8_t));
+            pic->ref_index[i]= av_mallocz(s->mb_stride * s->mb_height * 4 * sizeof(uint8_t));
             pic->motion_val_base[i]= av_mallocz((size+4) * 2 * sizeof(uint16_t));
             pic->motion_val[i]= pic->motion_val_base[i]+4;
         }

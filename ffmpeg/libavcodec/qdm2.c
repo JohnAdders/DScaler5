@@ -38,6 +38,7 @@
 #include "avcodec.h"
 #include "get_bits.h"
 #include "dsputil.h"
+#include "fft.h"
 #include "mpegaudio.h"
 
 #include "qdm2data.h"
@@ -122,7 +123,7 @@ typedef struct {
 } FFTCoefficient;
 
 typedef struct {
-    DECLARE_ALIGNED_16(QDM2Complex, complex[MPA_MAX_CHANNELS][256]);
+    DECLARE_ALIGNED(16, QDM2Complex, complex)[MPA_MAX_CHANNELS][256];
 } QDM2FFT;
 
 /**
@@ -172,9 +173,9 @@ typedef struct {
     float output_buffer[1024];
 
     /// Synthesis filter
-    DECLARE_ALIGNED_16(MPA_INT, synth_buf[MPA_MAX_CHANNELS][512*2]);
+    DECLARE_ALIGNED(16, MPA_INT, synth_buf)[MPA_MAX_CHANNELS][512*2];
     int synth_buf_offset[MPA_MAX_CHANNELS];
-    DECLARE_ALIGNED_16(int32_t, sb_samples[MPA_MAX_CHANNELS][128][SBLIMIT]);
+    DECLARE_ALIGNED(16, int32_t, sb_samples)[MPA_MAX_CHANNELS][128][SBLIMIT];
 
     /// Mixed temporary data used in decoding
     float tone_level[MPA_MAX_CHANNELS][30][64];
@@ -218,8 +219,6 @@ static float noise_table[4096];
 static uint8_t random_dequant_index[256][5];
 static uint8_t random_dequant_type24[128][3];
 static float noise_samples[128];
-
-static DECLARE_ALIGNED_16(MPA_INT, mpa_window[512]);
 
 
 static av_cold void softclip_table_init(void) {
@@ -1684,7 +1683,7 @@ static void qdm2_synthesis_filter (QDM2Context *q, int index)
 
         for (i = 0; i < 8; i++) {
             ff_mpa_synth_filter(q->synth_buf[ch], &(q->synth_buf_offset[ch]),
-                mpa_window, &dither_state,
+                ff_mpa_synth_window, &dither_state,
                 samples_ptr, q->nb_channels,
                 q->sb_samples[ch][(8 * index) + i]);
             samples_ptr += 32 * q->nb_channels;
@@ -1713,7 +1712,7 @@ static av_cold void qdm2_init(QDM2Context *q) {
     initialized = 1;
 
     qdm2_init_vlc();
-    ff_mpa_synth_init(mpa_window);
+    ff_mpa_synth_init(ff_mpa_synth_window);
     softclip_table_init();
     rnd_table_init();
     init_noise_samples();
@@ -1929,7 +1928,7 @@ static av_cold int qdm2_decode_init(AVCodecContext *avctx)
         return -1;
     }
 
-    ff_rdft_init(&s->rdft_ctx, s->fft_order, IRDFT);
+    ff_rdft_init(&s->rdft_ctx, s->fft_order, IDFT_C2R);
 
     qdm2_init(s);
 

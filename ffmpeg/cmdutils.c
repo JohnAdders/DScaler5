@@ -35,14 +35,16 @@
 #include "libswscale/swscale.h"
 #include "libpostproc/postprocess.h"
 #include "libavutil/avstring.h"
+#include "libavutil/pixdesc.h"
 #include "libavcodec/opt.h"
 #include "cmdutils.h"
 #include "version.h"
 #if CONFIG_NETWORK
 #include "libavformat/network.h"
 #endif
-
-#undef exit
+#if HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#endif
 
 const char **opt_names;
 static int opt_name_count;
@@ -50,7 +52,7 @@ AVCodecContext *avcodec_opts[CODEC_TYPE_NB];
 AVFormatContext *avformat_opts;
 struct SwsContext *sws_opts;
 
-const int this_year = 2009;
+const int this_year = 2010;
 
 double parse_number_or_die(const char *context, const char *numstr, int type, double min, double max)
 {
@@ -130,10 +132,11 @@ void parse_options(int argc, char **argv, const OptionDef *options,
                 handleoptions = 0;
                 continue;
             }
-            po= find_option(options, opt + 1);
-            if (!po->name && opt[1] == 'n' && opt[2] == 'o') {
+            opt++;
+            po= find_option(options, opt);
+            if (!po->name && opt[0] == 'n' && opt[1] == 'o') {
                 /* handle 'no' bool option */
-                po = find_option(options, opt + 3);
+                po = find_option(options, opt + 2);
                 if (!(po->name && (po->flags & OPT_BOOL)))
                     goto unknown_opt;
                 bool_val = 0;
@@ -160,14 +163,16 @@ unknown_opt:
             } else if (po->flags & OPT_BOOL) {
                 *po->u.int_arg = bool_val;
             } else if (po->flags & OPT_INT) {
-                *po->u.int_arg = parse_number_or_die(opt+1, arg, OPT_INT64, INT_MIN, INT_MAX);
+                *po->u.int_arg = parse_number_or_die(opt, arg, OPT_INT64, INT_MIN, INT_MAX);
             } else if (po->flags & OPT_INT64) {
-                *po->u.int64_arg = parse_number_or_die(opt+1, arg, OPT_INT64, INT64_MIN, INT64_MAX);
+                *po->u.int64_arg = parse_number_or_die(opt, arg, OPT_INT64, INT64_MIN, INT64_MAX);
             } else if (po->flags & OPT_FLOAT) {
-                *po->u.float_arg = parse_number_or_die(opt+1, arg, OPT_FLOAT, -1.0/0.0, 1.0/0.0);
+                *po->u.float_arg = parse_number_or_die(opt, arg, OPT_FLOAT, -1.0/0.0, 1.0/0.0);
             } else if (po->flags & OPT_FUNC2) {
-                if(po->u.func2_arg(opt+1, arg)<0)
-                    goto unknown_opt;
+                if (po->u.func2_arg(opt, arg) < 0) {
+                    fprintf(stderr, "%s: invalid value '%s' for option '%s'\n", argv[0], arg, opt);
+                    exit(1);
+                }
             } else {
                 po->u.func_arg(arg);
             }
@@ -193,7 +198,7 @@ int opt_default(const char *opt, const char *arg){
     }
     if(!o)
         ret = av_set_string3(avformat_opts, opt, arg, 1, &o);
-    if(!o)
+    if(!o && sws_opts)
         ret = av_set_string3(sws_opts, opt, arg, 1, &o);
     if(!o){
         if(opt[0] == 'a')
@@ -207,8 +212,10 @@ int opt_default(const char *opt, const char *arg){
         fprintf(stderr, "Invalid value '%s' for option '%s'\n", arg, opt);
         exit(1);
     }
-    if(!o)
-        return -1;
+    if (!o) {
+        fprintf(stderr, "Unrecognized option '%s'\n", opt);
+        exit(1);
+    }
 
 //    av_log(NULL, AV_LOG_ERROR, "%s:%s: %f 0x%0X\n", opt, arg, av_get_double(avcodec_opts, opt, NULL), (int)av_get_int(avcodec_opts, opt, NULL));
 
@@ -253,6 +260,19 @@ int opt_loglevel(const char *opt, const char *arg)
         exit(1);
     }
     av_log_set_level(level);
+    return 0;
+}
+
+int opt_timelimit(const char *opt, const char *arg)
+{
+#if HAVE_SETRLIMIT
+    int lim = parse_number_or_die(opt, arg, OPT_INT64, 0, INT_MAX);
+    struct rlimit rl = { lim, lim + 1 };
+    if (setrlimit(RLIMIT_CPU, &rl))
+        perror("setrlimit");
+#else
+    fprintf(stderr, "Warning: -%s not implemented on this OS\n", opt);
+#endif
     return 0;
 }
 
@@ -307,40 +327,61 @@ void print_error(const char *filename, int err)
     }
 }
 
-#define PRINT_LIB_VERSION(outstream,libname,LIBNAME,indent) \
-    version= libname##_version(); \
-    fprintf(outstream, "%slib%-10s %2d.%2d.%2d / %2d.%2d.%2d\n", indent? "  " : "", #libname, \
-            LIB##LIBNAME##_VERSION_MAJOR, LIB##LIBNAME##_VERSION_MINOR, LIB##LIBNAME##_VERSION_MICRO, \
-            version >> 16, version >> 8 & 0xff, version & 0xff);
+#define PRINT_LIB_VERSION(outstream,libname,LIBNAME,indent)             \
+    if (CONFIG_##LIBNAME) {                                             \
+        unsigned int version = libname##_version();                     \
+        fprintf(outstream, "%slib%-10s %2d.%2d.%2d / %2d.%2d.%2d\n",    \
+                indent? "  " : "", #libname,                            \
+                LIB##LIBNAME##_VERSION_MAJOR,                           \
+                LIB##LIBNAME##_VERSION_MINOR,                           \
+                LIB##LIBNAME##_VERSION_MICRO,                           \
+                version >> 16, version >> 8 & 0xff, version & 0xff);    \
+    }
 
 static void print_all_lib_versions(FILE* outstream, int indent)
 {
-    unsigned int version;
     PRINT_LIB_VERSION(outstream, avutil,   AVUTIL,   indent);
     PRINT_LIB_VERSION(outstream, avcodec,  AVCODEC,  indent);
     PRINT_LIB_VERSION(outstream, avformat, AVFORMAT, indent);
     PRINT_LIB_VERSION(outstream, avdevice, AVDEVICE, indent);
-#if CONFIG_AVFILTER
     PRINT_LIB_VERSION(outstream, avfilter, AVFILTER, indent);
-#endif
     PRINT_LIB_VERSION(outstream, swscale,  SWSCALE,  indent);
-#if CONFIG_POSTPROC
     PRINT_LIB_VERSION(outstream, postproc, POSTPROC, indent);
-#endif
 }
+
+static void maybe_print_config(const char *lib, const char *cfg)
+{
+    static int warned_cfg;
+
+    if (strcmp(FFMPEG_CONFIGURATION, cfg)) {
+        if (!warned_cfg) {
+            fprintf(stderr, "  WARNING: library configuration mismatch\n");
+            warned_cfg = 1;
+        }
+        fprintf(stderr, "  %-11s configuration: %s\n", lib, cfg);
+    }
+}
+
+#define PRINT_LIB_CONFIG(lib, tag, cfg) do {    \
+        if (CONFIG_##lib)                       \
+            maybe_print_config(tag, cfg);       \
+    } while (0)
 
 void show_banner(void)
 {
-    fprintf(stderr, "%s version " FFMPEG_VERSION ", Copyright (c) %d-%d Fabrice Bellard, et al.\n",
+    fprintf(stderr, "%s version " FFMPEG_VERSION ", Copyright (c) %d-%d the FFmpeg developers\n",
             program_name, program_birth_year, this_year);
+    fprintf(stderr, "  built on %s %s with %s %s\n",
+            __DATE__, __TIME__, CC_TYPE, CC_VERSION);
     fprintf(stderr, "  configuration: " FFMPEG_CONFIGURATION "\n");
+    PRINT_LIB_CONFIG(AVUTIL,   "libavutil",   avutil_configuration());
+    PRINT_LIB_CONFIG(AVCODEC,  "libavcodec",  avcodec_configuration());
+    PRINT_LIB_CONFIG(AVFORMAT, "libavformat", avformat_configuration());
+    PRINT_LIB_CONFIG(AVDEVICE, "libavdevice", avdevice_configuration());
+    PRINT_LIB_CONFIG(AVFILTER, "libavfilter", avfilter_configuration());
+    PRINT_LIB_CONFIG(SWSCALE,  "libswscale",  swscale_configuration());
+    PRINT_LIB_CONFIG(POSTPROC, "libpostproc", postproc_configuration());
     print_all_lib_versions(stderr, 1);
-    fprintf(stderr, "  built on " __DATE__ " " __TIME__);
-#ifdef __GNUC__
-    fprintf(stderr, ", gcc: " __VERSION__ "\n");
-#else
-    fprintf(stderr, ", using a non-gcc compiler\n");
-#endif
 }
 
 void show_version(void) {
@@ -417,16 +458,27 @@ void show_license(void)
     );
 }
 
+void list_fmts(void (*get_fmt_string)(char *buf, int buf_size, int fmt), int nb_fmts)
+{
+    int i;
+    char fmt_str[128];
+    for (i=-1; i < nb_fmts; i++) {
+        get_fmt_string (fmt_str, sizeof(fmt_str), i);
+        fprintf(stdout, "%s\n", fmt_str);
+    }
+}
+
 void show_formats(void)
 {
     AVInputFormat *ifmt=NULL;
     AVOutputFormat *ofmt=NULL;
-    URLProtocol *up=NULL;
-    AVCodec *p=NULL, *p2;
-    AVBitStreamFilter *bsf=NULL;
     const char *last_name;
 
-    printf("File formats:\n");
+    printf(
+        "File formats:\n"
+        " D. = Demuxing supported\n"
+        " .E = Muxing supported\n"
+        " --\n");
     last_name= "000";
     for(;;){
         int decode=0;
@@ -463,9 +515,23 @@ void show_formats(void)
             name,
             long_name ? long_name:" ");
     }
-    printf("\n");
+}
 
-    printf("Codecs:\n");
+void show_codecs(void)
+{
+    AVCodec *p=NULL, *p2;
+    const char *last_name;
+    printf(
+        "Codecs:\n"
+        " D..... = Decoding supported\n"
+        " .E.... = Encoding supported\n"
+        " ..V... = Video codec\n"
+        " ..A... = Audio codec\n"
+        " ..S... = Subtitle codec\n"
+        " ...S.. = Supports draw_horiz_band\n"
+        " ....D. = Supports direct rendering method 1\n"
+        " .....T = Supports weird frame truncation\n"
+        " ------\n");
     last_name= "000";
     for(;;){
         int decode=0;
@@ -519,25 +585,73 @@ void show_formats(void)
         printf("\n");
     }
     printf("\n");
-
-    printf("Bitstream filters:\n");
-    while((bsf = av_bitstream_filter_next(bsf)))
-        printf(" %s", bsf->name);
-    printf("\n");
-
-    printf("Supported file protocols:\n");
-    while((up = av_protocol_next(up)))
-        printf(" %s:", up->name);
-    printf("\n");
-
-    printf("Frame size, frame rate abbreviations:\n ntsc pal qntsc qpal sntsc spal film ntsc-film sqcif qcif cif 4cif\n");
-    printf("\n");
     printf(
 "Note, the names of encoders and decoders do not always match, so there are\n"
 "several cases where the above table shows encoder only or decoder only entries\n"
 "even though both encoding and decoding are supported. For example, the h263\n"
 "decoder corresponds to the h263 and h263p encoders, for file formats it is even\n"
 "worse.\n");
+}
+
+void show_bsfs(void)
+{
+    AVBitStreamFilter *bsf=NULL;
+
+    printf("Bitstream filters:\n");
+    while((bsf = av_bitstream_filter_next(bsf)))
+        printf("%s\n", bsf->name);
+    printf("\n");
+}
+
+void show_protocols(void)
+{
+    URLProtocol *up=NULL;
+
+    printf("Supported file protocols:\n");
+    while((up = av_protocol_next(up)))
+        printf("%s\n", up->name);
+    printf("\n");
+
+    printf("Frame size, frame rate abbreviations:\n ntsc pal qntsc qpal sntsc spal film ntsc-film sqcif qcif cif 4cif\n");
+}
+
+void show_filters(void)
+{
+    AVFilter av_unused(**filter) = NULL;
+
+    printf("Filters:\n");
+#if CONFIG_AVFILTER
+    while ((filter = av_filter_next(filter)) && *filter)
+        printf("%-16s %s\n", (*filter)->name, (*filter)->description);
+#endif
+}
+
+void show_pix_fmts(void)
+{
+    enum PixelFormat pix_fmt;
+
+    printf(
+        "Pixel formats:\n"
+        "I.... = Supported Input  format for conversion\n"
+        ".O... = Supported Output format for conversion\n"
+        "..H.. = Hardware accelerated format\n"
+        "...P. = Paletted format\n"
+        "....B = Bitstream format\n"
+        "FLAGS NAME            NB_COMPONENTS BITS_PER_PIXEL\n"
+        "-----\n");
+
+    for (pix_fmt = 0; pix_fmt < PIX_FMT_NB; pix_fmt++) {
+        const AVPixFmtDescriptor *pix_desc = &av_pix_fmt_descriptors[pix_fmt];
+        printf("%c%c%c%c%c %-16s       %d            %2d\n",
+               sws_isSupportedInput (pix_fmt)      ? 'I' : '.',
+               sws_isSupportedOutput(pix_fmt)      ? 'O' : '.',
+               pix_desc->flags & PIX_FMT_HWACCEL   ? 'H' : '.',
+               pix_desc->flags & PIX_FMT_PAL       ? 'P' : '.',
+               pix_desc->flags & PIX_FMT_BITSTREAM ? 'B' : '.',
+               pix_desc->name,
+               pix_desc->nb_components,
+               av_get_bits_per_pixel(pix_desc));
+    }
 }
 
 int read_yesno(void)

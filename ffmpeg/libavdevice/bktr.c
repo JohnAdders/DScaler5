@@ -25,6 +25,8 @@
  */
 
 #define _BSD_SOURCE 1
+#define _NETBSD_SOURCE
+
 #include "libavformat/avformat.h"
 #if HAVE_DEV_BKTR_IOCTL_METEOR_H && HAVE_DEV_BKTR_IOCTL_BT848_H
 # include <dev/bktr/ioctl_meteor.h>
@@ -32,7 +34,7 @@
 #elif HAVE_MACHINE_IOCTL_METEOR_H && HAVE_MACHINE_IOCTL_BT848_H
 # include <machine/ioctl_meteor.h>
 # include <machine/ioctl_bt848.h>
-#elif HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H && HAVE_DEV_VIDEO_METEOR_IOCTL_BT848_H
+#elif HAVE_DEV_VIDEO_METEOR_IOCTL_METEOR_H && HAVE_DEV_VIDEO_BKTR_IOCTL_BT848_H
 # include <dev/video/meteor/ioctl_meteor.h>
 # include <dev/video/bktr/ioctl_bt848.h>
 #elif HAVE_DEV_IC_BT8XX_H
@@ -44,6 +46,7 @@
 #include <sys/mman.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <strings.h>
 
 typedef struct {
     int video_fd;

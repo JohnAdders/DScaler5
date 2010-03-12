@@ -28,7 +28,7 @@
 // The idiosyncrasies of GSM-in-WAV are explained at http://kbs.cs.tu-berlin.de/~jutta/toast.html
 
 #include "avcodec.h"
-#include <gsm.h>
+#include <gsm/gsm.h>
 
 // gsm.h misses some essential constants
 #define GSM_BLOCK_SIZE 33
@@ -120,7 +120,7 @@ AVCodec libgsm_encoder = {
     libgsm_init,
     libgsm_encode_frame,
     libgsm_close,
-    .sample_fmts = (enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
     .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM"),
 };
 
@@ -132,7 +132,7 @@ AVCodec libgsm_ms_encoder = {
     libgsm_init,
     libgsm_encode_frame,
     libgsm_close,
-    .sample_fmts = (enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
+    .sample_fmts = (const enum SampleFormat[]){SAMPLE_FMT_S16,SAMPLE_FMT_NONE},
     .long_name = NULL_IF_CONFIG_SMALL("libgsm GSM Microsoft variant"),
 };
 

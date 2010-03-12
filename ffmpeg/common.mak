@@ -2,13 +2,15 @@
 # common bits used by all libraries
 #
 
-all: # make "all" default target
+# first so "all" becomes default target
+all: all-yes
 
 ifndef SUBDIR
 vpath %.c   $(SRC_DIR)
 vpath %.h   $(SRC_DIR)
 vpath %.S   $(SRC_DIR)
 vpath %.asm $(SRC_DIR)
+vpath %.v   $(SRC_DIR)
 
 ifeq ($(SRC_DIR),$(SRC_PATH_BARE))
 BUILD_ROOT_REL = .
@@ -16,45 +18,55 @@ else
 BUILD_ROOT_REL = ..
 endif
 
+ifndef V
+Q      = @
+ECHO   = printf "$(1)\t%s\n" $(2)
+BRIEF  = CC AS YASM AR LD HOSTCC RANLIB STRIP CP
+SILENT = DEPCC YASMDEP RM
+MSG    = $@
+M      = @$(call ECHO,$(MSG),$@);
+$(foreach VAR,$(BRIEF), \
+    $(eval $(VAR) = @$$(call ECHO,$(VAR),$$(MSG)); $($(VAR))))
+$(foreach VAR,$(SILENT),$(eval $(VAR) = @$($(VAR))))
+$(eval INSTALL = @$(call ECHO,INSTALL,$$(^:$(SRC_DIR)/%=%)); $(INSTALL))
+endif
+
 ALLFFLIBS = avcodec avdevice avfilter avformat avutil postproc swscale
 
-CPPFLAGS := -DHAVE_AV_CONFIG_H -I$(BUILD_ROOT_REL) -I$(SRC_PATH) $(CPPFLAGS)
+CPPFLAGS := -I$(BUILD_ROOT_REL) -I$(SRC_PATH) $(CPPFLAGS)
+CFLAGS   += $(ECFLAGS)
 
 %.o: %.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBOBJFLAGS) -c $(CC_O) $<
+	$(CCDEP)
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(CC_DEPFLAGS) -c $(CC_O) $<
 
 %.o: %.S
-	$(AS) $(CPPFLAGS) $(ASFLAGS) $(LIBOBJFLAGS) -c -o $@ $<
+	$(ASDEP)
+	$(AS) $(CPPFLAGS) $(ASFLAGS) $(AS_DEPFLAGS) -c -o $@ $<
 
 %.ho: %.h
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBOBJFLAGS) -Wno-unused -c -o $@ -x c $<
-
-%.d: %.c
-	$(DEPEND_CMD)
-
-%.d: %.S
-	$(DEPEND_CMD)
-
-%.d: %.cpp
-	$(DEPEND_CMD)
-
-%.o: %.d
+	$(CC) $(CPPFLAGS) $(CFLAGS) -Wno-unused -c -o $@ -x c $<
 
 %$(EXESUF): %.c
 
-SVN_ENTRIES = $(SRC_PATH_BARE)/.svn/entries
-ifeq ($(wildcard $(SVN_ENTRIES)),$(SVN_ENTRIES))
-$(BUILD_ROOT_REL)/version.h: $(SVN_ENTRIES)
-endif
+%.ver: %.v
+	$(Q)sed 's/$$MAJOR/$($(basename $(@F))_VERSION_MAJOR)/' $^ > $@
 
-$(BUILD_ROOT_REL)/version.h: $(SRC_PATH_BARE)/version.sh config.mak
-	$< $(SRC_PATH) $@ $(EXTRA_VERSION)
+%.c %.h: MSG = GEN
 
 install: install-libs install-headers
+install-libs: install-libs-yes
 
 uninstall: uninstall-libs uninstall-headers
 
 .PHONY: all depend dep *clean install* uninstall* examples testprogs
+
+# Disable suffix rules.  Most of the builtin rules are suffix rules,
+# so this saves some time on slow systems.
+.SUFFIXES:
+
+# Do not delete intermediate files from chains of implicit rules
+$(OBJS):
 endif
 
 OBJS-$(HAVE_MMX) +=  $(MMX-OBJS-yes)
@@ -68,19 +80,30 @@ FFEXTRALIBS := $(addprefix -l,$(addsuffix $(BUILDSUF),$(FFLIBS))) $(EXTRALIBS)
 FFLDFLAGS   := $(addprefix -L$(BUILD_ROOT)/lib,$(ALLFFLIBS)) $(LDFLAGS)
 
 EXAMPLES  := $(addprefix $(SUBDIR),$(addsuffix -example$(EXESUF),$(EXAMPLES)))
-OBJS      := $(addprefix $(SUBDIR),$(OBJS))
+OBJS      := $(addprefix $(SUBDIR),$(sort $(OBJS)))
+TESTOBJS  := $(addprefix $(SUBDIR),$(TESTOBJS))
 TESTPROGS := $(addprefix $(SUBDIR),$(addsuffix -test$(EXESUF),$(TESTPROGS)))
+HOSTOBJS  := $(addprefix $(SUBDIR),$(addsuffix .o,$(HOSTPROGS)))
+HOSTPROGS := $(addprefix $(SUBDIR),$(addsuffix $(HOSTEXESUF),$(HOSTPROGS)))
 
 DEP_LIBS := $(foreach NAME,$(FFLIBS),$(BUILD_ROOT_REL)/lib$(NAME)/$($(CONFIG_SHARED:yes=S)LIBNAME))
 
 ALLHEADERS := $(subst $(SRC_DIR)/,$(SUBDIR),$(wildcard $(SRC_DIR)/*.h $(SRC_DIR)/$(ARCH)/*.h))
-checkheaders: $(filter-out %_template.ho,$(ALLHEADERS:.h=.ho))
+SKIPHEADERS += $(addprefix $(ARCH)/,$(ARCH_HEADERS))
+SKIPHEADERS := $(addprefix $(SUBDIR),$(SKIPHEADERS-) $(SKIPHEADERS))
+checkheaders: $(filter-out $(SKIPHEADERS:.h=.ho),$(ALLHEADERS:.h=.ho))
+
+$(HOSTOBJS): %.o: %.c
+	$(HOSTCC) $(HOSTCFLAGS) -c -o $@ $<
+
+$(HOSTPROGS): %$(HOSTEXESUF): %.o
+	$(HOSTCC) $(HOSTLDFLAGS) -o $@ $< $(HOSTLIBS)
 
 DEPS := $(OBJS:.o=.d)
 depend dep: $(DEPS)
 
-CLEANSUFFIXES     = *.o *~ *.ho *.map
-DISTCLEANSUFFIXES = *.d *.pc
+CLEANSUFFIXES     = *.d *.o *~ *.ho *.map *.ver
+DISTCLEANSUFFIXES = *.pc
 LIBSUFFIXES       = *.a *.lib *.so *.so.* *.dylib *.dll *.def *.dll.a *.exp
 
--include $(DEPS)
+-include $(wildcard $(DEPS))

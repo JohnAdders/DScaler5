@@ -20,8 +20,8 @@
  */
 
 #include "libavformat/avformat.h"
-#include <vfw.h>
 #include <windows.h>
+#include <vfw.h>
 
 //#define DEBUG_VFW
 
@@ -46,6 +46,8 @@ struct vfw_ctx {
 static enum PixelFormat vfw_pixfmt(DWORD biCompression, WORD biBitCount)
 {
     switch(biCompression) {
+    case MKTAG('U', 'Y', 'V', 'Y'):
+        return PIX_FMT_UYVY422;
     case MKTAG('Y', 'U', 'Y', '2'):
         return PIX_FMT_YUYV422;
     case MKTAG('I', '4', '2', '0'):
@@ -74,6 +76,9 @@ static enum CodecID vfw_codecid(DWORD biCompression)
     switch(biCompression) {
     case MKTAG('d', 'v', 's', 'd'):
         return CODEC_ID_DVVIDEO;
+    case MKTAG('M', 'J', 'P', 'G'):
+    case MKTAG('m', 'j', 'p', 'g'):
+        return CODEC_ID_MJPEG;
     }
     return CODEC_ID_NONE;
 }
@@ -294,17 +299,17 @@ static int vfw_read_header(AVFormatContext *s, AVFormatParameters *ap)
     bi->bmiHeader.biWidth  = width ;
     bi->bmiHeader.biHeight = height;
 
-#if 0
-    /* For testing yet unsupported compressions
-     * Copy these values from user-supplied verbose information */
-    bi->bmiHeader.biWidth       = 320;
-    bi->bmiHeader.biHeight      = 240;
-    bi->bmiHeader.biPlanes      = 1;
-    bi->bmiHeader.biBitCount    = 12;
-    bi->bmiHeader.biCompression = MKTAG('I','4','2','0');
-    bi->bmiHeader.biSizeImage   = 115200;
-    dump_bih(s, &bi->bmiHeader);
-#endif
+    if (0) {
+        /* For testing yet unsupported compressions
+         * Copy these values from user-supplied verbose information */
+        bi->bmiHeader.biWidth       = 320;
+        bi->bmiHeader.biHeight      = 240;
+        bi->bmiHeader.biPlanes      = 1;
+        bi->bmiHeader.biBitCount    = 12;
+        bi->bmiHeader.biCompression = MKTAG('I','4','2','0');
+        bi->bmiHeader.biSizeImage   = 115200;
+        dump_bih(s, &bi->bmiHeader);
+    }
 
     ret = SendMessage(ctx->hwnd, WM_CAP_SET_VIDEOFORMAT, bisize, (LPARAM) bi);
     if(!ret) {

@@ -56,6 +56,11 @@ int opt_default(const char *opt, const char *arg);
 int opt_loglevel(const char *opt, const char *arg);
 
 /**
+ * Limit the execution time.
+ */
+int opt_timelimit(const char *opt, const char *arg);
+
+/**
  * Parses a string and returns its corresponding value as a double.
  * Exits from the application if the string cannot be correctly
  * parsed or the corresponding value is invalid.
@@ -131,6 +136,8 @@ void set_context_opts(void *ctx, void *opts_ctx, int flags);
 
 void print_error(const char *filename, int err);
 
+void list_fmts(void (*get_fmt_string)(char *buf, int buf_size, int fmt), int nb_fmts);
+
 /**
  * Prints the program banner to stderr. The banner contents depend on the
  * current version of the repository and of the libav* libraries used by
@@ -156,6 +163,36 @@ void show_license(void);
  * program.
  */
 void show_formats(void);
+
+/**
+ * Prints a listing containing all the codecs supported by the
+ * program.
+ */
+void show_codecs(void);
+
+/**
+ * Prints a listing containing all the filters supported by the
+ * program.
+ */
+void show_filters(void);
+
+/**
+ * Prints a listing containing all the bit stream filters supported by the
+ * program.
+ */
+void show_bsfs(void);
+
+/**
+ * Prints a listing containing all the protocols supported by the
+ * program.
+ */
+void show_protocols(void);
+
+/**
+ * Prints a listing containing all the pixel formats supported by the
+ * program.
+ */
+void show_pix_fmts(void);
 
 /**
  * Returns a positive value if reads from standard input a line

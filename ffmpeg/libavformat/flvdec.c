@@ -39,36 +39,10 @@ static int flv_probe(AVProbeData *p)
     const uint8_t *d;
 
     d = p->buf;
-    if (d[0] == 'F' && d[1] == 'L' && d[2] == 'V' && d[3] < 5 && d[5]==0) {
+    if (d[0] == 'F' && d[1] == 'L' && d[2] == 'V' && d[3] < 5 && d[5]==0 && AV_RB32(d+5)>8) {
         return AVPROBE_SCORE_MAX;
     }
     return 0;
-}
-
-/**
- * Builds a Speex header.
- * This is not needed for the libavcodec libspeex decoder, but is needed for
- * stream copy and for decoders which require a header.
- */
-static void flv_build_speex_header(uint8_t *extradata)
-{
-    memset(extradata, 0, 80);
-    bytestream_put_buffer(&extradata, "Speex   ", 8);   // speex_string
-    bytestream_put_buffer(&extradata, "1.2rc1",   6);   // speex_version
-    extradata += 14;                                    // speex_version padding
-    bytestream_put_le32(&extradata,     1);             // speex_version_id
-    bytestream_put_le32(&extradata,    80);             // header_size
-    bytestream_put_le32(&extradata, 16000);             // rate
-    bytestream_put_le32(&extradata,     1);             // mode
-    bytestream_put_le32(&extradata,     4);             // mode_bitstream_version
-    bytestream_put_le32(&extradata,     1);             // nb_channels
-    bytestream_put_le32(&extradata,    -1);             // bitrate
-    bytestream_put_le32(&extradata,   320);             // frame_size
-                                                        // vbr = 0
-                                                        // frames_per_packet = 0
-                                                        // extra_headers = 0
-                                                        // reserved1 = 0
-                                                        // reserved2 = 0
 }
 
 static void flv_set_audio_codec(AVFormatContext *s, AVStream *astream, int flv_codecid) {
@@ -76,7 +50,7 @@ static void flv_set_audio_codec(AVFormatContext *s, AVStream *astream, int flv_c
     switch(flv_codecid) {
         //no distinction between S16 and S8 PCM codec flags
         case FLV_CODECID_PCM:
-            acodec->codec_id = acodec->bits_per_coded_sample == 8 ? CODEC_ID_PCM_S8 :
+            acodec->codec_id = acodec->bits_per_coded_sample == 8 ? CODEC_ID_PCM_U8 :
 #if HAVE_BIGENDIAN
                                 CODEC_ID_PCM_S16BE;
 #else
@@ -84,19 +58,12 @@ static void flv_set_audio_codec(AVFormatContext *s, AVStream *astream, int flv_c
 #endif
             break;
         case FLV_CODECID_PCM_LE:
-            acodec->codec_id = acodec->bits_per_coded_sample == 8 ? CODEC_ID_PCM_S8 : CODEC_ID_PCM_S16LE; break;
+            acodec->codec_id = acodec->bits_per_coded_sample == 8 ? CODEC_ID_PCM_U8 : CODEC_ID_PCM_S16LE; break;
         case FLV_CODECID_AAC  : acodec->codec_id = CODEC_ID_AAC;                                    break;
         case FLV_CODECID_ADPCM: acodec->codec_id = CODEC_ID_ADPCM_SWF;                              break;
         case FLV_CODECID_SPEEX:
             acodec->codec_id = CODEC_ID_SPEEX;
             acodec->sample_rate = 16000;
-            acodec->extradata = av_mallocz(80 + FF_INPUT_BUFFER_PADDING_SIZE);
-            if (acodec->extradata) {
-                acodec->extradata_size = 80;
-                flv_build_speex_header(acodec->extradata);
-            } else {
-                av_log(s, AV_LOG_WARNING, "Unable to create Speex extradata\n");
-            }
             break;
         case FLV_CODECID_MP3  : acodec->codec_id = CODEC_ID_MP3      ; astream->need_parsing = AVSTREAM_PARSE_FULL; break;
         case FLV_CODECID_NELLYMOSER_8KHZ_MONO:
@@ -115,6 +82,7 @@ static int flv_set_video_codec(AVFormatContext *s, AVStream *vstream, int flv_co
     switch(flv_codecid) {
         case FLV_CODECID_H263  : vcodec->codec_id = CODEC_ID_FLV1   ; break;
         case FLV_CODECID_SCREEN: vcodec->codec_id = CODEC_ID_FLASHSV; break;
+        case FLV_CODECID_SCREEN2: vcodec->codec_id = CODEC_ID_FLASHSV2; break;
         case FLV_CODECID_VP6   : vcodec->codec_id = CODEC_ID_VP6F   ;
         case FLV_CODECID_VP6A  :
             if(flv_codecid == FLV_CODECID_VP6A)
@@ -394,7 +362,7 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
  }
 
     // if not streamed and no duration from metadata then seek to end to find the duration from the timestamps
-    if(!url_is_streamed(s->pb) && s->duration==AV_NOPTS_VALUE){
+    if(!url_is_streamed(s->pb) && (!s->duration || s->duration==AV_NOPTS_VALUE)){
         int size;
         const int64_t pos= url_ftell(s->pb);
         const int64_t fsize= url_fsize(s->pb);
@@ -402,7 +370,9 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
         size= get_be32(s->pb);
         url_fseek(s->pb, fsize-3-size, SEEK_SET);
         if(size == get_be24(s->pb) + 11){
-            s->duration= get_be24(s->pb) * (int64_t)AV_TIME_BASE / 1000;
+            uint32_t ts = get_be24(s->pb);
+            ts |= get_byte(s->pb) << 24;
+            s->duration = ts * (int64_t)AV_TIME_BASE / 1000;
         }
         url_fseek(s->pb, pos, SEEK_SET);
     }
@@ -441,9 +411,7 @@ static int flv_read_packet(AVFormatContext *s, AVPacket *pkt)
                 MPEG4AudioConfig cfg;
                 ff_mpeg4audio_get_config(&cfg, st->codec->extradata,
                                          st->codec->extradata_size);
-                if (cfg.chan_config > 7)
-                    return -1;
-                st->codec->channels = ff_mpeg4audio_channels[cfg.chan_config];
+                st->codec->channels = cfg.channels;
                 st->codec->sample_rate = cfg.sample_rate;
                 dprintf(s, "mp4a config channels %d sample rate %d\n",
                         st->codec->channels, st->codec->sample_rate);

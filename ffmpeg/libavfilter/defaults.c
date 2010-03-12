@@ -23,7 +23,7 @@
 #include "avfilter.h"
 
 /* TODO: buffer pool.  see comment for avfilter_default_get_video_buffer() */
-void avfilter_default_free_video_buffer(AVFilterPic *pic)
+static void avfilter_default_free_video_buffer(AVFilterPic *pic)
 {
     av_free(pic->data[0]);
     av_free(pic);
@@ -32,7 +32,7 @@ void avfilter_default_free_video_buffer(AVFilterPic *pic)
 /* TODO: set the buffer's priv member to a context structure for the whole
  * filter chain.  This will allow for a buffer pool instead of the constant
  * alloc & free cycle currently implemented. */
-AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms)
+AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms, int w, int h)
 {
     AVFilterPic *pic = av_mallocz(sizeof(AVFilterPic));
     AVFilterPicRef *ref = av_mallocz(sizeof(AVFilterPicRef));
@@ -40,8 +40,8 @@ AVFilterPicRef *avfilter_default_get_video_buffer(AVFilterLink *link, int perms)
     char *buf;
 
     ref->pic   = pic;
-    ref->w     = link->w;
-    ref->h     = link->h;
+    ref->w     = pic->w = w;
+    ref->h     = pic->h = h;
 
     /* make sure the buffer gets read permission or it's useless for output */
     ref->perms = perms | AV_PERM_READ;
@@ -72,13 +72,14 @@ void avfilter_default_start_frame(AVFilterLink *link, AVFilterPicRef *picref)
         out = link->dst->outputs[0];
 
     if(out) {
-        out->outpic      = avfilter_get_video_buffer(out, AV_PERM_WRITE);
+        out->outpic      = avfilter_get_video_buffer(out, AV_PERM_WRITE, out->w, out->h);
         out->outpic->pts = picref->pts;
+        out->outpic->pixel_aspect = picref->pixel_aspect;
         avfilter_start_frame(out, avfilter_ref_pic(out->outpic, ~0));
     }
 }
 
-void avfilter_default_draw_slice(AVFilterLink *link, int y, int h)
+void avfilter_default_draw_slice(AVFilterLink *link, int y, int h, int slice_dir)
 {
     AVFilterLink *out = NULL;
 
@@ -86,7 +87,7 @@ void avfilter_default_draw_slice(AVFilterLink *link, int y, int h)
         out = link->dst->outputs[0];
 
     if(out)
-        avfilter_draw_slice(out, y, h);
+        avfilter_draw_slice(out, y, h, slice_dir);
 }
 
 void avfilter_default_end_frame(AVFilterLink *link)

@@ -201,7 +201,7 @@ static const AVCodecTag nsv_codec_video_tags[] = {
 */
     { CODEC_ID_MPEG4, MKTAG('X', 'V', 'I', 'D') }, /* cf sample xvid decoder from nsv_codec_sdk.zip */
     { CODEC_ID_RAWVIDEO, MKTAG('R', 'G', 'B', '3') },
-    { 0, 0 },
+    { CODEC_ID_NONE, 0 },
 };
 
 static const AVCodecTag nsv_codec_audio_tags[] = {
@@ -210,7 +210,7 @@ static const AVCodecTag nsv_codec_audio_tags[] = {
     { CODEC_ID_AAC,       MKTAG('A', 'A', 'C', 'P') },
     { CODEC_ID_SPEEX,     MKTAG('S', 'P', 'X', ' ') },
     { CODEC_ID_PCM_U16LE, MKTAG('P', 'C', 'M', ' ') },
-    { 0, 0 },
+    { CODEC_ID_NONE,      0 },
 };
 
 //static int nsv_load_index(AVFormatContext *s);
@@ -728,6 +728,10 @@ static int nsv_read_close(AVFormatContext *s)
 
     av_freep(&nsv->nsvs_file_offset);
     av_freep(&nsv->nsvs_timestamps);
+    if (nsv->ahead[0].data)
+        av_free_packet(&nsv->ahead[0]);
+    if (nsv->ahead[1].data)
+        av_free_packet(&nsv->ahead[1]);
 
 #if 0
 
@@ -764,7 +768,7 @@ static int nsv_probe(AVProbeData *p)
             return AVPROBE_SCORE_MAX-20;
     }
     /* so we'll have more luck on extension... */
-    if (match_ext(p->filename, "nsv"))
+    if (av_match_ext(p->filename, "nsv"))
         return AVPROBE_SCORE_MAX/2;
     /* FIXME: add mime-type check */
     return 0;
