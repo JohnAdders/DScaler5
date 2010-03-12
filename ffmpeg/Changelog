@@ -226,7 +226,7 @@ version 0.5:
 - Gopher client support
 - MXF D-10 muxer
 - generic metadata API
-
+- spectral extension support in the E-AC-3 decoder
 
 
 version 0.4.9-pre1:
