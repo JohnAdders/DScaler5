@@ -804,7 +804,8 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat,
 
     unscaled = (srcW == dstW && srcH == dstH);
 
-    srcRange = handle_jpeg(&srcFormat);
+    // JA force 16-235 conversion
+    srcRange = 1;
     dstRange = handle_jpeg(&dstFormat);
 
     if (!isSupportedIn(srcFormat)) {
@@ -903,7 +904,8 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat,
     c->chrDstW= -((-dstW) >> c->chrDstHSubSample);
     c->chrDstH= -((-dstH) >> c->chrDstVSubSample);
 
-    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[SWS_CS_DEFAULT], srcRange, ff_yuv2rgb_coeffs[SWS_CS_DEFAULT] /* FIXME*/, dstRange, 0, 1<<16, 1<<16);
+    int swsConvType = (srcH> 576 || srcW > 1024)?SWS_CS_ITU709:SWS_CS_ITU601;
+    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[swsConvType], srcRange, ff_yuv2rgb_coeffs[swsConvType], dstRange, 0, 1<<16, 1<<16);
 
     /* unscaled special cases */
     if (unscaled && !usesHFilter && !usesVFilter && (srcRange == dstRange || isAnyRGB(dstFormat))) {
