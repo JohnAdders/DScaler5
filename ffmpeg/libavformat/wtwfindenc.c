@@ -35,10 +35,12 @@ static int wtwfind_write_header(AVFormatContext *s)
 static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
 {
     AVCodecContext* codecContext = s->streams[0]->codec;
-    uint32_t count[3] = {0,0,0};
+    uint32_t counthi[3] = {0,0,0};
+    uint32_t countlo[3] = {0,0,0};
     uint8_t peak[3] = {0,0,0};
     uint8_t valley[3] = {255,255,255};
     char buf[256];
+    static uint64_t counter = 0;
 
     for(uint32_t i = 0; i < codecContext->height; ++i)
     {
@@ -50,7 +52,11 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
                 uint8_t colour = *pBuff++;
                 if(colour > 235)
                 {
-                    ++count[k];
+                    ++counthi[k];
+                }
+                if(colour < 16)
+                {
+                    ++countlo[k];
                 }
                 if(colour > peak[k])
                 {
@@ -63,7 +69,7 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
             }
         }
     }
-    snprintf(buf, sizeof(buf), "%d,%d,%d,%d,%d,%d,%d,%d,%d,   %dx%d %d\n", count[0], count[2], count[2], peak[0], peak[1], peak[2], valley[0], valley[1], valley[2], codecContext->width, codecContext->height, pkt->size);
+    snprintf(buf, sizeof(buf), "%"PRId64",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n", ++counter, counthi[0], counthi[1], counthi[2], peak[0], peak[1], peak[2], countlo[0], countlo[1], countlo[2], valley[0], valley[1], valley[2]);
     put_buffer(s->pb, buf, strlen(buf));
     put_flush_packet(s->pb);
     return 0;
@@ -72,10 +78,12 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
 static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
 {
     AVCodecContext* codecContext = s->streams[0]->codec;
-    uint32_t count[3] = {0,0,0};
+    uint32_t counthi[3] = {0,0,0};
+    uint32_t countlo[3] = {0,0,0};
     uint8_t peak[3] = {0,0,0};
     uint8_t valley[3] = {255,255,255};
     char buf[256];
+    static uint64_t counter = 0;
 
     uint8_t* pBuff = (uint8_t*)pkt->data;
     for(uint32_t i = 0; i < codecContext->height; ++i)
@@ -85,7 +93,11 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
             uint8_t colour = *pBuff++;
             if(colour > 235)
             {
-                ++count[0];
+                ++counthi[0];
+            }
+            if(colour < 16)
+            {
+                ++countlo[0];
             }
             if(colour > peak[0])
             {
@@ -102,9 +114,13 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         for(uint32_t j = 1; j < codecContext->width / 2; ++j)
         {
             uint8_t colour = *pBuff++;
-            if(colour > 235)
+            if(colour > 240)
             {
-                ++count[1];
+                ++counthi[1];
+            }
+            if(colour < 16)
+            {
+                ++countlo[1];
             }
             if(colour > peak[1])
             {
@@ -123,7 +139,11 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
             uint8_t colour = *pBuff++;
             if(colour > 235)
             {
-                ++count[2];
+                ++counthi[2];
+            }
+            if(colour < 16)
+            {
+                ++countlo[2];
             }
             if(colour > peak[2])
             {
@@ -136,7 +156,7 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         }
     }
 
-    snprintf(buf, sizeof(buf), "%d,%d,%d,%d,%d,%d,%d,%d,%d,   %dx%d %d\n", count[0], count[2], count[2], peak[0], peak[1], peak[2], valley[0], valley[1], valley[2], codecContext->width, codecContext->height, pkt->size);
+    snprintf(buf, sizeof(buf), "%"PRId64",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n", ++counter, counthi[0], counthi[1], counthi[2], peak[0], peak[1], peak[2], countlo[0], countlo[1], countlo[2], valley[0], valley[1], valley[2]);
     put_buffer(s->pb, buf, strlen(buf));
     put_flush_packet(s->pb);
     return 0;
