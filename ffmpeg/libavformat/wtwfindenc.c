@@ -76,6 +76,7 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
     for(uint32_t i = offsety; i < codecContext->height - offsety; ++i)
     {
         uint8_t* pBuff = (uint8_t*)pkt->data + i * codecContext->width * 3;
+        pBuff += offsetx * 3;
         for(uint32_t j = offsetx; j < codecContext->width -offsetx; ++j)
         {
             for(int k = 0; k < 3; ++k)
@@ -128,8 +129,10 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
     uint32_t offsetx = codecContext->width / 20;
 
     uint8_t* pBuff = (uint8_t*)pkt->data;
+    pBuff += offsety * codecContext->width;
     for(uint32_t i = offsety; i < codecContext->height - offsety; ++i)
     {
+        pBuff += offsetx;
         for(uint32_t j = offsetx; j < codecContext->width - offsetx; ++j)
         {
             uint8_t colour = *pBuff++;
@@ -150,9 +153,13 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
                 valley[0] = colour;
             }
         }
+        pBuff += offsetx;
     }
+    pBuff += offsety * codecContext->width;
+    pBuff += offsety * codecContext->width / 4;
     for(uint32_t i = offsety / 2; i < (codecContext->height - offsety) / 2; ++i)
     {
+        pBuff += offsetx / 2;
         for(uint32_t j = offsetx / 2; j < (codecContext->width - offsetx)/ 2; ++j)
         {
             uint8_t colour = *pBuff++;
@@ -173,9 +180,12 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
                 valley[1] = colour;
             }
         }
+        pBuff += offsetx / 2;
     }
+    pBuff += offsety * codecContext->width / 2;
     for(uint32_t i = offsety / 2; i < (codecContext->height - offsety) / 2; ++i)
     {
+        pBuff += offsetx / 2;
         for(uint32_t j = offsetx / 2; j < (codecContext->width - offsetx) / 2; ++j)
         {
             uint8_t colour = *pBuff++;
@@ -196,6 +206,7 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
                 valley[2] = colour;
             }
         }
+        pBuff += offsetx / 2;
     }
 
     for(int i = 0; i < 3; ++i)

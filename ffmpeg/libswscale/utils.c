@@ -804,8 +804,7 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat,
 
     unscaled = (srcW == dstW && srcH == dstH);
 
-    // JA force 16-235 conversion
-    srcRange = 1;
+    srcRange = handle_jpeg(&srcFormat);
     dstRange = handle_jpeg(&dstFormat);
 
     if (!isSupportedIn(srcFormat)) {
@@ -904,8 +903,9 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat,
     c->chrDstW= -((-dstW) >> c->chrDstHSubSample);
     c->chrDstH= -((-dstH) >> c->chrDstVSubSample);
 
+    // use correct matrix for sd and hd also se brightness and contrast to get studio rgb out
     int swsConvType = (srcH> 576 || srcW > 1024)?SWS_CS_ITU709:SWS_CS_ITU601;
-    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[swsConvType], srcRange, ff_yuv2rgb_coeffs[swsConvType], dstRange, 0, 1<<16, 1<<16);
+    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[swsConvType], srcRange, ff_yuv2rgb_coeffs[swsConvType], dstRange, 4112, 56284, 56284);
 
     /* unscaled special cases */
     if (unscaled && !usesHFilter && !usesVFilter && (srcRange == dstRange || isAnyRGB(dstFormat))) {
