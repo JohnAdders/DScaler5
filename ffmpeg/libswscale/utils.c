@@ -905,7 +905,7 @@ SwsContext *sws_getContext(int srcW, int srcH, enum PixelFormat srcFormat,
 
     // use correct matrix for sd and hd also se brightness and contrast to get studio rgb out
     int swsConvType = (srcH> 576 || srcW > 1024)?SWS_CS_ITU709:SWS_CS_ITU601;
-    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[swsConvType], srcRange, ff_yuv2rgb_coeffs[swsConvType], dstRange, 4112, 56284, 56284);
+    sws_setColorspaceDetails(c, ff_yuv2rgb_coeffs[swsConvType], srcRange, ff_yuv2rgb_coeffs[swsConvType], dstRange, 4096, 56284, 1<<16);
 
     /* unscaled special cases */
     if (unscaled && !usesHFilter && !usesVFilter && (srcRange == dstRange || isAnyRGB(dstFormat))) {
