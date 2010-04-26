@@ -2497,7 +2497,7 @@ static inline void RENAME(hcscale_fast)(SwsContext *c, int16_t *dst,
 /* GCC 3.3 makes MPlayer crash on IA-32 machines when using "g" operand here,
 which is needed to support GCC 4.0. */
 #if ARCH_X86_64 && AV_GCC_VERSION_AT_LEAST(3,4)
-            :: "m" (src1), "m" (dst), "g" (dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
+            :: "m" (src1), "m" (dst), "g" ((x86_reg)dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
 #else
             :: "m" (src1), "m" (dst), "m" (dstWidth), "m" (xInc_shr16), "m" (xInc_mask),
 #endif
