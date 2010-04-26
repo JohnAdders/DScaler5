@@ -39,7 +39,7 @@ static int wtwfind_write_header(AVFormatContext *s)
     }
     else if(s->streams[0]->codec->pix_fmt == PIX_FMT_YUV420P)
     {
-        snprintf(buf, sizeof(buf), "Counter,NumYPixelsOverRange,NumCrPixelsOverRange,NumCbPixelsOverRange,PeakY,PeakCr,PeakCb,NumYPixelsUnderRange,NumCrPixelsUnderRange,NumCbPixelsUnderRange,MinY,MinCr,MinCb\r\n");
+        snprintf(buf, sizeof(buf), "Counter,NumYPixelsOverRange,NumCbPixelsOverRange,NumCrPixelsOverRange,PeakY,PeakCb,PeakCr,NumYPixelsUnderRange,NumCbPixelsUnderRange,NumCrPixelsUnderRange,MinY,MinCb,MinCr\r\n");
     }
     else
     {
@@ -73,9 +73,12 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
     uint32_t offsety = codecContext->height / 20;
     uint32_t offsetx = codecContext->width / 20;
 
+    AVPicture *picture;
+    picture = (AVPicture *)pkt->data;
+
     for(uint32_t i = offsety; i < codecContext->height - offsety; ++i)
     {
-        uint8_t* pBuff = (uint8_t*)pkt->data + i * codecContext->width * 3;
+        uint8_t* pBuff = picture->data[0] + i * codecContext->width * 3;
         pBuff += offsetx * 3;
         for(uint32_t j = offsetx; j < codecContext->width -offsetx; ++j)
         {
@@ -125,10 +128,18 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
     char buf[256];
     static uint64_t counter = 0;
 
-    uint32_t offsety = codecContext->height / 20;
-    uint32_t offsetx = codecContext->width / 20;
+    AVPicture *picture;
+    picture = (AVPicture *)pkt->data;
 
-    uint8_t* pBuff = (uint8_t*)pkt->data;
+    //uint32_t offsety = codecContext->height / 20;
+    //uint32_t offsetx = codecContext->width / 20;
+    uint32_t offsety = 0;
+    uint32_t offsetx = 0;
+
+    //av_log(NULL, AV_LOG_ERROR, "R:%d %d\n", pBuff -  (uint8_t*)pkt->data, pkt->size);
+
+
+    uint8_t* pBuff = picture->data[0];
     pBuff += offsety * codecContext->width;
     for(uint32_t i = offsety; i < codecContext->height - offsety; ++i)
     {
@@ -156,6 +167,7 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         pBuff += offsetx;
     }
     pBuff += offsety * codecContext->width;
+    pBuff = picture->data[1];
     pBuff += offsety * codecContext->width / 4;
     for(uint32_t i = offsety / 2; i < (codecContext->height - offsety) / 2; ++i)
     {
@@ -182,14 +194,16 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         }
         pBuff += offsetx / 2;
     }
-    pBuff += offsety * codecContext->width / 2;
+    pBuff += offsety * codecContext->width / 4;
+    pBuff = picture->data[2];
+    pBuff += offsety * codecContext->width / 4;
     for(uint32_t i = offsety / 2; i < (codecContext->height - offsety) / 2; ++i)
     {
         pBuff += offsetx / 2;
         for(uint32_t j = offsetx / 2; j < (codecContext->width - offsetx) / 2; ++j)
         {
             uint8_t colour = *pBuff++;
-            if(colour > 235)
+            if(colour > 240)
             {
                 ++counthi[2];
             }
@@ -208,6 +222,8 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         }
         pBuff += offsetx / 2;
     }
+    pBuff += offsety * codecContext->width / 4;
+    //av_log(NULL, AV_LOG_ERROR, "R:%d %d\n", pBuff -  (uint8_t*)pkt->data, pkt->size);
 
     for(int i = 0; i < 3; ++i)
     {
@@ -244,7 +260,7 @@ static int wtwfind_write_trailer(struct AVFormatContext *s)
     }
     else if(s->streams[0]->codec->pix_fmt == PIX_FMT_YUV420P)
     {
-        snprintf(buf, sizeof(buf), "Value,YFramesPeak,CrFramesPeak,CbFramesPeak,YFramesMin,CrFramesMin,CbFramesMin\r\n");
+        snprintf(buf, sizeof(buf), "Value,YFramesPeak,CbFramesPeak,CrFramesPeak,YFramesMin,CbFramesMin,CrFramesMin\r\n");
     }
     put_buffer(s->pb, buf, strlen(buf));
     put_flush_packet(s->pb);
@@ -268,4 +284,5 @@ AVOutputFormat wtwfind_muxer = {
     wtwfind_write_header,
     wtwfind_write_packet,
     wtwfind_write_trailer,
+    .flags = AVFMT_RAWPICTURE,
 };
