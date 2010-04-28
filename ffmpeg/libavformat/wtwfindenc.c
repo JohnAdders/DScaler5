@@ -19,13 +19,95 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/avstring.h"
 #include "avformat.h"
+#include <strings.h>
 
 typedef struct wtwfind_context {
     uint64_t frame_count;
     uint64_t max_histogram[3][256];
     uint64_t min_histogram[3][256];
+    char path[1024];
+    uint8_t peak_so_far[3];
 } WtwFindContext;
+
+
+static void dumpImage(struct AVFormatContext *s, AVPacket *pkt)
+{
+    WtwFindContext *img = s->priv_data;
+    ByteIOContext *pb[3];
+    char filename[1024];
+    uint32_t pkt_size;
+    AVCodecContext *codec= s->streams[ pkt->stream_index ]->codec;
+    AVPicture *picture;
+    AVFrame *frame;
+    uint8_t* buf;
+    AVCodec* tiffCodec;
+    AVCodecContext* context;
+    int sizeUsed;
+
+    if (av_get_frame_filename(filename, sizeof(filename),
+                              img->path, img->frame_count) < 0) 
+    {
+        av_log(s, AV_LOG_ERROR, "Could not get frame filename from pattern\n");
+        return;
+    }
+    if (url_fopen(&pb[0], filename, URL_WRONLY) < 0) {
+        av_log(s, AV_LOG_ERROR, "Could not open file : %s\n",filename);
+        return;
+    }
+
+    picture = (AVPicture *)pkt->data;
+    pkt_size = codec->height * codec->width * 3;
+
+    buf = av_mallocz(pkt_size * 2);
+
+    tiffCodec = avcodec_find_encoder(CODEC_ID_TIFF);
+    if (!tiffCodec) 
+    {
+        av_log(s, AV_LOG_ERROR, "Could not find tiff encoder\n");
+        return;
+    }
+    context = avcodec_alloc_context();
+
+    context->width = codec->width;
+    context->height = codec->height;
+    context->pix_fmt = codec->pix_fmt;
+
+    if (avcodec_open(context, tiffCodec) < 0)
+    {
+        av_log(s, AV_LOG_ERROR, "Could not open tiff encoder\n");
+        av_free(context);
+        return;
+    }
+
+    frame = avcodec_alloc_frame();
+    if(!frame)
+    {
+        av_log(s, AV_LOG_ERROR, "Out of memory\n");
+        avcodec_close(context);
+        av_free(context);
+        return;
+    }
+
+    frame->data[0] = picture->data[0];
+    frame->linesize[0] = codec->width * 3;
+
+    sizeUsed = avcodec_encode_video(context, buf, pkt_size * 2, frame);
+    if(sizeUsed > 0)
+    {
+        put_buffer(pb[0], buf, sizeUsed);
+        put_flush_packet(pb[0]);
+    }
+    else
+    {
+        av_log(s, AV_LOG_ERROR, "Tiff encode failed\n");
+    }
+    url_fclose(pb[0]);
+    avcodec_close(context);
+    av_free(context);
+    av_free(frame);
+}
 
 
 static int wtwfind_write_header(AVFormatContext *s)
@@ -52,11 +134,24 @@ static int wtwfind_write_header(AVFormatContext *s)
 
     wtw->frame_count = 0;
     for(int i = 0; i < 3; ++i)
+    {
         for(int j =0; j < 256; ++j)
         {
             wtw->max_histogram[i][j] = 0;
             wtw->min_histogram[i][j] = 0;
         }
+        wtw->peak_so_far[i] = 0;
+    }
+
+    if(strncmp(s->filename, "pipe:", 5) != 0)
+    {
+        av_strlcpy(wtw->path, s->filename, sizeof(wtw->path));
+    }
+    else
+    {
+        av_strlcpy(wtw->path, "frame", sizeof(wtw->path));
+    }
+    av_strlcat(wtw->path, ".%06d.tif", sizeof(wtw->path));
     return 0;
 }
 
@@ -69,6 +164,7 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
     uint8_t peak[3] = {0,0,0};
     uint8_t valley[3] = {255,255,255};
     char buf[256];
+    int needToDumpImage = 0;
 
     uint32_t offsety = codecContext->height / 20;
     uint32_t offsetx = codecContext->width / 20;
@@ -114,6 +210,25 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
     snprintf(buf, sizeof(buf), "%"PRId64",%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\r\n", ++wtw->frame_count, counthi[0], counthi[1], counthi[2], peak[0], peak[1], peak[2], countlo[0], countlo[1], countlo[2], valley[0], valley[1], valley[2]);
     put_buffer(s->pb, buf, strlen(buf));
     put_flush_packet(s->pb);
+
+    // look for frames at peaks so far in each colour
+    for(int i = 0; i < 3; ++i)
+    {
+        if(peak[i] >= wtw->peak_so_far[i])
+        {
+            wtw->peak_so_far[i] = peak[i];
+            if(peak[i] > 235)
+            {
+                needToDumpImage = 1;
+            }
+        }
+    }
+
+    if(needToDumpImage)
+    {
+        dumpImage(s, pkt);
+    }
+
     return 0;
 }
 
@@ -127,19 +242,14 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
     uint8_t valley[3] = {255,255,255};
     char buf[256];
     static uint64_t counter = 0;
+    uint32_t offsety = codecContext->height / 20;
+    uint32_t offsetx = codecContext->width / 20;
+    uint8_t* pBuff;
 
     AVPicture *picture;
     picture = (AVPicture *)pkt->data;
 
-    //uint32_t offsety = codecContext->height / 20;
-    //uint32_t offsetx = codecContext->width / 20;
-    uint32_t offsety = 0;
-    uint32_t offsetx = 0;
-
-    //av_log(NULL, AV_LOG_ERROR, "R:%d %d\n", pBuff -  (uint8_t*)pkt->data, pkt->size);
-
-
-    uint8_t* pBuff = picture->data[0];
+    pBuff = picture->data[0];
     pBuff += offsety * codecContext->width;
     for(uint32_t i = offsety; i < codecContext->height - offsety; ++i)
     {
@@ -223,7 +333,6 @@ static int wtwfind_write_packet_yuv(struct AVFormatContext *s, AVPacket *pkt)
         pBuff += offsetx / 2;
     }
     pBuff += offsety * codecContext->width / 4;
-    //av_log(NULL, AV_LOG_ERROR, "R:%d %d\n", pBuff -  (uint8_t*)pkt->data, pkt->size);
 
     for(int i = 0; i < 3; ++i)
     {
