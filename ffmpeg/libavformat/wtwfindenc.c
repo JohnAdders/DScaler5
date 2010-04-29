@@ -29,46 +29,61 @@ typedef struct wtwfind_context {
     uint64_t min_histogram[3][256];
     char path[1024];
     uint8_t peak_so_far[3];
+    uint32_t peak_num_frames[3];
 } WtwFindContext;
 
 
 static void dumpImage(struct AVFormatContext *s, AVPacket *pkt)
 {
     WtwFindContext *img = s->priv_data;
-    ByteIOContext *pb[3];
+    ByteIOContext *pb = 0;
     char filename[1024];
     uint32_t pkt_size;
     AVCodecContext *codec= s->streams[ pkt->stream_index ]->codec;
     AVPicture *picture;
-    AVFrame *frame;
-    uint8_t* buf;
-    AVCodec* tiffCodec;
-    AVCodecContext* context;
+    AVFrame *frame = 0;
+    uint8_t* buf = 0;
+    AVCodec* tiffCodec = 0;
+    AVCodecContext* context = 0;
     int sizeUsed;
 
-    if (av_get_frame_filename(filename, sizeof(filename),
-                              img->path, img->frame_count) < 0) 
-    {
-        av_log(s, AV_LOG_ERROR, "Could not get frame filename from pattern\n");
-        return;
-    }
-    if (url_fopen(&pb[0], filename, URL_WRONLY) < 0) {
-        av_log(s, AV_LOG_ERROR, "Could not open file : %s\n",filename);
-        return;
-    }
 
     picture = (AVPicture *)pkt->data;
     pkt_size = codec->height * codec->width * 3;
 
     buf = av_mallocz(pkt_size * 2);
+    if(!buf)
+    {
+        av_log(s, AV_LOG_ERROR, "Out of memory\n");
+        return;
+    }
+
+    if (av_get_frame_filename(filename, sizeof(filename),
+                              img->path, img->frame_count) < 0) 
+    {
+        av_log(s, AV_LOG_ERROR, "Could not get frame filename from pattern\n");
+        goto tidyUp1;
+        return;
+    }
+    if (url_fopen(&pb, filename, URL_WRONLY) < 0)
+    {
+        av_log(s, AV_LOG_ERROR, "Could not open file : %s\n",filename);
+        goto tidyUp1;
+    }
 
     tiffCodec = avcodec_find_encoder(CODEC_ID_TIFF);
     if (!tiffCodec) 
     {
         av_log(s, AV_LOG_ERROR, "Could not find tiff encoder\n");
-        return;
+        goto tidyUp2;
     }
+
     context = avcodec_alloc_context();
+    if (!context) 
+    {
+        av_log(s, AV_LOG_ERROR, "Out of memory\n");
+        goto tidyUp2;
+    }
 
     context->width = codec->width;
     context->height = codec->height;
@@ -77,7 +92,7 @@ static void dumpImage(struct AVFormatContext *s, AVPacket *pkt)
     if (avcodec_open(context, tiffCodec) < 0)
     {
         av_log(s, AV_LOG_ERROR, "Could not open tiff encoder\n");
-        av_free(context);
+        goto tidyUp3;
         return;
     }
 
@@ -85,8 +100,7 @@ static void dumpImage(struct AVFormatContext *s, AVPacket *pkt)
     if(!frame)
     {
         av_log(s, AV_LOG_ERROR, "Out of memory\n");
-        avcodec_close(context);
-        av_free(context);
+        goto tidyUp4;
         return;
     }
 
@@ -96,17 +110,23 @@ static void dumpImage(struct AVFormatContext *s, AVPacket *pkt)
     sizeUsed = avcodec_encode_video(context, buf, pkt_size * 2, frame);
     if(sizeUsed > 0)
     {
-        put_buffer(pb[0], buf, sizeUsed);
-        put_flush_packet(pb[0]);
+        put_buffer(pb, buf, sizeUsed);
+        put_flush_packet(pb);
     }
     else
     {
         av_log(s, AV_LOG_ERROR, "Tiff encode failed\n");
     }
-    url_fclose(pb[0]);
-    avcodec_close(context);
-    av_free(context);
+
     av_free(frame);
+tidyUp4:
+    avcodec_close(context);
+tidyUp3:
+    av_free(context);
+tidyUp2:
+    url_fclose(pb);
+tidyUp1:
+    av_free(buf);
 }
 
 
@@ -141,6 +161,7 @@ static int wtwfind_write_header(AVFormatContext *s)
             wtw->min_histogram[i][j] = 0;
         }
         wtw->peak_so_far[i] = 0;
+        wtw->peak_num_frames[i] = 0;
     }
 
     if(strncmp(s->filename, "pipe:", 5) != 0)
@@ -214,13 +235,18 @@ static int wtwfind_write_packet_rgb24(struct AVFormatContext *s, AVPacket *pkt)
     // look for frames at peaks so far in each colour
     for(int i = 0; i < 3; ++i)
     {
-        if(peak[i] >= wtw->peak_so_far[i])
+        if(peak[i] > wtw->peak_so_far[i])
         {
             wtw->peak_so_far[i] = peak[i];
             if(peak[i] > 235)
             {
                 needToDumpImage = 1;
             }
+        }
+        if(counthi[i] > wtw->peak_num_frames[i])
+        {
+            wtw->peak_num_frames[i] = counthi[i];
+            needToDumpImage = 1;
         }
     }
 
