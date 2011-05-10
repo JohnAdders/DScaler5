@@ -1,6 +1,7 @@
 #!/bin/sh
 ./configure --extra-cflags="-fno-common -D_WIN32_WINNT=0x0600" --enable-memalign-hack --enable-shared --disable-static --disable-debug --disable-encoders --disable-muxers --disable-devices --enable-gpl
 make clean
+make version.h
 make
 mkdir ../Debug
 mkdir ../Release
