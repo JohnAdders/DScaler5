@@ -385,6 +385,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\MpegDecoder_IVTC.cpp"
+				>
+			</File>
+			<File
 				RelativePath="MpegDecoder_Rate.cpp"
 				>
 			</File>
