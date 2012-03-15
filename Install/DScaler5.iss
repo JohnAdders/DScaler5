@@ -35,9 +35,9 @@
 [Setup]
 AppName=DScaler 5 Mpeg Decoders
 AppVerName=DScaler 5 Mpeg Decoders
-AppPublisherURL=http://www.dscaler.org
-AppSupportURL=http://www.dscaler.org/phpBB/
-AppUpdatesURL=http://www.dscaler.org
+AppPublisherURL=http://www.dscaler.net
+AppSupportURL=http://www.dscaler.net/phpBB/
+AppUpdatesURL=http://www.dscaler.net
 DefaultDirName={pf}\DScaler5
 DefaultGroupName=DScaler5
 AllowNoIcons=yes
@@ -70,8 +70,8 @@ Source: "..\Release\GenDMOProp.dll"; DestDir: "{app}"; Flags: regserver;
 Source: "..\Release\DScaler5.chm"; DestDir: "{app}"; Flags:;
 
 [INI]
-Filename: "{app}\DScaler.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://www.dscaler.org"
-Filename: "{app}\Support.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://www.dscaler.org/phpBB/"
+Filename: "{app}\DScaler.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://www.dscaler.net"
+Filename: "{app}\Support.url"; Section: "InternetShortcut"; Key: "URL"; String: "http://www.dscaler.net/phpBB/"
 
 [Icons]
 Name: "{group}\DScaler on the Web"; Filename: "{app}\DScaler.url"
