@@ -127,7 +127,10 @@ STDAPI DllRegisterServer(void)
 
 
     HRESULT hr = RegisterFilter(CLSID_CAudioDecoder, L"DScaler Audio Decoder", &RegInfo);
-    CHECK(hr);
+    if(hr != E_ACCESSDENIED && UsePerUserRegistration)
+    {
+        CHECK(hr);
+    }
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, TRUE);
 }
 

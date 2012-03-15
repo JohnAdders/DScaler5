@@ -123,7 +123,10 @@ STDAPI DllRegisterServer(void)
 
 
     HRESULT hr = RegisterFilter(CLSID_CDivxDecoder, L"DScaler MPEG4 Video Decoder", &RegInfo);
-    CHECK(hr);
+    if(hr != E_ACCESSDENIED && UsePerUserRegistration)
+    {
+        CHECK(hr);
+    }
 
     for(size_t i(0); i < InputTypes.size(); ++i)
     {

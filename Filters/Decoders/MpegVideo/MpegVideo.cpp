@@ -103,7 +103,7 @@ STDAPI DllRegisterServer(void)
 
 
     HRESULT hr = RegisterFilter(CLSID_CMpegDecoder, L"DScaler Mpeg2 Video Decoder", &RegInfo);
-    if(hr != E_ACCESSDENIED)
+    if(hr != E_ACCESSDENIED && UsePerUserRegistration)
     {
         CHECK(hr);
     }
