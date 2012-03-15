@@ -141,4 +141,33 @@ STDAPI DllUnregisterServer(void)
     return ClassTableUpdateRegistry(GetThisInstance(), Classes, 0, FALSE, FALSE);
 }
 
+/////////////////////////////////////////////////////////////////////////////
+// DllInstall - Adds support for per user registration
 
+STDAPI DllInstall(BOOL bInstall, LPCWSTR pszCmdLine)
+{
+    HRESULT hr = E_FAIL;
+    static const wchar_t szUserSwitch[] = L"user";
+
+    if (pszCmdLine != NULL)
+    {
+        if (_wcsnicmp(pszCmdLine, szUserSwitch, _countof(szUserSwitch)) == 0)
+        {
+            UsePerUserRegistration = true;
+        }
+    }
+
+    if (bInstall)
+    {
+        hr = DllRegisterServer();
+        if (FAILED(hr))
+        {
+            DllUnregisterServer();
+        }
+    }
+    else
+    {
+        hr = DllUnregisterServer();
+    }
+    return hr;
+}

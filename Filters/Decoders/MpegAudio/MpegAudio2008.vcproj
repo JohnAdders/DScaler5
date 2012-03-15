@@ -72,6 +72,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -159,6 +160,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -243,6 +245,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -328,6 +331,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -410,6 +414,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -493,6 +498,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -577,6 +583,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -662,6 +669,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				RegisterOutput="true"
+				PerUserRedirection="true"
 				AdditionalDependencies="user32.lib advapi32.lib ole32.lib oleaut32.lib odbc32.lib odbccp32.lib Rpcrt4.lib dmoguids.lib msdmo.lib strmiids.lib avcodec-52.lib avutil-50.lib"
 				AdditionalLibraryDirectories="$(OutDir)"
 				IgnoreDefaultLibraryNames=""
@@ -698,21 +706,26 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{FB15DBB5-C9F1-4D23-B8C5-F8291DEA6826}"
+			RelativePathToProject=".\Filters\Decoders\MpegAudio\djbfft\djbfft2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{F4892194-4D03-4CAC-85C0-351DCE97B1A8}"
+			RelativePathToProject=".\Filters\Filter_Lib\Filter_Lib2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{0F39947C-180A-48C7-B5DE-454B968ADEB6}"
+			RelativePathToProject=".\GenDMOProp\GenDMOProp2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{DABBA817-B2FC-49AA-B872-2AAFAE560337}"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{68876F9C-E66B-40CE-A590-58FDCE7B8CCB}"
+			RelativePathToProject=".\Filters\Decoders\MpegAudio\dtsdec\vc++\libdts2008.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{74462BDC-197C-4142-9AAB-64BD2DA9B257}"
+			RelativePathToProject=".\Filters\Decoders\MpegAudio\libmad\msvc++\libmad2008.vcproj"
 		/>
 	</References>
 	<Files>

@@ -49,6 +49,7 @@ LONG RegDeleteAllKeys(HKEY hkeyRoot, const char *pszKeyName)
     return err;
 }
 
+static BOOL UsePerUserRegistration = FALSE;
 
 // the routine that inserts/deletes Registry keys based on the table
 EXTERN_C HRESULT STDAPICALLTYPE
@@ -92,9 +93,20 @@ RegistryTableUpdateRegistry(HINSTANCE hInstance,
                 const char *pszValue = (pEntries->pszValue != REG_MODULE_NAME) ? pEntries->pszValue : szModuleName;
                 if (pEntries->hkeyRoot)
                 {
-                    hkeyRoot = pEntries->hkeyRoot;
-                    lstrcpyA(szKey, pEntries->pszKey);
-                    lstrcpyA(szFullKey, pEntries->pszKey);
+                    if(UsePerUserRegistration && pEntries->hkeyRoot == HKEY_CLASSES_ROOT)
+                    {
+                        hkeyRoot = HKEY_CURRENT_USER;
+                        lstrcpyA(szKey, "Software\\Classes\\");
+                        lstrcpyA(szFullKey, "Software\\Classes\\");
+                        lstrcatA(szKey, pEntries->pszKey);
+                        lstrcatA(szFullKey, pEntries->pszKey);
+                    }
+                    else
+                    {
+                        hkeyRoot = pEntries->hkeyRoot;
+                        lstrcpyA(szKey, pEntries->pszKey);
+                        lstrcpyA(szFullKey, pEntries->pszKey);
+                    }
                 }
                 else
                 {
